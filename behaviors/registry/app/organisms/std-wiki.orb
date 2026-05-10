@@ -143,27 +143,27 @@
           "name": "WikiAppLayout",
           "config": {
             "appName": "Wiki",
-            "contentTrait": "@trait.WikiWorkspace",
             "navItems": [
               {
-                "href": "/wiki",
                 "icon": "book-open",
-                "label": "Pages"
+                "label": "Pages",
+                "href": "/wiki"
               },
               {
-                "label": "History",
+                "href": "/revisions",
                 "icon": "history",
-                "href": "/revisions"
+                "label": "History"
               },
               {
-                "href": "/wiki/tags",
+                "icon": "tag",
                 "label": "Tags",
-                "icon": "tag"
+                "href": "/wiki/tags"
               }
             ],
             "searchEvent": "WIKI_SEARCH",
+            "notificationClickEvent": "WIKI_NOTIFICATIONS_OPEN",
             "notifications": [],
-            "notificationClickEvent": "WIKI_NOTIFICATIONS_OPEN"
+            "contentTrait": "@trait.WikiWorkspace"
           },
           "events": {
             "SEARCH": "WIKI_SEARCH",
@@ -251,75 +251,77 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
                           "type": "stack",
+                          "justify": "between",
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "book-open",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "book-open"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Wiki",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
+                              "type": "stack",
                               "gap": "sm",
-                              "type": "stack"
+                              "align": "center"
                             },
                             {
-                              "gap": "sm",
                               "direction": "horizontal",
                               "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "button",
                                   "action": "CREATE",
                                   "label": "New Page",
-                                  "icon": "plus",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "plus"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "align": "center",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.WikiSearch",
                             "@trait.WikiFilter"
                           ],
                           "gap": "md",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "lg",
                           "children": [
                             {
                               "gap": "md",
                               "type": "stack",
+                              "className": "w-72 shrink-0",
                               "direction": "vertical",
                               "children": [
                                 "@trait.WikiPageTree"
-                              ],
-                              "className": "w-72 shrink-0"
+                              ]
                             },
                             {
                               "className": "flex-1",
+                              "direction": "vertical",
                               "children": [
                                 "@trait.WikiBrowseList",
                                 {
@@ -327,15 +329,13 @@
                                 },
                                 "@trait.WikiBacklinks"
                               ],
-                              "direction": "vertical",
                               "type": "stack",
                               "gap": "md"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -355,20 +355,19 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "className": "py-8",
-                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "No notifications",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "type": "typography",
@@ -377,12 +376,13 @@
                           "color": "muted"
                         },
                         {
-                          "label": "Back to wiki",
                           "action": "INIT",
-                          "type": "button",
-                          "variant": "ghost"
+                          "label": "Back to wiki",
+                          "variant": "ghost",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -395,8 +395,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "WikiSearch",
           "config": {
-            "event": "WIKI_FULLTEXT_SEARCH",
-            "placeholder": "Search wiki…"
+            "placeholder": "Search wiki…",
+            "event": "WIKI_FULLTEXT_SEARCH"
           }
         },
         {
@@ -405,24 +405,24 @@
           "config": {
             "filters": [
               {
+                "field": "kind",
+                "filterType": "select",
                 "options": [
                   "page",
                   "doc",
                   "post"
                 ],
-                "field": "kind",
-                "label": "Kind",
-                "filterType": "select"
+                "label": "Kind"
               },
               {
+                "filterType": "select",
                 "label": "Status",
+                "field": "status",
                 "options": [
                   "draft",
                   "published",
                   "archived"
-                ],
-                "field": "status",
-                "filterType": "select"
+                ]
               }
             ],
             "event": "WIKI_FILTER"
@@ -440,6 +440,34 @@
           "name": "WikiBrowseList",
           "linkedEntity": "WikiPage",
           "config": {
+            "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "label": "Open",
+                "event": "VIEW",
+                "icon": "eye",
+                "variant": "ghost"
+              },
+              {
+                "icon": "edit",
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "variant": "ghost",
+                "icon": "history",
+                "label": "History",
+                "event": "VIEW_HISTORY"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete",
+                "icon": "trash"
+              }
+            ],
             "fields": [
               {
                 "name": "title",
@@ -447,50 +475,22 @@
                 "icon": "file-text"
               },
               {
-                "variant": "badge",
-                "name": "kind"
+                "name": "kind",
+                "variant": "badge"
               },
               {
-                "variant": "badge",
-                "name": "status"
-              },
-              {
-                "name": "version",
-                "label": "v",
-                "variant": "caption"
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "variant": "caption",
+                "label": "v",
+                "name": "version"
+              },
+              {
                 "name": "updatedAt",
-                "label": "Updated"
-              }
-            ],
-            "cols": 1.0,
-            "gap": "sm",
-            "itemActions": [
-              {
-                "label": "Open",
-                "variant": "ghost",
-                "event": "VIEW",
-                "icon": "eye"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "icon": "edit",
-                "variant": "ghost"
-              },
-              {
-                "event": "VIEW_HISTORY",
-                "icon": "history",
-                "variant": "ghost",
-                "label": "History"
-              },
-              {
-                "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger",
-                "icon": "trash"
+                "label": "Updated",
+                "variant": "caption"
               }
             ]
           },
@@ -558,7 +558,7 @@
           "linkedEntity": "WikiPage",
           "config": {
             "icon": "plus-circle",
-            "title": "New Page",
+            "mode": "create",
             "fields": [
               "title",
               "slug",
@@ -567,7 +567,7 @@
               "parentId",
               "authorId"
             ],
-            "mode": "create"
+            "title": "New Page"
           },
           "events": {
             "OPEN": "CREATE"
@@ -620,8 +620,7 @@
           "name": "WikiView",
           "linkedEntity": "WikiPage",
           "config": {
-            "title": "View Page",
-            "mode": "edit",
+            "icon": "eye",
             "fields": [
               "title",
               "slug",
@@ -631,7 +630,8 @@
               "updatedAt",
               "blocksJson"
             ],
-            "icon": "eye"
+            "mode": "edit",
+            "title": "View Page"
           },
           "events": {
             "OPEN": "VIEW"
@@ -653,13 +653,13 @@
           "linkedEntity": "WikiPage",
           "config": {
             "title": "Delete Page",
+            "icon": "alert-triangle",
             "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle"
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -683,8 +683,8 @@
           "ref": "Tags.traits.TagBrowse",
           "name": "WikiTagBrowse",
           "config": {
-            "title": "Tags",
-            "allowEdit": true
+            "allowEdit": true,
+            "title": "Tags"
           }
         },
         {
@@ -1023,21 +1023,21 @@
         {
           "ref": "AppShell.traits.AppLayout",
           "name": "RevisionAppLayout",
-          "linkedEntity": "WikiRevision",
           "config": {
-            "searchEvent": "REVISION_SEARCH",
+            "appName": "Wiki",
             "notifications": [],
             "notificationClickEvent": "REVISION_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.RevisionWorkspace",
             "navItems": [
               {
-                "icon": "book-open",
                 "href": "/wiki",
+                "icon": "book-open",
                 "label": "Pages"
               },
               {
-                "href": "/revisions",
+                "icon": "history",
                 "label": "History",
-                "icon": "history"
+                "href": "/revisions"
               },
               {
                 "label": "Tags",
@@ -1045,12 +1045,11 @@
                 "icon": "tag"
               }
             ],
-            "appName": "Wiki",
-            "contentTrait": "@trait.RevisionWorkspace"
+            "searchEvent": "REVISION_SEARCH"
           },
           "events": {
-            "SEARCH": "REVISION_SEARCH",
-            "NOTIFY_CLICK": "REVISION_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "REVISION_NOTIFICATIONS_OPEN",
+            "SEARCH": "REVISION_SEARCH"
           }
         },
         {
@@ -1095,60 +1094,60 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
                           "justify": "between",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "name": "history",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Version History"
+                                  "content": "Version History",
+                                  "variant": "h2"
                                 }
                               ]
                             },
                             {
                               "children": [
                                 {
-                                  "variant": "primary",
-                                  "action": "CREATE",
                                   "icon": "plus",
+                                  "type": "button",
                                   "label": "New Revision",
-                                  "type": "button"
+                                  "action": "CREATE",
+                                  "variant": "primary"
                                 }
                               ],
-                              "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
                           "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "Recent"
+                          "content": "Recent",
+                          "type": "typography"
                         },
                         "@trait.RevisionBrowseList"
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1164,8 +1163,8 @@
           "config": {
             "fields": [
               {
-                "icon": "history",
                 "variant": "h4",
+                "icon": "history",
                 "name": "summary"
               },
               {
@@ -1178,8 +1177,8 @@
                 "variant": "badge"
               },
               {
-                "name": "authorName",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "authorName"
               },
               {
                 "variant": "caption",
@@ -1187,16 +1186,16 @@
                 "label": "Saved"
               }
             ],
-            "gap": "sm",
+            "cols": 1.0,
             "itemActions": [
               {
                 "label": "Inspect",
+                "variant": "ghost",
                 "event": "VIEW",
-                "icon": "eye",
-                "variant": "ghost"
+                "icon": "eye"
               }
             ],
-            "cols": 1.0
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1215,8 +1214,6 @@
           "linkedEntity": "WikiRevision",
           "config": {
             "title": "New Revision",
-            "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "documentId",
               "documentType",
@@ -1225,7 +1222,9 @@
               "authorName",
               "summary",
               "content"
-            ]
+            ],
+            "icon": "plus-circle",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"

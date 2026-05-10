@@ -112,32 +112,32 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "PlanAppLayout",
           "config": {
-            "contentTrait": "@trait.PlanCatalog",
-            "searchEvent": "PLAN_SEARCH",
             "appName": "Subscription Billing",
+            "notifications": [],
+            "contentTrait": "@trait.PlanCatalog",
             "navItems": [
               {
-                "icon": "credit-card",
                 "label": "Plans",
-                "href": "/plans"
+                "href": "/plans",
+                "icon": "credit-card"
               },
               {
-                "label": "Invoices",
                 "icon": "receipt",
+                "label": "Invoices",
                 "href": "/invoices"
               },
               {
-                "icon": "alert-triangle",
                 "label": "Dunning",
-                "href": "/dunning"
+                "href": "/dunning",
+                "icon": "alert-triangle"
               }
             ],
-            "notifications": [],
+            "searchEvent": "PLAN_SEARCH",
             "notificationClickEvent": "PLAN_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "PLAN_NOTIFICATIONS_OPEN",
-            "SEARCH": "PLAN_SEARCH"
+            "SEARCH": "PLAN_SEARCH",
+            "NOTIFY_CLICK": "PLAN_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -220,16 +220,18 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
                               "type": "stack",
                               "children": [
                                 {
@@ -237,42 +239,41 @@
                                   "name": "credit-card"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Plans"
+                                  "content": "Plans",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "align": "center",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "type": "stack",
                               "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
+                                  "type": "button",
                                   "icon": "plus",
                                   "variant": "primary",
                                   "label": "New Plan",
-                                  "type": "button",
                                   "action": "CREATE"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             "@trait.PlanSearch",
                             "@trait.PlanFilter"
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         "@trait.PlanStats",
                         "@trait.PlanGraphs",
@@ -284,8 +285,8 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Active Subscriptions"
                         },
                         "@trait.PlanSubscriptionManage",
@@ -293,15 +294,14 @@
                           "type": "divider"
                         },
                         {
+                          "variant": "h3",
                           "content": "Trials",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         "@trait.PlanTrialManage"
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -321,32 +321,32 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "content": "You're all caught up.",
-                          "type": "typography"
+                          "content": "You're all caught up."
                         },
                         {
-                          "action": "INIT",
+                          "type": "button",
                           "label": "Back to plans",
                           "variant": "ghost",
-                          "type": "button"
+                          "action": "INIT"
                         }
                       ],
+                      "className": "py-8",
+                      "align": "center",
                       "gap": "md"
                     }
                   ]
@@ -368,11 +368,10 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "PlanFilter",
           "config": {
-            "event": "PLAN_FILTER",
             "filters": [
               {
-                "filterType": "select",
                 "label": "Interval",
+                "filterType": "select",
                 "field": "interval",
                 "options": [
                   "monthly",
@@ -380,15 +379,16 @@
                 ]
               },
               {
-                "field": "status",
+                "label": "Status",
+                "filterType": "select",
                 "options": [
                   "active",
                   "archived"
                 ],
-                "label": "Status",
-                "filterType": "select"
+                "field": "status"
               }
-            ]
+            ],
+            "event": "PLAN_FILTER"
           }
         },
         {
@@ -397,14 +397,18 @@
           "config": {
             "metrics": [
               {
+                "label": "Total",
                 "variant": "primary",
                 "format": "number",
-                "label": "Total",
                 "aggregation": "count",
                 "icon": "credit-card"
               },
               {
+                "label": "Active",
+                "aggregation": "count",
                 "format": "number",
+                "icon": "check-circle",
+                "variant": "success",
                 "filter": [
                   "fn",
                   "row",
@@ -413,13 +417,12 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "icon": "check-circle",
-                "variant": "success",
-                "aggregation": "count",
-                "label": "Active"
+                ]
               },
               {
+                "label": "Archived",
+                "variant": "warning",
+                "icon": "archive",
                 "filter": [
                   "fn",
                   "row",
@@ -429,11 +432,8 @@
                     "archived"
                   ]
                 ],
-                "label": "Archived",
-                "format": "number",
                 "aggregation": "count",
-                "icon": "archive",
-                "variant": "warning"
+                "format": "number"
               }
             ],
             "title": "Plans"
@@ -453,13 +453,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "PlanGraphs",
           "config": {
-            "subtitle": "Monthly vs yearly distribution",
             "chartType": "bar",
             "categoryField": "interval",
-            "aggregation": "count",
             "height": 240.0,
-            "title": "Plans by Interval",
-            "showLegend": false
+            "showLegend": false,
+            "subtitle": "Monthly vs yearly distribution",
+            "aggregation": "count",
+            "title": "Plans by Interval"
           },
           "listens": [
             {
@@ -477,6 +477,7 @@
           "name": "PlanBrowseList",
           "linkedEntity": "Plan",
           "config": {
+            "gap": "sm",
             "itemActions": [
               {
                 "label": "View",
@@ -484,22 +485,22 @@
                 "variant": "ghost"
               },
               {
-                "variant": "ghost",
+                "label": "Edit",
                 "event": "EDIT",
-                "label": "Edit"
+                "variant": "ghost"
               },
               {
-                "event": "DELETE",
                 "label": "Delete",
+                "event": "DELETE",
                 "variant": "danger"
               }
             ],
             "cols": 1.0,
             "fields": [
               {
+                "variant": "h3",
                 "icon": "credit-card",
-                "name": "name",
-                "variant": "h3"
+                "name": "name"
               },
               {
                 "name": "description",
@@ -514,15 +515,14 @@
                 "name": "amount"
               },
               {
-                "variant": "badge",
-                "name": "currency"
+                "name": "currency",
+                "variant": "badge"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               }
-            ],
-            "gap": "sm"
+            ]
           },
           "listens": [
             {
@@ -572,6 +572,8 @@
           "name": "PlanCreate",
           "linkedEntity": "Plan",
           "config": {
+            "title": "New Plan",
+            "icon": "plus-circle",
             "mode": "create",
             "fields": [
               "name",
@@ -581,9 +583,7 @@
               "currency",
               "trialDays",
               "status"
-            ],
-            "title": "New Plan",
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -605,6 +605,7 @@
           "linkedEntity": "Plan",
           "config": {
             "icon": "edit",
+            "title": "Edit Plan",
             "mode": "edit",
             "fields": [
               "name",
@@ -614,8 +615,7 @@
               "currency",
               "trialDays",
               "status"
-            ],
-            "title": "Edit Plan"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -636,7 +636,7 @@
           "name": "PlanView",
           "linkedEntity": "Plan",
           "config": {
-            "mode": "edit",
+            "icon": "eye",
             "fields": [
               "name",
               "description",
@@ -647,7 +647,7 @@
               "status"
             ],
             "title": "View Plan",
-            "icon": "eye"
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -668,9 +668,9 @@
           "name": "PlanDelete",
           "linkedEntity": "Plan",
           "config": {
-            "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle",
             "title": "Delete Plan",
+            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete"
           },
           "events": {
@@ -999,34 +999,33 @@
         {
           "ref": "AppShell.traits.AppLayout",
           "name": "InvoiceAppLayout",
-          "linkedEntity": "InvoiceNote",
           "config": {
-            "appName": "Subscription Billing",
-            "searchEvent": "INVOICE_SEARCH",
-            "contentTrait": "@trait.InvoiceCatalog",
             "navItems": [
               {
-                "href": "/plans",
+                "label": "Plans",
                 "icon": "credit-card",
-                "label": "Plans"
+                "href": "/plans"
               },
               {
-                "label": "Invoices",
                 "href": "/invoices",
+                "label": "Invoices",
                 "icon": "receipt"
               },
               {
-                "label": "Dunning",
                 "href": "/dunning",
+                "label": "Dunning",
                 "icon": "alert-triangle"
               }
             ],
+            "notifications": [],
             "notificationClickEvent": "INVOICE_NOTIFICATIONS_OPEN",
-            "notifications": []
+            "appName": "Subscription Billing",
+            "searchEvent": "INVOICE_SEARCH",
+            "contentTrait": "@trait.InvoiceCatalog"
           },
           "events": {
-            "NOTIFY_CLICK": "INVOICE_NOTIFICATIONS_OPEN",
-            "SEARCH": "INVOICE_SEARCH"
+            "SEARCH": "INVOICE_SEARCH",
+            "NOTIFY_CLICK": "INVOICE_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1109,15 +1108,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "align": "center",
                           "justify": "between",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -1125,28 +1130,25 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Invoices",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Invoices"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack"
+                              "direction": "horizontal"
                             },
                             {
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "label": "Add Note",
                                   "variant": "primary",
-                                  "action": "CREATE",
+                                  "type": "button",
                                   "icon": "plus",
-                                  "type": "button"
+                                  "action": "CREATE",
+                                  "label": "Add Note"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "direction": "horizontal"
                             }
                           ]
                         },
@@ -1158,15 +1160,12 @@
                           "type": "divider"
                         },
                         {
+                          "variant": "h3",
                           "type": "typography",
-                          "content": "Recent Notes",
-                          "variant": "h3"
+                          "content": "Recent Notes"
                         },
                         "@trait.InvoiceNoteBrowseList"
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1185,6 +1184,7 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-8",
                       "children": [
                         {
                           "name": "bell",
@@ -1196,10 +1196,10 @@
                           "type": "typography"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "You're all caught up."
+                          "content": "You're all caught up.",
+                          "color": "muted"
                         },
                         {
                           "action": "INIT",
@@ -1208,11 +1208,10 @@
                           "label": "Back to invoices"
                         }
                       ],
-                      "type": "stack",
                       "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-8"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1236,28 +1235,28 @@
           "config": {
             "fields": [
               {
+                "icon": "receipt",
                 "name": "invoiceId",
-                "variant": "h4",
-                "icon": "receipt"
+                "variant": "h4"
               },
               {
-                "variant": "body",
-                "name": "body"
+                "name": "body",
+                "variant": "body"
               },
               {
                 "name": "author",
                 "variant": "caption"
               },
               {
-                "name": "createdAt",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "createdAt"
               }
             ],
             "itemActions": [
               {
-                "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE",
-                "variant": "danger"
+                "label": "Delete"
               }
             ],
             "cols": 1.0,
@@ -1287,14 +1286,14 @@
           "name": "InvoiceNoteCreate",
           "linkedEntity": "InvoiceNote",
           "config": {
-            "mode": "create",
             "icon": "plus-circle",
-            "title": "New Note",
             "fields": [
               "invoiceId",
               "body",
               "author"
-            ]
+            ],
+            "mode": "create",
+            "title": "New Note"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1531,11 +1530,7 @@
         {
           "ref": "AppShell.traits.AppLayout",
           "name": "DunningAppLayout",
-          "linkedEntity": "DunningNote",
           "config": {
-            "notificationClickEvent": "DUNNING_NOTIFICATIONS_OPEN",
-            "appName": "Subscription Billing",
-            "notifications": [],
             "searchEvent": "DUNNING_SEARCH",
             "navItems": [
               {
@@ -1544,21 +1539,24 @@
                 "href": "/plans"
               },
               {
-                "href": "/invoices",
                 "label": "Invoices",
+                "href": "/invoices",
                 "icon": "receipt"
               },
               {
+                "icon": "alert-triangle",
                 "label": "Dunning",
-                "href": "/dunning",
-                "icon": "alert-triangle"
+                "href": "/dunning"
               }
             ],
+            "notificationClickEvent": "DUNNING_NOTIFICATIONS_OPEN",
+            "appName": "Subscription Billing",
+            "notifications": [],
             "contentTrait": "@trait.DunningCatalog"
           },
           "events": {
-            "SEARCH": "DUNNING_SEARCH",
-            "NOTIFY_CLICK": "DUNNING_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "DUNNING_NOTIFICATIONS_OPEN",
+            "SEARCH": "DUNNING_SEARCH"
           }
         },
         {
@@ -1641,49 +1639,48 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "md",
                           "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
+                          "justify": "between",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "alert-triangle",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "Dunning",
                                   "type": "typography",
-                                  "content": "Dunning"
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm"
                             },
                             {
-                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
                                   "variant": "primary",
-                                  "icon": "plus",
+                                  "label": "Log Note",
                                   "action": "CREATE",
-                                  "label": "Log Note"
+                                  "icon": "plus",
+                                  "type": "button"
                                 }
                               ]
                             }
-                          ],
-                          "justify": "between",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1693,12 +1690,13 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
                           "content": "Case Notes",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         "@trait.DunningNoteBrowseList"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1717,10 +1715,6 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -1732,18 +1726,22 @@
                           "variant": "h3"
                         },
                         {
-                          "content": "You're all caught up.",
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
-                          "action": "INIT",
                           "label": "Back to dunning",
                           "type": "button",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "action": "INIT"
                         }
                       ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-8",
                       "gap": "md"
                     }
                   ]
@@ -1765,15 +1763,6 @@
           "name": "DunningNoteBrowseList",
           "linkedEntity": "DunningNote",
           "config": {
-            "itemActions": [
-              {
-                "variant": "danger",
-                "label": "Delete",
-                "event": "DELETE"
-              }
-            ],
-            "cols": 1.0,
-            "gap": "sm",
             "fields": [
               {
                 "name": "caseId",
@@ -1789,10 +1778,19 @@
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "createdAt"
+                "name": "createdAt",
+                "variant": "caption"
               }
-            ]
+            ],
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ],
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1819,8 +1817,8 @@
           "linkedEntity": "DunningNote",
           "config": {
             "mode": "create",
-            "title": "New Note",
             "icon": "plus-circle",
+            "title": "New Note",
             "fields": [
               "caseId",
               "body",

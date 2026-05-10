@@ -119,19 +119,16 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "QuestionAppLayout",
           "config": {
-            "notificationClickEvent": "QUESTION_NOTIFICATIONS_OPEN",
-            "searchEvent": "QUESTION_SEARCH",
-            "appName": "Forum",
             "navItems": [
               {
-                "label": "Questions",
                 "href": "/questions",
-                "icon": "help-circle"
+                "icon": "help-circle",
+                "label": "Questions"
               },
               {
-                "href": "/questions",
                 "icon": "tag",
-                "label": "Categories"
+                "label": "Categories",
+                "href": "/questions"
               },
               {
                 "label": "Moderation",
@@ -139,12 +136,15 @@
                 "icon": "shield-alert"
               }
             ],
-            "notifications": [],
-            "contentTrait": "@trait.QuestionCatalog"
+            "notificationClickEvent": "QUESTION_NOTIFICATIONS_OPEN",
+            "searchEvent": "QUESTION_SEARCH",
+            "contentTrait": "@trait.QuestionCatalog",
+            "appName": "Forum",
+            "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "QUESTION_NOTIFICATIONS_OPEN",
-            "SEARCH": "QUESTION_SEARCH"
+            "SEARCH": "QUESTION_SEARCH",
+            "NOTIFY_CLICK": "QUESTION_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -227,15 +227,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "gap": "md",
+                          "type": "stack",
                           "align": "center",
-                          "justify": "between",
                           "children": [
                             {
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
@@ -243,46 +242,44 @@
                                 },
                                 {
                                   "variant": "h2",
-                                  "content": "Questions",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Questions"
                                 }
                               ],
+                              "align": "center",
                               "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
-                              "gap": "sm",
                               "direction": "horizontal",
-                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "primary",
                                   "label": "Ask Question",
-                                  "icon": "plus",
+                                  "type": "button",
                                   "action": "CREATE",
-                                  "type": "button"
+                                  "icon": "plus",
+                                  "variant": "primary"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
                           "children": [
                             "@trait.QuestionSearch",
                             "@trait.QuestionFilter"
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         "@trait.QuestionStats",
                         {
@@ -293,7 +290,10 @@
                           "type": "divider"
                         },
                         "@trait.QuestionBrowseList"
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -319,27 +319,27 @@
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "type": "typography"
                         },
                         {
-                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "You're all caught up."
                         },
                         {
+                          "type": "button",
                           "label": "Back to questions",
                           "action": "INIT",
-                          "variant": "ghost",
-                          "type": "button"
+                          "variant": "ghost"
                         }
                       ],
                       "align": "center",
                       "type": "stack",
-                      "className": "py-8",
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -360,11 +360,12 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "QuestionFilter",
           "config": {
+            "event": "QUESTION_FILTER",
             "filters": [
               {
-                "field": "status",
                 "label": "Status",
                 "filterType": "select",
+                "field": "status",
                 "options": [
                   "open",
                   "answered",
@@ -374,27 +375,29 @@
               {
                 "filterType": "select",
                 "label": "Tag",
-                "options": [],
-                "field": "tag"
+                "field": "tag",
+                "options": []
               }
-            ],
-            "event": "QUESTION_FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "QuestionStats",
           "config": {
-            "title": "Questions",
             "metrics": [
               {
-                "aggregation": "count",
-                "label": "Total",
-                "icon": "help-circle",
                 "variant": "primary",
-                "format": "number"
+                "format": "number",
+                "icon": "help-circle",
+                "label": "Total",
+                "aggregation": "count"
               },
               {
+                "variant": "warning",
+                "icon": "circle",
+                "label": "Open",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -404,11 +407,7 @@
                     "open"
                   ]
                 ],
-                "label": "Open",
-                "icon": "circle",
-                "aggregation": "count",
-                "variant": "warning",
-                "format": "number"
+                "aggregation": "count"
               },
               {
                 "filter": [
@@ -420,21 +419,22 @@
                     "answered"
                   ]
                 ],
+                "format": "number",
                 "label": "Answered",
-                "aggregation": "count",
                 "variant": "success",
                 "icon": "check-circle",
-                "format": "number"
+                "aggregation": "count"
               },
               {
                 "format": "text",
-                "field": "tag",
-                "aggregation": "mode",
                 "label": "Top Tag",
                 "icon": "hash",
-                "variant": "info"
+                "variant": "info",
+                "aggregation": "mode",
+                "field": "tag"
               }
-            ]
+            ],
+            "title": "Questions"
           },
           "listens": [
             {
@@ -451,8 +451,8 @@
           "ref": "Tags.traits.TagBrowse",
           "name": "QuestionTagTree",
           "config": {
-            "allowEdit": false,
-            "title": "Categories"
+            "title": "Categories",
+            "allowEdit": false
           }
         },
         {
@@ -462,21 +462,21 @@
           "config": {
             "fields": [
               {
-                "icon": "help-circle",
                 "variant": "h3",
+                "icon": "help-circle",
                 "name": "title"
               },
               {
-                "name": "authorName",
-                "variant": "body"
+                "variant": "body",
+                "name": "authorName"
               },
               {
                 "name": "tag",
                 "variant": "badge"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "format": "number",
@@ -484,26 +484,26 @@
                 "variant": "caption"
               },
               {
-                "variant": "caption",
+                "name": "replyCount",
                 "format": "number",
-                "name": "replyCount"
+                "variant": "caption"
               }
             ],
             "itemActions": [
               {
-                "label": "View",
+                "variant": "ghost",
                 "event": "VIEW",
-                "variant": "ghost"
+                "label": "View"
               },
               {
-                "label": "Edit",
                 "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "label": "Edit"
               },
               {
+                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
+                "variant": "danger"
               }
             ],
             "gap": "sm",
@@ -573,6 +573,8 @@
           "name": "QuestionCreate",
           "linkedEntity": "Question",
           "config": {
+            "icon": "plus-circle",
+            "title": "Ask Question",
             "mode": "create",
             "fields": [
               "title",
@@ -580,9 +582,7 @@
               "authorName",
               "tag",
               "status"
-            ],
-            "icon": "plus-circle",
-            "title": "Ask Question"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -604,15 +604,15 @@
           "linkedEntity": "Question",
           "config": {
             "mode": "edit",
+            "title": "Edit Question",
+            "icon": "edit",
             "fields": [
               "title",
               "body",
               "authorName",
               "tag",
               "status"
-            ],
-            "icon": "edit",
-            "title": "Edit Question"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -634,6 +634,7 @@
           "linkedEntity": "Question",
           "config": {
             "title": "View Question",
+            "icon": "eye",
             "fields": [
               "title",
               "body",
@@ -643,7 +644,6 @@
               "voteCount",
               "replyCount"
             ],
-            "icon": "eye",
             "mode": "edit"
           },
           "events": {
@@ -666,13 +666,13 @@
           "linkedEntity": "Question",
           "config": {
             "alertMessage": "This action cannot be undone. The question and all its replies will be removed.",
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
-            "title": "Delete Question"
+            "title": "Delete Question",
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -1000,34 +1000,33 @@
         {
           "ref": "AppShell.traits.AppLayout",
           "name": "ModerationAppLayout",
-          "linkedEntity": "ModerationDecision",
           "config": {
+            "searchEvent": "MODERATION_SEARCH",
             "notifications": [],
             "notificationClickEvent": "MODERATION_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.ModerationDisplay",
+            "appName": "Forum",
             "navItems": [
               {
-                "href": "/questions",
                 "icon": "help-circle",
-                "label": "Questions"
+                "label": "Questions",
+                "href": "/questions"
               },
               {
-                "href": "/questions",
+                "label": "Categories",
                 "icon": "tag",
-                "label": "Categories"
+                "href": "/questions"
               },
               {
-                "href": "/moderation",
+                "label": "Moderation",
                 "icon": "shield-alert",
-                "label": "Moderation"
+                "href": "/moderation"
               }
             ],
-            "searchEvent": "MODERATION_SEARCH",
-            "appName": "Forum"
+            "contentTrait": "@trait.ModerationDisplay"
           },
           "events": {
-            "NOTIFY_CLICK": "MODERATION_NOTIFICATIONS_OPEN",
-            "SEARCH": "MODERATION_SEARCH"
+            "SEARCH": "MODERATION_SEARCH",
+            "NOTIFY_CLICK": "MODERATION_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1094,22 +1093,24 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "name": "shield-alert",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Moderation Queue",
                               "variant": "h2",
-                              "content": "Moderation Queue"
+                              "type": "typography"
                             }
                           ],
+                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
@@ -1120,9 +1121,9 @@
                           "type": "divider"
                         },
                         {
+                          "type": "typography",
                           "content": "Recent Flags",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         "@trait.ModerationFlagBrowse",
                         {
@@ -1130,15 +1131,13 @@
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Recorded Decisions"
+                          "content": "Recorded Decisions",
+                          "type": "typography"
                         },
                         "@trait.ModerationDecisionBrowse"
                       ],
-                      "direction": "vertical",
                       "className": "max-w-6xl mx-auto w-full p-4",
-                      "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1158,9 +1157,8 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "py-8",
-                      "direction": "vertical",
                       "gap": "md",
+                      "className": "py-8",
                       "align": "center",
                       "children": [
                         {
@@ -1169,22 +1167,23 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "variant": "h3"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "You're all caught up."
+                          "variant": "caption",
+                          "content": "You're all caught up.",
+                          "color": "muted"
                         },
                         {
                           "label": "Back to moderation",
-                          "action": "INIT",
+                          "type": "button",
                           "variant": "ghost",
-                          "type": "button"
+                          "action": "INIT"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1205,7 +1204,6 @@
           "ref": "Flag.traits.FlagReport",
           "name": "ModerationFlagBrowse",
           "config": {
-            "title": "Latest reports",
             "reasons": [
               "spam",
               "abuse",
@@ -1213,7 +1211,8 @@
               "misinformation",
               "nsfw",
               "other"
-            ]
+            ],
+            "title": "Latest reports"
           }
         },
         {
@@ -1223,9 +1222,9 @@
           "config": {
             "fields": [
               {
+                "variant": "badge",
                 "name": "targetType",
-                "label": "Target",
-                "variant": "badge"
+                "label": "Target"
               },
               {
                 "variant": "badge",
@@ -1243,18 +1242,18 @@
                 "variant": "body"
               },
               {
+                "format": "date",
                 "variant": "caption",
-                "label": "When",
                 "name": "createdAt",
-                "format": "date"
+                "label": "When"
               }
             ],
             "gap": "sm",
             "itemActions": [
               {
+                "variant": "danger",
                 "label": "Revert",
-                "event": "DELETE",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ],
             "cols": 1.0
@@ -1283,10 +1282,10 @@
           "name": "ModerationRevertConfirm",
           "linkedEntity": "ModerationDecision",
           "config": {
-            "confirmLabel": "Revert",
+            "title": "Revert Decision",
             "alertMessage": "This will undo the recorded moderation verdict.",
             "icon": "rotate-ccw",
-            "title": "Revert Decision"
+            "confirmLabel": "Revert"
           },
           "events": {
             "REQUEST": "REVERT",

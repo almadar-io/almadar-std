@@ -9,7 +9,7 @@ orbital TicketTierOrbital {
     price          : number!
     currency       : string = "USD"
     quantityTotal  : number!
-    quantitySold   : number = 0
+    quantitySold   : number! = 0
     availableFrom  : string
     availableUntil : string
     status         : "available" | "sold-out" | "closed" = "available"
@@ -62,7 +62,7 @@ orbital TicketTierOrbital {
         (set @entity.quantitySold (+ @payload.row.quantitySold @payload.qty))
         (set @entity.availableFrom @payload.row.availableFrom)
         (set @entity.availableUntil @payload.row.availableUntil)
-        (set @entity.status (if (>= @entity.quantitySold @entity.quantityTotal) "sold-out" "available"))
+        (set @entity.status (if (>= (+ @payload.row.quantitySold @payload.qty) (+ @payload.row.quantityTotal 0)) "sold-out" "available"))
         (persist update TicketTier @entity { emit: { success: "TicketTierSold", failure: "TicketTierWriteFailed" } })
       CLOSE -> loading
         (set @entity.id @payload.tierId)
