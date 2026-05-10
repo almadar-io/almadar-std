@@ -488,22 +488,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Loading documents…",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -517,22 +517,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "file-text",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -540,54 +538,56 @@
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "name": "title",
+                              "label": "Title"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Kind",
+                              "name": "kind"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status"
+                            },
+                            {
+                              "name": "version",
+                              "label": "v",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Updated",
+                              "name": "updatedAt"
+                            }
+                          ],
                           "gap": "sm",
                           "cols": 1.0,
                           "itemActions": [
                             {
-                              "icon": "edit",
                               "event": "OPEN",
-                              "label": "Open",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "icon": "edit",
+                              "label": "Open"
                             },
                             {
-                              "label": "Publish",
-                              "variant": "secondary",
                               "event": "PUBLISH",
+                              "variant": "secondary",
+                              "label": "Publish",
                               "icon": "send"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "Title",
-                              "name": "title",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Kind",
-                              "name": "kind",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "version",
-                              "variant": "caption",
-                              "label": "v"
-                            },
-                            {
-                              "name": "updatedAt",
-                              "label": "Updated",
-                              "variant": "caption"
                             }
                           ]
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -667,22 +667,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
                               "variant": "secondary",
@@ -690,36 +690,36 @@
                               "type": "badge"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "onChange": "BLOCKS_CHANGE",
                           "initialBlocks": "@entity.blocksJson",
-                          "showToolbar": true,
                           "type": "rich-block-editor",
-                          "placeholder": "Start writing…"
+                          "onChange": "BLOCKS_CHANGE",
+                          "placeholder": "Start writing…",
+                          "showToolbar": true
                         },
                         {
+                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "label": "Save",
-                              "action": "SAVE",
-                              "variant": "primary",
                               "type": "button",
-                              "icon": "save"
+                              "label": "Save",
+                              "icon": "save",
+                              "variant": "primary",
+                              "action": "SAVE"
                             },
                             {
-                              "label": "Publish",
+                              "type": "button",
                               "action": "PUBLISH",
-                              "icon": "send",
                               "variant": "secondary",
-                              "type": "button"
+                              "icon": "send",
+                              "label": "Publish"
                             }
                           ]
                         }
@@ -790,8 +790,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "DocumentSaveFailed",
-                        "success": "DocumentPublished"
+                        "success": "DocumentPublished",
+                        "failure": "DocumentSaveFailed"
                       }
                     }
                   ]
@@ -916,9 +916,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Saved",
+                      "variant": "success",
                       "type": "alert",
-                      "variant": "success"
+                      "message": "Saved"
                     }
                   ]
                 ]
@@ -933,8 +933,8 @@
                     "Document",
                     {
                       "emit": {
-                        "failure": "DocumentLoadFailed",
-                        "success": "DocumentLoaded"
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
                       }
                     }
                   ]
@@ -949,9 +949,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -966,8 +966,8 @@
                     "Document",
                     {
                       "emit": {
-                        "failure": "DocumentLoadFailed",
-                        "success": "DocumentLoaded"
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
                       }
                     }
                   ],
@@ -975,8 +975,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

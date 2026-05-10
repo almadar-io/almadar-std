@@ -419,22 +419,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading questions…",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading questions…"
+                          "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -449,21 +449,14 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "between",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "list-checks",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "list-checks"
                                 },
                                 {
                                   "content": "@config.title",
@@ -471,43 +464,64 @@
                                   "type": "typography"
                                 }
                               ],
+                              "gap": "sm",
                               "direction": "horizontal",
                               "type": "stack"
                             },
                             {
-                              "type": "button",
                               "label": "Add Question",
+                              "action": "ADD_QUESTION",
+                              "type": "button",
                               "variant": "primary",
-                              "icon": "plus",
-                              "action": "ADD_QUESTION"
+                              "icon": "plus"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "icon": "edit",
+                              "event": "UPDATE_QUESTION",
+                              "label": "Edit",
+                              "variant": "ghost"
+                            },
+                            {
+                              "event": "DELETE_QUESTION",
+                              "label": "Delete",
+                              "variant": "danger",
+                              "icon": "trash"
+                            }
+                          ],
                           "fields": [
                             {
-                              "name": "label",
                               "label": "Question",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "name": "label"
                             },
                             {
+                              "name": "kind",
                               "label": "Type",
-                              "variant": "badge",
-                              "name": "kind"
+                              "variant": "badge"
                             },
                             {
-                              "label": "Category",
                               "variant": "caption",
-                              "name": "category"
+                              "name": "category",
+                              "label": "Category"
                             },
                             {
+                              "name": "required",
                               "label": "Required",
-                              "variant": "badge",
-                              "name": "required"
+                              "variant": "badge"
                             },
                             {
                               "name": "order",
@@ -515,25 +529,11 @@
                               "label": "Order"
                             }
                           ],
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "variant": "ghost",
-                              "icon": "edit",
-                              "event": "UPDATE_QUESTION",
-                              "label": "Edit"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE_QUESTION",
-                              "variant": "destructive",
-                              "icon": "trash"
-                            }
-                          ],
-                          "type": "data-grid"
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -547,9 +547,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -625,8 +625,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionUpdated"
+                        "success": "QuestionUpdated",
+                        "failure": "QuestionLoadFailed"
                       }
                     }
                   ]
@@ -649,8 +649,8 @@
                     "@entity.id",
                     {
                       "emit": {
-                        "success": "QuestionDeleted",
-                        "failure": "QuestionLoadFailed"
+                        "failure": "QuestionLoadFailed",
+                        "success": "QuestionDeleted"
                       }
                     }
                   ]
@@ -716,75 +716,75 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "QuestionAdded",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "QuestionUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "QuestionDeleted",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "success": "QuestionLoaded",
-                        "failure": "QuestionLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "error",
-                "event": "QuestionLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "QuestionAdded",
+                "effects": [
+                  [
+                    "fetch",
+                    "Question",
+                    {
+                      "emit": {
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "QuestionUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Question",
+                    {
+                      "emit": {
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
+                "event": "QuestionDeleted",
+                "effects": [
+                  [
+                    "fetch",
+                    "Question",
+                    {
+                      "emit": {
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "error",
+                "event": "QuestionLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -800,8 +800,8 @@
                     "Question",
                     {
                       "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
                       }
                     }
                   ],

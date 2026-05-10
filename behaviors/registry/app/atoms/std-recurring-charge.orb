@@ -638,10 +638,10 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
-                      "type": "stack",
                       "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
@@ -649,9 +649,9 @@
                         },
                         {
                           "color": "muted",
-                          "content": "Loading subscriptions…",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Loading subscriptions…"
                         }
                       ]
                     }
@@ -669,9 +669,10 @@
                     {
                       "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "repeat",
@@ -683,15 +684,34 @@
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "icon": "credit-card",
+                              "event": "CHARGE",
+                              "label": "Charge"
+                            },
+                            {
+                              "icon": "calculator",
+                              "label": "Prorate",
+                              "variant": "secondary",
+                              "event": "PRORATE"
+                            },
+                            {
+                              "label": "Cancel",
+                              "icon": "x",
+                              "variant": "danger",
+                              "event": "CANCEL"
+                            }
+                          ],
                           "fields": [
                             {
                               "variant": "caption",
@@ -699,66 +719,46 @@
                               "label": "Customer"
                             },
                             {
+                              "variant": "caption",
                               "name": "planId",
-                              "label": "Plan",
-                              "variant": "caption"
+                              "label": "Plan"
                             },
                             {
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
-                            },
-                            {
-                              "name": "amount",
-                              "label": "Amount",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Currency",
-                              "variant": "caption",
-                              "name": "currency"
-                            },
-                            {
-                              "label": "Interval",
-                              "name": "interval",
+                              "name": "status",
                               "variant": "badge"
                             },
                             {
-                              "name": "nextBillingAt",
-                              "label": "Next Bill",
-                              "variant": "caption"
+                              "label": "Amount",
+                              "variant": "caption",
+                              "name": "amount"
                             },
                             {
                               "variant": "caption",
+                              "name": "currency",
+                              "label": "Currency"
+                            },
+                            {
+                              "label": "Interval",
+                              "variant": "badge",
+                              "name": "interval"
+                            },
+                            {
+                              "name": "nextBillingAt",
+                              "variant": "caption",
+                              "label": "Next Bill"
+                            },
+                            {
                               "name": "attemptCount",
-                              "label": "Retries"
+                              "label": "Retries",
+                              "variant": "caption"
                             }
                           ],
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "icon": "credit-card",
-                              "event": "CHARGE",
-                              "variant": "primary",
-                              "label": "Charge"
-                            },
-                            {
-                              "label": "Prorate",
-                              "event": "PRORATE",
-                              "variant": "secondary",
-                              "icon": "calculator"
-                            },
-                            {
-                              "event": "CANCEL",
-                              "variant": "destructive",
-                              "label": "Cancel",
-                              "icon": "x"
-                            }
-                          ],
-                          "cols": 1.0,
-                          "entity": "@payload.data"
+                          "gap": "sm",
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -772,8 +772,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert"
                     }
                   ]
@@ -859,14 +859,14 @@
                     "stripe-charge",
                     "charge",
                     {
-                      "subscriptionId": "@payload.subscriptionId",
+                      "amount": "@entity.amount",
                       "currency": "@entity.currency",
-                      "amount": "@entity.amount"
+                      "subscriptionId": "@payload.subscriptionId"
                     },
                     {
                       "emit": {
-                        "success": "ChargeSucceeded",
-                        "failure": "ChargeFailed"
+                        "failure": "ChargeFailed",
+                        "success": "ChargeSucceeded"
                       }
                     }
                   ],
@@ -874,22 +874,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Charging subscription…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "content": "Charging subscription…"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -988,8 +988,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "SubscriptionUpdated",
-                        "failure": "ChargeFailed"
+                        "failure": "ChargeFailed",
+                        "success": "SubscriptionUpdated"
                       }
                     }
                   ]
@@ -1093,9 +1093,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Subscription updated",
                       "variant": "success",
-                      "type": "alert",
-                      "message": "Subscription updated"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -1192,8 +1192,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "success": "SubscriptionLoaded",
-                        "failure": "SubscriptionLoadFailed"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ]
@@ -1220,8 +1220,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ChargeFailed",
-                        "success": "SubscriptionUpdated"
+                        "success": "SubscriptionUpdated",
+                        "failure": "ChargeFailed"
                       }
                     }
                   ],
@@ -1229,9 +1229,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -1246,8 +1246,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "success": "SubscriptionLoaded",
-                        "failure": "SubscriptionLoadFailed"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ],
@@ -1264,13 +1264,13 @@
             ]
           },
           "config": {
-            "maxRetries": {
-              "type": "number",
-              "default": 4.0
-            },
             "title": {
               "type": "string",
               "default": "Subscriptions"
+            },
+            "maxRetries": {
+              "type": "number",
+              "default": 4.0
             }
           },
           "scope": "collection"

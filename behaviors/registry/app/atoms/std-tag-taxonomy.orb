@@ -171,8 +171,8 @@
                     "Tag",
                     {
                       "emit": {
-                        "failure": "TagLoadFailed",
-                        "success": "TagLoaded"
+                        "success": "TagLoaded",
+                        "failure": "TagLoadFailed"
                       }
                     }
                   ],
@@ -181,21 +181,21 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Loading categories…",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
                       "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -209,7 +209,7 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
@@ -218,6 +218,13 @@
                           "type": "typography"
                         },
                         {
+                          "itemActions": [
+                            {
+                              "icon": "chevron-right",
+                              "label": "Open",
+                              "event": "SELECT_TAG"
+                            }
+                          ],
                           "entity": "@payload.data",
                           "type": "data-grid",
                           "fields": [
@@ -229,17 +236,10 @@
                               "name": "count",
                               "label": "Items"
                             }
-                          ],
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "event": "SELECT_TAG",
-                              "icon": "chevron-right"
-                            }
                           ]
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -278,54 +278,35 @@
                     }
                   ],
                   [
+                    "fetch",
+                    "Tag",
+                    {
+                      "emit": {
+                        "success": "TagLoaded",
+                        "failure": "TagLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "label": "Back",
-                              "action": "INIT",
-                              "variant": "ghost",
-                              "type": "button",
-                              "icon": "chevron-left"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
-                            }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "type": "spinner"
                         },
                         {
-                          "entity": "@entity.id",
-                          "itemActions": [
-                            {
-                              "event": "SELECT_TAG",
-                              "icon": "chevron-right",
-                              "label": "Open"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "label": "Name",
-                              "name": "name"
-                            },
-                            {
-                              "label": "Items",
-                              "name": "count"
-                            }
-                          ],
-                          "type": "data-grid"
+                          "content": "Loading children…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -341,11 +322,12 @@
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "@config.title"
                         },
                         {
+                          "type": "data-grid",
                           "fields": [
                             {
                               "label": "Name",
@@ -356,20 +338,19 @@
                               "label": "Items"
                             }
                           ],
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "icon": "chevron-right",
                               "event": "SELECT_TAG",
                               "label": "Open"
                             }
-                          ],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
+                          ]
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -383,9 +364,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -409,22 +390,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
+                          "type": "typography",
                           "content": "Loading categories…",
-                          "type": "typography"
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -469,37 +450,37 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "@config.title",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "entity": "@payload.data",
                           "type": "data-grid",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Open",
                               "event": "SELECT_TAG",
+                              "label": "Open",
                               "icon": "chevron-right"
                             }
                           ],
                           "fields": [
                             {
-                              "name": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "name": "name"
                             },
                             {
-                              "name": "count",
-                              "label": "Items"
+                              "label": "Items",
+                              "name": "count"
                             }
                           ]
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -513,9 +494,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -530,8 +511,8 @@
                     "Tag",
                     {
                       "emit": {
-                        "success": "TagLoaded",
-                        "failure": "TagLoadFailed"
+                        "failure": "TagLoadFailed",
+                        "success": "TagLoaded"
                       }
                     }
                   ],
@@ -539,22 +520,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading categories…",
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
                       "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]

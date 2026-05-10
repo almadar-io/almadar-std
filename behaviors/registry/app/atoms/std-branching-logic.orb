@@ -510,8 +510,8 @@
                     "BranchingRule",
                     {
                       "emit": {
-                        "success": "BranchingRuleLoaded",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleLoaded"
                       }
                     }
                   ],
@@ -519,22 +519,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "gap": "md",
+                      "align": "center",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading branching rules…",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -548,11 +548,11 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "git-branch",
@@ -563,20 +563,34 @@
                               "variant": "h3",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "rules": "@payload.data",
+                          "questions": [],
                           "type": "branching-logic-builder",
-                          "questions": []
+                          "rules": "@payload.data"
                         },
                         {
+                          "itemActions": [
+                            {
+                              "label": "Edit",
+                              "variant": "secondary",
+                              "icon": "pencil",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Delete",
+                              "icon": "trash-2",
+                              "variant": "danger",
+                              "event": "DELETE_RULE"
+                            }
+                          ],
                           "type": "data-grid",
-                          "entity": "@payload.data",
-                          "cols": 1.0,
                           "fields": [
                             {
                               "name": "sourceQuestionId",
@@ -584,12 +598,12 @@
                             },
                             {
                               "name": "operator",
-                              "label": "Op",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "label": "Op"
                             },
                             {
-                              "label": "Value",
-                              "name": "value"
+                              "name": "value",
+                              "label": "Value"
                             },
                             {
                               "label": "Jump to",
@@ -601,33 +615,19 @@
                               "label": "Priority"
                             }
                           ],
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Edit",
-                              "variant": "secondary",
-                              "event": "EDIT",
-                              "icon": "pencil"
-                            },
-                            {
-                              "event": "DELETE_RULE",
-                              "icon": "trash-2",
-                              "variant": "destructive",
-                              "label": "Delete"
-                            }
-                          ]
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "gap": "sm"
                         },
                         {
-                          "action": "ADD_RULE",
-                          "icon": "plus",
-                          "type": "button",
                           "variant": "primary",
-                          "label": "Add rule"
+                          "type": "button",
+                          "icon": "plus",
+                          "label": "Add rule",
+                          "action": "ADD_RULE"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -641,9 +641,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -660,8 +660,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "BranchingRuleAdded",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleAdded"
                       }
                     }
                   ]
@@ -681,42 +681,42 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "pencil"
+                              "name": "pencil",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "content": "Edit branching rule",
                               "type": "typography",
-                              "content": "Edit branching rule"
+                              "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "Source question id",
+                          "action": "EDIT_SOURCE",
                           "value": "@entity.sourceQuestionId",
-                          "action": "EDIT_SOURCE"
+                          "type": "input",
+                          "placeholder": "Source question id"
                         },
                         {
-                          "type": "select",
+                          "placeholder": "Operator",
                           "value": "@entity.operator",
                           "options": [
                             {
-                              "label": "Equals",
-                              "value": "equals"
+                              "value": "equals",
+                              "label": "Equals"
                             },
                             {
                               "value": "not-equals",
@@ -731,41 +731,41 @@
                               "label": "In"
                             }
                           ],
-                          "placeholder": "Operator",
-                          "action": "EDIT_OPERATOR"
+                          "action": "EDIT_OPERATOR",
+                          "type": "select"
                         },
                         {
-                          "type": "input",
                           "placeholder": "Value",
-                          "action": "EDIT_VALUE",
-                          "value": "@entity.value"
-                        },
-                        {
+                          "value": "@entity.value",
                           "type": "input",
-                          "value": "@entity.targetQuestionId",
-                          "placeholder": "Target question id",
-                          "action": "EDIT_TARGET"
+                          "action": "EDIT_VALUE"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "action": "EDIT_TARGET",
+                          "placeholder": "Target question id",
+                          "type": "input",
+                          "value": "@entity.targetQuestionId"
+                        },
+                        {
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Save",
-                              "type": "button",
-                              "icon": "check",
+                              "action": "UPDATE_RULE",
                               "variant": "primary",
-                              "action": "UPDATE_RULE"
+                              "label": "Save",
+                              "icon": "check",
+                              "type": "button"
                             },
                             {
                               "label": "Cancel",
-                              "variant": "secondary",
                               "icon": "x",
                               "type": "button",
+                              "variant": "secondary",
                               "action": "CANCEL"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ]
                     }
@@ -823,8 +823,8 @@
                     "BranchingRule",
                     {
                       "emit": {
-                        "success": "BranchingRuleLoaded",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleLoaded"
                       }
                     }
                   ]
@@ -856,9 +856,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -953,8 +953,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "BranchingRuleUpdated",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleUpdated"
                       }
                     }
                   ]
@@ -987,8 +987,8 @@
                     "BranchingRule",
                     {
                       "emit": {
-                        "success": "BranchingRuleLoaded",
-                        "failure": "BranchingRuleLoadFailed"
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleLoaded"
                       }
                     }
                   ]
