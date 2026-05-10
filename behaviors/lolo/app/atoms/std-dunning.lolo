@@ -46,7 +46,7 @@ orbital DunningCaseOrbital {
         (set @entity.nextRetryAt @payload.row.nextRetryAt)
         (set @entity.amountDue @payload.row.amountDue)
         (set @entity.currency @payload.row.currency)
-        (render-ui main { type: "dunning-banner", severity: @entity.severity, attemptNumber: @entity.attemptNumber, attemptsTotal: @entity.attemptsTotal, failedAt: @entity.failedAt, nextRetryAt: @entity.nextRetryAt, amountDue: @entity.amountDue, currency: @entity.currency, dismissible: false })
+        (render-ui main { type: "alert", variant: "warning", title: "Payment failed", message: "Attempt @entity.attemptNumber of @entity.attemptsTotal — amount @entity.amountDue @entity.currency. Next retry @entity.nextRetryAt.", dismissible: false })
         (persist update DunningCase @entity { emit: { success: "DunningCaseUpdated", failure: "DunningCaseUpdateFailed" } })
       RESOLVE -> escalating
         (set @entity.id @payload.id)

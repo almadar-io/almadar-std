@@ -560,22 +560,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Loading dunning cases…",
+                          "type": "typography",
                           "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -589,27 +589,33 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": [
                             {
                               "name": "subscriptionId",
@@ -617,9 +623,9 @@
                               "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "customerId",
-                              "label": "Customer",
-                              "variant": "caption"
+                              "label": "Customer"
                             },
                             {
                               "variant": "badge",
@@ -628,13 +634,13 @@
                             },
                             {
                               "label": "Attempt",
-                              "variant": "caption",
-                              "name": "attemptNumber"
+                              "name": "attemptNumber",
+                              "variant": "caption"
                             },
                             {
                               "label": "Amount Due",
-                              "variant": "caption",
-                              "name": "amountDue"
+                              "name": "amountDue",
+                              "variant": "caption"
                             },
                             {
                               "name": "status",
@@ -642,35 +648,29 @@
                               "variant": "badge"
                             }
                           ],
+                          "gap": "sm",
                           "itemActions": [
                             {
-                              "label": "Escalate",
                               "variant": "primary",
                               "icon": "arrow-up",
-                              "event": "ESCALATE"
+                              "event": "ESCALATE",
+                              "label": "Escalate"
                             },
                             {
+                              "event": "RESOLVE",
                               "label": "Resolve",
                               "variant": "secondary",
-                              "event": "RESOLVE",
                               "icon": "check"
                             },
                             {
-                              "variant": "destructive",
                               "label": "Suspend",
+                              "icon": "ban",
                               "event": "SUSPEND",
-                              "icon": "ban"
+                              "variant": "destructive"
                             }
-                          ],
-                          "cols": 1.0,
-                          "type": "data-grid",
-                          "gap": "sm",
-                          "entity": "@payload.data"
+                          ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -684,8 +684,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert"
                     }
                   ]
@@ -759,15 +759,11 @@
                     "render-ui",
                     "main",
                     {
-                      "currency": "@entity.currency",
-                      "amountDue": "@entity.amountDue",
-                      "type": "dunning-banner",
-                      "attemptsTotal": "@entity.attemptsTotal",
-                      "attemptNumber": "@entity.attemptNumber",
-                      "severity": "@entity.severity",
-                      "failedAt": "@entity.failedAt",
-                      "nextRetryAt": "@entity.nextRetryAt",
-                      "dismissible": false
+                      "variant": "warning",
+                      "message": "Attempt @entity.attemptNumber of @entity.attemptsTotal — amount @entity.amountDue @entity.currency. Next retry @entity.nextRetryAt.",
+                      "dismissible": false,
+                      "title": "Payment failed",
+                      "type": "alert"
                     }
                   ],
                   [
@@ -777,8 +773,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "DunningCaseUpdateFailed",
-                        "success": "DunningCaseUpdated"
+                        "success": "DunningCaseUpdated",
+                        "failure": "DunningCaseUpdateFailed"
                       }
                     }
                   ]
@@ -885,8 +881,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert"
                     }
                   ]
