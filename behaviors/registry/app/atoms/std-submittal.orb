@@ -1,0 +1,921 @@
+{
+  "name": "std-submittal",
+  "version": "1.0.0",
+  "description": "std-submittal — construction submittal primitive tracking material/equipment samples reviewed and approved before installation.",
+  "orbitals": [
+    {
+      "name": "SubmittalOrbital",
+      "entity": {
+        "name": "Submittal",
+        "collection": "submittals",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "submittalNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "specSection",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "contractor",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "reviewer",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "submitted",
+              "in-review",
+              "approved",
+              "rejected",
+              "revise-resubmit"
+            ]
+          },
+          {
+            "name": "revisionNumber",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "submittedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "reviewedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "comments",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SubmittalReview",
+          "category": "interaction",
+          "linkedEntity": "Submittal",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.submittalNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.specSection",
+                  "type": "string"
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.contractor",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewer",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.revisionNumber",
+                  "type": "number"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comments",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.submittalNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.specSection",
+                  "type": "string"
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.contractor",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewer",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.revisionNumber",
+                  "type": "number"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comments",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.submittalNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.specSection",
+                  "type": "string"
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.contractor",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewer",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.revisionNumber",
+                  "type": "number"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comments",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SubmittalLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Submittal]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "SubmittalLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SubmittalLoaded",
+                "name": "Submittal loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Submittal]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "SubmittalLoadFailed",
+                "name": "Submittal load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "APPROVE",
+                "name": "Approve",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REJECT",
+                "name": "Reject",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_REVISION",
+                "name": "Request Revision",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Submittal",
+                    {
+                      "emit": {
+                        "success": "SubmittalLoaded",
+                        "failure": "SubmittalLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading submittals…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "SubmittalLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "name": "file-text",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "@config.title",
+                                  "variant": "h3",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "button",
+                              "label": "New Submittal",
+                              "action": "CREATE",
+                              "actionPayload": {
+                                "source": "header"
+                              },
+                              "variant": "primary"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "name": "submittalNumber",
+                              "label": "Number",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Spec Section",
+                              "variant": "caption",
+                              "name": "specSection"
+                            },
+                            {
+                              "name": "title",
+                              "label": "Title",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Contractor",
+                              "variant": "caption",
+                              "name": "contractor"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "revisionNumber",
+                              "label": "Rev",
+                              "variant": "caption"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "variant": "ghost",
+                              "label": "View"
+                            },
+                            {
+                              "event": "EDIT",
+                              "label": "Edit",
+                              "variant": "secondary"
+                            },
+                            {
+                              "variant": "primary",
+                              "event": "APPROVE",
+                              "label": "Approve"
+                            },
+                            {
+                              "label": "Reject",
+                              "event": "REJECT",
+                              "variant": "danger"
+                            },
+                            {
+                              "variant": "secondary",
+                              "event": "REQUEST_REVISION",
+                              "label": "Revise"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE",
+                              "variant": "ghost"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "SubmittalLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "type": "alert",
+                      "message": "Submittal submitted for review"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "APPROVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "success",
+                      "message": "Submittal approved"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REJECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "Submittal rejected",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_REVISION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "warning",
+                      "message": "Revision requested",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "type": "alert",
+                      "message": "Creating new submittal"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Submittal",
+                    {
+                      "emit": {
+                        "success": "SubmittalLoaded",
+                        "failure": "SubmittalLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Searching submittals",
+                      "type": "alert",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Filtering by status",
+                      "variant": "info",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Viewing submittal",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Editing submittal"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "warning",
+                      "message": "Delete requested"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Submittal",
+                    {
+                      "emit": {
+                        "success": "SubmittalLoaded",
+                        "failure": "SubmittalLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Submittals"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SubmittalPage",
+          "path": "/submittals",
+          "traits": [
+            {
+              "ref": "SubmittalReview"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

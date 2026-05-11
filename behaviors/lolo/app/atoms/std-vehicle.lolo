@@ -1,0 +1,104 @@
+app std-vehicle "1.0.0"
+"std-vehicle — fleet vehicle primitive tracking make/model/year, VIN, license plate, odometer, status, and assigned driver."
+
+orbital VehicleOrbital {
+  entity Vehicle [persistent: vehicles] {
+    id               : string!
+    vin              : string!
+    licensePlate     : string!
+    make             : string = ""
+    model            : string = ""
+    year             : number = 2020
+    vehicleType      : "car" | "truck" | "van" | "trailer" | "motorcycle" = "car"
+    odometer         : number = 0
+    fuelType         : "gasoline" | "diesel" | "electric" | "hybrid" = "gasoline"
+    status           : "active" | "maintenance" | "retired" | "in-transit" = "active"
+    assignedDriverId : string = ""
+    pendingId        : string = ""
+  }
+
+  type VehicleLoaded     = Event { data : [Vehicle], totalCount : number }   "Fired when the vehicle collection finishes loading"
+  type VehicleLoadFailed = Event { error : string, code : string }           "Fired when the vehicle collection fails to load"
+
+  trait VehicleFleet -> Vehicle [interaction, collection] {
+    config {
+      title : string = "Fleet"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading vehicles…" }] })
+      VehicleLoaded -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "truck" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "New Vehicle", variant: "primary", action: "CREATE" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "licensePlate", label: "Plate", variant: "caption" }, { name: "make", label: "Make", variant: "caption" }, { name: "model", label: "Model", variant: "caption" }, { name: "year", label: "Year", variant: "caption" }, { name: "vehicleType", label: "Type", variant: "badge" }, { name: "odometer", label: "Odometer", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "assignedDriverId", label: "Driver", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Assign Driver", event: "ASSIGN_DRIVER", variant: "primary" }, { label: "Maintenance", event: "MARK_MAINTENANCE", variant: "secondary" }, { label: "Retire", event: "RETIRE", variant: "ghost" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      VehicleLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state viewing {
+      REFRESH -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing vehicles…" }] })
+      SEARCH -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching vehicles…" }] })
+      FILTER_STATUS -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering vehicles…" }] })
+      FILTER_TYPE -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering vehicles…" }] })
+      RETIRE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Vehicle retired" })
+      MARK_MAINTENANCE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Vehicle marked for maintenance" })
+      ASSIGN_DRIVER -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Driver assigned" })
+      CREATE -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Creating new vehicle" })
+      VIEW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Viewing vehicle" })
+      EDIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Editing vehicle" })
+      REQUEST_DELETE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW              { id : string!, source : string }
+      EDIT              { id : string!, source : string }
+      CREATE            { source : string }
+      REQUEST_DELETE    { id : string!, source : string }
+      RETIRE            { id : string!, row : Vehicle }
+      MARK_MAINTENANCE  { id : string!, row : Vehicle }
+      ASSIGN_DRIVER     { id : string!, row : Vehicle }
+      VehicleLoaded     { data : [Vehicle], totalCount : number }
+      VehicleLoadFailed { error : string, code : string }
+    }
+    listens {
+      VIEW              { id : string! }
+      EDIT              { id : string! }
+      CREATE            { source : string }
+      REQUEST_DELETE    { id : string! }
+      RETIRE            { id : string! }
+      MARK_MAINTENANCE  { id : string! }
+      ASSIGN_DRIVER     { id : string! }
+      REFRESH           { source : string }
+      SEARCH            { query : string }
+      FILTER_STATUS     { status : string }
+      FILTER_TYPE       { vehicleType : string }
+      VehicleLoaded     { data : [Vehicle], totalCount : number }
+      VehicleLoadFailed { error : string, code : string }
+    }
+  }
+  page "/vehicles" as VehiclePage -> VehicleFleet
+}

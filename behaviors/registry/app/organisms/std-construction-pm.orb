@@ -1,0 +1,915 @@
+{
+  "name": "std-construction-pm",
+  "version": "1.0.0",
+  "description": "Construction Project Management: active projects with RFIs, submittals, and change orders. Procore-pattern for GCs and construction PMs.",
+  "orbitals": [
+    {
+      "name": "ProjectOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-rfi",
+          "as": "Rfi"
+        },
+        {
+          "from": "std/behaviors/std-submittal",
+          "as": "Submittal"
+        },
+        {
+          "from": "std/behaviors/std-change-order",
+          "as": "ChangeOrder"
+        }
+      ],
+      "entity": {
+        "name": "ConstructionProject",
+        "collection": "constructionprojects",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "jobNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "client",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "on-hold",
+              "completed",
+              "cancelled"
+            ]
+          },
+          {
+            "name": "startDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetEndDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "budgetUsd",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "projectManager",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ProjectAppLayout",
+          "config": {
+            "appName": "Construction PM",
+            "navItems": [
+              {
+                "label": "Projects",
+                "icon": "briefcase",
+                "href": "/projects"
+              },
+              {
+                "label": "RFIs",
+                "icon": "help-circle",
+                "href": "/rfis"
+              },
+              {
+                "label": "Submittals",
+                "href": "/submittals",
+                "icon": "file-text"
+              },
+              {
+                "href": "/change-orders",
+                "label": "Change Orders",
+                "icon": "edit-3"
+              }
+            ],
+            "searchEvent": "PROJECT_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "PROJECT_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.ProjectCatalog"
+          },
+          "events": {
+            "SEARCH": "PROJECT_SEARCH",
+            "NOTIFY_CLICK": "PROJECT_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "ProjectCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "PROJECT_SEARCH",
+              "triggers": "PROJECT_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectAppLayout"
+              }
+            },
+            {
+              "event": "PROJECT_NOTIFICATIONS_OPEN",
+              "triggers": "PROJECT_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PROJECT_SEARCH",
+                "name": "Project Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROJECT_NOTIFICATIONS_OPEN",
+                "name": "Project Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "briefcase"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Projects",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "label": "New Project",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            "@trait.ProjectSearch",
+                            "@trait.ProjectFilter"
+                          ]
+                        },
+                        "@trait.ProjectStats",
+                        "@trait.ProjectGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ProjectBrowseList"
+                      ],
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "PROJECT_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "PROJECT_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "action": "INIT",
+                          "label": "Back to projects",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "className": "py-8",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "ProjectSearch",
+          "config": {
+            "event": "PROJECT_SEARCH",
+            "placeholder": "Search projects…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "ProjectFilter",
+          "config": {
+            "filters": [
+              {
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "active",
+                  "on-hold",
+                  "completed",
+                  "cancelled"
+                ],
+                "filterType": "select"
+              }
+            ],
+            "event": "PROJECT_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "ProjectStats",
+          "config": {
+            "metrics": [
+              {
+                "label": "Total",
+                "aggregation": "count",
+                "variant": "primary",
+                "format": "number",
+                "icon": "briefcase"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "variant": "success",
+                "icon": "check-circle",
+                "aggregation": "count",
+                "format": "number",
+                "label": "Active"
+              },
+              {
+                "icon": "pause-circle",
+                "format": "number",
+                "aggregation": "count",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "on-hold"
+                  ]
+                ],
+                "label": "On Hold"
+              },
+              {
+                "field": "budgetUsd",
+                "icon": "dollar-sign",
+                "format": "number",
+                "variant": "info",
+                "aggregation": "sum",
+                "label": "Total Budget"
+              }
+            ],
+            "title": "Projects"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "ProjectGraphs",
+          "config": {
+            "categoryField": "status",
+            "height": 240.0,
+            "aggregation": "count",
+            "title": "Projects by Status",
+            "subtitle": "Portfolio composition across project statuses",
+            "showLegend": false,
+            "chartType": "bar"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "ProjectBrowseList",
+          "linkedEntity": "ConstructionProject",
+          "config": {
+            "gap": "sm",
+            "cols": 1.0,
+            "fields": [
+              {
+                "icon": "briefcase",
+                "variant": "h3",
+                "name": "name"
+              },
+              {
+                "name": "jobNumber",
+                "variant": "caption"
+              },
+              {
+                "name": "client",
+                "variant": "caption"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "projectManager",
+                "variant": "caption"
+              }
+            ],
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectFilter"
+              }
+            },
+            {
+              "event": "PROJECT_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectPersistor"
+              }
+            },
+            {
+              "event": "PROJECT_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectPersistor"
+              }
+            },
+            {
+              "event": "PROJECT_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ProjectCreate",
+          "linkedEntity": "ConstructionProject",
+          "config": {
+            "title": "New Project",
+            "icon": "plus-circle",
+            "mode": "create",
+            "fields": [
+              "name",
+              "jobNumber",
+              "client",
+              "status",
+              "startDate",
+              "targetEndDate",
+              "budgetUsd",
+              "projectManager"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ProjectEdit",
+          "linkedEntity": "ConstructionProject",
+          "config": {
+            "icon": "edit",
+            "title": "Edit Project",
+            "fields": [
+              "name",
+              "jobNumber",
+              "client",
+              "status",
+              "startDate",
+              "targetEndDate",
+              "budgetUsd",
+              "projectManager"
+            ],
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ProjectView",
+          "linkedEntity": "ConstructionProject",
+          "config": {
+            "mode": "edit",
+            "icon": "eye",
+            "title": "View Project",
+            "fields": [
+              "name",
+              "jobNumber",
+              "client",
+              "status",
+              "startDate",
+              "targetEndDate",
+              "budgetUsd",
+              "projectManager"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "ProjectDelete",
+          "linkedEntity": "ConstructionProject",
+          "config": {
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
+            "title": "Delete Project",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ProjectPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "ConstructionProject",
+          "emits": [
+            {
+              "event": "PROJECT_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PROJECT_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PROJECT_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ProjectDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROJECT_CREATED",
+                "name": "Project Created"
+              },
+              {
+                "key": "PROJECT_UPDATED",
+                "name": "Project Updated"
+              },
+              {
+                "key": "PROJECT_DELETED",
+                "name": "Project Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ConstructionProject",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PROJECT_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "ConstructionProject",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PROJECT_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "ConstructionProject",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "PROJECT_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ProjectsPage",
+          "path": "/projects",
+          "traits": [
+            {
+              "ref": "ProjectAppLayout"
+            },
+            {
+              "ref": "ProjectCatalog"
+            },
+            {
+              "ref": "ProjectSearch"
+            },
+            {
+              "ref": "ProjectFilter"
+            },
+            {
+              "ref": "ProjectStats"
+            },
+            {
+              "ref": "ProjectGraphs"
+            },
+            {
+              "ref": "ProjectBrowseList"
+            },
+            {
+              "ref": "ProjectCreate"
+            },
+            {
+              "ref": "ProjectEdit"
+            },
+            {
+              "ref": "ProjectView"
+            },
+            {
+              "ref": "ProjectDelete"
+            },
+            {
+              "ref": "ProjectPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

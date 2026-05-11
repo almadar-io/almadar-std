@@ -1,0 +1,846 @@
+{
+  "name": "std-help-category",
+  "version": "1.0.0",
+  "description": "std-help-category — Help center category directory grouping articles into sections like Getting Started, Billing, API Reference.",
+  "orbitals": [
+    {
+      "name": "HelpCategoryOrbital",
+      "entity": {
+        "name": "HelpCategory",
+        "collection": "helpcategories",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "slug",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "icon",
+            "type": "string",
+            "default": "folder"
+          },
+          {
+            "name": "sortOrder",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "articleCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "published",
+              "draft",
+              "archived"
+            ]
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HelpCategoryDirectory",
+          "category": "interaction",
+          "linkedEntity": "HelpCategory",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PUBLISH",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.icon",
+                  "type": "string"
+                },
+                {
+                  "name": "row.sortOrder",
+                  "type": "number"
+                },
+                {
+                  "name": "row.articleCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ARCHIVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.icon",
+                  "type": "string"
+                },
+                {
+                  "name": "row.sortOrder",
+                  "type": "number"
+                },
+                {
+                  "name": "row.articleCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HelpCategoryLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[HelpCategory]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "HelpCategoryLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HelpCategoryLoaded",
+                "name": "HelpCategory loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[HelpCategory]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "HelpCategoryLoadFailed",
+                "name": "HelpCategory load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PUBLISH",
+                "name": "Publish",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ARCHIVE",
+                "name": "Archive",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpCategory",
+                    {
+                      "emit": {
+                        "failure": "HelpCategoryLoadFailed",
+                        "success": "HelpCategoryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading help categories…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "HelpCategoryLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "folder"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@config.title"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "New Category",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "variant": "secondary",
+                              "event": "VIEW"
+                            },
+                            {
+                              "label": "Edit",
+                              "variant": "secondary",
+                              "event": "EDIT"
+                            },
+                            {
+                              "variant": "primary",
+                              "event": "PUBLISH",
+                              "label": "Publish"
+                            },
+                            {
+                              "label": "Archive",
+                              "event": "ARCHIVE",
+                              "variant": "ghost"
+                            },
+                            {
+                              "label": "Delete",
+                              "variant": "danger",
+                              "event": "REQUEST_DELETE"
+                            }
+                          ],
+                          "gap": "sm",
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "name": "name",
+                              "label": "Name"
+                            },
+                            {
+                              "label": "Slug",
+                              "name": "slug",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Articles",
+                              "name": "articleCount"
+                            },
+                            {
+                              "label": "Order",
+                              "name": "sortOrder",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Status",
+                              "name": "status"
+                            },
+                            {
+                              "name": "updatedAt",
+                              "label": "Updated",
+                              "variant": "caption"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "HelpCategoryLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.message",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpCategory",
+                    {
+                      "emit": {
+                        "success": "HelpCategoryLoaded",
+                        "failure": "HelpCategoryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Refreshing help categories…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpCategory",
+                    {
+                      "emit": {
+                        "failure": "HelpCategoryLoadFailed",
+                        "success": "HelpCategoryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Searching help categories…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpCategory",
+                    {
+                      "emit": {
+                        "failure": "HelpCategoryLoadFailed",
+                        "success": "HelpCategoryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Filtering help categories…"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Creating new help category",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "type": "alert",
+                      "message": "Viewing help category"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Editing help category",
+                      "variant": "info",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "PUBLISH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "message": "Help category published",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "ARCHIVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Help category archived"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "Delete requested",
+                      "variant": "warning"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpCategory",
+                    {
+                      "emit": {
+                        "success": "HelpCategoryLoaded",
+                        "failure": "HelpCategoryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Help Categories"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HelpCategoryPage",
+          "path": "/help-categories",
+          "traits": [
+            {
+              "ref": "HelpCategoryDirectory"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,895 @@
+{
+  "name": "std-fleet-mgmt",
+  "version": "1.0.0",
+  "description": "Fleet Management: vehicles, drivers, maintenance, and telematics for operations and supply-chain teams running a vehicle fleet.",
+  "orbitals": [
+    {
+      "name": "FleetOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-vehicle",
+          "as": "Vehicle"
+        },
+        {
+          "from": "std/behaviors/std-driver",
+          "as": "Driver"
+        },
+        {
+          "from": "std/behaviors/std-telematics-event",
+          "as": "TelematicsEvent"
+        }
+      ],
+      "entity": {
+        "name": "Fleet",
+        "collection": "fleets",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "region",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "vehicleCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "driverCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "merging",
+              "archived"
+            ]
+          },
+          {
+            "name": "managedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "FleetAppLayout",
+          "config": {
+            "notificationClickEvent": "FLEET_NOTIFICATIONS_OPEN",
+            "navItems": [
+              {
+                "label": "Fleets",
+                "href": "/fleets",
+                "icon": "truck"
+              },
+              {
+                "icon": "truck",
+                "href": "/vehicles",
+                "label": "Vehicles"
+              },
+              {
+                "icon": "users",
+                "label": "Drivers",
+                "href": "/drivers"
+              },
+              {
+                "href": "/telematics-events",
+                "label": "Events",
+                "icon": "activity"
+              }
+            ],
+            "searchEvent": "FLEET_SEARCH",
+            "appName": "Fleet Manager",
+            "contentTrait": "@trait.FleetCatalog",
+            "notifications": []
+          },
+          "events": {
+            "SEARCH": "FLEET_SEARCH",
+            "NOTIFY_CLICK": "FLEET_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "FleetCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "FLEET_SEARCH",
+              "triggers": "FLEET_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetAppLayout"
+              }
+            },
+            {
+              "event": "FLEET_NOTIFICATIONS_OPEN",
+              "triggers": "FLEET_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FLEET_SEARCH",
+                "name": "Fleet Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FLEET_NOTIFICATIONS_OPEN",
+                "name": "Fleet Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "truck"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Fleets"
+                                }
+                              ],
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "label": "New Fleet",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            }
+                          ],
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            "@trait.FleetSearch",
+                            "@trait.FleetFilter"
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        "@trait.FleetStats",
+                        "@trait.FleetGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.FleetBrowseList"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "FLEET_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "FLEET_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-8",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Back to fleets",
+                          "action": "INIT",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "FleetSearch",
+          "config": {
+            "placeholder": "Search fleets…",
+            "event": "FLEET_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "FleetFilter",
+          "config": {
+            "filters": [
+              {
+                "field": "status",
+                "options": [
+                  "active",
+                  "inactive",
+                  "merging",
+                  "archived"
+                ],
+                "label": "Status",
+                "filterType": "select"
+              }
+            ],
+            "event": "FLEET_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "FleetStats",
+          "config": {
+            "metrics": [
+              {
+                "aggregation": "count",
+                "label": "Total",
+                "format": "number",
+                "icon": "truck",
+                "variant": "primary"
+              },
+              {
+                "aggregation": "count",
+                "label": "Active",
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "icon": "check-circle",
+                "format": "number"
+              },
+              {
+                "aggregation": "sum",
+                "label": "Vehicles",
+                "variant": "info",
+                "format": "number",
+                "field": "vehicleCount",
+                "icon": "truck"
+              },
+              {
+                "icon": "users",
+                "aggregation": "sum",
+                "label": "Drivers",
+                "variant": "info",
+                "format": "number",
+                "field": "driverCount"
+              }
+            ],
+            "title": "Fleets"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "FleetGraphs",
+          "config": {
+            "showLegend": false,
+            "title": "Fleets by Status",
+            "subtitle": "Operational composition across fleet statuses",
+            "chartType": "bar",
+            "categoryField": "status",
+            "aggregation": "count",
+            "height": 240.0
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "FleetBrowseList",
+          "linkedEntity": "Fleet",
+          "config": {
+            "gap": "sm",
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "fields": [
+              {
+                "variant": "h3",
+                "name": "name",
+                "icon": "truck"
+              },
+              {
+                "variant": "caption",
+                "name": "region"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "caption",
+                "name": "vehicleCount"
+              },
+              {
+                "variant": "caption",
+                "name": "driverCount"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetFilter"
+              }
+            },
+            {
+              "event": "FLEET_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetPersistor"
+              }
+            },
+            {
+              "event": "FLEET_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetPersistor"
+              }
+            },
+            {
+              "event": "FLEET_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "FleetCreate",
+          "linkedEntity": "Fleet",
+          "config": {
+            "mode": "create",
+            "icon": "plus-circle",
+            "fields": [
+              "name",
+              "description",
+              "region",
+              "status",
+              "managedBy"
+            ],
+            "title": "New Fleet"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "FleetEdit",
+          "linkedEntity": "Fleet",
+          "config": {
+            "fields": [
+              "name",
+              "description",
+              "region",
+              "status",
+              "managedBy"
+            ],
+            "title": "Edit Fleet",
+            "icon": "edit",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "FleetView",
+          "linkedEntity": "Fleet",
+          "config": {
+            "icon": "eye",
+            "title": "View Fleet",
+            "fields": [
+              "name",
+              "description",
+              "region",
+              "status",
+              "managedBy",
+              "vehicleCount",
+              "driverCount"
+            ],
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "FleetDelete",
+          "linkedEntity": "Fleet",
+          "config": {
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
+            "title": "Delete Fleet",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "FleetPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Fleet",
+          "emits": [
+            {
+              "event": "FLEET_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "FLEET_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "FLEET_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "FleetDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FLEET_CREATED",
+                "name": "Fleet Created"
+              },
+              {
+                "key": "FLEET_UPDATED",
+                "name": "Fleet Updated"
+              },
+              {
+                "key": "FLEET_DELETED",
+                "name": "Fleet Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Fleet",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "FLEET_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Fleet",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "FLEET_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Fleet",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "FLEET_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FleetsPage",
+          "path": "/fleets",
+          "traits": [
+            {
+              "ref": "FleetAppLayout"
+            },
+            {
+              "ref": "FleetCatalog"
+            },
+            {
+              "ref": "FleetSearch"
+            },
+            {
+              "ref": "FleetFilter"
+            },
+            {
+              "ref": "FleetStats"
+            },
+            {
+              "ref": "FleetGraphs"
+            },
+            {
+              "ref": "FleetBrowseList"
+            },
+            {
+              "ref": "FleetCreate"
+            },
+            {
+              "ref": "FleetEdit"
+            },
+            {
+              "ref": "FleetView"
+            },
+            {
+              "ref": "FleetDelete"
+            },
+            {
+              "ref": "FleetPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

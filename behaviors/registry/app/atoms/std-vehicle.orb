@@ -1,0 +1,1051 @@
+{
+  "name": "std-vehicle",
+  "version": "1.0.0",
+  "description": "std-vehicle — fleet vehicle primitive tracking make/model/year, VIN, license plate, odometer, status, and assigned driver.",
+  "orbitals": [
+    {
+      "name": "VehicleOrbital",
+      "entity": {
+        "name": "Vehicle",
+        "collection": "vehicles",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "vin",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "licensePlate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "make",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "year",
+            "type": "number",
+            "default": 2020.0
+          },
+          {
+            "name": "vehicleType",
+            "type": "string",
+            "default": "car",
+            "values": [
+              "car",
+              "truck",
+              "van",
+              "trailer",
+              "motorcycle"
+            ]
+          },
+          {
+            "name": "odometer",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "fuelType",
+            "type": "string",
+            "default": "gasoline",
+            "values": [
+              "gasoline",
+              "diesel",
+              "electric",
+              "hybrid"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "maintenance",
+              "retired",
+              "in-transit"
+            ]
+          },
+          {
+            "name": "assignedDriverId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "VehicleFleet",
+          "category": "interaction",
+          "linkedEntity": "Vehicle",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RETIRE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.vin",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licensePlate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.make",
+                  "type": "string"
+                },
+                {
+                  "name": "row.model",
+                  "type": "string"
+                },
+                {
+                  "name": "row.year",
+                  "type": "number"
+                },
+                {
+                  "name": "row.vehicleType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.odometer",
+                  "type": "number"
+                },
+                {
+                  "name": "row.fuelType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedDriverId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MARK_MAINTENANCE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.vin",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licensePlate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.make",
+                  "type": "string"
+                },
+                {
+                  "name": "row.model",
+                  "type": "string"
+                },
+                {
+                  "name": "row.year",
+                  "type": "number"
+                },
+                {
+                  "name": "row.vehicleType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.odometer",
+                  "type": "number"
+                },
+                {
+                  "name": "row.fuelType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedDriverId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ASSIGN_DRIVER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.vin",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licensePlate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.make",
+                  "type": "string"
+                },
+                {
+                  "name": "row.model",
+                  "type": "string"
+                },
+                {
+                  "name": "row.year",
+                  "type": "number"
+                },
+                {
+                  "name": "row.vehicleType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.odometer",
+                  "type": "number"
+                },
+                {
+                  "name": "row.fuelType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedDriverId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "VehicleLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Vehicle]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "VehicleLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VehicleLoaded",
+                "name": "Vehicle loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Vehicle]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "VehicleLoadFailed",
+                "name": "Vehicle load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_TYPE",
+                "name": "Filter Type",
+                "payloadSchema": [
+                  {
+                    "name": "vehicleType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RETIRE",
+                "name": "Retire",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MARK_MAINTENANCE",
+                "name": "Mark Maintenance",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ASSIGN_DRIVER",
+                "name": "Assign Driver",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vehicle",
+                    {
+                      "emit": {
+                        "failure": "VehicleLoadFailed",
+                        "success": "VehicleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading vehicles…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "VehicleLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "truck",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "action": "CREATE",
+                              "label": "New Vehicle",
+                              "variant": "primary",
+                              "type": "button"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "name": "licensePlate",
+                              "label": "Plate"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "make",
+                              "label": "Make"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Model",
+                              "name": "model"
+                            },
+                            {
+                              "label": "Year",
+                              "variant": "caption",
+                              "name": "year"
+                            },
+                            {
+                              "name": "vehicleType",
+                              "label": "Type",
+                              "variant": "badge"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Odometer",
+                              "name": "odometer"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "assignedDriverId",
+                              "label": "Driver",
+                              "variant": "caption"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "variant": "secondary",
+                              "event": "VIEW",
+                              "label": "View"
+                            },
+                            {
+                              "label": "Edit",
+                              "variant": "secondary",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Assign Driver",
+                              "event": "ASSIGN_DRIVER",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Maintenance",
+                              "event": "MARK_MAINTENANCE"
+                            },
+                            {
+                              "label": "Retire",
+                              "event": "RETIRE",
+                              "variant": "ghost"
+                            },
+                            {
+                              "event": "REQUEST_DELETE",
+                              "label": "Delete",
+                              "variant": "danger"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "VehicleLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vehicle",
+                    {
+                      "emit": {
+                        "failure": "VehicleLoadFailed",
+                        "success": "VehicleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Refreshing vehicles…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vehicle",
+                    {
+                      "emit": {
+                        "success": "VehicleLoaded",
+                        "failure": "VehicleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Searching vehicles…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vehicle",
+                    {
+                      "emit": {
+                        "success": "VehicleLoaded",
+                        "failure": "VehicleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Filtering vehicles…",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_TYPE",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vehicle",
+                    {
+                      "emit": {
+                        "success": "VehicleLoaded",
+                        "failure": "VehicleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Filtering vehicles…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "RETIRE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "type": "alert",
+                      "message": "Vehicle retired"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "MARK_MAINTENANCE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Vehicle marked for maintenance",
+                      "variant": "warning",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "ASSIGN_DRIVER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "message": "Driver assigned",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Creating new vehicle"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Viewing vehicle",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Editing vehicle"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "warning",
+                      "message": "Delete requested",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Vehicle",
+                    {
+                      "emit": {
+                        "failure": "VehicleLoadFailed",
+                        "success": "VehicleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Fleet"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "VehiclePage",
+          "path": "/vehicles",
+          "traits": [
+            {
+              "ref": "VehicleFleet"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

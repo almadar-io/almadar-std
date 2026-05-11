@@ -1,0 +1,926 @@
+{
+  "name": "std-time-tracking",
+  "version": "1.0.0",
+  "description": "Time Tracking: employees, timesheets, time entries, billable hours, and approvals. Pick for HR / operations teams tracking workforce hours.",
+  "orbitals": [
+    {
+      "name": "EmployeeOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-timesheet",
+          "as": "Timesheet"
+        },
+        {
+          "from": "std/behaviors/std-time-entry",
+          "as": "TimeEntry"
+        },
+        {
+          "from": "std/behaviors/std-billable-hour",
+          "as": "BillableHour"
+        },
+        {
+          "from": "std/behaviors/std-approval-request",
+          "as": "ApprovalRequest"
+        }
+      ],
+      "entity": {
+        "name": "Employee",
+        "collection": "employees",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "department",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "on-leave",
+              "terminated"
+            ]
+          },
+          {
+            "name": "hireDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "defaultHourlyRate",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "EmployeeAppLayout",
+          "config": {
+            "navItems": [
+              {
+                "icon": "users",
+                "href": "/employees",
+                "label": "Employees"
+              },
+              {
+                "icon": "calendar",
+                "label": "Timesheets",
+                "href": "/timesheets"
+              },
+              {
+                "label": "Time Entries",
+                "icon": "clock",
+                "href": "/time-entries"
+              },
+              {
+                "icon": "dollar-sign",
+                "href": "/billable-hours",
+                "label": "Billable Hours"
+              },
+              {
+                "href": "/approvals",
+                "icon": "check-circle",
+                "label": "Approvals"
+              }
+            ],
+            "appName": "Time Tracking",
+            "searchEvent": "EMPLOYEE_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "EMPLOYEE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.EmployeeCatalog"
+          },
+          "events": {
+            "NOTIFY_CLICK": "EMPLOYEE_NOTIFICATIONS_OPEN",
+            "SEARCH": "EMPLOYEE_SEARCH"
+          }
+        },
+        {
+          "name": "EmployeeCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "EMPLOYEE_SEARCH",
+              "triggers": "EMPLOYEE_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeAppLayout"
+              }
+            },
+            {
+              "event": "EMPLOYEE_NOTIFICATIONS_OPEN",
+              "triggers": "EMPLOYEE_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EMPLOYEE_SEARCH",
+                "name": "Employee Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "EMPLOYEE_NOTIFICATIONS_OPEN",
+                "name": "Employee Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "users"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Employees"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "label": "New Employee",
+                                  "icon": "plus",
+                                  "action": "CREATE"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            "@trait.EmployeeSearch",
+                            "@trait.EmployeeFilter"
+                          ],
+                          "type": "stack"
+                        },
+                        "@trait.EmployeeStats",
+                        "@trait.EmployeeGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.EmployeeBrowseList"
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "EMPLOYEE_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "EMPLOYEE_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-8",
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "label": "Back to employees"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "EmployeeSearch",
+          "config": {
+            "event": "EMPLOYEE_SEARCH",
+            "placeholder": "Search employees…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "EmployeeFilter",
+          "config": {
+            "event": "EMPLOYEE_FILTER",
+            "filters": [
+              {
+                "label": "Department",
+                "filterType": "select",
+                "field": "department",
+                "options": [
+                  "engineering",
+                  "sales",
+                  "operations",
+                  "hr",
+                  "finance"
+                ]
+              },
+              {
+                "field": "status",
+                "label": "Status",
+                "options": [
+                  "active",
+                  "on-leave",
+                  "terminated"
+                ],
+                "filterType": "select"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "EmployeeStats",
+          "config": {
+            "metrics": [
+              {
+                "label": "Total",
+                "format": "number",
+                "variant": "primary",
+                "icon": "users",
+                "aggregation": "count"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "variant": "success",
+                "aggregation": "count",
+                "icon": "check-circle",
+                "label": "Active",
+                "format": "number"
+              },
+              {
+                "variant": "warning",
+                "aggregation": "count",
+                "label": "On Leave",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "on-leave"
+                  ]
+                ],
+                "icon": "pause-circle"
+              },
+              {
+                "label": "Avg Rate",
+                "icon": "dollar-sign",
+                "field": "defaultHourlyRate",
+                "variant": "info",
+                "format": "currency",
+                "aggregation": "avg"
+              }
+            ],
+            "title": "Employees"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "EmployeeGraphs",
+          "config": {
+            "showLegend": false,
+            "chartType": "bar",
+            "categoryField": "department",
+            "title": "Employees by Department",
+            "aggregation": "count",
+            "subtitle": "Workforce distribution across departments",
+            "height": 240.0
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "EmployeeBrowseList",
+          "linkedEntity": "Employee",
+          "config": {
+            "gap": "sm",
+            "fields": [
+              {
+                "name": "name",
+                "variant": "h3",
+                "icon": "user"
+              },
+              {
+                "name": "role",
+                "variant": "caption"
+              },
+              {
+                "name": "department",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "defaultHourlyRate",
+                "variant": "caption"
+              }
+            ],
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeFilter"
+              }
+            },
+            {
+              "event": "EMPLOYEE_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeePersistor"
+              }
+            },
+            {
+              "event": "EMPLOYEE_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeePersistor"
+              }
+            },
+            {
+              "event": "EMPLOYEE_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "EmployeeCreate",
+          "linkedEntity": "Employee",
+          "config": {
+            "title": "New Employee",
+            "mode": "create",
+            "fields": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "status",
+              "hireDate",
+              "defaultHourlyRate"
+            ],
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "EmployeeEdit",
+          "linkedEntity": "Employee",
+          "config": {
+            "icon": "edit",
+            "title": "Edit Employee",
+            "fields": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "status",
+              "hireDate",
+              "defaultHourlyRate"
+            ],
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "EmployeeView",
+          "linkedEntity": "Employee",
+          "config": {
+            "mode": "edit",
+            "fields": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "status",
+              "hireDate",
+              "defaultHourlyRate"
+            ],
+            "title": "View Employee",
+            "icon": "eye"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "EmployeeDelete",
+          "linkedEntity": "Employee",
+          "config": {
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
+            "title": "Delete Employee"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "EmployeePersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Employee",
+          "emits": [
+            {
+              "event": "EMPLOYEE_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EMPLOYEE_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EMPLOYEE_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "EmployeeDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "EMPLOYEE_CREATED",
+                "name": "Employee Created"
+              },
+              {
+                "key": "EMPLOYEE_UPDATED",
+                "name": "Employee Updated"
+              },
+              {
+                "key": "EMPLOYEE_DELETED",
+                "name": "Employee Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Employee",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "EMPLOYEE_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Employee",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "EMPLOYEE_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Employee",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "EMPLOYEE_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EmployeesPage",
+          "path": "/employees",
+          "traits": [
+            {
+              "ref": "EmployeeAppLayout"
+            },
+            {
+              "ref": "EmployeeCatalog"
+            },
+            {
+              "ref": "EmployeeSearch"
+            },
+            {
+              "ref": "EmployeeFilter"
+            },
+            {
+              "ref": "EmployeeStats"
+            },
+            {
+              "ref": "EmployeeGraphs"
+            },
+            {
+              "ref": "EmployeeBrowseList"
+            },
+            {
+              "ref": "EmployeeCreate"
+            },
+            {
+              "ref": "EmployeeEdit"
+            },
+            {
+              "ref": "EmployeeView"
+            },
+            {
+              "ref": "EmployeeDelete"
+            },
+            {
+              "ref": "EmployeePersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

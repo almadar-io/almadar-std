@@ -1,0 +1,1064 @@
+{
+  "name": "std-driver",
+  "version": "1.0.0",
+  "description": "std-driver — fleet driver primitive tracking license info, hire date, status, and currently-assigned vehicle.",
+  "orbitals": [
+    {
+      "name": "DriverOrbital",
+      "entity": {
+        "name": "Driver",
+        "collection": "drivers",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "licenseNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "licenseClass",
+            "type": "string",
+            "default": "C",
+            "values": [
+              "A",
+              "B",
+              "C",
+              "CDL-A",
+              "CDL-B",
+              "CDL-C"
+            ]
+          },
+          {
+            "name": "licenseExpiresAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "hiredAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "on-leave",
+              "terminated",
+              "suspended"
+            ]
+          },
+          {
+            "name": "assignedVehicleId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DriverRoster",
+          "category": "interaction",
+          "linkedEntity": "Driver",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SUSPEND",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseClass",
+                  "type": "string"
+                },
+                {
+                  "name": "row.licenseExpiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.hiredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedVehicleId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REINSTATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseClass",
+                  "type": "string"
+                },
+                {
+                  "name": "row.licenseExpiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.hiredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedVehicleId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TERMINATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseClass",
+                  "type": "string"
+                },
+                {
+                  "name": "row.licenseExpiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.hiredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedVehicleId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ASSIGN_VEHICLE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.licenseClass",
+                  "type": "string"
+                },
+                {
+                  "name": "row.licenseExpiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.hiredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedVehicleId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DriverLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Driver]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "DriverLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DriverLoaded",
+                "name": "Driver loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Driver]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "DriverLoadFailed",
+                "name": "Driver load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SUSPEND",
+                "name": "Suspend",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINSTATE",
+                "name": "Reinstate",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TERMINATE",
+                "name": "Terminate",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ASSIGN_VEHICLE",
+                "name": "Assign Vehicle",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "failure": "DriverLoadFailed",
+                        "success": "DriverLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading drivers…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "DriverLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "truck",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "New Driver",
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "label": "Name",
+                              "name": "name"
+                            },
+                            {
+                              "name": "licenseNumber",
+                              "label": "License #",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "licenseClass",
+                              "label": "Class",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "licenseExpiresAt",
+                              "label": "Expires",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Status",
+                              "name": "status"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "assignedVehicleId",
+                              "label": "Vehicle"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "variant": "secondary",
+                              "label": "View"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Edit",
+                              "event": "EDIT"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Suspend",
+                              "event": "SUSPEND"
+                            },
+                            {
+                              "label": "Reinstate",
+                              "variant": "secondary",
+                              "event": "REINSTATE"
+                            },
+                            {
+                              "label": "Terminate",
+                              "event": "TERMINATE",
+                              "variant": "danger"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "Assign Vehicle",
+                              "event": "ASSIGN_VEHICLE"
+                            },
+                            {
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger",
+                              "label": "Delete"
+                            }
+                          ],
+                          "cols": 1.0
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "DriverLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "success": "DriverLoaded",
+                        "failure": "DriverLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Refreshing drivers…",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "failure": "DriverLoadFailed",
+                        "success": "DriverLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Searching drivers…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "success": "DriverLoaded",
+                        "failure": "DriverLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Filtering drivers…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "SUSPEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "warning",
+                      "message": "Driver suspended"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REINSTATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "type": "alert",
+                      "message": "Driver reinstated"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "TERMINATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Driver terminated",
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "ASSIGN_VEHICLE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Vehicle assigned",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "Creating new driver",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Viewing driver"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Editing driver",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "warning",
+                      "message": "Delete requested"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "failure": "DriverLoadFailed",
+                        "success": "DriverLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Drivers"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DriverPage",
+          "path": "/drivers",
+          "traits": [
+            {
+              "ref": "DriverRoster"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

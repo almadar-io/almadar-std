@@ -1,0 +1,272 @@
+app std-notes "1.0.0"
+"Notes: Notion-style personal hierarchical notes with rich-text content, page tree, search, and favorites. Pick for personal/lightweight notes (vs std-wiki for collaborative team KB)."
+
+orbital NoteOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
+  uses PageTree     from "std/behaviors/std-page-tree"
+  uses RichEditor   from "std/behaviors/std-rich-editor"
+
+  entity Note [persistent: notes] {
+    id           : string!
+    title        : string!
+    content      : string = ""
+    blocksJson   : [object]
+    parentId     : string = ""
+    path         : string = ""
+    icon         : string = "file-text"
+    isFavorite   : boolean = false
+    lastEditedAt : string = ""
+    createdAt    : string = ""
+    pendingId    : string = ""
+  }
+
+  trait NoteAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.NoteCatalog",
+      appName: "Notes",
+      navItems: [
+        { label: "Notes",     href: "/notes",           icon: "file-text" },
+        { label: "Tree",      href: "/notes/tree",      icon: "list-tree" },
+        { label: "Editor",    href: "/notes/editor",    icon: "edit" },
+        { label: "Favorites", href: "/notes/favorites", icon: "star" }
+      ],
+      searchEvent: "NOTE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "NOTE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: NOTE_SEARCH
+      NOTIFY_CLICK: NOTE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait NoteCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "file-text" },
+              { type: "typography", content: "Notes", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Note", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.NoteSearch",
+            "@trait.NoteFilter"
+          ]},
+          "@trait.NoteStats",
+          "@trait.NoteGraphs",
+          { type: "divider" },
+          "@trait.NoteBrowseList"
+        ]})
+      NOTE_SEARCH -> composing
+      NOTE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to notes", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      NoteAppLayout.NOTE_SEARCH             -> NOTE_SEARCH
+      NoteAppLayout.NOTE_NOTIFICATIONS_OPEN -> NOTE_NOTIFICATIONS_OPEN
+      NOTE_SEARCH { value : string }
+      NOTE_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait NoteSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search notes…",
+      event: "NOTE_FULLTEXT_SEARCH"
+    }
+  }
+
+  trait NoteFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "isFavorite", label: "Favorite", filterType: "select", options: ["true", "false"] }
+      ],
+      event: "NOTE_FILTER"
+    }
+  }
+
+  trait NoteStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Notes",
+      metrics: [
+        { aggregation: "count", label: "Total",      icon: "file-text", variant: "primary", format: "number" },
+        { aggregation: "count", label: "Favorites",  icon: "star",      variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.isFavorite", true]] },
+        { aggregation: "count", label: "Top-level",  icon: "folder",    variant: "info",    format: "number", filter: ["fn", "row", ["=", "@row.parentId", ""]] }
+      ]
+    }
+    listens {
+      NoteBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait NoteGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Notes by Icon",
+      subtitle: "Distribution of note icons across your tree",
+      chartType: "bar",
+      categoryField: "icon",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      NoteBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait NoteBrowseList = Browse.traits.BrowseItemBrowse -> Note {
+    config: {
+      fields: [
+        { name: "title",        variant: "h3",      icon: "file-text" },
+        { name: "icon",         variant: "badge" },
+        { name: "isFavorite",   variant: "badge" },
+        { name: "lastEditedAt", variant: "caption", label: "Edited" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      NoteSearch.SEARCH             -> REFETCH_QUERY
+      NoteFilter.FILTER             -> REFETCH_FILTER
+      NotePersistor.NOTE_CREATED    -> INIT
+      NotePersistor.NOTE_UPDATED    -> INIT
+      NotePersistor.NOTE_DELETED    -> INIT
+    }
+  }
+
+  trait NotePageTree = PageTree.traits.PageNodeBrowse {
+    config: {
+      title: "Note Tree"
+    }
+  }
+
+  trait NoteCreate = Modal.traits.ModalRecordModal -> Note {
+    config: {
+      icon: "plus-circle",
+      title: "New Note",
+      mode: "create",
+      fields: ["title", "content", "blocksJson", "parentId", "icon", "isFavorite"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      NoteCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Note }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait NoteEdit = Modal.traits.ModalRecordModal -> Note {
+    config: {
+      icon: "edit",
+      title: "Edit Note",
+      mode: "edit",
+      fields: ["title", "content", "blocksJson", "parentId", "icon", "isFavorite"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      NoteBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Note }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait NoteView = Modal.traits.ModalRecordModal -> Note {
+    config: {
+      icon: "eye",
+      title: "View Note",
+      mode: "edit",
+      fields: ["title", "content", "blocksJson", "icon", "isFavorite", "lastEditedAt"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      NoteBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Note }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait NoteDelete = Confirmation.traits.ConfirmActionConfirmation -> Note {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Note",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      NoteBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Note }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait NotePersistor -> Note [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Note @payload.data { emit: { success: "NOTE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Note @payload.data { emit: { success: "NOTE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Note @payload.id { emit: { success: "NOTE_DELETED" } })
+    }
+    emits {
+      NOTE_CREATED -> external { id : string }
+      NOTE_UPDATED -> external { id : string }
+      NOTE_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      NoteCreate.SAVE           -> DO_CREATE
+      NoteEdit.SAVE             -> DO_UPDATE
+      NoteDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/notes"           as NotesPage          -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
+  page "/notes/tree"      as NotesTreePage      -> NoteAppLayout, NotePageTree
+  page "/notes/editor"    as NotesEditorPage    -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
+  page "/notes/favorites" as NotesFavoritesPage -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
+}

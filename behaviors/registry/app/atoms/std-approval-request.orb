@@ -1,0 +1,1142 @@
+{
+  "name": "std-approval-request",
+  "version": "1.0.0",
+  "description": "std-approval-request — Generic approval step primitive for routing a target (timesheet, expense, PTO, etc.) through requestor + approver decisions.",
+  "orbitals": [
+    {
+      "name": "ApprovalRequestOrbital",
+      "entity": {
+        "name": "ApprovalRequest",
+        "collection": "approvalrequests",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetType",
+            "type": "string",
+            "default": "timesheet",
+            "values": [
+              "timesheet",
+              "expense-report",
+              "pto-request",
+              "purchase-order",
+              "change-order",
+              "other"
+            ]
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "requestedBy",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "requestedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "assignedApprover",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "approverDecision",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "pending",
+              "approved",
+              "rejected",
+              "needs-info"
+            ]
+          },
+          {
+            "name": "decidedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "comment",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "submitted",
+              "approved",
+              "rejected",
+              "withdrawn"
+            ]
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ApprovalRequestPipeline",
+          "category": "interaction",
+          "linkedEntity": "ApprovalRequest",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "APPROVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedBy",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedApprover",
+                  "type": "string"
+                },
+                {
+                  "name": "row.approverDecision",
+                  "type": "string"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comment",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REJECT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedBy",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedApprover",
+                  "type": "string"
+                },
+                {
+                  "name": "row.approverDecision",
+                  "type": "string"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comment",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_INFO",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedBy",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedApprover",
+                  "type": "string"
+                },
+                {
+                  "name": "row.approverDecision",
+                  "type": "string"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comment",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WITHDRAW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedBy",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedApprover",
+                  "type": "string"
+                },
+                {
+                  "name": "row.approverDecision",
+                  "type": "string"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.comment",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalRequestLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ApprovalRequest]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalRequestLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ApprovalRequestLoaded",
+                "name": "ApprovalRequest loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ApprovalRequest]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "ApprovalRequestLoadFailed",
+                "name": "ApprovalRequest load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_TYPE",
+                "name": "Filter Type",
+                "payloadSchema": [
+                  {
+                    "name": "targetType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "APPROVE",
+                "name": "Approve",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REJECT",
+                "name": "Reject",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_INFO",
+                "name": "Request Info",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "WITHDRAW",
+                "name": "Withdraw",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading approval requests…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "ApprovalRequestLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "check-circle",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "button",
+                              "action": "CREATE",
+                              "variant": "primary",
+                              "label": "New Approval Request"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "variant": "secondary",
+                              "event": "VIEW"
+                            },
+                            {
+                              "label": "Edit",
+                              "variant": "secondary",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Approve",
+                              "event": "APPROVE",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Reject",
+                              "event": "REJECT",
+                              "variant": "danger"
+                            },
+                            {
+                              "label": "Request Info",
+                              "event": "REQUEST_INFO",
+                              "variant": "ghost"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Withdraw",
+                              "event": "WITHDRAW"
+                            },
+                            {
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger",
+                              "label": "Delete"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "label": "Title",
+                              "name": "title",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Target",
+                              "variant": "badge",
+                              "name": "targetType"
+                            },
+                            {
+                              "name": "requestedBy",
+                              "variant": "caption",
+                              "label": "Requested By"
+                            },
+                            {
+                              "name": "assignedApprover",
+                              "label": "Approver",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "approverDecision",
+                              "variant": "badge",
+                              "label": "Decision"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            },
+                            {
+                              "name": "decidedAt",
+                              "label": "Decided",
+                              "variant": "caption"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ApprovalRequestLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.message",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Refreshing approval requests…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Searching approval requests…"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Filtering approval requests…",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_TYPE",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Filtering approval requests…",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Creating new approval request",
+                      "variant": "info",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Viewing approval request",
+                      "type": "alert",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Editing approval request",
+                      "variant": "info",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "APPROVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "success",
+                      "message": "Approval recorded"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REJECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "warning",
+                      "message": "Rejection recorded",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_INFO",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "More information requested",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "WITHDRAW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "Request withdrawn",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Delete requested",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Approval Requests"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ApprovalRequestPage",
+          "path": "/approval-requests",
+          "traits": [
+            {
+              "ref": "ApprovalRequestPipeline"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

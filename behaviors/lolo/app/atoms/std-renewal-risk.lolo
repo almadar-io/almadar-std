@@ -1,0 +1,99 @@
+app std-renewal-risk "1.0.0"
+"std-renewal-risk — Customer Success renewal risk tracker for upcoming subscriptions with risk level, ARR, and CS action plan."
+
+orbital RenewalRiskOrbital {
+  entity RenewalRisk [persistent: renewalrisks] {
+    id              : string!
+    customerId      : string!
+    customerName    : string = ""
+    renewalDate     : string!
+    arrAmount       : number = 0
+    riskLevel       : "low" | "medium" | "high" | "critical" = "low"
+    reason          : string = ""
+    mitigationPlan  : string = ""
+    status          : "monitoring" | "in-progress" | "saved" | "churned" = "monitoring"
+    assignedCsm     : string = ""
+    lastCheckIn     : string = ""
+    pendingId       : string = ""
+  }
+
+  type RenewalRiskLoaded     = Event { data : [RenewalRisk], totalCount : number } "Fired when the renewal risk collection finishes loading"
+  type RenewalRiskLoadFailed = Event { message : string }                           "Fired when the renewal risk collection fails to load"
+
+  trait RenewalRiskWatch -> RenewalRisk [interaction, collection] {
+    config {
+      title : string = "Renewal Risk"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading renewal risks…" }] })
+      RenewalRiskLoaded -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Track Renewal Risk", variant: "primary", action: "CREATE" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "customerName", label: "Customer", variant: "caption" }, { name: "renewalDate", label: "Renewal Date", variant: "caption" }, { name: "arrAmount", label: "ARR", variant: "caption" }, { name: "riskLevel", label: "Risk", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "assignedCsm", label: "CSM", variant: "caption" }, { name: "lastCheckIn", label: "Last Check-In", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Mark Saved", event: "MARK_SAVED", variant: "primary" }, { label: "Mark Churned", event: "MARK_CHURNED", variant: "ghost" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      RenewalRiskLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.message" })
+    }
+    state viewing {
+      REFRESH -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing renewal risks…" }] })
+      SEARCH -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching renewal risks…" }] })
+      FILTER_RISK -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering renewal risks…" }] })
+      FILTER_STATUS -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering renewal risks…" }] })
+      CREATE -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Tracking new renewal risk" })
+      VIEW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Viewing renewal risk" })
+      EDIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Editing renewal risk" })
+      MARK_SAVED -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Renewal saved" })
+      MARK_CHURNED -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Customer churned" })
+      REQUEST_DELETE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW                   { id : string!, source : string }
+      EDIT                   { id : string!, source : string }
+      CREATE                 { source : string }
+      REQUEST_DELETE         { id : string!, source : string }
+      MARK_SAVED             { id : string!, row : RenewalRisk }
+      MARK_CHURNED           { id : string!, row : RenewalRisk }
+      RenewalRiskLoaded      { data : [RenewalRisk], totalCount : number }
+      RenewalRiskLoadFailed  { message : string }
+    }
+    listens {
+      VIEW                   { id : string! }
+      EDIT                   { id : string! }
+      CREATE                 { source : string }
+      REQUEST_DELETE         { id : string! }
+      MARK_SAVED             { id : string! }
+      MARK_CHURNED           { id : string! }
+      REFRESH                { source : string }
+      SEARCH                 { query : string }
+      FILTER_RISK            { riskLevel : string }
+      FILTER_STATUS          { status : string }
+      RenewalRiskLoaded      { data : [RenewalRisk], totalCount : number }
+      RenewalRiskLoadFailed  { message : string }
+    }
+  }
+  page "/renewal-risks" as RenewalRiskPage -> RenewalRiskWatch
+}

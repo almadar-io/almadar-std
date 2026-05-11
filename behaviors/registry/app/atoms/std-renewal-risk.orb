@@ -1,0 +1,933 @@
+{
+  "name": "std-renewal-risk",
+  "version": "1.0.0",
+  "description": "std-renewal-risk — Customer Success renewal risk tracker for upcoming subscriptions with risk level, ARR, and CS action plan.",
+  "orbitals": [
+    {
+      "name": "RenewalRiskOrbital",
+      "entity": {
+        "name": "RenewalRisk",
+        "collection": "renewalrisks",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "renewalDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "arrAmount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "riskLevel",
+            "type": "string",
+            "default": "low",
+            "values": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "mitigationPlan",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "monitoring",
+            "values": [
+              "monitoring",
+              "in-progress",
+              "saved",
+              "churned"
+            ]
+          },
+          {
+            "name": "assignedCsm",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lastCheckIn",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "RenewalRiskWatch",
+          "category": "interaction",
+          "linkedEntity": "RenewalRisk",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MARK_SAVED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.renewalDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.arrAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.riskLevel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigationPlan",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedCsm",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCheckIn",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MARK_CHURNED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.renewalDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.arrAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.riskLevel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigationPlan",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedCsm",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCheckIn",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RenewalRiskLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[RenewalRisk]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "RenewalRiskLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RenewalRiskLoaded",
+                "name": "RenewalRisk loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[RenewalRisk]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RenewalRiskLoadFailed",
+                "name": "RenewalRisk load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_RISK",
+                "name": "Filter Risk",
+                "payloadSchema": [
+                  {
+                    "name": "riskLevel",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MARK_SAVED",
+                "name": "Mark Saved",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MARK_CHURNED",
+                "name": "Mark Churned",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "success": "RenewalRiskLoaded",
+                        "failure": "RenewalRiskLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading renewal risks…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "RenewalRiskLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "alert-triangle",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
+                            },
+                            {
+                              "label": "Track Renewal Risk",
+                              "variant": "primary",
+                              "action": "CREATE",
+                              "type": "button"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "variant": "secondary",
+                              "label": "View",
+                              "event": "VIEW"
+                            },
+                            {
+                              "label": "Edit",
+                              "event": "EDIT",
+                              "variant": "secondary"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "Mark Saved",
+                              "event": "MARK_SAVED"
+                            },
+                            {
+                              "label": "Mark Churned",
+                              "event": "MARK_CHURNED",
+                              "variant": "ghost"
+                            },
+                            {
+                              "label": "Delete",
+                              "variant": "danger",
+                              "event": "REQUEST_DELETE"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "fields": [
+                            {
+                              "name": "customerName",
+                              "variant": "caption",
+                              "label": "Customer"
+                            },
+                            {
+                              "name": "renewalDate",
+                              "label": "Renewal Date",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "arrAmount",
+                              "label": "ARR"
+                            },
+                            {
+                              "label": "Risk",
+                              "name": "riskLevel",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "assignedCsm",
+                              "label": "CSM"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Last Check-In",
+                              "name": "lastCheckIn"
+                            }
+                          ]
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "RenewalRiskLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.message",
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "success": "RenewalRiskLoaded",
+                        "failure": "RenewalRiskLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Refreshing renewal risks…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "success": "RenewalRiskLoaded",
+                        "failure": "RenewalRiskLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Searching renewal risks…"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_RISK",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "success": "RenewalRiskLoaded",
+                        "failure": "RenewalRiskLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Filtering renewal risks…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "failure": "RenewalRiskLoadFailed",
+                        "success": "RenewalRiskLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Filtering renewal risks…"
+                        }
+                      ],
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Tracking new renewal risk",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Viewing renewal risk",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Editing renewal risk"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "MARK_SAVED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "message": "Renewal saved",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "MARK_CHURNED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "warning",
+                      "message": "Customer churned"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Delete requested",
+                      "type": "alert",
+                      "variant": "warning"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "failure": "RenewalRiskLoadFailed",
+                        "success": "RenewalRiskLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Renewal Risk"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "RenewalRiskPage",
+          "path": "/renewal-risks",
+          "traits": [
+            {
+              "ref": "RenewalRiskWatch"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

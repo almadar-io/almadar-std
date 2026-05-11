@@ -1,0 +1,109 @@
+app std-approval-request "1.0.0"
+"std-approval-request — Generic approval step primitive for routing a target (timesheet, expense, PTO, etc.) through requestor + approver decisions."
+
+orbital ApprovalRequestOrbital {
+  entity ApprovalRequest [persistent: approvalrequests] {
+    id                : string!
+    title             : string!
+    targetType        : "timesheet" | "expense-report" | "pto-request" | "purchase-order" | "change-order" | "other" = "timesheet"
+    targetId          : string!
+    requestedBy       : string!
+    requestedAt       : string = ""
+    assignedApprover  : string = ""
+    approverDecision  : "pending" | "approved" | "rejected" | "needs-info" = "pending"
+    decidedAt         : string = ""
+    comment           : string = ""
+    status            : "draft" | "submitted" | "approved" | "rejected" | "withdrawn" = "draft"
+    pendingId         : string = ""
+  }
+
+  type ApprovalRequestLoaded     = Event { data : [ApprovalRequest], totalCount : number } "Fired when the approval request collection finishes loading"
+  type ApprovalRequestLoadFailed = Event { message : string }                                "Fired when the approval request collection fails to load"
+
+  trait ApprovalRequestPipeline -> ApprovalRequest [interaction, collection] {
+    config {
+      title : string = "Approval Requests"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading approval requests…" }] })
+      ApprovalRequestLoaded -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "New Approval Request", variant: "primary", action: "CREATE" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "targetType", label: "Target", variant: "badge" }, { name: "requestedBy", label: "Requested By", variant: "caption" }, { name: "assignedApprover", label: "Approver", variant: "caption" }, { name: "approverDecision", label: "Decision", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "decidedAt", label: "Decided", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Approve", event: "APPROVE", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }, { label: "Request Info", event: "REQUEST_INFO", variant: "ghost" }, { label: "Withdraw", event: "WITHDRAW", variant: "ghost" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      ApprovalRequestLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.message" })
+    }
+    state viewing {
+      REFRESH -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing approval requests…" }] })
+      SEARCH -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching approval requests…" }] })
+      FILTER_STATUS -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering approval requests…" }] })
+      FILTER_TYPE -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering approval requests…" }] })
+      CREATE -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Creating new approval request" })
+      VIEW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Viewing approval request" })
+      EDIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Editing approval request" })
+      APPROVE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Approval recorded" })
+      REJECT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Rejection recorded" })
+      REQUEST_INFO -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "More information requested" })
+      WITHDRAW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Request withdrawn" })
+      REQUEST_DELETE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW                       { id : string!, source : string }
+      EDIT                       { id : string!, source : string }
+      CREATE                     { source : string }
+      REQUEST_DELETE             { id : string!, source : string }
+      APPROVE                    { id : string!, row : ApprovalRequest }
+      REJECT                     { id : string!, row : ApprovalRequest }
+      REQUEST_INFO               { id : string!, row : ApprovalRequest }
+      WITHDRAW                   { id : string!, row : ApprovalRequest }
+      ApprovalRequestLoaded      { data : [ApprovalRequest], totalCount : number }
+      ApprovalRequestLoadFailed  { message : string }
+    }
+    listens {
+      VIEW                       { id : string! }
+      EDIT                       { id : string! }
+      CREATE                     { source : string }
+      REQUEST_DELETE             { id : string! }
+      APPROVE                    { id : string! }
+      REJECT                     { id : string! }
+      REQUEST_INFO               { id : string! }
+      WITHDRAW                   { id : string! }
+      REFRESH                    { source : string }
+      SEARCH                     { query : string }
+      FILTER_STATUS              { status : string }
+      FILTER_TYPE                { targetType : string }
+      ApprovalRequestLoaded      { data : [ApprovalRequest], totalCount : number }
+      ApprovalRequestLoadFailed  { message : string }
+    }
+  }
+  page "/approval-requests" as ApprovalRequestPage -> ApprovalRequestPipeline
+}

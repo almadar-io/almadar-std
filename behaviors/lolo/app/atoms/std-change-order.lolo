@@ -1,0 +1,99 @@
+app std-change-order "1.0.0"
+"std-change-order — construction change-order primitive tracking contract scope/cost/schedule modifications with owner approval."
+
+orbital ChangeOrderOrbital {
+  entity ChangeOrder [persistent: changeorders] {
+    id                  : string!
+    coNumber            : string!
+    description         : string!
+    reason              : string = ""
+    costImpact          : number = 0
+    scheduleImpactDays  : number = 0
+    status              : "draft" | "pending-approval" | "approved" | "rejected" | "executed" = "draft"
+    requestedBy         : string = ""
+    approvedBy          : string = ""
+    requestedAt         : string = ""
+    approvedAt          : string = ""
+    pendingId           : string = ""
+  }
+
+  type ChangeOrderLoaded     = Event { data : [ChangeOrder], totalCount : number } "Fired when the change-order collection finishes loading"
+  type ChangeOrderLoadFailed = Event { error : string, code : string }              "Fired when the change-order collection fails to load"
+
+  trait ChangeOrderLedger -> ChangeOrder [interaction, collection] {
+    config {
+      title : string = "Change Orders"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading change orders…" }] })
+      ChangeOrderLoaded -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "New Change Order", variant: "primary", action: "CREATE", actionPayload: { source: "header" } }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "coNumber", label: "CO #", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "costImpact", label: "Cost Impact", variant: "caption" }, { name: "scheduleImpactDays", label: "Days", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "requestedBy", label: "Requested By", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Submit", event: "SUBMIT_FOR_APPROVAL", variant: "primary" }, { label: "Approve", event: "APPROVE", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }, { label: "Delete", event: "REQUEST_DELETE", variant: "ghost" }] }] })
+      ChangeOrderLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state viewing {
+      SUBMIT_FOR_APPROVAL -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Change order submitted for approval" })
+      APPROVE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Change order approved" })
+      REJECT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "error", message: "Change order rejected" })
+      EXECUTE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Change order executed" })
+      CREATE -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Creating new change order" })
+      REFRESH -> loading
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      SEARCH -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Searching change orders" })
+      FILTER_STATUS -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Filtering by status" })
+      VIEW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Viewing change order" })
+      EDIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Editing change order" })
+      REQUEST_DELETE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW                  { id : string!, row : ChangeOrder }
+      EDIT                  { id : string!, row : ChangeOrder }
+      CREATE                { source : string! }
+      REQUEST_DELETE        { id : string!, row : ChangeOrder }
+      ChangeOrderLoaded     { data : [ChangeOrder], totalCount : number }
+      ChangeOrderLoadFailed { error : string, code : string }
+    }
+    listens {
+      VIEW                  { id : string! }
+      EDIT                  { id : string! }
+      CREATE                { source : string! }
+      REQUEST_DELETE        { id : string! }
+      SUBMIT_FOR_APPROVAL   { id : string! }
+      APPROVE               { id : string! }
+      REJECT                { id : string! }
+      EXECUTE               { id : string! }
+      REFRESH               {  }
+      SEARCH                { query : string! }
+      FILTER_STATUS         { status : string! }
+      ChangeOrderLoaded     { data : [ChangeOrder], totalCount : number }
+      ChangeOrderLoadFailed { error : string, code : string }
+    }
+  }
+  page "/change-orders" as ChangeOrderPage -> ChangeOrderLedger
+}

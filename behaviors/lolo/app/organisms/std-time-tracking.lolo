@@ -1,0 +1,261 @@
+app std-time-tracking "1.0.0"
+"Time Tracking: employees, timesheets, time entries, billable hours, and approvals. Pick for HR / operations teams tracking workforce hours."
+
+orbital EmployeeOrbital {
+  uses AppShell           from "std/behaviors/std-app-layout"
+  uses Modal              from "std/behaviors/std-modal"
+  uses Confirmation       from "std/behaviors/std-confirmation"
+  uses Search             from "std/behaviors/std-search"
+  uses Filter             from "std/behaviors/std-filter"
+  uses Stats              from "std/behaviors/std-stats"
+  uses Graphs             from "std/behaviors/std-graphs"
+  uses Browse             from "std/behaviors/std-browse"
+  uses Timesheet          from "std/behaviors/std-timesheet"
+  uses TimeEntry          from "std/behaviors/std-time-entry"
+  uses BillableHour       from "std/behaviors/std-billable-hour"
+  uses ApprovalRequest    from "std/behaviors/std-approval-request"
+
+  entity Employee [persistent: employees] {
+    id : string!
+    name : string!
+    email : string!
+    department : string!
+    role : string!
+    status : "active" | "on-leave" | "terminated" = "active"
+    hireDate : string!
+    defaultHourlyRate : number = 0
+    pendingId : string = ""
+  }
+
+  trait EmployeeAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.EmployeeCatalog",
+      appName: "Time Tracking",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "calendar" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable-hours", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
+      searchEvent: "EMPLOYEE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "EMPLOYEE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: EMPLOYEE_SEARCH
+      NOTIFY_CLICK: EMPLOYEE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait EmployeeCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "users" },
+              { type: "typography", content: "Employees", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Employee", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.EmployeeSearch",
+            "@trait.EmployeeFilter"
+          ]},
+          "@trait.EmployeeStats",
+          "@trait.EmployeeGraphs",
+          { type: "divider" },
+          "@trait.EmployeeBrowseList"
+        ]})
+      EMPLOYEE_SEARCH -> composing
+      EMPLOYEE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to employees", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      EmployeeAppLayout.EMPLOYEE_SEARCH             -> EMPLOYEE_SEARCH
+      EmployeeAppLayout.EMPLOYEE_NOTIFICATIONS_OPEN -> EMPLOYEE_NOTIFICATIONS_OPEN
+      EMPLOYEE_SEARCH { value : string }
+      EMPLOYEE_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait EmployeeSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search employees…",
+      event: "EMPLOYEE_SEARCH"
+    }
+  }
+
+  trait EmployeeFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "department", label: "Department", filterType: "select", options: ["engineering", "sales", "operations", "hr", "finance"] },
+        { field: "status",     label: "Status",     filterType: "select", options: ["active", "on-leave", "terminated"] }
+      ],
+      event: "EMPLOYEE_FILTER"
+    }
+  }
+
+  trait EmployeeStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Employees",
+      metrics: [
+        { aggregation: "count", label: "Total",      icon: "users",        variant: "primary", format: "number" },
+        { aggregation: "count", label: "Active",     icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "active"]] },
+        { aggregation: "count", label: "On Leave",   icon: "pause-circle", variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "on-leave"]] },
+        { aggregation: "avg",   label: "Avg Rate",   icon: "dollar-sign",  variant: "info",    format: "currency", field: "defaultHourlyRate" }
+      ]
+    }
+    listens {
+      EmployeeBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait EmployeeGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Employees by Department",
+      subtitle: "Workforce distribution across departments",
+      chartType: "bar",
+      categoryField: "department",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      EmployeeBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait EmployeeBrowseList = Browse.traits.BrowseItemBrowse -> Employee {
+    config: {
+      fields: [
+        { name: "name",              variant: "h3",      icon: "user" },
+        { name: "role",              variant: "caption" },
+        { name: "department",        variant: "badge" },
+        { name: "status",            variant: "badge" },
+        { name: "defaultHourlyRate", variant: "caption" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      EmployeeSearch.SEARCH               -> REFETCH_QUERY
+      EmployeeFilter.FILTER               -> REFETCH_FILTER
+      EmployeePersistor.EMPLOYEE_CREATED  -> INIT
+      EmployeePersistor.EMPLOYEE_UPDATED  -> INIT
+      EmployeePersistor.EMPLOYEE_DELETED  -> INIT
+    }
+  }
+
+  trait EmployeeCreate = Modal.traits.ModalRecordModal -> Employee {
+    config: {
+      icon: "plus-circle",
+      title: "New Employee",
+      mode: "create",
+      fields: ["name", "email", "department", "role", "status", "hireDate", "defaultHourlyRate"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      EmployeeCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Employee }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EmployeeEdit = Modal.traits.ModalRecordModal -> Employee {
+    config: {
+      icon: "edit",
+      title: "Edit Employee",
+      mode: "edit",
+      fields: ["name", "email", "department", "role", "status", "hireDate", "defaultHourlyRate"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      EmployeeBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Employee }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EmployeeView = Modal.traits.ModalRecordModal -> Employee {
+    config: {
+      icon: "eye",
+      title: "View Employee",
+      mode: "edit",
+      fields: ["name", "email", "department", "role", "status", "hireDate", "defaultHourlyRate"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      EmployeeBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Employee }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EmployeeDelete = Confirmation.traits.ConfirmActionConfirmation -> Employee {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Employee",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      EmployeeBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Employee }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait EmployeePersistor -> Employee [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Employee @payload.data { emit: { success: "EMPLOYEE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Employee @payload.data { emit: { success: "EMPLOYEE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Employee @payload.id { emit: { success: "EMPLOYEE_DELETED" } })
+    }
+    emits {
+      EMPLOYEE_CREATED -> external { id : string }
+      EMPLOYEE_UPDATED -> external { id : string }
+      EMPLOYEE_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      EmployeeCreate.SAVE           -> DO_CREATE
+      EmployeeEdit.SAVE             -> DO_UPDATE
+      EmployeeDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/employees" as EmployeesPage -> EmployeeAppLayout, EmployeeCatalog, EmployeeSearch, EmployeeFilter, EmployeeStats, EmployeeGraphs, EmployeeBrowseList, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete, EmployeePersistor
+}

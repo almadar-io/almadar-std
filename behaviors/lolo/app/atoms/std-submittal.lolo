@@ -1,0 +1,99 @@
+app std-submittal "1.0.0"
+"std-submittal — construction submittal primitive tracking material/equipment samples reviewed and approved before installation."
+
+orbital SubmittalOrbital {
+  entity Submittal [persistent: submittals] {
+    id              : string!
+    submittalNumber : string!
+    specSection     : string = ""
+    title           : string!
+    contractor      : string = ""
+    reviewer        : string = ""
+    status          : "draft" | "submitted" | "in-review" | "approved" | "rejected" | "revise-resubmit" = "draft"
+    revisionNumber  : number = 0
+    submittedAt     : string = ""
+    reviewedAt      : string = ""
+    comments        : string = ""
+    pendingId       : string = ""
+  }
+
+  type SubmittalLoaded     = Event { data : [Submittal], totalCount : number } "Fired when the submittal collection finishes loading"
+  type SubmittalLoadFailed = Event { error : string, code : string }           "Fired when the submittal collection fails to load"
+
+  trait SubmittalReview -> Submittal [interaction, collection] {
+    config {
+      title : string = "Submittals"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading submittals…" }] })
+      SubmittalLoaded -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "New Submittal", variant: "primary", action: "CREATE", actionPayload: { source: "header" } }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "submittalNumber", label: "Number", variant: "caption" }, { name: "specSection", label: "Spec Section", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "contractor", label: "Contractor", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "revisionNumber", label: "Rev", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Approve", event: "APPROVE", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }, { label: "Revise", event: "REQUEST_REVISION", variant: "secondary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "ghost" }] }] })
+      SubmittalLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state viewing {
+      SUBMIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Submittal submitted for review" })
+      APPROVE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Submittal approved" })
+      REJECT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "error", message: "Submittal rejected" })
+      REQUEST_REVISION -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Revision requested" })
+      CREATE -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Creating new submittal" })
+      REFRESH -> loading
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      SEARCH -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Searching submittals" })
+      FILTER_STATUS -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Filtering by status" })
+      VIEW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Viewing submittal" })
+      EDIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Editing submittal" })
+      REQUEST_DELETE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW                { id : string!, row : Submittal }
+      EDIT                { id : string!, row : Submittal }
+      CREATE              { source : string! }
+      REQUEST_DELETE      { id : string!, row : Submittal }
+      SubmittalLoaded     { data : [Submittal], totalCount : number }
+      SubmittalLoadFailed { error : string, code : string }
+    }
+    listens {
+      VIEW                { id : string! }
+      EDIT                { id : string! }
+      CREATE              { source : string! }
+      REQUEST_DELETE      { id : string! }
+      SUBMIT              { id : string! }
+      APPROVE             { id : string! }
+      REJECT              { id : string! }
+      REQUEST_REVISION    { id : string! }
+      REFRESH             {  }
+      SEARCH              { query : string! }
+      FILTER_STATUS       { status : string! }
+      SubmittalLoaded     { data : [Submittal], totalCount : number }
+      SubmittalLoadFailed { error : string, code : string }
+    }
+  }
+  page "/submittals" as SubmittalPage -> SubmittalReview
+}

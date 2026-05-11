@@ -1,0 +1,902 @@
+{
+  "name": "std-public-help-center",
+  "version": "1.0.0",
+  "description": "Public Help Center: admin-managed knowledge base with categories, articles, and public search. Pick for Zendesk Guide-style docs portals.",
+  "orbitals": [
+    {
+      "name": "HelpCenterOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-help-article",
+          "as": "HelpArticle"
+        },
+        {
+          "from": "std/behaviors/std-help-category",
+          "as": "HelpCategory"
+        }
+      ],
+      "entity": {
+        "name": "HelpCenter",
+        "collection": "helpcenters",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "slug",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "totalArticles",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "totalCategories",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "published",
+              "private"
+            ]
+          },
+          {
+            "name": "publishedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lastUpdatedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "HelpCenterAppLayout",
+          "config": {
+            "notifications": [],
+            "notificationClickEvent": "HELP_CENTER_NOTIFICATIONS_OPEN",
+            "appName": "Help Center",
+            "searchEvent": "HELP_CENTER_SEARCH",
+            "navItems": [
+              {
+                "label": "Help Centers",
+                "href": "/help-centers",
+                "icon": "life-buoy"
+              },
+              {
+                "label": "Articles",
+                "icon": "book-open",
+                "href": "/help-articles"
+              },
+              {
+                "href": "/help-categories",
+                "icon": "folder",
+                "label": "Categories"
+              }
+            ],
+            "contentTrait": "@trait.HelpCenterCatalog"
+          },
+          "events": {
+            "SEARCH": "HELP_CENTER_SEARCH",
+            "NOTIFY_CLICK": "HELP_CENTER_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "HelpCenterCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "HELP_CENTER_SEARCH",
+              "triggers": "HELP_CENTER_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterAppLayout"
+              }
+            },
+            {
+              "event": "HELP_CENTER_NOTIFICATIONS_OPEN",
+              "triggers": "HELP_CENTER_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HELP_CENTER_SEARCH",
+                "name": "Help Center Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HELP_CENTER_NOTIFICATIONS_OPEN",
+                "name": "Help Center Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "life-buoy"
+                                },
+                                {
+                                  "content": "Help Centers",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "action": "CREATE",
+                                  "label": "New Help Center",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "type": "button"
+                                }
+                              ]
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            "@trait.HelpCenterSearch",
+                            "@trait.HelpCenterFilter"
+                          ]
+                        },
+                        "@trait.HelpCenterStats",
+                        "@trait.HelpCenterGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.HelpCenterBrowseList"
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "HELP_CENTER_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "HELP_CENTER_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "variant": "caption"
+                        },
+                        {
+                          "label": "Back to help centers",
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "type": "button"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-8"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "HelpCenterSearch",
+          "config": {
+            "event": "HELP_CENTER_SEARCH",
+            "placeholder": "Search help centers…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "HelpCenterFilter",
+          "config": {
+            "filters": [
+              {
+                "filterType": "select",
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "draft",
+                  "published",
+                  "private"
+                ]
+              }
+            ],
+            "event": "HELP_CENTER_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "HelpCenterStats",
+          "config": {
+            "metrics": [
+              {
+                "variant": "primary",
+                "icon": "life-buoy",
+                "label": "Total",
+                "aggregation": "count",
+                "format": "number"
+              },
+              {
+                "aggregation": "count",
+                "label": "Published",
+                "icon": "check-circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "published"
+                  ]
+                ],
+                "variant": "success",
+                "format": "number"
+              },
+              {
+                "label": "Draft",
+                "format": "number",
+                "icon": "edit",
+                "aggregation": "count",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "draft"
+                  ]
+                ]
+              },
+              {
+                "format": "number",
+                "field": "totalArticles",
+                "aggregation": "sum",
+                "label": "Articles",
+                "icon": "book-open",
+                "variant": "info"
+              }
+            ],
+            "title": "Help Centers"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "HelpCenterGraphs",
+          "config": {
+            "categoryField": "status",
+            "aggregation": "count",
+            "title": "Help Centers by Status",
+            "subtitle": "Publication state across managed help centers",
+            "height": 240.0,
+            "showLegend": false,
+            "chartType": "bar"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "HelpCenterBrowseList",
+          "linkedEntity": "HelpCenter",
+          "config": {
+            "fields": [
+              {
+                "icon": "life-buoy",
+                "variant": "h3",
+                "name": "name"
+              },
+              {
+                "variant": "caption",
+                "name": "slug"
+              },
+              {
+                "variant": "caption",
+                "name": "domain"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "totalArticles",
+                "variant": "badge",
+                "format": "number"
+              },
+              {
+                "name": "totalCategories",
+                "variant": "caption",
+                "format": "number"
+              },
+              {
+                "name": "lastUpdatedAt",
+                "variant": "caption"
+              }
+            ],
+            "gap": "sm",
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterFilter"
+              }
+            },
+            {
+              "event": "HELP_CENTER_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterPersistor"
+              }
+            },
+            {
+              "event": "HELP_CENTER_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterPersistor"
+              }
+            },
+            {
+              "event": "HELP_CENTER_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "HelpCenterCreate",
+          "linkedEntity": "HelpCenter",
+          "config": {
+            "fields": [
+              "name",
+              "slug",
+              "domain",
+              "status"
+            ],
+            "title": "New Help Center",
+            "mode": "create",
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "HelpCenterEdit",
+          "linkedEntity": "HelpCenter",
+          "config": {
+            "fields": [
+              "name",
+              "slug",
+              "domain",
+              "status"
+            ],
+            "icon": "edit",
+            "title": "Edit Help Center",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "HelpCenterView",
+          "linkedEntity": "HelpCenter",
+          "config": {
+            "mode": "edit",
+            "title": "View Help Center",
+            "icon": "eye",
+            "fields": [
+              "name",
+              "slug",
+              "domain",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "HelpCenterDelete",
+          "linkedEntity": "HelpCenter",
+          "config": {
+            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Help Center",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "HelpCenterPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "HelpCenter",
+          "emits": [
+            {
+              "event": "HELP_CENTER_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HELP_CENTER_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HELP_CENTER_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "HelpCenterDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HELP_CENTER_CREATED",
+                "name": "Help Center Created"
+              },
+              {
+                "key": "HELP_CENTER_UPDATED",
+                "name": "Help Center Updated"
+              },
+              {
+                "key": "HELP_CENTER_DELETED",
+                "name": "Help Center Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "HelpCenter",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "HELP_CENTER_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "HelpCenter",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "HELP_CENTER_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "HelpCenter",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "HELP_CENTER_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HelpCentersPage",
+          "path": "/help-centers",
+          "traits": [
+            {
+              "ref": "HelpCenterAppLayout"
+            },
+            {
+              "ref": "HelpCenterCatalog"
+            },
+            {
+              "ref": "HelpCenterSearch"
+            },
+            {
+              "ref": "HelpCenterFilter"
+            },
+            {
+              "ref": "HelpCenterStats"
+            },
+            {
+              "ref": "HelpCenterGraphs"
+            },
+            {
+              "ref": "HelpCenterBrowseList"
+            },
+            {
+              "ref": "HelpCenterCreate"
+            },
+            {
+              "ref": "HelpCenterEdit"
+            },
+            {
+              "ref": "HelpCenterView"
+            },
+            {
+              "ref": "HelpCenterDelete"
+            },
+            {
+              "ref": "HelpCenterPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

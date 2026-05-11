@@ -1,0 +1,102 @@
+app std-help-article "1.0.0"
+"std-help-article — Public help center article primitive with title, body, category, view count, and published/draft status."
+
+orbital HelpArticleOrbital {
+  entity HelpArticle [persistent: helparticles] {
+    id               : string!
+    title            : string!
+    slug             : string!
+    body             : string = ""
+    summary          : string = ""
+    categoryId       : string = ""
+    categoryName     : string = ""
+    author           : string = ""
+    status           : "draft" | "published" | "archived" | "needs-update" = "draft"
+    viewCount        : number = 0
+    helpfulCount     : number = 0
+    notHelpfulCount  : number = 0
+    publishedAt      : string = ""
+    updatedAt        : string = ""
+    pendingId        : string = ""
+  }
+
+  type HelpArticleLoaded     = Event { data : [HelpArticle], totalCount : number } "Fired when the help article collection finishes loading"
+  type HelpArticleLoadFailed = Event { message : string }                           "Fired when the help article collection fails to load"
+
+  trait HelpArticleManage -> HelpArticle [interaction, collection] {
+    config {
+      title : string = "Help Articles"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading help articles…" }] })
+      HelpArticleLoaded -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "New Article", variant: "primary", action: "CREATE" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "slug", label: "Slug", variant: "caption" }, { name: "categoryName", label: "Category", variant: "caption" }, { name: "author", label: "Author", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "viewCount", label: "Views", variant: "caption" }, { name: "helpfulCount", label: "Helpful", variant: "caption" }, { name: "publishedAt", label: "Published", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Publish", event: "PUBLISH", variant: "primary" }, { label: "Archive", event: "ARCHIVE", variant: "ghost" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      HelpArticleLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.message" })
+    }
+    state viewing {
+      REFRESH -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing help articles…" }] })
+      SEARCH -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching help articles…" }] })
+      FILTER_STATUS -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering help articles…" }] })
+      FILTER_CATEGORY -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering help articles…" }] })
+      CREATE -> viewing
+        (render-ui main { type: "alert", variant: "info", message: "Creating new help article" })
+      VIEW -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Viewing help article" })
+      EDIT -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Editing help article" })
+      PUBLISH -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Article published" })
+      ARCHIVE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Article archived" })
+      REQUEST_DELETE -> viewing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      VIEW                  { id : string!, source : string }
+      EDIT                  { id : string!, source : string }
+      CREATE                { source : string }
+      REQUEST_DELETE        { id : string!, source : string }
+      PUBLISH               { id : string!, row : HelpArticle }
+      ARCHIVE               { id : string!, row : HelpArticle }
+      HelpArticleLoaded     { data : [HelpArticle], totalCount : number }
+      HelpArticleLoadFailed { message : string }
+    }
+    listens {
+      VIEW                  { id : string! }
+      EDIT                  { id : string! }
+      CREATE                { source : string }
+      REQUEST_DELETE        { id : string! }
+      PUBLISH               { id : string! }
+      ARCHIVE               { id : string! }
+      REFRESH               { source : string }
+      SEARCH                { query : string }
+      FILTER_STATUS         { status : string }
+      FILTER_CATEGORY       { categoryId : string }
+      HelpArticleLoaded     { data : [HelpArticle], totalCount : number }
+      HelpArticleLoadFailed { message : string }
+    }
+  }
+  page "/help-articles" as HelpArticlePage -> HelpArticleManage
+}

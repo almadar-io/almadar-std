@@ -1,0 +1,974 @@
+{
+  "name": "std-rfi",
+  "version": "1.0.0",
+  "description": "std-rfi — Request For Information primitive tracking formal questions raised during construction with response and deadline.",
+  "orbitals": [
+    {
+      "name": "RfiOrbital",
+      "entity": {
+        "name": "Rfi",
+        "collection": "rfis",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "rfiNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "question",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "submitted",
+              "answered",
+              "closed"
+            ]
+          },
+          {
+            "name": "raisedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "assignedTo",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "raisedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "dueAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "answeredAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "RfiPipeline",
+          "category": "interaction",
+          "linkedEntity": "Rfi",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.rfiNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subject",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.question",
+                  "type": "string"
+                },
+                {
+                  "name": "row.response",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.raisedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.raisedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.answeredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ANSWER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.rfiNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subject",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.question",
+                  "type": "string"
+                },
+                {
+                  "name": "row.response",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.raisedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.raisedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.answeredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.rfiNumber",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subject",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.question",
+                  "type": "string"
+                },
+                {
+                  "name": "row.response",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.raisedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.raisedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.answeredAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RfiLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Rfi]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "RfiLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RfiLoaded",
+                "name": "Rfi loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Rfi]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RfiLoadFailed",
+                "name": "Rfi load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ANSWER",
+                "name": "Answer",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading RFIs…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "RfiLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "help-circle"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@config.title"
+                            },
+                            {
+                              "type": "button",
+                              "action": "CREATE",
+                              "variant": "primary",
+                              "label": "New RFI"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "fields": [
+                            {
+                              "name": "rfiNumber",
+                              "label": "RFI #",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Subject",
+                              "variant": "caption",
+                              "name": "subject"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "raisedBy",
+                              "label": "Raised By",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "dueAt",
+                              "label": "Due"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "variant": "secondary",
+                              "event": "VIEW"
+                            },
+                            {
+                              "event": "EDIT",
+                              "variant": "secondary",
+                              "label": "Edit"
+                            },
+                            {
+                              "event": "SUBMIT",
+                              "variant": "primary",
+                              "label": "Submit"
+                            },
+                            {
+                              "event": "ANSWER",
+                              "variant": "primary",
+                              "label": "Answer"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Close",
+                              "event": "CLOSE"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "RfiLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Refreshing RFIs…",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Searching RFIs…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Filtering RFIs…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "success",
+                      "message": "RFI submitted"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "ANSWER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "RFI answered",
+                      "variant": "success",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "RFI closed",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Creating new RFI",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Viewing RFI"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Editing RFI"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "warning",
+                      "message": "Delete requested",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "RFIs"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "RfiPage",
+          "path": "/rfis",
+          "traits": [
+            {
+              "ref": "RfiPipeline"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

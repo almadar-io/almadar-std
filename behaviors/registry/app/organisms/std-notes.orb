@@ -1,0 +1,996 @@
+{
+  "name": "std-notes",
+  "version": "1.0.0",
+  "description": "Notes: Notion-style personal hierarchical notes with rich-text content, page tree, search, and favorites. Pick for personal/lightweight notes (vs std-wiki for collaborative team KB).",
+  "orbitals": [
+    {
+      "name": "NoteOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-page-tree",
+          "as": "PageTree"
+        },
+        {
+          "from": "std/behaviors/std-rich-editor",
+          "as": "RichEditor"
+        }
+      ],
+      "entity": {
+        "name": "Note",
+        "collection": "notes",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "blocksJson",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          {
+            "name": "parentId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "path",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "icon",
+            "type": "string",
+            "default": "file-text"
+          },
+          {
+            "name": "isFavorite",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "lastEditedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "NoteAppLayout",
+          "config": {
+            "appName": "Notes",
+            "searchEvent": "NOTE_SEARCH",
+            "navItems": [
+              {
+                "icon": "file-text",
+                "label": "Notes",
+                "href": "/notes"
+              },
+              {
+                "href": "/notes/tree",
+                "label": "Tree",
+                "icon": "list-tree"
+              },
+              {
+                "label": "Editor",
+                "icon": "edit",
+                "href": "/notes/editor"
+              },
+              {
+                "label": "Favorites",
+                "icon": "star",
+                "href": "/notes/favorites"
+              }
+            ],
+            "notifications": [],
+            "contentTrait": "@trait.NoteCatalog",
+            "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "SEARCH": "NOTE_SEARCH",
+            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "NoteCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "NOTE_SEARCH",
+              "triggers": "NOTE_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteAppLayout"
+              }
+            },
+            {
+              "event": "NOTE_NOTIFICATIONS_OPEN",
+              "triggers": "NOTE_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "NOTE_SEARCH",
+                "name": "Note Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "NOTE_NOTIFICATIONS_OPEN",
+                "name": "Note Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file-text"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "Notes",
+                                  "type": "typography"
+                                }
+                              ],
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "CREATE",
+                                  "type": "button",
+                                  "label": "New Note",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@trait.NoteSearch",
+                            "@trait.NoteFilter"
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        "@trait.NoteStats",
+                        "@trait.NoteGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.NoteBrowseList"
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "NOTE_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "NOTE_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-8",
+                      "align": "center",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "action": "INIT",
+                          "variant": "ghost",
+                          "type": "button",
+                          "label": "Back to notes"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "NoteSearch",
+          "config": {
+            "event": "NOTE_FULLTEXT_SEARCH",
+            "placeholder": "Search notes…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "NoteFilter",
+          "config": {
+            "filters": [
+              {
+                "filterType": "select",
+                "options": [
+                  "true",
+                  "false"
+                ],
+                "field": "isFavorite",
+                "label": "Favorite"
+              }
+            ],
+            "event": "NOTE_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "NoteStats",
+          "config": {
+            "title": "Notes",
+            "metrics": [
+              {
+                "variant": "primary",
+                "format": "number",
+                "icon": "file-text",
+                "label": "Total",
+                "aggregation": "count"
+              },
+              {
+                "variant": "warning",
+                "label": "Favorites",
+                "icon": "star",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.isFavorite",
+                    true
+                  ]
+                ],
+                "aggregation": "count"
+              },
+              {
+                "icon": "folder",
+                "aggregation": "count",
+                "format": "number",
+                "variant": "info",
+                "label": "Top-level",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.parentId",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "NoteGraphs",
+          "config": {
+            "showLegend": false,
+            "subtitle": "Distribution of note icons across your tree",
+            "chartType": "bar",
+            "title": "Notes by Icon",
+            "categoryField": "icon",
+            "aggregation": "count",
+            "height": 240.0
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "NoteBrowseList",
+          "linkedEntity": "Note",
+          "config": {
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm",
+            "fields": [
+              {
+                "name": "title",
+                "variant": "h3",
+                "icon": "file-text"
+              },
+              {
+                "name": "icon",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "isFavorite"
+              },
+              {
+                "name": "lastEditedAt",
+                "variant": "caption",
+                "label": "Edited"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteFilter"
+              }
+            },
+            {
+              "event": "NOTE_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "NotePersistor"
+              }
+            },
+            {
+              "event": "NOTE_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "NotePersistor"
+              }
+            },
+            {
+              "event": "NOTE_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "NotePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "PageTree.traits.PageNodeBrowse",
+          "name": "NotePageTree",
+          "config": {
+            "title": "Note Tree"
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "NoteCreate",
+          "linkedEntity": "Note",
+          "config": {
+            "mode": "create",
+            "fields": [
+              "title",
+              "content",
+              "blocksJson",
+              "parentId",
+              "icon",
+              "isFavorite"
+            ],
+            "title": "New Note",
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "NoteEdit",
+          "linkedEntity": "Note",
+          "config": {
+            "fields": [
+              "title",
+              "content",
+              "blocksJson",
+              "parentId",
+              "icon",
+              "isFavorite"
+            ],
+            "icon": "edit",
+            "title": "Edit Note",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "NoteView",
+          "linkedEntity": "Note",
+          "config": {
+            "mode": "edit",
+            "title": "View Note",
+            "icon": "eye",
+            "fields": [
+              "title",
+              "content",
+              "blocksJson",
+              "icon",
+              "isFavorite",
+              "lastEditedAt"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "NoteDelete",
+          "linkedEntity": "Note",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Note",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "NotePersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Note",
+          "emits": [
+            {
+              "event": "NOTE_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "NOTE_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "NOTE_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "NoteDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "NOTE_CREATED",
+                "name": "Note Created"
+              },
+              {
+                "key": "NOTE_UPDATED",
+                "name": "Note Updated"
+              },
+              {
+                "key": "NOTE_DELETED",
+                "name": "Note Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Note",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "NOTE_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Note",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "NOTE_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Note",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "NOTE_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "NotesPage",
+          "path": "/notes",
+          "traits": [
+            {
+              "ref": "NoteAppLayout"
+            },
+            {
+              "ref": "NoteCatalog"
+            },
+            {
+              "ref": "NoteSearch"
+            },
+            {
+              "ref": "NoteFilter"
+            },
+            {
+              "ref": "NoteStats"
+            },
+            {
+              "ref": "NoteGraphs"
+            },
+            {
+              "ref": "NoteBrowseList"
+            },
+            {
+              "ref": "NoteCreate"
+            },
+            {
+              "ref": "NoteEdit"
+            },
+            {
+              "ref": "NoteView"
+            },
+            {
+              "ref": "NoteDelete"
+            },
+            {
+              "ref": "NotePersistor"
+            }
+          ]
+        },
+        {
+          "name": "NotesTreePage",
+          "path": "/notes/tree",
+          "traits": [
+            {
+              "ref": "NoteAppLayout"
+            },
+            {
+              "ref": "NotePageTree"
+            }
+          ]
+        },
+        {
+          "name": "NotesEditorPage",
+          "path": "/notes/editor",
+          "traits": [
+            {
+              "ref": "NoteAppLayout"
+            },
+            {
+              "ref": "NoteCatalog"
+            },
+            {
+              "ref": "NoteSearch"
+            },
+            {
+              "ref": "NoteFilter"
+            },
+            {
+              "ref": "NoteStats"
+            },
+            {
+              "ref": "NoteGraphs"
+            },
+            {
+              "ref": "NoteBrowseList"
+            },
+            {
+              "ref": "NoteCreate"
+            },
+            {
+              "ref": "NoteEdit"
+            },
+            {
+              "ref": "NoteView"
+            },
+            {
+              "ref": "NoteDelete"
+            },
+            {
+              "ref": "NotePersistor"
+            }
+          ]
+        },
+        {
+          "name": "NotesFavoritesPage",
+          "path": "/notes/favorites",
+          "traits": [
+            {
+              "ref": "NoteAppLayout"
+            },
+            {
+              "ref": "NoteCatalog"
+            },
+            {
+              "ref": "NoteSearch"
+            },
+            {
+              "ref": "NoteFilter"
+            },
+            {
+              "ref": "NoteStats"
+            },
+            {
+              "ref": "NoteGraphs"
+            },
+            {
+              "ref": "NoteBrowseList"
+            },
+            {
+              "ref": "NoteCreate"
+            },
+            {
+              "ref": "NoteEdit"
+            },
+            {
+              "ref": "NoteView"
+            },
+            {
+              "ref": "NoteDelete"
+            },
+            {
+              "ref": "NotePersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

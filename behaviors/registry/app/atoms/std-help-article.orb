@@ -1,0 +1,971 @@
+{
+  "name": "std-help-article",
+  "version": "1.0.0",
+  "description": "std-help-article — Public help center article primitive with title, body, category, view count, and published/draft status.",
+  "orbitals": [
+    {
+      "name": "HelpArticleOrbital",
+      "entity": {
+        "name": "HelpArticle",
+        "collection": "helparticles",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "slug",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "summary",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "categoryId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "categoryName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "author",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "published",
+              "archived",
+              "needs-update"
+            ]
+          },
+          {
+            "name": "viewCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "helpfulCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "notHelpfulCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "publishedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HelpArticleManage",
+          "category": "interaction",
+          "linkedEntity": "HelpArticle",
+          "emits": [
+            {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PUBLISH",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.body",
+                  "type": "string"
+                },
+                {
+                  "name": "row.summary",
+                  "type": "string"
+                },
+                {
+                  "name": "row.categoryId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.categoryName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.author",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.viewCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.helpfulCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notHelpfulCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.publishedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ARCHIVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.body",
+                  "type": "string"
+                },
+                {
+                  "name": "row.summary",
+                  "type": "string"
+                },
+                {
+                  "name": "row.categoryId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.categoryName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.author",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.viewCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.helpfulCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notHelpfulCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.publishedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HelpArticleLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[HelpArticle]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "HelpArticleLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HelpArticleLoaded",
+                "name": "HelpArticle loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[HelpArticle]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "HelpArticleLoadFailed",
+                "name": "HelpArticle load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "query",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_STATUS",
+                "name": "Filter Status",
+                "payloadSchema": [
+                  {
+                    "name": "status",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FILTER_CATEGORY",
+                "name": "Filter Category",
+                "payloadSchema": [
+                  {
+                    "name": "categoryId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "source",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PUBLISH",
+                "name": "Publish",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ARCHIVE",
+                "name": "Archive",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "success": "HelpArticleLoaded",
+                        "failure": "HelpArticleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading help articles…",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "HelpArticleLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "book-open",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "button",
+                              "label": "New Article",
+                              "action": "CREATE",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "event": "VIEW",
+                              "variant": "secondary"
+                            },
+                            {
+                              "label": "Edit",
+                              "event": "EDIT",
+                              "variant": "secondary"
+                            },
+                            {
+                              "event": "PUBLISH",
+                              "label": "Publish",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "ARCHIVE",
+                              "label": "Archive",
+                              "variant": "ghost"
+                            },
+                            {
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger",
+                              "label": "Delete"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "name": "title",
+                              "variant": "caption",
+                              "label": "Title"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "slug",
+                              "label": "Slug"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Category",
+                              "name": "categoryName"
+                            },
+                            {
+                              "name": "author",
+                              "label": "Author",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            },
+                            {
+                              "label": "Views",
+                              "variant": "caption",
+                              "name": "viewCount"
+                            },
+                            {
+                              "name": "helpfulCount",
+                              "label": "Helpful",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "publishedAt",
+                              "variant": "caption",
+                              "label": "Published"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "cols": 1.0
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "HelpArticleLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.message",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "success": "HelpArticleLoaded",
+                        "failure": "HelpArticleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Refreshing help articles…",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "failure": "HelpArticleLoadFailed",
+                        "success": "HelpArticleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Searching help articles…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_STATUS",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "failure": "HelpArticleLoadFailed",
+                        "success": "HelpArticleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Filtering help articles…",
+                          "color": "muted"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "loading",
+                "event": "FILTER_CATEGORY",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "success": "HelpArticleLoaded",
+                        "failure": "HelpArticleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Filtering help articles…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "type": "alert",
+                      "message": "Creating new help article"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Viewing help article",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Editing help article",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "PUBLISH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "Article published",
+                      "variant": "success"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "ARCHIVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "Article archived",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "viewing",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "warning",
+                      "type": "alert",
+                      "message": "Delete requested"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "failure": "HelpArticleLoadFailed",
+                        "success": "HelpArticleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Help Articles"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HelpArticlePage",
+          "path": "/help-articles",
+          "traits": [
+            {
+              "ref": "HelpArticleManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
