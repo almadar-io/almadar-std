@@ -115,54 +115,59 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       name: canonicalName,
       collection: 'jobopenings',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'department',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'closed',
-            'draft',
-          ],
-        },
-        {
-          'name': 'location',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'hiringManager',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'headcount',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'closed',
+              'draft',
+            ],
+          },
+          {
+            'name': 'location',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'hiringManager',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'headcount',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1100,80 +1105,85 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       name: canonicalName,
       collection: 'applicationintakes',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'applicantName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'applicantEmail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'applicantPhone',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'jobId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'resumeUrl',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'firstInterviewAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'interviewerName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'interviewFormat',
-          'type': 'string',
-          'default': 'video',
-          'values': [
-            'phone',
-            'video',
-            'onsite',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'submitted',
-            'interviewing',
-            'completed',
-          ],
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'applicantName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'applicantEmail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'applicantPhone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'jobId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'resumeUrl',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'firstInterviewAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'interviewerName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'interviewFormat',
+            'type': 'string',
+            'default': 'video',
+            'values': [
+              'phone',
+              'video',
+              'onsite',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'submitted',
+              'interviewing',
+              'completed',
+            ],
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1470,62 +1480,67 @@ export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplica
       name: canonicalName,
       collection: 'applicants',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'jobId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'resumeUrl',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'stage',
-          'type': 'string',
-          'default': 'applied',
-          'values': [
-            'applied',
-            'screening',
-            'interview',
-            'offer',
-            'hired',
-            'rejected',
-          ],
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'appliedAt',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'jobId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'resumeUrl',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'stage',
+            'type': 'string',
+            'default': 'applied',
+            'values': [
+              'applied',
+              'screening',
+              'interview',
+              'offer',
+              'hired',
+              'rejected',
+            ],
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'appliedAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1706,65 +1721,70 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
       name: canonicalName,
       collection: 'interviewslots',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'applicantId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'applicantName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'interviewerName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'scheduledAt',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'durationMinutes',
-          'type': 'number',
-          'default': 60,
-        },
-        {
-          'name': 'format',
-          'type': 'string',
-          'default': 'video',
-          'values': [
-            'phone',
-            'video',
-            'onsite',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'scheduled',
-          'values': [
-            'scheduled',
-            'completed',
-            'cancelled',
-            'no_show',
-          ],
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'applicantId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'applicantName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'interviewerName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'durationMinutes',
+            'type': 'number',
+            'default': 60,
+          },
+          {
+            'name': 'format',
+            'type': 'string',
+            'default': 'video',
+            'values': [
+              'phone',
+              'video',
+              'onsite',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'scheduled',
+            'values': [
+              'scheduled',
+              'completed',
+              'cancelled',
+              'no_show',
+            ],
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1945,61 +1965,66 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
       name: canonicalName,
       collection: 'offerletters',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'applicantId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'applicantName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'position',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'salary',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'startDate',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'sent',
-            'accepted',
-            'rejected',
-            'expired',
-          ],
-        },
-        {
-          'name': 'expiresAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'applicantId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'applicantName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'position',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'salary',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'startDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'sent',
+              'accepted',
+              'rejected',
+              'expired',
+            ],
+          },
+          {
+            'name': 'expiresAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

@@ -123,69 +123,74 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
       name: canonicalName,
       collection: 'questions',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'authorId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'authorName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'tag',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'answered',
-            'closed',
-          ],
-        },
-        {
-          'name': 'voteCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'replyCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'authorId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'authorName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'tag',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'answered',
+              'closed',
+            ],
+          },
+          {
+            'name': 'voteCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'replyCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1135,54 +1140,59 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
       name: canonicalName,
       collection: 'moderationdecisions',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'targetId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'targetType',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'verdict',
-          'type': 'string',
-          'default': 'approved',
-          'values': [
-            'approved',
-            'rejected',
-            'escalated',
-          ],
-        },
-        {
-          'name': 'reviewerId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'targetId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'targetType',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'verdict',
+            'type': 'string',
+            'default': 'approved',
+            'values': [
+              'approved',
+              'rejected',
+              'escalated',
+            ],
+          },
+          {
+            'name': 'reviewerId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

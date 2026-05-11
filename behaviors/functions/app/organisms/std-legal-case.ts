@@ -127,80 +127,85 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       name: canonicalName,
       collection: 'matters',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'matterNumber',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'clientName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'practiceArea',
-          'type': 'string',
-          'default': 'other',
-          'values': [
-            'litigation',
-            'transactional',
-            'regulatory',
-            'ip',
-            'immigration',
-            'family',
-            'other',
-          ],
-        },
-        {
-          'name': 'leadAttorney',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'active',
-            'on_hold',
-            'closed',
-            'archived',
-          ],
-        },
-        {
-          'name': 'openedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'closedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'matterNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'clientName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'practiceArea',
+            'type': 'string',
+            'default': 'other',
+            'values': [
+              'litigation',
+              'transactional',
+              'regulatory',
+              'ip',
+              'immigration',
+              'family',
+              'other',
+            ],
+          },
+          {
+            'name': 'leadAttorney',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'active',
+              'on_hold',
+              'closed',
+              'archived',
+            ],
+          },
+          {
+            'name': 'openedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'closedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1151,70 +1156,75 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
       name: canonicalName,
       collection: 'billablehours',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'workerId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'workerName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'matterId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'projectId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'workDate',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'hours',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'rate',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'isBillable',
-          'type': 'boolean',
-          'default': true,
-        },
-        {
-          'name': 'invoiceStatus',
-          'type': 'string',
-          'default': 'unbilled',
-          'values': [
-            'unbilled',
-            'invoiced',
-            'paid',
-            'written_off',
-          ],
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'workerId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'workerName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'matterId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'projectId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'workDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'hours',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'rate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'isBillable',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'invoiceStatus',
+            'type': 'string',
+            'default': 'unbilled',
+            'values': [
+              'unbilled',
+              'invoiced',
+              'paid',
+              'written_off',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1455,73 +1465,78 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
       name: canonicalName,
       collection: 'courtdeadlines',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'matterId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'deadlineType',
-          'type': 'string',
-          'default': 'filing',
-          'values': [
-            'filing',
-            'response',
-            'discovery',
-            'hearing',
-            'trial',
-            'other',
-          ],
-        },
-        {
-          'name': 'dueAt',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'jurisdiction',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'assignedTo',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'upcoming',
-          'values': [
-            'upcoming',
-            'completed',
-            'missed',
-            'extended',
-          ],
-        },
-        {
-          'name': 'reminderSent',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'matterId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'deadlineType',
+            'type': 'string',
+            'default': 'filing',
+            'values': [
+              'filing',
+              'response',
+              'discovery',
+              'hearing',
+              'trial',
+              'other',
+            ],
+          },
+          {
+            'name': 'dueAt',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'jurisdiction',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'assignedTo',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'upcoming',
+            'values': [
+              'upcoming',
+              'completed',
+              'missed',
+              'extended',
+            ],
+          },
+          {
+            'name': 'reminderSent',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

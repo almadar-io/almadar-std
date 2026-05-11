@@ -123,44 +123,49 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
       name: canonicalName,
       collection: 'menurecords',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'available',
-          'type': 'boolean',
-          'default': true,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'available',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1003,34 +1008,39 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
       name: canonicalName,
       collection: 'tablerecords',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'label',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'capacity',
-          'type': 'number',
-          'default': 4,
-        },
-        {
-          'name': 'section',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'capacity',
+            'type': 'number',
+            'default': 4,
+          },
+          {
+            'name': 'section',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1339,59 +1349,64 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
       name: canonicalName,
       collection: 'orderTickets',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'tableId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'serverName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'subtotal',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'taxAmount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'tipAmount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'total',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'submitted',
-            'closed',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tableId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'serverName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'subtotal',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'taxAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'tipAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'total',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'submitted',
+              'closed',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1989,29 +2004,34 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
       name: canonicalName,
       collection: 'kitchenlogs',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'orderId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'note',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'orderId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'note',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

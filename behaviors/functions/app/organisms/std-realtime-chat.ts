@@ -115,38 +115,43 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
       name: canonicalName,
       collection: 'chatmessages',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'sender',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'channel',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'datetime',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sender',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'channel',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1440,39 +1445,44 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
       name: canonicalName,
       collection: 'channels',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'memberCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'isPrivate',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memberCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'isPrivate',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2142,38 +2152,43 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'username',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'offline',
-          'values': [
-            'online',
-            'away',
-            'offline',
-          ],
-        },
-        {
-          'name': 'lastActive',
-          'type': 'datetime',
-        },
-        {
-          'name': 'avatar',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'username',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'offline',
+            'values': [
+              'online',
+              'away',
+              'offline',
+            ],
+          },
+          {
+            'name': 'lastActive',
+            'type': 'datetime',
+          },
+          {
+            'name': 'avatar',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

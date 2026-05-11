@@ -153,44 +153,49 @@ export function stdServiceResearchAssistantResearchOrbital(params: StdServiceRes
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'query',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'videoTitle',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'videoDescription',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'summary',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pipelineStatus',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'query',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'videoTitle',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'videoDescription',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'summary',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pipelineStatus',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1672,39 +1677,44 @@ export function stdServiceResearchAssistantCacheEntryOrbital(params: StdServiceR
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'key',
-          'type': 'string',
-        },
-        {
-          'name': 'value',
-          'type': 'string',
-        },
-        {
-          'name': 'ttl',
-          'type': 'number',
-        },
-        {
-          'name': 'result',
-          'type': 'string',
-        },
-        {
-          'name': 'redisStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'key',
+            'type': 'string',
+          },
+          {
+            'name': 'value',
+            'type': 'string',
+          },
+          {
+            'name': 'ttl',
+            'type': 'number',
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'name': 'redisStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -2667,43 +2677,48 @@ export function stdServiceResearchAssistantReportOrbital(params: StdServiceResea
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'bucket',
-          'type': 'string',
-        },
-        {
-          'name': 'fileKey',
-          'type': 'string',
-        },
-        {
-          'name': 'prefix',
-          'type': 'string',
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-        },
-        {
-          'name': 'storageStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'result',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'bucket',
+            'type': 'string',
+          },
+          {
+            'name': 'fileKey',
+            'type': 'string',
+          },
+          {
+            'name': 'prefix',
+            'type': 'string',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'storageStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -3779,43 +3794,48 @@ export function stdServiceResearchAssistantKnowledgeQueryOrbital(params: StdServ
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'endpoint',
-          'type': 'string',
-        },
-        {
-          'name': 'method',
-          'type': 'string',
-        },
-        {
-          'name': 'requestBody',
-          'type': 'string',
-        },
-        {
-          'name': 'responseData',
-          'type': 'string',
-        },
-        {
-          'name': 'statusCode',
-          'type': 'string',
-        },
-        {
-          'name': 'callStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'endpoint',
+            'type': 'string',
+          },
+          {
+            'name': 'method',
+            'type': 'string',
+          },
+          {
+            'name': 'requestBody',
+            'type': 'string',
+          },
+          {
+            'name': 'responseData',
+            'type': 'string',
+          },
+          {
+            'name': 'statusCode',
+            'type': 'string',
+          },
+          {
+            'name': 'callStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

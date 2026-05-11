@@ -119,61 +119,66 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       name: canonicalName,
       collection: 'articles',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'slug',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'review',
-            'published',
-            'archived',
-          ],
-        },
-        {
-          'name': 'publishedAt',
-          'type': 'datetime',
-        },
-        {
-          'name': 'heroImage',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'review',
+              'published',
+              'archived',
+            ],
+          },
+          {
+            'name': 'publishedAt',
+            'type': 'datetime',
+          },
+          {
+            'name': 'heroImage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1222,37 +1227,42 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
       name: canonicalName,
       collection: 'mediaassets',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'altText',
-          'type': 'string',
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-        },
-        {
-          'name': 'url',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'altText',
+            'type': 'string',
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+          },
+          {
+            'name': 'url',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2042,41 +2052,46 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       name: canonicalName,
       collection: 'categorys',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'slug',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-        },
-        {
-          'name': 'parentCategory',
-          'type': 'string',
-        },
-        {
-          'name': 'articleCount',
-          'type': 'number',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'parentCategory',
+            'type': 'string',
+          },
+          {
+            'name': 'articleCount',
+            'type': 'number',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2775,52 +2790,57 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
       name: canonicalName,
       collection: 'articles',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'slug',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'review',
-            'published',
-            'archived',
-          ],
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'publishedAt',
-          'type': 'datetime',
-        },
-        {
-          'name': 'heroImage',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'review',
+              'published',
+              'archived',
+            ],
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'publishedAt',
+            'type': 'datetime',
+          },
+          {
+            'name': 'heroImage',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

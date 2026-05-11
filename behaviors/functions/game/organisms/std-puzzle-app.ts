@@ -99,49 +99,54 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'moves',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'completed',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'highScore',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'combo',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'multiplier',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'moves',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1026,50 +1031,55 @@ export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOr
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'playerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'required': true,
-          'default': 0,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'moves',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'highScore',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'combo',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'multiplier',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'playerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'required': true,
+            'default': 0,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'moves',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

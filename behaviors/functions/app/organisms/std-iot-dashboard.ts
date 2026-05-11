@@ -99,44 +99,49 @@ export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSenso
       name: canonicalName,
       collection: 'sensorreadings',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'sensorId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'value',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'unit',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'threshold',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sensorId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'value',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'unit',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -536,43 +541,48 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
       name: canonicalName,
       collection: 'devices',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'offline',
-          'values': [
-            'online',
-            'offline',
-            'maintenance',
-          ],
-        },
-        {
-          'name': 'lastSeen',
-          'type': 'datetime',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'offline',
+            'values': [
+              'online',
+              'offline',
+              'maintenance',
+            ],
+          },
+          {
+            'name': 'lastSeen',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1403,59 +1413,64 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
       name: canonicalName,
       collection: 'devicealerts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'deviceId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'severity',
-          'type': 'string',
-          'default': 'info',
-          'values': [
-            'info',
-            'warning',
-            'critical',
-          ],
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'acknowledged',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'failureCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'successCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'threshold',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'deviceId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'severity',
+            'type': 'string',
+            'default': 'info',
+            'values': [
+              'info',
+              'warning',
+              'critical',
+            ],
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'acknowledged',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'failureCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'successCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

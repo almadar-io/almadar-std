@@ -107,52 +107,57 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
       name: canonicalName,
       collection: 'providers',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'specialty',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'location',
-          'type': 'string',
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-        },
-        {
-          'name': 'rating',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'hourlyRate',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'available',
-          'type': 'boolean',
-          'default': true,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'specialty',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'location',
+            'type': 'string',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+          },
+          {
+            'name': 'rating',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'hourlyRate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'available',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2182,53 +2187,58 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'providerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'customerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'scheduledAt',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-        },
-        {
-          'name': 'depositAmount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'providerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+          },
+          {
+            'name': 'depositAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -3794,53 +3804,58 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
       name: canonicalName,
       collection: 'appointments',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'providerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'customerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'summary',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'scheduledAt',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'time',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'scheduled',
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'providerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'summary',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'time',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'scheduled',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -5644,34 +5659,39 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'singleton',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'totalBookings',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'confirmedToday',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'pendingBookings',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'availableSlots',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalBookings',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'confirmedToday',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingBookings',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'availableSlots',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

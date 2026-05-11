@@ -97,38 +97,43 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'bugType',
-          'type': 'string',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'solved',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'bugType',
+            'type': 'string',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'solved',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -528,37 +533,42 @@ export function stdLogicTrainingNegotiateChallengeOrbital(params: StdLogicTraini
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'scenario',
-          'type': 'string',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'outcome',
-          'type': 'string',
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'scenario',
+            'type': 'string',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'outcome',
+            'type': 'string',
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -958,50 +968,55 @@ export function stdLogicTrainingTrainingScoreOrbital(params: StdLogicTrainingTra
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'playerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'required': true,
-          'default': 0,
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'completedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'highScore',
-          'type': 'number',
-        },
-        {
-          'name': 'combo',
-          'type': 'number',
-        },
-        {
-          'name': 'multiplier',
-          'type': 'number',
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'playerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'required': true,
+            'default': 0,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

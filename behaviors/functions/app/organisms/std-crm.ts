@@ -119,55 +119,60 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       name: canonicalName,
       collection: 'contacts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'company',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'industry',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lifecycleStage',
-          'type': 'string',
-          'default': 'lead',
-          'values': [
-            'lead',
-            'mql',
-            'sql',
-            'customer',
-          ],
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'company',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'industry',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lifecycleStage',
+            'type': 'string',
+            'default': 'lead',
+            'values': [
+              'lead',
+              'mql',
+              'sql',
+              'customer',
+            ],
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1255,52 +1260,57 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       name: canonicalName,
       collection: 'deals',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'contactId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'amount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'stage',
-          'type': 'string',
-          'default': 'prospecting',
-          'values': [
-            'prospecting',
-            'qualified',
-            'proposal',
-            'negotiation',
-            'won',
-            'lost',
-          ],
-        },
-        {
-          'name': 'closedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'contactId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'amount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'stage',
+            'type': 'string',
+            'default': 'prospecting',
+            'values': [
+              'prospecting',
+              'qualified',
+              'proposal',
+              'negotiation',
+              'won',
+              'lost',
+            ],
+          },
+          {
+            'name': 'closedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1972,39 +1982,44 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'totalDeals',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'totalValue',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'wonDeals',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lostDeals',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'conversionRate',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalDeals',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalValue',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'wonDeals',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lostDeals',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'conversionRate',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2407,54 +2422,59 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       name: canonicalName,
       collection: 'notes',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'subject',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'priority',
-          'type': 'string',
-          'default': 'medium',
-          'values': [
-            'low',
-            'medium',
-            'high',
-          ],
-        },
-        {
-          'name': 'followUpAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+            ],
+          },
+          {
+            'name': 'followUpAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

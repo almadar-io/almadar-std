@@ -123,83 +123,88 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       name: canonicalName,
       collection: 'workorders',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'customerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'serviceType',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'address',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'priority',
-          'type': 'string',
-          'default': 'normal',
-          'values': [
-            'low',
-            'normal',
-            'high',
-            'urgent',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'created',
-          'values': [
-            'created',
-            'assigned',
-            'en-route',
-            'on-site',
-            'completed',
-            'cancelled',
-          ],
-        },
-        {
-          'name': 'assignedTo',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'scheduledAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'etaMinutes',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'serviceType',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'address',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'normal',
+            'values': [
+              'low',
+              'normal',
+              'high',
+              'urgent',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'created',
+            'values': [
+              'created',
+              'assigned',
+              'en-route',
+              'on-site',
+              'completed',
+              'cancelled',
+            ],
+          },
+          {
+            'name': 'assignedTo',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'etaMinutes',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1177,62 +1182,67 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       name: canonicalName,
       collection: 'technicians',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'skills',
-          'type': 'array',
-          'default': [],
-          'items': {
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
             'type': 'string',
+            'required': true,
           },
-        },
-        {
-          'name': 'available',
-          'type': 'boolean',
-          'default': true,
-        },
-        {
-          'name': 'currentOrderId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lat',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lng',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lastSeenAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'skills',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'available',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'currentOrderId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lat',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lng',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lastSeenAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1999,14 +2009,19 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

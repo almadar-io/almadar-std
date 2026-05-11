@@ -161,62 +161,67 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'topic',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'studentLevel',
-          'type': 'string',
-          'default': 'unknown',
-        },
-        {
-          'name': 'explanation',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'questionsAsked',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'correctAnswers',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'sessionStatus',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'activeTab',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'items',
-          'type': 'array',
-          'default': [],
-          'items': {
-            'type': 'object',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
           },
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'topic',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'studentLevel',
+            'type': 'string',
+            'default': 'unknown',
+          },
+          {
+            'name': 'explanation',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'questionsAsked',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'correctAnswers',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'sessionStatus',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'activeTab',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'items',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+            },
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1329,42 +1334,47 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'question',
-          'type': 'string',
-        },
-        {
-          'name': 'options',
-          'type': 'string',
-        },
-        {
-          'name': 'correctAnswer',
-          'type': 'string',
-        },
-        {
-          'name': 'studentAnswer',
-          'type': 'string',
-        },
-        {
-          'name': 'isCorrect',
-          'type': 'boolean',
-        },
-        {
-          'name': 'feedback',
-          'type': 'string',
-        },
-        {
-          'name': 'quizStatus',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'question',
+            'type': 'string',
+          },
+          {
+            'name': 'options',
+            'type': 'string',
+          },
+          {
+            'name': 'correctAnswer',
+            'type': 'string',
+          },
+          {
+            'name': 'studentAnswer',
+            'type': 'string',
+          },
+          {
+            'name': 'isCorrect',
+            'type': 'boolean',
+          },
+          {
+            'name': 'feedback',
+            'type': 'string',
+          },
+          {
+            'name': 'quizStatus',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -2242,53 +2252,58 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'messages',
-          'type': 'array',
-          'items': {
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'messages',
+            'type': 'array',
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'turnCount',
+            'type': 'number',
+          },
+          {
+            'name': 'lastMessage',
             'type': 'string',
           },
-        },
-        {
-          'name': 'turnCount',
-          'type': 'number',
-        },
-        {
-          'name': 'lastMessage',
-          'type': 'string',
-        },
-        {
-          'name': 'tokenCount',
-          'type': 'number',
-        },
-        {
-          'name': 'role',
-          'type': 'string',
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-        },
-        {
-          'name': 'toolName',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -3246,42 +3261,47 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
       name: canonicalName,
       collection: 'concepts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-        },
-        {
-          'name': 'pinned',
-          'type': 'boolean',
-        },
-        {
-          'name': 'scope',
-          'type': 'string',
-        },
-        {
-          'name': 'lastAccessedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+          },
+          {
+            'name': 'lastAccessedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -4684,38 +4704,43 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'input',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'confidence',
-          'type': 'number',
-        },
-        {
-          'name': 'model',
-          'type': 'string',
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-        },
-        {
-          'name': 'notificationType',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'input',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -5951,49 +5976,54 @@ export function stdAgentTutorTutorNavOrbital(params: StdAgentTutorTutorNavOrbita
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'topic',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'studentLevel',
-          'type': 'string',
-          'default': 'unknown',
-        },
-        {
-          'name': 'explanation',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'questionsAsked',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'correctAnswers',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'sessionStatus',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'topic',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'studentLevel',
+            'type': 'string',
+            'default': 'unknown',
+          },
+          {
+            'name': 'explanation',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'questionsAsked',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'correctAnswers',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'sessionStatus',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -6127,26 +6157,31 @@ export function stdAgentTutorConceptViewOrbital(params: StdAgentTutorConceptView
       name: canonicalName,
       collection: 'conceptviews',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

@@ -107,49 +107,54 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
       name: canonicalName,
       collection: 'contacts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'company',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'role',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'company',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -989,49 +994,54 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
       name: canonicalName,
       collection: 'items',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'sku',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'quantity',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1865,44 +1875,49 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
       name: canonicalName,
       collection: 'activities',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'actor',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'notes',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'actor',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2575,59 +2590,64 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
       name: canonicalName,
       collection: 'tasks',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'assignee',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'dueDate',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'priority',
-          'type': 'string',
-          'default': 'medium',
-          'values': [
-            'low',
-            'medium',
-            'high',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'todo',
-          'values': [
-            'todo',
-            'doing',
-            'done',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'assignee',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'dueDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'todo',
+            'values': [
+              'todo',
+              'doing',
+              'done',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -3438,49 +3458,54 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
       name: canonicalName,
       collection: 'scheduledevents',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'startTime',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'endTime',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'location',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'attendees',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'startTime',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'endTime',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'location',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'attendees',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -4254,44 +4279,49 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
       name: canonicalName,
       collection: 'widgets',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'default': 'metric',
-        },
-        {
-          'name': 'dataSource',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'value',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'label',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'refreshInterval',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'default': 'metric',
+          },
+          {
+            'name': 'dataSource',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'value',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'refreshInterval',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -5034,44 +5064,49 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
       name: canonicalName,
       collection: 'feedposts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'postedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'tags',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'postedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'tags',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -5833,44 +5868,49 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       name: canonicalName,
       collection: 'notes',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'tags',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'updatedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'tags',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

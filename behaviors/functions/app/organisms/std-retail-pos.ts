@@ -115,61 +115,66 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       name: canonicalName,
       collection: 'sales',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'total',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'in-progress',
-          'values': [
-            'in-progress',
-            'completed',
-            'refunded',
-            'voided',
-          ],
-        },
-        {
-          'name': 'paymentMethod',
-          'type': 'string',
-          'default': 'card',
-          'values': [
-            'cash',
-            'card',
-            'check',
-            'digital',
-          ],
-        },
-        {
-          'name': 'customerId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'cashierId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'completedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'total',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'in-progress',
+            'values': [
+              'in-progress',
+              'completed',
+              'refunded',
+              'voided',
+            ],
+          },
+          {
+            'name': 'paymentMethod',
+            'type': 'string',
+            'default': 'card',
+            'values': [
+              'cash',
+              'card',
+              'check',
+              'digital',
+            ],
+          },
+          {
+            'name': 'customerId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'cashierId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1093,81 +1098,86 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
       name: canonicalName,
       collection: 'checkoutsessions',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'terminalId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'cashierId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'cashierName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'cartItemsJson',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'subtotal',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'tax',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'total',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'paymentMethod',
-          'type': 'string',
-          'default': 'card',
-          'values': [
-            'cash',
-            'card',
-            'gift_card',
-            'split',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'paying',
-            'completed',
-            'voided',
-          ],
-        },
-        {
-          'name': 'openedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'completedAt',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'terminalId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'cashierId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'cashierName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'cartItemsJson',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'subtotal',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'tax',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'total',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'paymentMethod',
+            'type': 'string',
+            'default': 'card',
+            'values': [
+              'cash',
+              'card',
+              'gift_card',
+              'split',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'paying',
+              'completed',
+              'voided',
+            ],
+          },
+          {
+            'name': 'openedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1348,75 +1358,80 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
       name: canonicalName,
       collection: 'receipts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'receiptNumber',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'recipientName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'recipientEmail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'transactionId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'transactionType',
-          'type': 'string',
-          'default': 'purchase',
-          'values': [
-            'purchase',
-            'refund',
-            'donation',
-            'service',
-          ],
-        },
-        {
-          'name': 'subtotal',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'tax',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'total',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lineItemsJson',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'issuedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'isEmailed',
-          'type': 'boolean',
-          'default': false,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'receiptNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'recipientName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'recipientEmail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'transactionId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'transactionType',
+            'type': 'string',
+            'default': 'purchase',
+            'values': [
+              'purchase',
+              'refund',
+              'donation',
+              'service',
+            ],
+          },
+          {
+            'name': 'subtotal',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'tax',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'total',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lineItemsJson',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'issuedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'isEmailed',
+            'type': 'boolean',
+            'default': false,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1597,64 +1612,69 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
       name: canonicalName,
       collection: 'customeraccounts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'loyaltyPoints',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'storeCreditAmount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'totalSpent',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'joinedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lastVisitAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'inactive',
-            'banned',
-          ],
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'loyaltyPoints',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'storeCreditAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalSpent',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'joinedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lastVisitAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'banned',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

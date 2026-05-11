@@ -123,44 +123,49 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       name: canonicalName,
       collection: 'surveys',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'published',
-            'closed',
-          ],
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'published',
+              'closed',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1075,44 +1080,49 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
       name: canonicalName,
       collection: 'responses',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'surveyId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'respondentId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'questionId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'answerJson',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'submittedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'surveyId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'respondentId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'questionId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'answerJson',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'submittedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

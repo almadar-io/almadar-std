@@ -96,34 +96,39 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lives',
-          'type': 'number',
-          'default': 3,
-        },
-        {
-          'name': 'highScore',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lives',
+            'type': 'number',
+            'default': 3,
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -672,30 +677,35 @@ export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanv
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'width',
-          'type': 'number',
-        },
-        {
-          'name': 'height',
-          'type': 'number',
-        },
-        {
-          'name': 'fps',
-          'type': 'number',
-        },
-        {
-          'name': 'running',
-          'type': 'boolean',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'width',
+            'type': 'number',
+          },
+          {
+            'name': 'height',
+            'type': 'number',
+          },
+          {
+            'name': 'fps',
+            'type': 'number',
+          },
+          {
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1125,47 +1135,52 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'playerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'required': true,
-          'default': 0,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'completedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'highScore',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'combo',
-          'type': 'number',
-        },
-        {
-          'name': 'multiplier',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'playerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'required': true,
+            'default': 0,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1592,33 +1607,38 @@ export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbi
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lives',
-          'type': 'number',
-          'default': 3,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'timer',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lives',
+            'type': 'number',
+            'default': 3,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'timer',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

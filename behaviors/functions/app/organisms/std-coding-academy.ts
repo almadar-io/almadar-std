@@ -107,44 +107,49 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'difficulty',
-          'type': 'string',
-          'default': 'easy',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'completed',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'videoId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'difficulty',
+            'type': 'string',
+            'default': 'easy',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'videoId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -775,39 +780,44 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'difficulty',
-          'type': 'string',
-          'default': 'easy',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'completed',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'difficulty',
+            'type': 'string',
+            'default': 'easy',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1243,39 +1253,44 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'difficulty',
-          'type': 'string',
-          'default': 'easy',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'completed',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'difficulty',
+            'type': 'string',
+            'default': 'easy',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completed',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1737,54 +1752,59 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
       name: canonicalName,
       collection: 'studentprogresses',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'student',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lessonsCompleted',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'avgScore',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'streak',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'totalTimeMinutes',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'progressPct',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'day',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lastActiveAt',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'student',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lessonsCompleted',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'avgScore',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'streak',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalTimeMinutes',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'progressPct',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'day',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lastActiveAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

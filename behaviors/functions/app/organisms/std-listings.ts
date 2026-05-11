@@ -127,80 +127,85 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       name: canonicalName,
       collection: 'listings',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'location',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lat',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lng',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'images',
-          'type': 'array',
-          'default': [],
-          'items': {
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
             'type': 'string',
+            'required': true,
           },
-        },
-        {
-          'name': 'tags',
-          'type': 'array',
-          'default': [],
-          'items': {
+          {
+            'name': 'title',
             'type': 'string',
+            'required': true,
           },
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'sold',
-            'expired',
-          ],
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'location',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lat',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lng',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'images',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'tags',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'sold',
+              'expired',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1157,59 +1162,64 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
       name: canonicalName,
       collection: 'inquiries',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'listingId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'fromUserId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'toUserId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'subject',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'replied',
-            'closed',
-          ],
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'listingId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'fromUserId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'toUserId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'replied',
+              'closed',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

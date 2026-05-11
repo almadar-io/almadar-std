@@ -166,33 +166,38 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'turn',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'phase',
-          'type': 'string',
-          'default': 'setup',
-        },
-        {
-          'name': 'outcome',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'turn',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'phase',
+            'type': 'string',
+            'default': 'setup',
+          },
+          {
+            'name': 'outcome',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1138,31 +1143,36 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-        },
-        {
-          'name': 'explored',
-          'type': 'boolean',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+          },
+          {
+            'name': 'explored',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1678,36 +1688,41 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
       name: canonicalName,
       collection: 'rpgitems',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'quantity',
-          'type': 'number',
-        },
-        {
-          'name': 'rarity',
-          'type': 'string',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+          },
+          {
+            'name': 'rarity',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -3208,31 +3223,36 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-        },
-        {
-          'name': 'reward',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'reward',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

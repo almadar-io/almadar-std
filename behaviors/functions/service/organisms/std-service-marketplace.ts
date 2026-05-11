@@ -299,42 +299,47 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
       name: canonicalName,
       collection: 'products',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'inStock',
-          'type': 'boolean',
-          'default': true,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'inStock',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -2826,38 +2831,43 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-        },
-        {
-          'name': 'authUrl',
-          'type': 'string',
-        },
-        {
-          'name': 'accessToken',
-          'type': 'string',
-        },
-        {
-          'name': 'refreshToken',
-          'type': 'string',
-        },
-        {
-          'name': 'authStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+          },
+          {
+            'name': 'authUrl',
+            'type': 'string',
+          },
+          {
+            'name': 'accessToken',
+            'type': 'string',
+          },
+          {
+            'name': 'refreshToken',
+            'type': 'string',
+          },
+          {
+            'name': 'authStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -4073,54 +4083,59 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'amount',
-          'type': 'number',
-        },
-        {
-          'name': 'currency',
-          'type': 'string',
-        },
-        {
-          'name': 'paymentIntentId',
-          'type': 'string',
-        },
-        {
-          'name': 'clientSecret',
-          'type': 'string',
-        },
-        {
-          'name': 'paymentStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'to',
-          'type': 'string',
-        },
-        {
-          'name': 'subject',
-          'type': 'string',
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-        },
-        {
-          'name': 'sendStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'amount',
+            'type': 'number',
+          },
+          {
+            'name': 'currency',
+            'type': 'string',
+          },
+          {
+            'name': 'paymentIntentId',
+            'type': 'string',
+          },
+          {
+            'name': 'clientSecret',
+            'type': 'string',
+          },
+          {
+            'name': 'paymentStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'to',
+            'type': 'string',
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+          },
+          {
+            'name': 'sendStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -5633,37 +5648,42 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
       name: canonicalName,
       collection: 'orders',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'productName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'amount',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'paymentStatus',
-          'type': 'string',
-        },
-        {
-          'name': 'orderDate',
-          'type': 'string',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'productName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'amount',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'paymentStatus',
+            'type': 'string',
+          },
+          {
+            'name': 'orderDate',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

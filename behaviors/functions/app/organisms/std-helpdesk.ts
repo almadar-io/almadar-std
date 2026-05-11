@@ -115,61 +115,66 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
       name: canonicalName,
       collection: 'tickets',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'subject',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'priority',
-          'type': 'string',
-          'default': 'medium',
-          'values': [
-            'low',
-            'medium',
-            'high',
-            'critical',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'in-progress',
-            'resolved',
-            'closed',
-          ],
-        },
-        {
-          'name': 'assignee',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'customerEmail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'critical',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'in-progress',
+              'resolved',
+              'closed',
+            ],
+          },
+          {
+            'name': 'assignee',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'customerEmail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1092,49 +1097,54 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
       name: canonicalName,
       collection: 'ticketreplies',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'ticketId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'customerEmail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'subject',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'ticketId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'customerEmail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1822,49 +1832,54 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
       name: canonicalName,
       collection: 'supportmetrics',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'open',
-          'values': [
-            'open',
-            'in-progress',
-            'resolved',
-            'closed',
-          ],
-        },
-        {
-          'name': 'priority',
-          'type': 'string',
-          'default': 'medium',
-          'values': [
-            'low',
-            'medium',
-            'high',
-            'critical',
-          ],
-        },
-        {
-          'name': 'responseHours',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'in-progress',
+              'resolved',
+              'closed',
+            ],
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'critical',
+            ],
+          },
+          {
+            'name': 'responseHours',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

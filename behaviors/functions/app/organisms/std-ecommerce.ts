@@ -92,51 +92,56 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
       name: canonicalName,
       collection: 'products',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-        },
-        {
-          'name': 'imageUrl',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'sku',
-          'type': 'string',
-        },
-        {
-          'name': 'inStock',
-          'type': 'boolean',
-          'default': true,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'imageUrl',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+          },
+          {
+            'name': 'inStock',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1984,38 +1989,43 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
       name: canonicalName,
       collection: 'cartitems',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'productName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'quantity',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'unitPrice',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'totalPrice',
-          'type': 'number',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'productName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'unitPrice',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'totalPrice',
+            'type': 'number',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -3413,39 +3423,44 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'customerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'shippingAddress',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'orderTotal',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'shippingAddress',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'orderTotal',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -4604,47 +4619,52 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
       name: canonicalName,
       collection: 'orderrecords',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'customerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'shippingAddress',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'paymentMethod',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'orderTotal',
-          'type': 'number',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'customerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'shippingAddress',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'paymentMethod',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'orderTotal',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

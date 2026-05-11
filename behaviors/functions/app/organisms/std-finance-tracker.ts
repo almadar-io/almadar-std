@@ -115,52 +115,57 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       name: canonicalName,
       collection: 'transactions',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'amount',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'account',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'default': 'expense',
-          'values': [
-            'income',
-            'expense',
-          ],
-        },
-        {
-          'name': 'date',
-          'type': 'datetime',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'amount',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'account',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'default': 'expense',
+            'values': [
+              'income',
+              'expense',
+            ],
+          },
+          {
+            'name': 'date',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1076,34 +1081,39 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'totalIncome',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'totalExpenses',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'balance',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'savingsRate',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalIncome',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalExpenses',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'balance',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'savingsRate',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1499,48 +1509,53 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
       name: canonicalName,
       collection: 'financereports',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'period',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'dateRange',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'filters',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'total',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'generatedAt',
-          'type': 'datetime',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'period',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dateRange',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'filters',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'total',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'generatedAt',
+            'type': 'datetime',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

@@ -93,34 +93,39 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'turn',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'armySize',
-          'type': 'number',
-          'default': 10,
-        },
-        {
-          'name': 'morale',
-          'type': 'number',
-          'default': 100,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'turn',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'armySize',
+            'type': 'number',
+            'default': 10,
+          },
+          {
+            'name': 'morale',
+            'type': 'number',
+            'default': 100,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -849,31 +854,36 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'owner',
-          'type': 'string',
-        },
-        {
-          'name': 'defense',
-          'type': 'number',
-        },
-        {
-          'name': 'explored',
-          'type': 'boolean',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'owner',
+            'type': 'string',
+          },
+          {
+            'name': 'defense',
+            'type': 'number',
+          },
+          {
+            'name': 'explored',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1749,30 +1759,35 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'gold',
-          'type': 'number',
-        },
-        {
-          'name': 'food',
-          'type': 'number',
-        },
-        {
-          'name': 'wood',
-          'type': 'number',
-        },
-        {
-          'name': 'iron',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'gold',
+            'type': 'number',
+          },
+          {
+            'name': 'food',
+            'type': 'number',
+          },
+          {
+            'name': 'wood',
+            'type': 'number',
+          },
+          {
+            'name': 'iron',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

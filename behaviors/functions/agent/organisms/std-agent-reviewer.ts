@@ -153,62 +153,67 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'target',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'issues',
-          'type': 'string',
-          'default': '[]',
-        },
-        {
-          'name': 'suggestions',
-          'type': 'string',
-          'default': '[]',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'reviewStatus',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'activeTab',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'items',
-          'type': 'array',
-          'default': [],
-          'items': {
-            'type': 'object',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
           },
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'target',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'issues',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'suggestions',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reviewStatus',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'activeTab',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'items',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'object',
+            },
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1091,88 +1096,93 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'query',
-          'type': 'string',
-        },
-        {
-          'name': 'context',
-          'type': 'string',
-        },
-        {
-          'name': 'response',
-          'type': 'string',
-        },
-        {
-          'name': 'memoryHits',
-          'type': 'number',
-        },
-        {
-          'name': 'searchHits',
-          'type': 'number',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'scope',
-          'type': 'string',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-        },
-        {
-          'name': 'pinned',
-          'type': 'boolean',
-        },
-        {
-          'name': 'language',
-          'type': 'string',
-        },
-        {
-          'name': 'resultCount',
-          'type': 'number',
-        },
-        {
-          'name': 'results',
-          'type': 'string',
-        },
-        {
-          'name': 'prompt',
-          'type': 'string',
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-        },
-        {
-          'name': 'model',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'query',
+            'type': 'string',
+          },
+          {
+            'name': 'context',
+            'type': 'string',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+          },
+          {
+            'name': 'memoryHits',
+            'type': 'number',
+          },
+          {
+            'name': 'searchHits',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+          },
+          {
+            'name': 'language',
+            'type': 'string',
+          },
+          {
+            'name': 'resultCount',
+            'type': 'number',
+          },
+          {
+            'name': 'results',
+            'type': 'string',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -3469,39 +3479,44 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'input',
-          'type': 'string',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'confidence',
-          'type': 'number',
-        },
-        {
-          'name': 'model',
-          'type': 'string',
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-        },
-        {
-          'name': 'notificationType',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'input',
+            'type': 'string',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'confidence',
+            'type': 'number',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -4764,47 +4779,52 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'prompt',
-          'type': 'string',
-        },
-        {
-          'name': 'response',
-          'type': 'string',
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-        },
-        {
-          'name': 'model',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-        },
-        {
-          'name': 'notificationType',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -6111,49 +6131,54 @@ export function stdAgentReviewerReviewNavOrbital(params: StdAgentReviewerReviewN
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'target',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'issues',
-          'type': 'string',
-          'default': '[]',
-        },
-        {
-          'name': 'suggestions',
-          'type': 'string',
-          'default': '[]',
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'reviewStatus',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'target',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'issues',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'suggestions',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reviewStatus',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -6286,26 +6311,31 @@ export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerRevie
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-        },
-        {
-          'name': 'severity',
-          'type': 'string',
-        },
-        {
-          'name': 'line',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'severity',
+            'type': 'string',
+          },
+          {
+            'name': 'line',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

@@ -115,44 +115,49 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
       name: canonicalName,
       collection: 'portfolios',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'symbol',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'qty',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'avgCost',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'marketValue',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'dailyPnl',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'symbol',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'qty',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'avgCost',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'marketValue',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'dailyPnl',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1068,53 +1073,58 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
       name: canonicalName,
       collection: 'tradeorders',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'symbol',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'side',
-          'type': 'string',
-          'default': 'buy',
-          'values': [
-            'buy',
-            'sell',
-          ],
-        },
-        {
-          'name': 'quantity',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'filled',
-            'cancelled',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'symbol',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'side',
+            'type': 'string',
+            'default': 'buy',
+            'values': [
+              'buy',
+              'sell',
+            ],
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'filled',
+              'cancelled',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1781,39 +1791,44 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'symbol',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'change',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'volume',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'dailyPnl',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'symbol',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'change',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'volume',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'dailyPnl',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

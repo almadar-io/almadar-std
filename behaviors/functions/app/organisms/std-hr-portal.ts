@@ -123,59 +123,64 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       name: canonicalName,
       collection: 'employees',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'department',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'role',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'hireDate',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'avatar',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'leave',
-            'terminated',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'hireDate',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'avatar',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'leave',
+              'terminated',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1241,44 +1246,49 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
       name: canonicalName,
       collection: 'onboardings',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'employeeName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'department',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'manager',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'equipmentReady',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'accessGranted',
-          'type': 'boolean',
-          'default': false,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'manager',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'equipmentReady',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'accessGranted',
+            'type': 'boolean',
+            'default': false,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2527,65 +2537,70 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       name: canonicalName,
       collection: 'timeoffs',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'employeeName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'employeeEmail',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'leaveType',
-          'type': 'string',
-          'default': 'vacation',
-          'values': [
-            'vacation',
-            'sick',
-            'personal',
-            'bereavement',
-          ],
-        },
-        {
-          'name': 'startDate',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'endDate',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'reason',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'approved',
-            'denied',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeEmail',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'leaveType',
+            'type': 'string',
+            'default': 'vacation',
+            'values': [
+              'vacation',
+              'sick',
+              'personal',
+              'bereavement',
+            ],
+          },
+          {
+            'name': 'startDate',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'endDate',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'reason',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'approved',
+              'denied',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -3407,34 +3422,39 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'role',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'department',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'managerId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'managerId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

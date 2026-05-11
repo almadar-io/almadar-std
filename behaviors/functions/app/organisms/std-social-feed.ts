@@ -111,49 +111,54 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       name: canonicalName,
       collection: 'posts',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'image',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'datetime',
-          'default': '',
-        },
-        {
-          'name': 'likes',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'tag',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'image',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'datetime',
+            'default': '',
+          },
+          {
+            'name': 'likes',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'tag',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1223,39 +1228,44 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       name: canonicalName,
       collection: 'comments',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'postId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'author',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'body',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'datetime',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'postId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'datetime',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

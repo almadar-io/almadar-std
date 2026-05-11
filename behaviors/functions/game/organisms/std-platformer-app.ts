@@ -138,44 +138,49 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lives',
-          'type': 'number',
-          'default': 3,
-        },
-        {
-          'name': 'time',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'player',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'platforms',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lives',
+            'type': 'number',
+            'default': 3,
+          },
+          {
+            'name': 'time',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'player',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'platforms',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1077,46 +1082,51 @@ export function stdPlatformerAppPlatScoreOrbital(params: StdPlatformerAppPlatSco
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'playerName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'score',
-          'type': 'number',
-          'required': true,
-          'default': 0,
-        },
-        {
-          'name': 'level',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'completedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'highScore',
-          'type': 'number',
-        },
-        {
-          'name': 'combo',
-          'type': 'number',
-        },
-        {
-          'name': 'multiplier',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'playerName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'score',
+            'type': 'number',
+            'required': true,
+            'default': 0,
+          },
+          {
+            'name': 'level',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'highScore',
+            'type': 'number',
+          },
+          {
+            'name': 'combo',
+            'type': 'number',
+          },
+          {
+            'name': 'multiplier',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1490,36 +1500,41 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
       name: canonicalName,
       collection: 'collectibles',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'type',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'quantity',
-          'type': 'number',
-        },
-        {
-          'name': 'rarity',
-          'type': 'string',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+          },
+          {
+            'name': 'rarity',
+            'type': 'string',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

@@ -103,55 +103,60 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
       name: canonicalName,
       collection: 'vendors',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'businessName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'active',
-            'pending',
-            'suspended',
-            'closed',
-          ],
-        },
-        {
-          'name': 'totalSales',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'rating',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'businessName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'active',
+              'pending',
+              'suspended',
+              'closed',
+            ],
+          },
+          {
+            'name': 'totalSales',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'rating',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -957,86 +962,91 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       name: canonicalName,
       collection: 'listings',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'vendorId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'price',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'currency',
-          'type': 'string',
-          'default': 'USD',
-        },
-        {
-          'name': 'images',
-          'type': 'array',
-          'default': [],
-          'items': {
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
             'type': 'string',
+            'required': true,
           },
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'active',
-            'sold',
-            'removed',
-          ],
-        },
-        {
-          'name': 'tags',
-          'type': 'array',
-          'default': [],
-          'items': {
+          {
+            'name': 'vendorId',
             'type': 'string',
+            'required': true,
           },
-        },
-        {
-          'name': 'ratingAverage',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'reviewCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'currency',
+            'type': 'string',
+            'default': 'USD',
+          },
+          {
+            'name': 'images',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'active',
+              'sold',
+              'removed',
+            ],
+          },
+          {
+            'name': 'tags',
+            'type': 'array',
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'ratingAverage',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reviewCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2036,56 +2046,61 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       name: canonicalName,
       collection: 'orders',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'buyerId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'listingId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'quantity',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'totalAmount',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'paid',
-            'shipped',
-            'delivered',
-            'refunded',
-          ],
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'buyerId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'listingId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'totalAmount',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'paid',
+              'shipped',
+              'delivered',
+              'refunded',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

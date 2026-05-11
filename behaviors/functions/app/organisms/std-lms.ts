@@ -127,64 +127,69 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
       name: canonicalName,
       collection: 'courses',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'level',
-          'type': 'string',
-          'default': 'beginner',
-          'values': [
-            'beginner',
-            'intermediate',
-            'advanced',
-          ],
-        },
-        {
-          'name': 'duration',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'instructor',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'thumbnail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'videoId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'level',
+            'type': 'string',
+            'default': 'beginner',
+            'values': [
+              'beginner',
+              'intermediate',
+              'advanced',
+            ],
+          },
+          {
+            'name': 'duration',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'instructor',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'thumbnail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'videoId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1525,44 +1530,49 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
       name: canonicalName,
       collection: 'enrollments',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'studentName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'courseId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'enrolledAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'active',
-            'completed',
-          ],
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'studentName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'courseId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'enrolledAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'active',
+              'completed',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2726,54 +2736,59 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
       name: canonicalName,
       collection: 'progresses',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'courseName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'week',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lessonsCompleted',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'totalLessons',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'completionPct',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'timeSpent',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'streak',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lastActivity',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'courseName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'week',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lessonsCompleted',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalLessons',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completionPct',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'timeSpent',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'streak',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lastActivity',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

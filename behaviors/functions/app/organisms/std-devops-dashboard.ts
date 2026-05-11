@@ -115,63 +115,68 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       name: canonicalName,
       collection: 'servicenodes',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'healthy',
-          'values': [
-            'healthy',
-            'degraded',
-            'down',
-          ],
-        },
-        {
-          'name': 'region',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'url',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lastChecked',
-          'type': 'datetime',
-        },
-        {
-          'name': 'failureCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'successCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'threshold',
-          'type': 'number',
-          'default': 5,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'healthy',
+            'values': [
+              'healthy',
+              'degraded',
+              'down',
+            ],
+          },
+          {
+            'name': 'region',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'url',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lastChecked',
+            'type': 'datetime',
+          },
+          {
+            'name': 'failureCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'successCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+            'default': 5,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1898,43 +1903,48 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       name: canonicalName,
       collection: 'alertmetrics',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'severity',
-          'type': 'string',
-          'default': 'info',
-          'values': [
-            'info',
-            'warning',
-            'critical',
-          ],
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'timestamp',
-          'type': 'datetime',
-        },
-        {
-          'name': 'source',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'severity',
+            'type': 'string',
+            'default': 'info',
+            'values': [
+              'info',
+              'warning',
+              'critical',
+            ],
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'timestamp',
+            'type': 'datetime',
+          },
+          {
+            'name': 'source',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2689,39 +2699,44 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
       name: canonicalName,
       collection: 'logentries',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'level',
-          'type': 'string',
-          'default': 'info',
-          'values': [
-            'debug',
-            'info',
-            'warn',
-            'error',
-          ],
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'timestamp',
-          'type': 'datetime',
-        },
-        {
-          'name': 'service',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'level',
+            'type': 'string',
+            'default': 'info',
+            'values': [
+              'debug',
+              'info',
+              'warn',
+              'error',
+            ],
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'timestamp',
+            'type': 'datetime',
+          },
+          {
+            'name': 'service',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2999,39 +3014,44 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
       name: canonicalName,
       collection: 'systemmetrics',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'value',
-          'type': 'number',
-          'required': true,
-        },
-        {
-          'name': 'unit',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'trend',
-          'type': 'string',
-          'default': 'flat',
-          'values': [
-            'up',
-            'down',
-            'flat',
-          ],
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'value',
+            'type': 'number',
+            'required': true,
+          },
+          {
+            'name': 'unit',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'trend',
+            'type': 'string',
+            'default': 'flat',
+            'values': [
+              'up',
+              'down',
+              'flat',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

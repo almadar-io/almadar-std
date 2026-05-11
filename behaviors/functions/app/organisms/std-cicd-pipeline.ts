@@ -115,60 +115,65 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
       name: canonicalName,
       collection: 'builds',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'branch',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'commit',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'running',
-            'success',
-            'failed',
-          ],
-        },
-        {
-          'name': 'duration',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'triggeredBy',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'day',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'startedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'branch',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'commit',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'running',
+              'success',
+              'failed',
+            ],
+          },
+          {
+            'name': 'duration',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'triggeredBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'day',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'startedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1099,50 +1104,55 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
       name: canonicalName,
       collection: 'stages',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'buildId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'running',
-            'success',
-            'failed',
-          ],
-        },
-        {
-          'name': 'duration',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'output',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'buildId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'running',
+              'success',
+              'failed',
+            ],
+          },
+          {
+            'name': 'duration',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'output',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1897,40 +1907,45 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
       name: canonicalName,
       collection: 'deployments',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'environment',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'version',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'running',
-            'success',
-            'failed',
-          ],
-        },
-        {
-          'name': 'deployedAt',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'environment',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'version',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'running',
+              'success',
+              'failed',
+            ],
+          },
+          {
+            'name': 'deployedAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

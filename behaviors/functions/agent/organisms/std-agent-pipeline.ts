@@ -168,124 +168,129 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'task',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'steps',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'confidence',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'relevantMemories',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'memoryCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'input',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'prompt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'response',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-          'default': 'anthropic',
-        },
-        {
-          'name': 'model',
-          'type': 'string',
-          'default': 'claude-sonnet-4-20250514',
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'scope',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'pinned',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'action',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'detail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'duration',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'icon',
-          'type': 'string',
-          'default': 'circle',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'task',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'confidence',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'relevantMemories',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'input',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'action',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'detail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'duration',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'icon',
+            'type': 'string',
+            'default': 'circle',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -3216,142 +3221,147 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'task',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'plan',
-          'type': 'string',
-        },
-        {
-          'name': 'iterations',
-          'type': 'number',
-        },
-        {
-          'name': 'maxIterations',
-          'type': 'number',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'result',
-          'type': 'string',
-        },
-        {
-          'name': 'currentTool',
-          'type': 'string',
-        },
-        {
-          'name': 'lastToolResult',
-          'type': 'string',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'currentStep',
-          'type': 'number',
-        },
-        {
-          'name': 'totalSteps',
-          'type': 'number',
-        },
-        {
-          'name': 'steps',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'toolName',
-          'type': 'string',
-        },
-        {
-          'name': 'args',
-          'type': 'string',
-        },
-        {
-          'name': 'prompt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'response',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-          'default': 'anthropic',
-        },
-        {
-          'name': 'model',
-          'type': 'string',
-          'default': 'claude-sonnet-4-20250514',
-        },
-        {
-          'name': 'tokenCount',
-          'type': 'number',
-        },
-        {
-          'name': 'maxTokens',
-          'type': 'number',
-        },
-        {
-          'name': 'usage',
-          'type': 'number',
-        },
-        {
-          'name': 'current',
-          'type': 'number',
-        },
-        {
-          'name': 'max',
-          'type': 'number',
-        },
-        {
-          'name': 'threshold',
-          'type': 'number',
-        },
-        {
-          'name': 'lastCompactedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'action',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'detail',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'duration',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'task',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'plan',
+            'type': 'string',
+          },
+          {
+            'name': 'iterations',
+            'type': 'number',
+          },
+          {
+            'name': 'maxIterations',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'name': 'currentTool',
+            'type': 'string',
+          },
+          {
+            'name': 'lastToolResult',
+            'type': 'string',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+          },
+          {
+            'name': 'args',
+            'type': 'string',
+          },
+          {
+            'name': 'prompt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'anthropic',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': 'claude-sonnet-4-20250514',
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+          },
+          {
+            'name': 'maxTokens',
+            'type': 'number',
+          },
+          {
+            'name': 'usage',
+            'type': 'number',
+          },
+          {
+            'name': 'current',
+            'type': 'number',
+          },
+          {
+            'name': 'max',
+            'type': 'number',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+          },
+          {
+            'name': 'lastCompactedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'action',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'detail',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'duration',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -9065,35 +9075,40 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'sessionId',
-          'type': 'string',
-        },
-        {
-          'name': 'parentId',
-          'type': 'string',
-        },
-        {
-          'name': 'label',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+          },
+          {
+            'name': 'parentId',
+            'type': 'string',
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -10344,47 +10359,52 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
       name: canonicalName,
       collection: 'executionlogs',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'pinned',
-          'type': 'boolean',
-          'default': false,
-        },
-        {
-          'name': 'scope',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'lastAccessedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lastAccessedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -11793,32 +11813,37 @@ export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipeline
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'steps',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'currentStep',
-          'type': 'number',
-        },
-        {
-          'name': 'totalSteps',
-          'type': 'number',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'steps',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'currentStep',
+            'type': 'number',
+          },
+          {
+            'name': 'totalSteps',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -11951,27 +11976,32 @@ export function stdAgentPipelineSessionTreeOrbital(params: StdAgentPipelineSessi
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'branchId',
-          'type': 'string',
-        },
-        {
-          'name': 'label',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'branchId',
+            'type': 'string',
+          },
+          {
+            'name': 'label',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

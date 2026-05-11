@@ -165,94 +165,99 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'messages',
-          'type': 'string',
-          'default': '[]',
-        },
-        {
-          'name': 'currentMessage',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'response',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'memoryCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'contextUsage',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-          'default': 'default',
-        },
-        {
-          'name': 'sessionId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'turnCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'lastMessage',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'tokenCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'role',
-          'type': 'string',
-          'default': 'user',
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'toolName',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'messages',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'currentMessage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'contextUsage',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'default',
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'turnCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lastMessage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'default': 'user',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'toolName',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -1343,43 +1348,48 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
       name: canonicalName,
       collection: 'memorys',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'category',
-          'type': 'string',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-        },
-        {
-          'name': 'pinned',
-          'type': 'boolean',
-        },
-        {
-          'name': 'scope',
-          'type': 'string',
-        },
-        {
-          'name': 'lastAccessedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+          {
+            'name': 'pinned',
+            'type': 'boolean',
+          },
+          {
+            'name': 'scope',
+            'type': 'string',
+          },
+          {
+            'name': 'lastAccessedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -2783,51 +2793,56 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'tokenCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'maxTokens',
-          'type': 'number',
-        },
-        {
-          'name': 'usage',
-          'type': 'number',
-        },
-        {
-          'name': 'lastCompactedAt',
-          'type': 'string',
-        },
-        {
-          'name': 'current',
-          'type': 'number',
-        },
-        {
-          'name': 'max',
-          'type': 'number',
-        },
-        {
-          'name': 'threshold',
-          'type': 'number',
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-        },
-        {
-          'name': 'notificationType',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tokenCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'maxTokens',
+            'type': 'number',
+          },
+          {
+            'name': 'usage',
+            'type': 'number',
+          },
+          {
+            'name': 'lastCompactedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'current',
+            'type': 'number',
+          },
+          {
+            'name': 'max',
+            'type': 'number',
+          },
+          {
+            'name': 'threshold',
+            'type': 'number',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -5731,38 +5746,43 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'currentProvider',
-          'type': 'string',
-        },
-        {
-          'name': 'currentModel',
-          'type': 'string',
-        },
-        {
-          'name': 'fallbackProvider',
-          'type': 'string',
-        },
-        {
-          'name': 'requestCount',
-          'type': 'number',
-        },
-        {
-          'name': 'message',
-          'type': 'string',
-        },
-        {
-          'name': 'notificationType',
-          'type': 'string',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'currentProvider',
+            'type': 'string',
+          },
+          {
+            'name': 'currentModel',
+            'type': 'string',
+          },
+          {
+            'name': 'fallbackProvider',
+            'type': 'string',
+          },
+          {
+            'name': 'requestCount',
+            'type': 'number',
+          },
+          {
+            'name': 'message',
+            'type': 'string',
+          },
+          {
+            'name': 'notificationType',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -7067,59 +7087,64 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'messages',
-          'type': 'string',
-          'default': '[]',
-        },
-        {
-          'name': 'currentMessage',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'response',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'memoryCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'contextUsage',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'provider',
-          'type': 'string',
-          'default': 'default',
-        },
-        {
-          'name': 'sessionId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'idle',
-        },
-        {
-          'name': 'error',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'messages',
+            'type': 'string',
+            'default': '[]',
+          },
+          {
+            'name': 'currentMessage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'memoryCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'contextUsage',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'provider',
+            'type': 'string',
+            'default': 'default',
+          },
+          {
+            'name': 'sessionId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'idle',
+          },
+          {
+            'name': 'error',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {
@@ -7552,27 +7577,32 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'query',
-          'type': 'string',
-        },
-        {
-          'name': 'strength',
-          'type': 'number',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'query',
+            'type': 'string',
+          },
+          {
+            'name': 'strength',
+            'type': 'number',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       {

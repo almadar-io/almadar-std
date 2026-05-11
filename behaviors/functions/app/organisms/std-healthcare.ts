@@ -119,56 +119,61 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
       name: canonicalName,
       collection: 'patients',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'firstName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'lastName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'dateOfBirth',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'phone',
-          'type': 'string',
-        },
-        {
-          'name': 'insuranceId',
-          'type': 'string',
-        },
-        {
-          'name': 'email',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'inactive',
-            'discharged',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'firstName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'lastName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dateOfBirth',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+          },
+          {
+            'name': 'insuranceId',
+            'type': 'string',
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'discharged',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1344,62 +1349,67 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
       name: canonicalName,
       collection: 'appointments',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'patientName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'patientEmail',
-          'type': 'string',
-        },
-        {
-          'name': 'patientPhone',
-          'type': 'string',
-        },
-        {
-          'name': 'doctorName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'summary',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'scheduledAt',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'reason',
-          'type': 'string',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'scheduled',
-          'values': [
-            'scheduled',
-            'completed',
-            'cancelled',
-            'no-show',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientEmail',
+            'type': 'string',
+          },
+          {
+            'name': 'patientPhone',
+            'type': 'string',
+          },
+          {
+            'name': 'doctorName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'summary',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'reason',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'scheduled',
+            'values': [
+              'scheduled',
+              'completed',
+              'cancelled',
+              'no-show',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2416,54 +2426,59 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
       name: canonicalName,
       collection: 'intakeforms',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'firstName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'lastName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'dateOfBirth',
-          'type': 'datetime',
-          'required': true,
-        },
-        {
-          'name': 'allergies',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'medications',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'emergencyContact',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'insuranceProvider',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'insuranceId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'firstName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'lastName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dateOfBirth',
+            'type': 'datetime',
+            'required': true,
+          },
+          {
+            'name': 'allergies',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'medications',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'emergencyContact',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'insuranceProvider',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'insuranceId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -3702,61 +3717,66 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
       name: canonicalName,
       collection: 'prescriptions',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'medication',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'dosage',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'frequency',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'patientName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'prescribedBy',
-          'type': 'string',
-        },
-        {
-          'name': 'startDate',
-          'type': 'datetime',
-        },
-        {
-          'name': 'endDate',
-          'type': 'datetime',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'expired',
-            'discontinued',
-          ],
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'medication',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dosage',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'frequency',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'prescribedBy',
+            'type': 'string',
+          },
+          {
+            'name': 'startDate',
+            'type': 'datetime',
+          },
+          {
+            'name': 'endDate',
+            'type': 'datetime',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'expired',
+              'discontinued',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -4811,14 +4831,19 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

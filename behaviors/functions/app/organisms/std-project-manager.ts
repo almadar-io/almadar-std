@@ -123,71 +123,76 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       name: canonicalName,
       collection: 'tasks',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'assignee',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'priority',
-          'type': 'string',
-          'default': 'medium',
-          'values': [
-            'low',
-            'medium',
-            'high',
-            'critical',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'todo',
-          'values': [
-            'todo',
-            'in-progress',
-            'review',
-            'done',
-          ],
-        },
-        {
-          'name': 'sprint',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'storyPoints',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'dueDate',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'assignee',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'critical',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'todo',
+            'values': [
+              'todo',
+              'in-progress',
+              'review',
+              'done',
+            ],
+          },
+          {
+            'name': 'sprint',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'storyPoints',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'dueDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1179,54 +1184,59 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       name: canonicalName,
       collection: 'sprints',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'startDate',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'endDate',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'goal',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'planning',
-          'values': [
-            'planning',
-            'active',
-            'completed',
-          ],
-        },
-        {
-          'name': 'taskCount',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'startDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'endDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'goal',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'planning',
+            'values': [
+              'planning',
+              'active',
+              'completed',
+            ],
+          },
+          {
+            'name': 'taskCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1901,39 +1911,44 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'singleton',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'totalPoints',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'completedPoints',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'remainingPoints',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'velocity',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'daysRemaining',
-          'type': 'number',
-          'default': 0,
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalPoints',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'completedPoints',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'remainingPoints',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'velocity',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'daysRemaining',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

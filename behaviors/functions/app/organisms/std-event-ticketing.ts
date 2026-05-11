@@ -119,65 +119,70 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       name: canonicalName,
       collection: 'events',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'venue',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'startsAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'endsAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'capacity',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'published',
-            'sold-out',
-            'cancelled',
-          ],
-        },
-        {
-          'name': 'organizerId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'venue',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'startsAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'endsAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'capacity',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'published',
+              'sold-out',
+              'cancelled',
+            ],
+          },
+          {
+            'name': 'organizerId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1162,61 +1167,66 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
       name: canonicalName,
       collection: 'tickets',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'eventId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'tierId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'holderName',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'holderEmail',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'qrCode',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'pending',
-          'values': [
-            'pending',
-            'paid',
-            'scanned',
-            'refunded',
-            'cancelled',
-          ],
-        },
-        {
-          'name': 'purchasedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'eventId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tierId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'holderName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'holderEmail',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'qrCode',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'paid',
+              'scanned',
+              'refunded',
+              'cancelled',
+            ],
+          },
+          {
+            'name': 'purchasedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1785,44 +1795,49 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
       name: canonicalName,
       collection: 'attendees',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'description',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'inactive',
-            'pending',
-          ],
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'pending',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -2142,50 +2157,55 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
       name: canonicalName,
       collection: 'waitlistrows',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'targetId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'userId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'position',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'waiting',
-          'values': [
-            'waiting',
-            'promoted',
-            'cancelled',
-            'expired',
-          ],
-        },
-        {
-          'name': 'joinedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'targetId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'userId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'position',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'waiting',
+            'values': [
+              'waiting',
+              'promoted',
+              'cancelled',
+              'expired',
+            ],
+          },
+          {
+            'name': 'joinedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

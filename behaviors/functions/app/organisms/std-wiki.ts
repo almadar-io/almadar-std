@@ -127,88 +127,93 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       name: canonicalName,
       collection: 'wikipages',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'title',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'slug',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'blocksJson',
-          'type': 'array',
-          'items': {
-            'type': 'object',
-          },
-        },
-        {
-          'name': 'authorId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'parentId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'kind',
-          'type': 'string',
-          'default': 'page',
-          'values': [
-            'page',
-            'doc',
-            'post',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'draft',
-          'values': [
-            'draft',
-            'published',
-            'archived',
-          ],
-        },
-        {
-          'name': 'version',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'tagIds',
-          'type': 'array',
-          'items': {
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
             'type': 'string',
+            'required': true,
           },
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'updatedAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'blocksJson',
+            'type': 'array',
+            'items': {
+              'type': 'object',
+            },
+          },
+          {
+            'name': 'authorId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'parentId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'kind',
+            'type': 'string',
+            'default': 'page',
+            'values': [
+              'page',
+              'doc',
+              'post',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'published',
+              'archived',
+            ],
+          },
+          {
+            'name': 'version',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'tagIds',
+            'type': 'array',
+            'items': {
+              'type': 'string',
+            },
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1153,59 +1158,64 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
       name: canonicalName,
       collection: 'wikirevisions',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'documentId',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'documentType',
-          'type': 'string',
-          'default': 'page',
-        },
-        {
-          'name': 'versionNumber',
-          'type': 'number',
-          'default': 1,
-        },
-        {
-          'name': 'authorId',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'authorName',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'content',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'summary',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'createdAt',
-          'type': 'string',
-          'default': '',
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'documentId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'documentType',
+            'type': 'string',
+            'default': 'page',
+          },
+          {
+            'name': 'versionNumber',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'authorId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'authorName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'summary',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({

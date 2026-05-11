@@ -115,59 +115,64 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       name: canonicalName,
       collection: 'routes',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'path',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'method',
-          'type': 'string',
-          'default': 'GET',
-          'values': [
-            'GET',
-            'POST',
-            'PUT',
-            'DELETE',
-          ],
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'disabled',
-          ],
-        },
-        {
-          'name': 'target',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'hits',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'rateLimit',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'path',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'method',
+            'type': 'string',
+            'default': 'GET',
+            'values': [
+              'GET',
+              'POST',
+              'PUT',
+              'DELETE',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'disabled',
+            ],
+          },
+          {
+            'name': 'target',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'hits',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'rateLimit',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1103,43 +1108,48 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       name: canonicalName,
       collection: 'backends',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'url',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'status',
-          'type': 'string',
-          'default': 'active',
-          'values': [
-            'active',
-            'disabled',
-          ],
-        },
-        {
-          'name': 'latency',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'pendingId',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'url',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'disabled',
+            ],
+          },
+          {
+            'name': 'latency',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
@@ -1919,38 +1929,43 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
       name: canonicalName,
       collection: 'analyticsrecords',
       persistence: params.persistence ?? 'persistent',
-      fields: [
-        {
-          'name': 'id',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'routePath',
-          'type': 'string',
-          'required': true,
-        },
-        {
-          'name': 'method',
-          'type': 'string',
-        },
-        {
-          'name': 'statusCode',
-          'type': 'number',
-          'default': 200,
-        },
-        {
-          'name': 'latencyMs',
-          'type': 'number',
-          'default': 0,
-        },
-        {
-          'name': 'timestamp',
-          'type': 'string',
-          'default': '',
-        },
-        ...(params.fields ?? []),
-      ],
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'routePath',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'method',
+            'type': 'string',
+          },
+          {
+            'name': 'statusCode',
+            'type': 'number',
+            'default': 200,
+          },
+          {
+            'name': 'latencyMs',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'timestamp',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
     } as Entity,
     traits: [
       makeTraitRef({
