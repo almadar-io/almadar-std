@@ -143,6 +143,23 @@ import {
   isStdArcadeGameArcadeHudOrbitalParams,
 } from './game/organisms/std-arcade-game.js';
 import {
+  stdAtsRecruitingJobOpeningOrbital,
+  StdAtsRecruitingJobOpeningOrbitalManifest,
+  isStdAtsRecruitingJobOpeningOrbitalParams,
+  stdAtsRecruitingApplicantPipelineOrbital,
+  StdAtsRecruitingApplicantPipelineOrbitalManifest,
+  isStdAtsRecruitingApplicantPipelineOrbitalParams,
+  stdAtsRecruitingApplicantOrbital,
+  StdAtsRecruitingApplicantOrbitalManifest,
+  isStdAtsRecruitingApplicantOrbitalParams,
+  stdAtsRecruitingInterviewScheduleOrbital,
+  StdAtsRecruitingInterviewScheduleOrbitalManifest,
+  isStdAtsRecruitingInterviewScheduleOrbitalParams,
+  stdAtsRecruitingOfferLetterFlowOrbital,
+  StdAtsRecruitingOfferLetterFlowOrbitalManifest,
+  isStdAtsRecruitingOfferLetterFlowOrbitalParams,
+} from './app/organisms/std-ats-recruiting.js';
+import {
   stdBookingSystemProviderOrbital,
   StdBookingSystemProviderOrbitalManifest,
   isStdBookingSystemProviderOrbitalParams,
@@ -274,6 +291,20 @@ import {
   isStdFinanceTrackerFinanceReportOrbitalParams,
 } from './app/organisms/std-finance-tracker.js';
 import {
+  stdFitnessStudioMemberOrbital,
+  StdFitnessStudioMemberOrbitalManifest,
+  isStdFitnessStudioMemberOrbitalParams,
+  stdFitnessStudioClassSessionOrbital,
+  StdFitnessStudioClassSessionOrbitalManifest,
+  isStdFitnessStudioClassSessionOrbitalParams,
+  stdFitnessStudioMembershipOrbital,
+  StdFitnessStudioMembershipOrbitalManifest,
+  isStdFitnessStudioMembershipOrbitalParams,
+  stdFitnessStudioClassRosterOrbital,
+  StdFitnessStudioClassRosterOrbitalManifest,
+  isStdFitnessStudioClassRosterOrbitalParams,
+} from './app/organisms/std-fitness-studio.js';
+import {
   stdForumQuestionOrbital,
   StdForumQuestionOrbitalManifest,
   isStdForumQuestionOrbitalParams,
@@ -360,6 +391,17 @@ import {
   StdIotDashboardDeviceAlertOrbitalManifest,
   isStdIotDashboardDeviceAlertOrbitalParams,
 } from './app/organisms/std-iot-dashboard.js';
+import {
+  stdLegalCaseMatterOrbital,
+  StdLegalCaseMatterOrbitalManifest,
+  isStdLegalCaseMatterOrbitalParams,
+  stdLegalCaseBillableHourPanelOrbital,
+  StdLegalCaseBillableHourPanelOrbitalManifest,
+  isStdLegalCaseBillableHourPanelOrbitalParams,
+  stdLegalCaseCourtDeadlinePanelOrbital,
+  StdLegalCaseCourtDeadlinePanelOrbitalManifest,
+  isStdLegalCaseCourtDeadlinePanelOrbitalParams,
+} from './app/organisms/std-legal-case.js';
 import {
   stdListingsListingOrbital,
   StdListingsListingOrbitalManifest,
@@ -456,6 +498,20 @@ import {
   StdRestaurantPosKitchenOrbitalManifest,
   isStdRestaurantPosKitchenOrbitalParams,
 } from './app/organisms/std-restaurant-pos.js';
+import {
+  stdRetailPosSaleOrbital,
+  StdRetailPosSaleOrbitalManifest,
+  isStdRetailPosSaleOrbitalParams,
+  stdRetailPosCheckoutOrbital,
+  StdRetailPosCheckoutOrbitalManifest,
+  isStdRetailPosCheckoutOrbitalParams,
+  stdRetailPosReceiptOrbital,
+  StdRetailPosReceiptOrbitalManifest,
+  isStdRetailPosReceiptOrbitalParams,
+  stdRetailPosCustomerOrbital,
+  StdRetailPosCustomerOrbitalManifest,
+  isStdRetailPosCustomerOrbitalParams,
+} from './app/organisms/std-retail-pos.js';
 import {
   stdRpgGameBattleStateOrbital,
   StdRpgGameBattleStateOrbitalManifest,
@@ -929,6 +985,51 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdArcadeGameArcadeHudOrbitalManifest,
   }],
+  ['std-ats-recruiting::JobOpeningOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAtsRecruitingJobOpeningOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-ats-recruiting::JobOpeningOrbital');
+      }
+      return stdAtsRecruitingJobOpeningOrbital(p);
+    },
+    manifest: StdAtsRecruitingJobOpeningOrbitalManifest,
+  }],
+  ['std-ats-recruiting::ApplicantPipelineOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAtsRecruitingApplicantPipelineOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-ats-recruiting::ApplicantPipelineOrbital');
+      }
+      return stdAtsRecruitingApplicantPipelineOrbital(p);
+    },
+    manifest: StdAtsRecruitingApplicantPipelineOrbitalManifest,
+  }],
+  ['std-ats-recruiting::ApplicantOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAtsRecruitingApplicantOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-ats-recruiting::ApplicantOrbital');
+      }
+      return stdAtsRecruitingApplicantOrbital(p);
+    },
+    manifest: StdAtsRecruitingApplicantOrbitalManifest,
+  }],
+  ['std-ats-recruiting::InterviewScheduleOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAtsRecruitingInterviewScheduleOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-ats-recruiting::InterviewScheduleOrbital');
+      }
+      return stdAtsRecruitingInterviewScheduleOrbital(p);
+    },
+    manifest: StdAtsRecruitingInterviewScheduleOrbitalManifest,
+  }],
+  ['std-ats-recruiting::OfferLetterFlowOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAtsRecruitingOfferLetterFlowOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-ats-recruiting::OfferLetterFlowOrbital');
+      }
+      return stdAtsRecruitingOfferLetterFlowOrbital(p);
+    },
+    manifest: StdAtsRecruitingOfferLetterFlowOrbitalManifest,
+  }],
   ['std-booking-system::ProviderOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdBookingSystemProviderOrbitalParams(p)) {
@@ -1262,6 +1363,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdFinanceTrackerFinanceReportOrbitalManifest,
   }],
+  ['std-fitness-studio::MemberOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFitnessStudioMemberOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fitness-studio::MemberOrbital');
+      }
+      return stdFitnessStudioMemberOrbital(p);
+    },
+    manifest: StdFitnessStudioMemberOrbitalManifest,
+  }],
+  ['std-fitness-studio::ClassSessionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFitnessStudioClassSessionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fitness-studio::ClassSessionOrbital');
+      }
+      return stdFitnessStudioClassSessionOrbital(p);
+    },
+    manifest: StdFitnessStudioClassSessionOrbitalManifest,
+  }],
+  ['std-fitness-studio::MembershipOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFitnessStudioMembershipOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fitness-studio::MembershipOrbital');
+      }
+      return stdFitnessStudioMembershipOrbital(p);
+    },
+    manifest: StdFitnessStudioMembershipOrbitalManifest,
+  }],
+  ['std-fitness-studio::ClassRosterOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFitnessStudioClassRosterOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fitness-studio::ClassRosterOrbital');
+      }
+      return stdFitnessStudioClassRosterOrbital(p);
+    },
+    manifest: StdFitnessStudioClassRosterOrbitalManifest,
+  }],
   ['std-forum::QuestionOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdForumQuestionOrbitalParams(p)) {
@@ -1486,6 +1623,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdIotDashboardDeviceAlertOrbital(p);
     },
     manifest: StdIotDashboardDeviceAlertOrbitalManifest,
+  }],
+  ['std-legal-case::MatterOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLegalCaseMatterOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-legal-case::MatterOrbital');
+      }
+      return stdLegalCaseMatterOrbital(p);
+    },
+    manifest: StdLegalCaseMatterOrbitalManifest,
+  }],
+  ['std-legal-case::BillableHourPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLegalCaseBillableHourPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-legal-case::BillableHourPanelOrbital');
+      }
+      return stdLegalCaseBillableHourPanelOrbital(p);
+    },
+    manifest: StdLegalCaseBillableHourPanelOrbitalManifest,
+  }],
+  ['std-legal-case::CourtDeadlinePanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLegalCaseCourtDeadlinePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-legal-case::CourtDeadlinePanelOrbital');
+      }
+      return stdLegalCaseCourtDeadlinePanelOrbital(p);
+    },
+    manifest: StdLegalCaseCourtDeadlinePanelOrbitalManifest,
   }],
   ['std-listings::ListingOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1720,6 +1884,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdRestaurantPosKitchenOrbital(p);
     },
     manifest: StdRestaurantPosKitchenOrbitalManifest,
+  }],
+  ['std-retail-pos::SaleOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRetailPosSaleOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-retail-pos::SaleOrbital');
+      }
+      return stdRetailPosSaleOrbital(p);
+    },
+    manifest: StdRetailPosSaleOrbitalManifest,
+  }],
+  ['std-retail-pos::CheckoutOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRetailPosCheckoutOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-retail-pos::CheckoutOrbital');
+      }
+      return stdRetailPosCheckoutOrbital(p);
+    },
+    manifest: StdRetailPosCheckoutOrbitalManifest,
+  }],
+  ['std-retail-pos::ReceiptOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRetailPosReceiptOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-retail-pos::ReceiptOrbital');
+      }
+      return stdRetailPosReceiptOrbital(p);
+    },
+    manifest: StdRetailPosReceiptOrbitalManifest,
+  }],
+  ['std-retail-pos::CustomerOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRetailPosCustomerOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-retail-pos::CustomerOrbital');
+      }
+      return stdRetailPosCustomerOrbital(p);
+    },
+    manifest: StdRetailPosCustomerOrbitalManifest,
   }],
   ['std-rpg-game::BattleStateOrbital', {
     factory: (p: object): OrbitalDefinition => {

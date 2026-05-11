@@ -1,0 +1,323 @@
+app std-document-mgmt "1.0.0"
+"Document management: file-centric workflow with versions, permissions, and e-signature. Pick for compliance + legal apps."
+
+orbital DocumentOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses Modal           from "std/behaviors/std-modal"
+  uses Confirmation    from "std/behaviors/std-confirmation"
+  uses Search          from "std/behaviors/std-search"
+  uses Filter          from "std/behaviors/std-filter"
+  uses Stats           from "std/behaviors/std-stats"
+  uses Graphs          from "std/behaviors/std-graphs"
+  uses Browse          from "std/behaviors/std-browse"
+  uses ESignFlow       from "std/behaviors/std-esign-flow"
+  uses FileStore       from "std/behaviors/std-file-store"
+  uses ESignRequest    from "std/behaviors/std-esign-request"
+  uses VersionHistory  from "std/behaviors/std-version-history"
+
+  entity Document [persistent: documents] {
+    id : string!
+    name : string!
+    mimeType : string = ""
+    sizeBytes : number = 0
+    owner : string = ""
+    status : "active" | "archived" | "pending-review" = "active"
+    lastModified : string = ""
+    pendingId : string = ""
+  }
+
+  trait DocumentAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.DocumentCatalog",
+      appName: "Documents",
+      navItems: [
+        { label: "Documents", href: "/documents",       icon: "file-text" },
+        { label: "E-Sign Flow", href: "/esign-flow",    icon: "file-signature" },
+        { label: "Files",     href: "/files",           icon: "folder" },
+        { label: "Signatures", href: "/esign",          icon: "pen-tool" },
+        { label: "Versions",  href: "/revisions/manage", icon: "history" }
+      ],
+      searchEvent: "DOCUMENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "DOCUMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: DOCUMENT_SEARCH
+      NOTIFY_CLICK: DOCUMENT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  ;; Page-chrome trait. Header + toolbar + stats + graphs + embedded
+  ;; document browse list. AppLayout's contentTrait points here.
+  trait DocumentCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "file-text" },
+              { type: "typography", content: "Documents", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Document", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.DocumentSearch",
+            "@trait.DocumentFilter"
+          ]},
+          "@trait.DocumentStats",
+          "@trait.DocumentGraphs",
+          { type: "divider" },
+          "@trait.DocumentBrowseList"
+        ]})
+      DOCUMENT_SEARCH -> composing
+      DOCUMENT_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to documents", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      DocumentAppLayout.DOCUMENT_SEARCH             -> DOCUMENT_SEARCH
+      DocumentAppLayout.DOCUMENT_NOTIFICATIONS_OPEN -> DOCUMENT_NOTIFICATIONS_OPEN
+      DOCUMENT_SEARCH { value : string }
+      DOCUMENT_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait DocumentSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search documents…",
+      event: "DOCUMENT_SEARCH"
+    }
+  }
+
+  trait DocumentFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status",   label: "Status",   filterType: "select", options: ["active", "archived", "pending-review"] },
+        { field: "mimeType", label: "Type",     filterType: "select", options: ["pdf", "doc", "text", "image"] }
+      ],
+      event: "DOCUMENT_FILTER"
+    }
+  }
+
+  trait DocumentStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Documents",
+      metrics: [
+        { aggregation: "count", label: "Total",          icon: "file-text",     variant: "primary", format: "number" },
+        { aggregation: "count", label: "Active",         icon: "check-circle",  variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "active"]] },
+        { aggregation: "count", label: "Pending Review", icon: "clock",         variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "pending-review"]] },
+        { aggregation: "sum",   label: "Total Size",     icon: "hard-drive",    variant: "primary", format: "number", field: "sizeBytes" }
+      ]
+    }
+    listens {
+      DocumentBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait DocumentGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Documents by Status",
+      subtitle: "Volume across status buckets",
+      chartType: "bar",
+      categoryField: "status",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      DocumentBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait DocumentBrowseList = Browse.traits.BrowseItemBrowse -> Document {
+    config: {
+      fields: [
+        { name: "name",         variant: "h3",      icon: "file-text" },
+        { name: "status",       variant: "badge" },
+        { name: "mimeType",     variant: "badge" },
+        { name: "owner",        variant: "body" },
+        { name: "lastModified", variant: "caption", format: "date" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      DocumentSearch.SEARCH                  -> REFETCH_QUERY
+      DocumentFilter.FILTER                  -> REFETCH_FILTER
+      DocumentPersistor.DOCUMENT_CREATED     -> INIT
+      DocumentPersistor.DOCUMENT_UPDATED     -> INIT
+      DocumentPersistor.DOCUMENT_DELETED     -> INIT
+    }
+  }
+
+  trait DocumentCreate = Modal.traits.ModalRecordModal -> Document {
+    config: {
+      icon: "plus-circle",
+      title: "New Document",
+      mode: "create",
+      fields: ["name", "mimeType", "sizeBytes", "owner", "status"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      DocumentCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Document }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait DocumentEdit = Modal.traits.ModalRecordModal -> Document {
+    config: {
+      icon: "edit",
+      title: "Edit Document",
+      mode: "edit",
+      fields: ["name", "mimeType", "sizeBytes", "owner", "status"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      DocumentBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Document }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait DocumentView = Modal.traits.ModalRecordModal -> Document {
+    config: {
+      icon: "eye",
+      title: "View Document",
+      mode: "edit",
+      fields: ["name", "mimeType", "sizeBytes", "owner", "status", "lastModified"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      DocumentBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Document }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait DocumentDelete = Confirmation.traits.ConfirmActionConfirmation -> Document {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Document",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      DocumentBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Document }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  ;; Sub-page bindings. Each atom owns its own entity + page route; we
+  ;; rebind under the DocumentAppLayout chrome so navigation stays inside
+  ;; the Documents app. The e-sign flow molecule needs all four traits
+  ;; bound so its internal persistor closes the RESEND/DELETE loop.
+  trait DocumentESignFlow = ESignFlow.traits.SignatureSessionBrowse {
+    listens {
+      DocumentESignPersistor.SESSION_CREATED -> INIT
+      DocumentESignPersistor.SESSION_RESENT  -> INIT
+      DocumentESignPersistor.SESSION_DELETED -> INIT
+    }
+  }
+
+  trait DocumentESignCreate = ESignFlow.traits.SignatureSessionCreate {
+    listens {
+      DocumentESignFlow.CREATE -> CREATE
+    }
+  }
+
+  trait DocumentESignDelete = ESignFlow.traits.SignatureSessionDelete {
+    listens {
+      DocumentESignFlow.REQUEST_DELETE -> DELETE
+    }
+  }
+
+  trait DocumentESignPersistor = ESignFlow.traits.SignatureSessionPersistor {
+    listens {
+      DocumentESignCreate.SAVE             -> DO_CREATE
+      DocumentESignFlow.RESEND_REQUEST     -> DO_RESEND
+      DocumentESignDelete.CONFIRM_DELETE   -> DO_DELETE
+    }
+  }
+
+  trait DocumentFileStore = FileStore.traits.StoredFileStore {
+    config: {
+      title: "Files"
+    }
+  }
+
+  trait DocumentESignRequest = ESignRequest.traits.ESignRequestSigning {
+    config: {
+      title: "Signature Requests"
+    }
+  }
+
+  trait DocumentVersionHistory = VersionHistory.traits.RevisionManage {
+    config: {
+      title: "Version History"
+    }
+  }
+
+  ;; Coordinator: owns the persist side-effects from Modal/Confirm traits.
+  trait DocumentPersistor -> Document [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Document @payload.data { emit: { success: "DOCUMENT_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Document @payload.data { emit: { success: "DOCUMENT_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Document @payload.id { emit: { success: "DOCUMENT_DELETED" } })
+    }
+    emits {
+      DOCUMENT_CREATED -> external { id : string }
+      DOCUMENT_UPDATED -> external { id : string }
+      DOCUMENT_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      DocumentCreate.SAVE          -> DO_CREATE
+      DocumentEdit.SAVE            -> DO_UPDATE
+      DocumentDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/documents" as DocumentsPage -> DocumentAppLayout, DocumentCatalog, DocumentSearch, DocumentFilter, DocumentStats, DocumentGraphs, DocumentBrowseList, DocumentCreate, DocumentEdit, DocumentView, DocumentDelete, DocumentPersistor
+  page "/esign-flow" as DocumentsESignFlowPage -> DocumentAppLayout, DocumentESignFlow, DocumentESignCreate, DocumentESignDelete, DocumentESignPersistor
+  page "/files" as DocumentsFilesPage -> DocumentAppLayout, DocumentFileStore
+  page "/esign" as DocumentsSignaturesPage -> DocumentAppLayout, DocumentESignRequest
+  page "/revisions/manage" as DocumentsVersionsPage -> DocumentAppLayout, DocumentVersionHistory
+}

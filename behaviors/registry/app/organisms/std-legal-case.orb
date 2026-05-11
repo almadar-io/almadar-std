@@ -1,0 +1,1357 @@
+{
+  "name": "std-legal-case",
+  "version": "1.0.0",
+  "description": "Legal Case Management: matters, billable hours, and court deadlines for law firms and in-house counsel. Pick for litigation, transactional, and regulatory practice.",
+  "orbitals": [
+    {
+      "name": "MatterOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-matter",
+          "as": "Matter"
+        },
+        {
+          "from": "std/behaviors/std-billable-hour",
+          "as": "BillableHour"
+        },
+        {
+          "from": "std/behaviors/std-court-deadline",
+          "as": "CourtDeadline"
+        }
+      ],
+      "entity": {
+        "name": "Matter",
+        "collection": "matters",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "matterNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "clientName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "practiceArea",
+            "type": "string",
+            "default": "other",
+            "values": [
+              "litigation",
+              "transactional",
+              "regulatory",
+              "ip",
+              "immigration",
+              "family",
+              "other"
+            ]
+          },
+          {
+            "name": "leadAttorney",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "active",
+              "on_hold",
+              "closed",
+              "archived"
+            ]
+          },
+          {
+            "name": "openedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "closedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "MatterAppLayout",
+          "config": {
+            "appName": "Legal Case",
+            "contentTrait": "@trait.MatterCatalog",
+            "searchEvent": "MATTER_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "MATTER_NOTIFICATIONS_OPEN",
+            "navItems": [
+              {
+                "icon": "scale",
+                "href": "/matters",
+                "label": "Matters"
+              },
+              {
+                "label": "Time",
+                "href": "/timesheet",
+                "icon": "clock"
+              },
+              {
+                "icon": "calendar",
+                "label": "Deadlines",
+                "href": "/deadlines"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "MATTER_SEARCH",
+            "NOTIFY_CLICK": "MATTER_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "MatterCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "MATTER_SEARCH",
+              "triggers": "MATTER_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterAppLayout"
+              }
+            },
+            {
+              "event": "MATTER_NOTIFICATIONS_OPEN",
+              "triggers": "MATTER_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MATTER_SEARCH",
+                "name": "Matter Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "MATTER_NOTIFICATIONS_OPEN",
+                "name": "Matter Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "scale"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Matters"
+                                }
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "action": "CREATE",
+                                  "label": "New Matter",
+                                  "icon": "plus",
+                                  "type": "button"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            "@trait.MatterSearch",
+                            "@trait.MatterFilter"
+                          ]
+                        },
+                        "@trait.MatterStats",
+                        "@trait.MatterGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.MatterBrowseList"
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "MATTER_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "MATTER_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
+                          "content": "You're all caught up.",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        },
+                        {
+                          "action": "INIT",
+                          "label": "Back to matters",
+                          "variant": "ghost",
+                          "type": "button"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "MatterSearch",
+          "config": {
+            "event": "MATTER_SEARCH",
+            "placeholder": "Search matters…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "MatterFilter",
+          "config": {
+            "event": "MATTER_FILTER",
+            "filters": [
+              {
+                "field": "practiceArea",
+                "filterType": "select",
+                "label": "Practice",
+                "options": [
+                  "litigation",
+                  "transactional",
+                  "regulatory",
+                  "ip",
+                  "immigration",
+                  "family",
+                  "other"
+                ]
+              },
+              {
+                "field": "status",
+                "filterType": "select",
+                "options": [
+                  "open",
+                  "active",
+                  "on_hold",
+                  "closed",
+                  "archived"
+                ],
+                "label": "Status"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "MatterStats",
+          "config": {
+            "title": "Matters",
+            "metrics": [
+              {
+                "format": "number",
+                "label": "Total",
+                "aggregation": "count",
+                "variant": "primary",
+                "icon": "scale"
+              },
+              {
+                "icon": "circle",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ],
+                "format": "number",
+                "label": "Open",
+                "variant": "warning"
+              },
+              {
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "format": "number",
+                "aggregation": "count",
+                "label": "Active",
+                "icon": "check-circle"
+              },
+              {
+                "label": "Closed",
+                "variant": "info",
+                "icon": "archive",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "closed"
+                  ]
+                ],
+                "format": "number",
+                "aggregation": "count"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "MatterGraphs",
+          "config": {
+            "categoryField": "practiceArea",
+            "height": 240.0,
+            "title": "Matters by Practice Area",
+            "aggregation": "count",
+            "showLegend": false,
+            "chartType": "bar",
+            "subtitle": "Caseload composition across practice areas"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "MatterBrowseList",
+          "linkedEntity": "Matter",
+          "config": {
+            "fields": [
+              {
+                "variant": "caption",
+                "icon": "hash",
+                "name": "matterNumber"
+              },
+              {
+                "name": "title",
+                "variant": "h3"
+              },
+              {
+                "variant": "body",
+                "name": "clientName"
+              },
+              {
+                "name": "practiceArea",
+                "variant": "badge"
+              },
+              {
+                "name": "leadAttorney",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ],
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm"
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterFilter"
+              }
+            },
+            {
+              "event": "MATTER_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterPersistor"
+              }
+            },
+            {
+              "event": "MATTER_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterPersistor"
+              }
+            },
+            {
+              "event": "MATTER_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "MatterCreate",
+          "linkedEntity": "Matter",
+          "config": {
+            "fields": [
+              "matterNumber",
+              "title",
+              "clientName",
+              "practiceArea",
+              "leadAttorney",
+              "status",
+              "openedAt",
+              "notes"
+            ],
+            "title": "New Matter",
+            "mode": "create",
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "MatterEdit",
+          "linkedEntity": "Matter",
+          "config": {
+            "title": "Edit Matter",
+            "mode": "edit",
+            "icon": "edit",
+            "fields": [
+              "matterNumber",
+              "title",
+              "clientName",
+              "practiceArea",
+              "leadAttorney",
+              "status",
+              "openedAt",
+              "closedAt",
+              "notes"
+            ]
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "MatterView",
+          "linkedEntity": "Matter",
+          "config": {
+            "icon": "eye",
+            "title": "View Matter",
+            "mode": "edit",
+            "fields": [
+              "matterNumber",
+              "title",
+              "clientName",
+              "practiceArea",
+              "leadAttorney",
+              "status",
+              "openedAt",
+              "closedAt",
+              "notes"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "MatterDelete",
+          "linkedEntity": "Matter",
+          "config": {
+            "title": "Delete Matter",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone."
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "MatterPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Matter",
+          "emits": [
+            {
+              "event": "MATTER_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MATTER_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MATTER_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "MatterDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "MATTER_CREATED",
+                "name": "Matter Created"
+              },
+              {
+                "key": "MATTER_UPDATED",
+                "name": "Matter Updated"
+              },
+              {
+                "key": "MATTER_DELETED",
+                "name": "Matter Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Matter",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "MATTER_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Matter",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "MATTER_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Matter",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "MATTER_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MattersPage",
+          "path": "/matters",
+          "traits": [
+            {
+              "ref": "MatterAppLayout"
+            },
+            {
+              "ref": "MatterCatalog"
+            },
+            {
+              "ref": "MatterSearch"
+            },
+            {
+              "ref": "MatterFilter"
+            },
+            {
+              "ref": "MatterStats"
+            },
+            {
+              "ref": "MatterGraphs"
+            },
+            {
+              "ref": "MatterBrowseList"
+            },
+            {
+              "ref": "MatterCreate"
+            },
+            {
+              "ref": "MatterEdit"
+            },
+            {
+              "ref": "MatterView"
+            },
+            {
+              "ref": "MatterDelete"
+            },
+            {
+              "ref": "MatterPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BillableHourPanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-billable-hour",
+          "as": "BillableHour"
+        }
+      ],
+      "entity": {
+        "name": "BillableHour",
+        "collection": "billablehours",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "workerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "workerName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "matterId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "projectId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "workDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "hours",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "isBillable",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "invoiceStatus",
+            "type": "string",
+            "default": "unbilled",
+            "values": [
+              "unbilled",
+              "invoiced",
+              "paid",
+              "written_off"
+            ]
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "BillableHourAppLayout",
+          "config": {
+            "notifications": [],
+            "notificationClickEvent": "BILLABLE_HOUR_NOTIFICATIONS_OPEN",
+            "navItems": [
+              {
+                "icon": "scale",
+                "label": "Matters",
+                "href": "/matters"
+              },
+              {
+                "href": "/timesheet",
+                "label": "Time",
+                "icon": "clock"
+              },
+              {
+                "icon": "calendar",
+                "href": "/deadlines",
+                "label": "Deadlines"
+              }
+            ],
+            "appName": "Legal Case",
+            "searchEvent": "BILLABLE_HOUR_SEARCH",
+            "contentTrait": "@trait.BillableHourPanel"
+          },
+          "events": {
+            "SEARCH": "BILLABLE_HOUR_SEARCH",
+            "NOTIFY_CLICK": "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "BillableHourPanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "clock",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h2",
+                              "content": "Time Entries",
+                              "type": "typography"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.BillableHourTimesheetView"
+                      ],
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "BillableHour.traits.BillableHourTimesheet",
+          "name": "BillableHourTimesheetView",
+          "config": {
+            "title": "Billable Hours"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "TimesheetPage",
+          "path": "/timesheet",
+          "traits": [
+            {
+              "ref": "BillableHourAppLayout"
+            },
+            {
+              "ref": "BillableHourPanel"
+            },
+            {
+              "ref": "BillableHourTimesheetView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CourtDeadlinePanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-court-deadline",
+          "as": "CourtDeadline"
+        }
+      ],
+      "entity": {
+        "name": "CourtDeadline",
+        "collection": "courtdeadlines",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "matterId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "deadlineType",
+            "type": "string",
+            "default": "filing",
+            "values": [
+              "filing",
+              "response",
+              "discovery",
+              "hearing",
+              "trial",
+              "other"
+            ]
+          },
+          {
+            "name": "dueAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "jurisdiction",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "assignedTo",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "upcoming",
+            "values": [
+              "upcoming",
+              "completed",
+              "missed",
+              "extended"
+            ]
+          },
+          {
+            "name": "reminderSent",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "CourtDeadlineAppLayout",
+          "config": {
+            "notificationClickEvent": "COURT_DEADLINE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.CourtDeadlinePanel",
+            "appName": "Legal Case",
+            "navItems": [
+              {
+                "label": "Matters",
+                "href": "/matters",
+                "icon": "scale"
+              },
+              {
+                "icon": "clock",
+                "label": "Time",
+                "href": "/timesheet"
+              },
+              {
+                "href": "/deadlines",
+                "icon": "calendar",
+                "label": "Deadlines"
+              }
+            ],
+            "notifications": [],
+            "searchEvent": "COURT_DEADLINE_SEARCH"
+          },
+          "events": {
+            "SEARCH": "COURT_DEADLINE_SEARCH",
+            "NOTIFY_CLICK": "COURT_DEADLINE_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "CourtDeadlinePanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Court Deadlines"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.CourtDeadlineDocketView"
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "CourtDeadline.traits.CourtDeadlineDocket",
+          "name": "CourtDeadlineDocketView",
+          "config": {
+            "title": "Filing Deadlines"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DeadlinesPage",
+          "path": "/deadlines",
+          "traits": [
+            {
+              "ref": "CourtDeadlineAppLayout"
+            },
+            {
+              "ref": "CourtDeadlinePanel"
+            },
+            {
+              "ref": "CourtDeadlineDocketView"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

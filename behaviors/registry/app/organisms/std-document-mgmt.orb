@@ -1,0 +1,1082 @@
+{
+  "name": "std-document-mgmt",
+  "version": "1.0.0",
+  "description": "Document management: file-centric workflow with versions, permissions, and e-signature. Pick for compliance + legal apps.",
+  "orbitals": [
+    {
+      "name": "DocumentOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-esign-flow",
+          "as": "ESignFlow"
+        },
+        {
+          "from": "std/behaviors/std-file-store",
+          "as": "FileStore"
+        },
+        {
+          "from": "std/behaviors/std-esign-request",
+          "as": "ESignRequest"
+        },
+        {
+          "from": "std/behaviors/std-version-history",
+          "as": "VersionHistory"
+        }
+      ],
+      "entity": {
+        "name": "Document",
+        "collection": "documents",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "mimeType",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "sizeBytes",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "owner",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "archived",
+              "pending-review"
+            ]
+          },
+          {
+            "name": "lastModified",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "DocumentAppLayout",
+          "config": {
+            "contentTrait": "@trait.DocumentCatalog",
+            "navItems": [
+              {
+                "icon": "file-text",
+                "label": "Documents",
+                "href": "/documents"
+              },
+              {
+                "label": "E-Sign Flow",
+                "href": "/esign-flow",
+                "icon": "file-signature"
+              },
+              {
+                "icon": "folder",
+                "label": "Files",
+                "href": "/files"
+              },
+              {
+                "label": "Signatures",
+                "icon": "pen-tool",
+                "href": "/esign"
+              },
+              {
+                "icon": "history",
+                "href": "/revisions/manage",
+                "label": "Versions"
+              }
+            ],
+            "notifications": [],
+            "notificationClickEvent": "DOCUMENT_NOTIFICATIONS_OPEN",
+            "appName": "Documents",
+            "searchEvent": "DOCUMENT_SEARCH"
+          },
+          "events": {
+            "NOTIFY_CLICK": "DOCUMENT_NOTIFICATIONS_OPEN",
+            "SEARCH": "DOCUMENT_SEARCH"
+          }
+        },
+        {
+          "name": "DocumentCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "DOCUMENT_SEARCH",
+              "triggers": "DOCUMENT_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentAppLayout"
+              }
+            },
+            {
+              "event": "DOCUMENT_NOTIFICATIONS_OPEN",
+              "triggers": "DOCUMENT_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DOCUMENT_SEARCH",
+                "name": "Document Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DOCUMENT_NOTIFICATIONS_OPEN",
+                "name": "Document Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "name": "file-text",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Documents"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "label": "New Document",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            "@trait.DocumentSearch",
+                            "@trait.DocumentFilter"
+                          ],
+                          "gap": "md"
+                        },
+                        "@trait.DocumentStats",
+                        "@trait.DocumentGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.DocumentBrowseList"
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "DOCUMENT_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "DOCUMENT_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "variant": "caption"
+                        },
+                        {
+                          "label": "Back to documents",
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "INIT"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-8"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "DocumentSearch",
+          "config": {
+            "event": "DOCUMENT_SEARCH",
+            "placeholder": "Search documents…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "DocumentFilter",
+          "config": {
+            "event": "DOCUMENT_FILTER",
+            "filters": [
+              {
+                "field": "status",
+                "options": [
+                  "active",
+                  "archived",
+                  "pending-review"
+                ],
+                "label": "Status",
+                "filterType": "select"
+              },
+              {
+                "label": "Type",
+                "filterType": "select",
+                "options": [
+                  "pdf",
+                  "doc",
+                  "text",
+                  "image"
+                ],
+                "field": "mimeType"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "DocumentStats",
+          "config": {
+            "metrics": [
+              {
+                "icon": "file-text",
+                "aggregation": "count",
+                "label": "Total",
+                "format": "number",
+                "variant": "primary"
+              },
+              {
+                "variant": "success",
+                "label": "Active",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "format": "number",
+                "aggregation": "count",
+                "icon": "check-circle"
+              },
+              {
+                "variant": "warning",
+                "icon": "clock",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "pending-review"
+                  ]
+                ],
+                "aggregation": "count",
+                "label": "Pending Review"
+              },
+              {
+                "variant": "primary",
+                "icon": "hard-drive",
+                "format": "number",
+                "label": "Total Size",
+                "aggregation": "sum",
+                "field": "sizeBytes"
+              }
+            ],
+            "title": "Documents"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "DocumentGraphs",
+          "config": {
+            "height": 240.0,
+            "chartType": "bar",
+            "subtitle": "Volume across status buckets",
+            "categoryField": "status",
+            "aggregation": "count",
+            "title": "Documents by Status",
+            "showLegend": false
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "DocumentBrowseList",
+          "linkedEntity": "Document",
+          "config": {
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm",
+            "fields": [
+              {
+                "name": "name",
+                "icon": "file-text",
+                "variant": "h3"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "mimeType"
+              },
+              {
+                "variant": "body",
+                "name": "owner"
+              },
+              {
+                "name": "lastModified",
+                "variant": "caption",
+                "format": "date"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentFilter"
+              }
+            },
+            {
+              "event": "DOCUMENT_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentPersistor"
+              }
+            },
+            {
+              "event": "DOCUMENT_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentPersistor"
+              }
+            },
+            {
+              "event": "DOCUMENT_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "DocumentCreate",
+          "linkedEntity": "Document",
+          "config": {
+            "title": "New Document",
+            "mode": "create",
+            "icon": "plus-circle",
+            "fields": [
+              "name",
+              "mimeType",
+              "sizeBytes",
+              "owner",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "DocumentEdit",
+          "linkedEntity": "Document",
+          "config": {
+            "title": "Edit Document",
+            "mode": "edit",
+            "fields": [
+              "name",
+              "mimeType",
+              "sizeBytes",
+              "owner",
+              "status"
+            ],
+            "icon": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "DocumentView",
+          "linkedEntity": "Document",
+          "config": {
+            "title": "View Document",
+            "icon": "eye",
+            "mode": "edit",
+            "fields": [
+              "name",
+              "mimeType",
+              "sizeBytes",
+              "owner",
+              "status",
+              "lastModified"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "DocumentDelete",
+          "linkedEntity": "Document",
+          "config": {
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Document",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ESignFlow.traits.SignatureSessionBrowse",
+          "name": "DocumentESignFlow",
+          "listens": [
+            {
+              "event": "SESSION_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignPersistor"
+              }
+            },
+            {
+              "event": "SESSION_RESENT",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignPersistor"
+              }
+            },
+            {
+              "event": "SESSION_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ESignFlow.traits.SignatureSessionCreate",
+          "name": "DocumentESignCreate",
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignFlow"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ESignFlow.traits.SignatureSessionDelete",
+          "name": "DocumentESignDelete",
+          "listens": [
+            {
+              "event": "REQUEST_DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignFlow"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ESignFlow.traits.SignatureSessionPersistor",
+          "name": "DocumentESignPersistor",
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignCreate"
+              }
+            },
+            {
+              "event": "RESEND_REQUEST",
+              "triggers": "DO_RESEND",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignFlow"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentESignDelete"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "FileStore.traits.StoredFileStore",
+          "name": "DocumentFileStore",
+          "config": {
+            "title": "Files"
+          }
+        },
+        {
+          "ref": "ESignRequest.traits.ESignRequestSigning",
+          "name": "DocumentESignRequest",
+          "config": {
+            "title": "Signature Requests"
+          }
+        },
+        {
+          "ref": "VersionHistory.traits.RevisionManage",
+          "name": "DocumentVersionHistory",
+          "config": {
+            "title": "Version History"
+          }
+        },
+        {
+          "name": "DocumentPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Document",
+          "emits": [
+            {
+              "event": "DOCUMENT_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DOCUMENT_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DOCUMENT_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "DocumentDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DOCUMENT_CREATED",
+                "name": "Document Created"
+              },
+              {
+                "key": "DOCUMENT_UPDATED",
+                "name": "Document Updated"
+              },
+              {
+                "key": "DOCUMENT_DELETED",
+                "name": "Document Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Document",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "DOCUMENT_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Document",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "DOCUMENT_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Document",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "DOCUMENT_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DocumentsPage",
+          "path": "/documents",
+          "traits": [
+            {
+              "ref": "DocumentAppLayout"
+            },
+            {
+              "ref": "DocumentCatalog"
+            },
+            {
+              "ref": "DocumentSearch"
+            },
+            {
+              "ref": "DocumentFilter"
+            },
+            {
+              "ref": "DocumentStats"
+            },
+            {
+              "ref": "DocumentGraphs"
+            },
+            {
+              "ref": "DocumentBrowseList"
+            },
+            {
+              "ref": "DocumentCreate"
+            },
+            {
+              "ref": "DocumentEdit"
+            },
+            {
+              "ref": "DocumentView"
+            },
+            {
+              "ref": "DocumentDelete"
+            },
+            {
+              "ref": "DocumentPersistor"
+            }
+          ]
+        },
+        {
+          "name": "DocumentsESignFlowPage",
+          "path": "/esign-flow",
+          "traits": [
+            {
+              "ref": "DocumentAppLayout"
+            },
+            {
+              "ref": "DocumentESignFlow"
+            },
+            {
+              "ref": "DocumentESignCreate"
+            },
+            {
+              "ref": "DocumentESignDelete"
+            },
+            {
+              "ref": "DocumentESignPersistor"
+            }
+          ]
+        },
+        {
+          "name": "DocumentsFilesPage",
+          "path": "/files",
+          "traits": [
+            {
+              "ref": "DocumentAppLayout"
+            },
+            {
+              "ref": "DocumentFileStore"
+            }
+          ]
+        },
+        {
+          "name": "DocumentsSignaturesPage",
+          "path": "/esign",
+          "traits": [
+            {
+              "ref": "DocumentAppLayout"
+            },
+            {
+              "ref": "DocumentESignRequest"
+            }
+          ]
+        },
+        {
+          "name": "DocumentsVersionsPage",
+          "path": "/revisions/manage",
+          "traits": [
+            {
+              "ref": "DocumentAppLayout"
+            },
+            {
+              "ref": "DocumentVersionHistory"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

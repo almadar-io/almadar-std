@@ -1,0 +1,1345 @@
+{
+  "name": "std-accounting",
+  "version": "1.0.0",
+  "description": "Accounting: journal summaries, ledger entries, chart of accounts, AP bills, AR invoices. Pick for full-stack accounting apps.",
+  "orbitals": [
+    {
+      "name": "JournalOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-ledger-entry-form",
+          "as": "LedgerEntryForm"
+        },
+        {
+          "from": "std/behaviors/std-ledger-entry",
+          "as": "LedgerEntry"
+        },
+        {
+          "from": "std/behaviors/std-chart-of-accounts",
+          "as": "ChartOfAccounts"
+        },
+        {
+          "from": "std/behaviors/std-ap-bill",
+          "as": "ApBill"
+        },
+        {
+          "from": "std/behaviors/std-invoice",
+          "as": "Invoice"
+        }
+      ],
+      "entity": {
+        "name": "JournalSummary",
+        "collection": "journalsummaries",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "period",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "totalDebits",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "totalCredits",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "posted",
+              "closed"
+            ]
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "JournalAppLayout",
+          "config": {
+            "notificationClickEvent": "JOURNAL_NOTIFICATIONS_OPEN",
+            "appName": "Accounting",
+            "notifications": [],
+            "contentTrait": "@trait.JournalCatalog",
+            "navItems": [
+              {
+                "href": "/journal-summaries",
+                "icon": "book-open",
+                "label": "Journal"
+              },
+              {
+                "icon": "list",
+                "label": "Entries",
+                "href": "/entries"
+              },
+              {
+                "icon": "layout-list",
+                "label": "Chart of Accounts",
+                "href": "/accounts"
+              },
+              {
+                "icon": "file-text",
+                "label": "AP Bills",
+                "href": "/bills"
+              },
+              {
+                "icon": "receipt",
+                "href": "/invoices",
+                "label": "AR Invoices"
+              }
+            ],
+            "searchEvent": "JOURNAL_SEARCH"
+          },
+          "events": {
+            "NOTIFY_CLICK": "JOURNAL_NOTIFICATIONS_OPEN",
+            "SEARCH": "JOURNAL_SEARCH"
+          }
+        },
+        {
+          "name": "JournalCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "JOURNAL_SEARCH",
+              "triggers": "JOURNAL_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalAppLayout"
+              }
+            },
+            {
+              "event": "JOURNAL_NOTIFICATIONS_OPEN",
+              "triggers": "JOURNAL_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "JOURNAL_SEARCH",
+                "name": "Journal Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "JOURNAL_NOTIFICATIONS_OPEN",
+                "name": "Journal Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "book-open"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "Journal Summaries"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "icon": "plus",
+                                  "variant": "primary",
+                                  "label": "New Period",
+                                  "action": "CREATE",
+                                  "type": "button"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            "@trait.JournalSearch",
+                            "@trait.JournalFilter"
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        "@trait.JournalStats",
+                        "@trait.JournalGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.JournalBrowseList"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "JOURNAL_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "JOURNAL_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "variant": "caption"
+                        },
+                        {
+                          "label": "Back to journal",
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "INIT"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "JournalSearch",
+          "config": {
+            "placeholder": "Search journal periods…",
+            "event": "JOURNAL_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "JournalFilter",
+          "config": {
+            "event": "JOURNAL_FILTER",
+            "filters": [
+              {
+                "filterType": "select",
+                "options": [
+                  "draft",
+                  "posted",
+                  "closed"
+                ],
+                "field": "status",
+                "label": "Status"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "JournalStats",
+          "config": {
+            "title": "Journal Periods",
+            "metrics": [
+              {
+                "format": "number",
+                "label": "Periods",
+                "icon": "book-open",
+                "aggregation": "count",
+                "variant": "primary"
+              },
+              {
+                "aggregation": "sum",
+                "label": "Debits",
+                "icon": "trending-up",
+                "field": "totalDebits",
+                "format": "number",
+                "variant": "success"
+              },
+              {
+                "icon": "trending-down",
+                "label": "Credits",
+                "variant": "warning",
+                "aggregation": "sum",
+                "format": "number",
+                "field": "totalCredits"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "JournalSummaryLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "JournalGraphs",
+          "config": {
+            "aggregation": "count",
+            "categoryField": "status",
+            "chartType": "bar",
+            "title": "Journal Status",
+            "height": 240.0,
+            "subtitle": "Periods by status",
+            "showLegend": false
+          },
+          "listens": [
+            {
+              "event": "JournalSummaryLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "JournalBrowseList",
+          "category": "interaction",
+          "linkedEntity": "JournalSummary",
+          "emits": [
+            {
+              "event": "VIEW",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.period",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.totalDebits",
+                  "type": "number"
+                },
+                {
+                  "name": "row.totalCredits",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EDIT",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.period",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.totalDebits",
+                  "type": "number"
+                },
+                {
+                  "name": "row.totalCredits",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DELETE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.period",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.totalDebits",
+                  "type": "number"
+                },
+                {
+                  "name": "row.totalCredits",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "JournalSummaryLoaded",
+              "description": "Fired when the journal summary collection finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[JournalSummary]"
+                },
+                {
+                  "name": "totalCount",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "JournalSummaryLoadFailed",
+              "description": "Fired when the journal summary collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "JOURNAL_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalPersistor"
+              }
+            },
+            {
+              "event": "JOURNAL_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalPersistor"
+              }
+            },
+            {
+              "event": "JOURNAL_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "JournalSummaryLoaded",
+                "name": "JournalSummary loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[JournalSummary]"
+                  },
+                  {
+                    "name": "totalCount",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "JournalSummaryLoadFailed",
+                "name": "JournalSummary load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "JournalSummary"
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "JournalSummary"
+                  }
+                ]
+              },
+              {
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "JournalSummary"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "JournalSummary",
+                    {
+                      "emit": {
+                        "success": "JournalSummaryLoaded",
+                        "failure": "JournalSummaryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading journal periods…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "JournalSummaryLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "data-grid",
+                      "gap": "sm",
+                      "itemActions": [
+                        {
+                          "variant": "ghost",
+                          "label": "View",
+                          "event": "VIEW"
+                        },
+                        {
+                          "event": "EDIT",
+                          "label": "Edit",
+                          "variant": "ghost"
+                        },
+                        {
+                          "variant": "danger",
+                          "label": "Delete",
+                          "event": "DELETE"
+                        }
+                      ],
+                      "cols": 1.0,
+                      "fields": [
+                        {
+                          "label": "Period",
+                          "icon": "calendar",
+                          "variant": "h4",
+                          "name": "period"
+                        },
+                        {
+                          "name": "status",
+                          "label": "Status",
+                          "variant": "badge"
+                        },
+                        {
+                          "name": "totalDebits",
+                          "label": "Total Debits",
+                          "variant": "caption"
+                        },
+                        {
+                          "label": "Total Credits",
+                          "name": "totalCredits",
+                          "variant": "caption"
+                        }
+                      ],
+                      "entity": "@payload.data"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "JournalSummaryLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "JournalSummary",
+                    {
+                      "emit": {
+                        "success": "JournalSummaryLoaded",
+                        "failure": "JournalSummaryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "JournalSummary",
+                    {
+                      "emit": {
+                        "success": "JournalSummaryLoaded",
+                        "failure": "JournalSummaryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JournalCreate",
+          "linkedEntity": "JournalSummary",
+          "config": {
+            "mode": "create",
+            "fields": [
+              "period",
+              "totalDebits",
+              "totalCredits",
+              "status"
+            ],
+            "icon": "plus-circle",
+            "title": "New Journal Period"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JournalEdit",
+          "linkedEntity": "JournalSummary",
+          "config": {
+            "title": "Edit Journal Period",
+            "mode": "edit",
+            "fields": [
+              "period",
+              "totalDebits",
+              "totalCredits",
+              "status"
+            ],
+            "icon": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JournalView",
+          "linkedEntity": "JournalSummary",
+          "config": {
+            "fields": [
+              "period",
+              "totalDebits",
+              "totalCredits",
+              "status"
+            ],
+            "mode": "edit",
+            "icon": "eye",
+            "title": "View Journal Period"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "JournalDelete",
+          "linkedEntity": "JournalSummary",
+          "config": {
+            "confirmLabel": "Delete",
+            "title": "Delete Journal Period",
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "JournalPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "JournalSummary",
+          "emits": [
+            {
+              "event": "JOURNAL_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "JOURNAL_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "JOURNAL_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "JOURNAL_CREATED",
+                "name": "Journal Created"
+              },
+              {
+                "key": "JOURNAL_UPDATED",
+                "name": "Journal Updated"
+              },
+              {
+                "key": "JOURNAL_DELETED",
+                "name": "Journal Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "JournalSummary",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "JOURNAL_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "JournalSummary",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "JOURNAL_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "JournalSummary",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "JOURNAL_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "LedgerEntry.traits.LedgerEntryJournal",
+          "name": "JournalEntriesPanel",
+          "config": {
+            "title": "Ledger Entries"
+          }
+        },
+        {
+          "ref": "LedgerEntryForm.traits.JournalTransactionBrowse",
+          "name": "JournalTransactionBrowse"
+        },
+        {
+          "ref": "LedgerEntryForm.traits.JournalTransactionCreate",
+          "name": "JournalTransactionCreate"
+        },
+        {
+          "ref": "LedgerEntryForm.traits.JournalTransactionDelete",
+          "name": "JournalTransactionDelete"
+        },
+        {
+          "ref": "LedgerEntryForm.traits.JournalTransactionPersistor",
+          "name": "JournalTransactionPersistor"
+        },
+        {
+          "ref": "ChartOfAccounts.traits.AccountChart",
+          "name": "JournalAccountsPanel",
+          "config": {
+            "title": "Chart of Accounts"
+          }
+        },
+        {
+          "ref": "ApBill.traits.ApBillLedger",
+          "name": "JournalApBillsPanel",
+          "config": {
+            "title": "AP Bills"
+          }
+        },
+        {
+          "ref": "Invoice.traits.InvoiceManage",
+          "name": "JournalInvoicesPanel",
+          "config": {
+            "title": "AR Invoices"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "JournalSummariesPage",
+          "path": "/journal-summaries",
+          "traits": [
+            {
+              "ref": "JournalAppLayout"
+            },
+            {
+              "ref": "JournalCatalog"
+            },
+            {
+              "ref": "JournalSearch"
+            },
+            {
+              "ref": "JournalFilter"
+            },
+            {
+              "ref": "JournalStats"
+            },
+            {
+              "ref": "JournalGraphs"
+            },
+            {
+              "ref": "JournalBrowseList"
+            },
+            {
+              "ref": "JournalCreate"
+            },
+            {
+              "ref": "JournalEdit"
+            },
+            {
+              "ref": "JournalView"
+            },
+            {
+              "ref": "JournalDelete"
+            },
+            {
+              "ref": "JournalPersistor"
+            }
+          ]
+        },
+        {
+          "name": "JournalEntriesPage",
+          "path": "/entries",
+          "traits": [
+            {
+              "ref": "JournalAppLayout"
+            },
+            {
+              "ref": "JournalEntriesPanel"
+            },
+            {
+              "ref": "JournalTransactionBrowse"
+            },
+            {
+              "ref": "JournalTransactionCreate"
+            },
+            {
+              "ref": "JournalTransactionDelete"
+            },
+            {
+              "ref": "JournalTransactionPersistor"
+            }
+          ]
+        },
+        {
+          "name": "JournalAccountsPage",
+          "path": "/accounts",
+          "traits": [
+            {
+              "ref": "JournalAppLayout"
+            },
+            {
+              "ref": "JournalAccountsPanel"
+            }
+          ]
+        },
+        {
+          "name": "JournalApBillsPage",
+          "path": "/bills",
+          "traits": [
+            {
+              "ref": "JournalAppLayout"
+            },
+            {
+              "ref": "JournalApBillsPanel"
+            }
+          ]
+        },
+        {
+          "name": "JournalInvoicesPage",
+          "path": "/invoices",
+          "traits": [
+            {
+              "ref": "JournalAppLayout"
+            },
+            {
+              "ref": "JournalInvoicesPanel"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

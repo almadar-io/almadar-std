@@ -1,0 +1,376 @@
+app std-legal-case "1.0.0"
+"Legal Case Management: matters, billable hours, and court deadlines for law firms and in-house counsel. Pick for litigation, transactional, and regulatory practice."
+
+orbital MatterOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses Modal         from "std/behaviors/std-modal"
+  uses Confirmation  from "std/behaviors/std-confirmation"
+  uses Search        from "std/behaviors/std-search"
+  uses Filter        from "std/behaviors/std-filter"
+  uses Stats         from "std/behaviors/std-stats"
+  uses Graphs        from "std/behaviors/std-graphs"
+  uses Browse        from "std/behaviors/std-browse"
+  uses Matter        from "std/behaviors/std-matter"
+  uses BillableHour  from "std/behaviors/std-billable-hour"
+  uses CourtDeadline from "std/behaviors/std-court-deadline"
+
+  entity Matter [persistent: matters] {
+    id            : string!
+    matterNumber  : string!
+    title         : string!
+    clientName    : string!
+    practiceArea  : "litigation" | "transactional" | "regulatory" | "ip" | "immigration" | "family" | "other" = "other"
+    leadAttorney  : string = ""
+    status        : "open" | "active" | "on_hold" | "closed" | "archived" = "open"
+    openedAt      : string = ""
+    closedAt      : string = ""
+    notes         : string = ""
+    pendingId     : string = ""
+  }
+
+  trait MatterAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.MatterCatalog",
+      appName: "Legal Case",
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      searchEvent: "MATTER_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MATTER_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MATTER_SEARCH
+      NOTIFY_CLICK: MATTER_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait MatterCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "scale" },
+              { type: "typography", content: "Matters", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Matter", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.MatterSearch",
+            "@trait.MatterFilter"
+          ]},
+          "@trait.MatterStats",
+          "@trait.MatterGraphs",
+          { type: "divider" },
+          "@trait.MatterBrowseList"
+        ]})
+      MATTER_SEARCH -> composing
+      MATTER_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to matters", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      MatterAppLayout.MATTER_SEARCH             -> MATTER_SEARCH
+      MatterAppLayout.MATTER_NOTIFICATIONS_OPEN -> MATTER_NOTIFICATIONS_OPEN
+      MATTER_SEARCH { value : string }
+      MATTER_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait MatterSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search matters…",
+      event: "MATTER_SEARCH"
+    }
+  }
+
+  trait MatterFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "practiceArea", label: "Practice", filterType: "select", options: ["litigation", "transactional", "regulatory", "ip", "immigration", "family", "other"] },
+        { field: "status",       label: "Status",   filterType: "select", options: ["open", "active", "on_hold", "closed", "archived"] }
+      ],
+      event: "MATTER_FILTER"
+    }
+  }
+
+  trait MatterStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Matters",
+      metrics: [
+        { aggregation: "count", label: "Total",  icon: "scale",        variant: "primary", format: "number" },
+        { aggregation: "count", label: "Open",   icon: "circle",       variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "open"]] },
+        { aggregation: "count", label: "Active", icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "active"]] },
+        { aggregation: "count", label: "Closed", icon: "archive",      variant: "info",    format: "number", filter: ["fn", "row", ["=", "@row.status", "closed"]] }
+      ]
+    }
+    listens {
+      MatterBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait MatterGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Matters by Practice Area",
+      subtitle: "Caseload composition across practice areas",
+      chartType: "bar",
+      categoryField: "practiceArea",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      MatterBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait MatterBrowseList = Browse.traits.BrowseItemBrowse -> Matter {
+    config: {
+      fields: [
+        { name: "matterNumber", variant: "caption", icon: "hash" },
+        { name: "title",        variant: "h3" },
+        { name: "clientName",   variant: "body" },
+        { name: "practiceArea", variant: "badge" },
+        { name: "leadAttorney", variant: "caption" },
+        { name: "status",       variant: "badge" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      MatterSearch.SEARCH             -> REFETCH_QUERY
+      MatterFilter.FILTER             -> REFETCH_FILTER
+      MatterPersistor.MATTER_CREATED  -> INIT
+      MatterPersistor.MATTER_UPDATED  -> INIT
+      MatterPersistor.MATTER_DELETED  -> INIT
+    }
+  }
+
+  trait MatterCreate = Modal.traits.ModalRecordModal -> Matter {
+    config: {
+      icon: "plus-circle",
+      title: "New Matter",
+      mode: "create",
+      fields: ["matterNumber", "title", "clientName", "practiceArea", "leadAttorney", "status", "openedAt", "notes"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      MatterCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Matter }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MatterEdit = Modal.traits.ModalRecordModal -> Matter {
+    config: {
+      icon: "edit",
+      title: "Edit Matter",
+      mode: "edit",
+      fields: ["matterNumber", "title", "clientName", "practiceArea", "leadAttorney", "status", "openedAt", "closedAt", "notes"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      MatterBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Matter }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MatterView = Modal.traits.ModalRecordModal -> Matter {
+    config: {
+      icon: "eye",
+      title: "View Matter",
+      mode: "edit",
+      fields: ["matterNumber", "title", "clientName", "practiceArea", "leadAttorney", "status", "openedAt", "closedAt", "notes"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      MatterBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Matter }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MatterDelete = Confirmation.traits.ConfirmActionConfirmation -> Matter {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Matter",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      MatterBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Matter }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait MatterPersistor -> Matter [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Matter @payload.data { emit: { success: "MATTER_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Matter @payload.data { emit: { success: "MATTER_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Matter @payload.id { emit: { success: "MATTER_DELETED" } })
+    }
+    emits {
+      MATTER_CREATED -> external { id : string }
+      MATTER_UPDATED -> external { id : string }
+      MATTER_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      MatterCreate.SAVE         -> DO_CREATE
+      MatterEdit.SAVE           -> DO_UPDATE
+      MatterDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/matters" as MattersPage -> MatterAppLayout, MatterCatalog, MatterSearch, MatterFilter, MatterStats, MatterGraphs, MatterBrowseList, MatterCreate, MatterEdit, MatterView, MatterDelete, MatterPersistor
+}
+
+orbital BillableHourPanelOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses BillableHour from "std/behaviors/std-billable-hour"
+
+  entity BillableHour [persistent: billablehours] {
+    id            : string!
+    workerId      : string!
+    workerName    : string = ""
+    matterId      : string = ""
+    projectId     : string = ""
+    workDate      : string!
+    hours         : number = 0
+    rate          : number = 0
+    description   : string = ""
+    isBillable    : boolean = true
+    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" = "unbilled"
+  }
+
+  trait BillableHourAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.BillableHourPanel",
+      appName: "Legal Case",
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      searchEvent: "BILLABLE_HOUR_SEARCH",
+      notifications: [],
+      notificationClickEvent: "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BILLABLE_HOUR_SEARCH
+      NOTIFY_CLICK: BILLABLE_HOUR_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait BillableHourPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "clock" },
+            { type: "typography", variant: "h2", content: "Time Entries" }
+          ]},
+          { type: "divider" },
+          "@trait.BillableHourTimesheetView"
+        ]})
+    }
+  }
+
+  trait BillableHourTimesheetView = BillableHour.traits.BillableHourTimesheet {
+    config: {
+      title: "Billable Hours"
+    }
+  }
+
+  page "/timesheet" as TimesheetPage -> BillableHourAppLayout, BillableHourPanel, BillableHourTimesheetView
+}
+
+orbital CourtDeadlinePanelOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses CourtDeadline from "std/behaviors/std-court-deadline"
+
+  entity CourtDeadline [persistent: courtdeadlines] {
+    id            : string!
+    matterId      : string!
+    title         : string!
+    deadlineType  : "filing" | "response" | "discovery" | "hearing" | "trial" | "other" = "filing"
+    dueAt         : string!
+    jurisdiction  : string = ""
+    assignedTo    : string = ""
+    status        : "upcoming" | "completed" | "missed" | "extended" = "upcoming"
+    reminderSent  : boolean = false
+    notes         : string = ""
+  }
+
+  trait CourtDeadlineAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.CourtDeadlinePanel",
+      appName: "Legal Case",
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      searchEvent: "COURT_DEADLINE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "COURT_DEADLINE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: COURT_DEADLINE_SEARCH
+      NOTIFY_CLICK: COURT_DEADLINE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait CourtDeadlinePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "calendar" },
+            { type: "typography", variant: "h2", content: "Court Deadlines" }
+          ]},
+          { type: "divider" },
+          "@trait.CourtDeadlineDocketView"
+        ]})
+    }
+  }
+
+  trait CourtDeadlineDocketView = CourtDeadline.traits.CourtDeadlineDocket {
+    config: {
+      title: "Filing Deadlines"
+    }
+  }
+
+  page "/deadlines" as DeadlinesPage -> CourtDeadlineAppLayout, CourtDeadlinePanel, CourtDeadlineDocketView
+}

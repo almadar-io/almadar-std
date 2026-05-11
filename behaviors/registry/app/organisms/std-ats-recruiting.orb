@@ -1,0 +1,1567 @@
+{
+  "name": "std-ats-recruiting",
+  "version": "1.0.0",
+  "description": "ATS recruiting: job openings catalog, applicant intake pipeline, interview scheduling, and offer letters. Pick for hiring/talent apps.",
+  "orbitals": [
+    {
+      "name": "JobOpeningOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "JobOpening",
+        "collection": "jobopenings",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "department",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "closed",
+              "draft"
+            ]
+          },
+          {
+            "name": "location",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "hiringManager",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "headcount",
+            "type": "number",
+            "default": 1.0
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "JobOpeningAppLayout",
+          "config": {
+            "searchEvent": "JOB_OPENING_SEARCH",
+            "notificationClickEvent": "JOB_OPENING_NOTIFICATIONS_OPEN",
+            "appName": "ATSRecruiting",
+            "navItems": [
+              {
+                "label": "Openings",
+                "icon": "briefcase",
+                "href": "/openings"
+              },
+              {
+                "icon": "user-plus",
+                "label": "Pipeline",
+                "href": "/pipeline"
+              },
+              {
+                "label": "Interviews",
+                "href": "/interviews",
+                "icon": "calendar"
+              },
+              {
+                "label": "Offers",
+                "href": "/offers",
+                "icon": "file-text"
+              }
+            ],
+            "notifications": [],
+            "contentTrait": "@trait.JobOpeningCatalog"
+          },
+          "events": {
+            "NOTIFY_CLICK": "JOB_OPENING_NOTIFICATIONS_OPEN",
+            "SEARCH": "JOB_OPENING_SEARCH"
+          }
+        },
+        {
+          "name": "JobOpeningCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "JOB_OPENING_SEARCH",
+              "triggers": "JOB_OPENING_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningAppLayout"
+              }
+            },
+            {
+              "event": "JOB_OPENING_NOTIFICATIONS_OPEN",
+              "triggers": "JOB_OPENING_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "JOB_OPENING_SEARCH",
+                "name": "Job Opening Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "JOB_OPENING_NOTIFICATIONS_OPEN",
+                "name": "Job Opening Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "briefcase"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Job Openings",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "variant": "primary",
+                                  "label": "New Opening",
+                                  "action": "CREATE",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            "@trait.JobOpeningSearch",
+                            "@trait.JobOpeningFilter"
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        "@trait.JobOpeningStats",
+                        "@trait.JobOpeningGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.JobOpeningBrowseList"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "JOB_OPENING_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "JOB_OPENING_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "No notifications"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "label": "Back to openings"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-8"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "JobOpeningSearch",
+          "config": {
+            "placeholder": "Search openings…",
+            "event": "JOB_OPENING_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "JobOpeningFilter",
+          "config": {
+            "event": "JOB_OPENING_FILTER",
+            "filters": [
+              {
+                "field": "status",
+                "label": "Status",
+                "filterType": "select",
+                "options": [
+                  "open",
+                  "closed",
+                  "draft"
+                ]
+              },
+              {
+                "field": "department",
+                "filterType": "select",
+                "label": "Department",
+                "options": [
+                  "engineering",
+                  "design",
+                  "marketing",
+                  "sales",
+                  "hr",
+                  "finance",
+                  "operations"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "JobOpeningStats",
+          "config": {
+            "metrics": [
+              {
+                "icon": "briefcase",
+                "format": "number",
+                "aggregation": "count",
+                "variant": "primary",
+                "label": "Total"
+              },
+              {
+                "variant": "success",
+                "icon": "circle",
+                "format": "number",
+                "aggregation": "count",
+                "label": "Open",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ]
+              },
+              {
+                "aggregation": "count",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "draft"
+                  ]
+                ],
+                "label": "Drafts",
+                "format": "number",
+                "icon": "edit"
+              },
+              {
+                "label": "Seats",
+                "icon": "users",
+                "format": "number",
+                "aggregation": "sum",
+                "variant": "primary",
+                "field": "headcount"
+              }
+            ],
+            "title": "Openings"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "JobOpeningGraphs",
+          "config": {
+            "chartType": "bar",
+            "aggregation": "count",
+            "title": "Openings by Department",
+            "categoryField": "department",
+            "showLegend": false,
+            "height": 240.0,
+            "subtitle": "Headcount distribution across teams"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "JobOpeningBrowseList",
+          "linkedEntity": "JobOpening",
+          "config": {
+            "fields": [
+              {
+                "icon": "briefcase",
+                "name": "title",
+                "variant": "h3"
+              },
+              {
+                "name": "department",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "location",
+                "variant": "body"
+              },
+              {
+                "name": "hiringManager",
+                "variant": "caption"
+              },
+              {
+                "name": "headcount",
+                "variant": "caption"
+              }
+            ],
+            "gap": "sm",
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningSearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningFilter"
+              }
+            },
+            {
+              "event": "JOB_OPENING_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningPersistor"
+              }
+            },
+            {
+              "event": "JOB_OPENING_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningPersistor"
+              }
+            },
+            {
+              "event": "JOB_OPENING_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JobOpeningCreate",
+          "linkedEntity": "JobOpening",
+          "config": {
+            "title": "New Opening",
+            "fields": [
+              "title",
+              "department",
+              "status",
+              "location",
+              "hiringManager",
+              "headcount"
+            ],
+            "mode": "create",
+            "icon": "plus-circle"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JobOpeningEdit",
+          "linkedEntity": "JobOpening",
+          "config": {
+            "title": "Edit Opening",
+            "fields": [
+              "title",
+              "department",
+              "status",
+              "location",
+              "hiringManager",
+              "headcount"
+            ],
+            "icon": "edit",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JobOpeningView",
+          "linkedEntity": "JobOpening",
+          "config": {
+            "icon": "eye",
+            "title": "View Opening",
+            "mode": "edit",
+            "fields": [
+              "title",
+              "department",
+              "status",
+              "location",
+              "hiringManager",
+              "headcount"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "JobOpeningDelete",
+          "linkedEntity": "JobOpening",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Opening",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "JobOpeningPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "JobOpening",
+          "emits": [
+            {
+              "event": "JOB_OPENING_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "JOB_OPENING_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "JOB_OPENING_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "JobOpeningDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "JOB_OPENING_CREATED",
+                "name": "Job Opening Created"
+              },
+              {
+                "key": "JOB_OPENING_UPDATED",
+                "name": "Job Opening Updated"
+              },
+              {
+                "key": "JOB_OPENING_DELETED",
+                "name": "Job Opening Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "JobOpening",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "JOB_OPENING_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "JobOpening",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "JOB_OPENING_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "JobOpening",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "JOB_OPENING_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "OpeningsPage",
+          "path": "/openings",
+          "traits": [
+            {
+              "ref": "JobOpeningAppLayout"
+            },
+            {
+              "ref": "JobOpeningCatalog"
+            },
+            {
+              "ref": "JobOpeningSearch"
+            },
+            {
+              "ref": "JobOpeningFilter"
+            },
+            {
+              "ref": "JobOpeningStats"
+            },
+            {
+              "ref": "JobOpeningGraphs"
+            },
+            {
+              "ref": "JobOpeningBrowseList"
+            },
+            {
+              "ref": "JobOpeningCreate"
+            },
+            {
+              "ref": "JobOpeningEdit"
+            },
+            {
+              "ref": "JobOpeningView"
+            },
+            {
+              "ref": "JobOpeningDelete"
+            },
+            {
+              "ref": "JobOpeningPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ApplicantPipelineOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-applicant-form",
+          "as": "ApplicantForm"
+        }
+      ],
+      "entity": {
+        "name": "ApplicationIntake",
+        "collection": "applicationintakes",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantEmail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "applicantPhone",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "jobId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resumeUrl",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "firstInterviewAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "interviewerName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "interviewFormat",
+            "type": "string",
+            "default": "video",
+            "values": [
+              "phone",
+              "video",
+              "onsite"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "submitted",
+              "interviewing",
+              "completed"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ApplicantPipelineAppLayout",
+          "config": {
+            "notifications": [],
+            "notificationClickEvent": "PIPELINE_NOTIFICATIONS_OPEN",
+            "searchEvent": "PIPELINE_SEARCH",
+            "contentTrait": "@trait.PipelineIntakeBrowse",
+            "appName": "ATSRecruiting",
+            "navItems": [
+              {
+                "href": "/openings",
+                "icon": "briefcase",
+                "label": "Openings"
+              },
+              {
+                "href": "/pipeline",
+                "label": "Pipeline",
+                "icon": "user-plus"
+              },
+              {
+                "icon": "calendar",
+                "label": "Interviews",
+                "href": "/interviews"
+              },
+              {
+                "href": "/offers",
+                "icon": "file-text",
+                "label": "Offers"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "PIPELINE_SEARCH",
+            "NOTIFY_CLICK": "PIPELINE_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "ref": "ApplicantForm.traits.ApplicationIntakeBrowse",
+          "name": "PipelineIntakeBrowse",
+          "linkedEntity": "ApplicationIntake",
+          "listens": [
+            {
+              "event": "INTAKE_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakePersistor"
+              }
+            },
+            {
+              "event": "INTAKE_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakePersistor"
+              }
+            },
+            {
+              "event": "INTAKE_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakePersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ApplicantForm.traits.ApplicationIntakeCreate",
+          "name": "PipelineIntakeCreate",
+          "linkedEntity": "ApplicationIntake",
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakeBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ApplicantForm.traits.ApplicationIntakeEdit",
+          "name": "PipelineIntakeEdit",
+          "linkedEntity": "ApplicationIntake",
+          "listens": [
+            {
+              "event": "REQUEST_EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakeBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ApplicantForm.traits.ApplicationIntakeDelete",
+          "name": "PipelineIntakeDelete",
+          "linkedEntity": "ApplicationIntake",
+          "listens": [
+            {
+              "event": "REQUEST_DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakeBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "ApplicantForm.traits.ApplicationIntakePersistor",
+          "name": "PipelineIntakePersistor",
+          "linkedEntity": "ApplicationIntake",
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakeCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakeEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PipelineIntakeDelete"
+              }
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "PipelinePage",
+          "path": "/pipeline",
+          "traits": [
+            {
+              "ref": "ApplicantPipelineAppLayout"
+            },
+            {
+              "ref": "PipelineIntakeBrowse"
+            },
+            {
+              "ref": "PipelineIntakeCreate"
+            },
+            {
+              "ref": "PipelineIntakeEdit"
+            },
+            {
+              "ref": "PipelineIntakeDelete"
+            },
+            {
+              "ref": "PipelineIntakePersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ApplicantOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-applicant",
+          "as": "Applicant"
+        }
+      ],
+      "entity": {
+        "name": "Applicant",
+        "collection": "applicants",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "jobId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resumeUrl",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "stage",
+            "type": "string",
+            "default": "applied",
+            "values": [
+              "applied",
+              "screening",
+              "interview",
+              "offer",
+              "hired",
+              "rejected"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "appliedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ApplicantAppLayout",
+          "config": {
+            "navItems": [
+              {
+                "label": "Openings",
+                "icon": "briefcase",
+                "href": "/openings"
+              },
+              {
+                "href": "/pipeline",
+                "icon": "user-plus",
+                "label": "Pipeline"
+              },
+              {
+                "icon": "calendar",
+                "href": "/interviews",
+                "label": "Interviews"
+              },
+              {
+                "href": "/offers",
+                "label": "Offers",
+                "icon": "file-text"
+              }
+            ],
+            "contentTrait": "@trait.ApplicantList",
+            "appName": "ATSRecruiting",
+            "searchEvent": "APPLICANT_SEARCH",
+            "notificationClickEvent": "APPLICANT_NOTIFICATIONS_OPEN",
+            "notifications": []
+          },
+          "events": {
+            "SEARCH": "APPLICANT_SEARCH",
+            "NOTIFY_CLICK": "APPLICANT_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "ref": "Applicant.traits.ApplicantPipeline",
+          "name": "ApplicantList",
+          "config": {
+            "title": "Applicants"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ApplicantsPage",
+          "path": "/applicants",
+          "traits": [
+            {
+              "ref": "ApplicantAppLayout"
+            },
+            {
+              "ref": "ApplicantList"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "InterviewScheduleOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-interview-slot",
+          "as": "InterviewSlot"
+        }
+      ],
+      "entity": {
+        "name": "InterviewSlot",
+        "collection": "interviewslots",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "interviewerName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scheduledAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "durationMinutes",
+            "type": "number",
+            "default": 60.0
+          },
+          {
+            "name": "format",
+            "type": "string",
+            "default": "video",
+            "values": [
+              "phone",
+              "video",
+              "onsite"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "scheduled",
+            "values": [
+              "scheduled",
+              "completed",
+              "cancelled",
+              "no_show"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "InterviewScheduleAppLayout",
+          "config": {
+            "searchEvent": "INTERVIEW_SEARCH",
+            "notifications": [],
+            "contentTrait": "@trait.InterviewScheduleList",
+            "notificationClickEvent": "INTERVIEW_NOTIFICATIONS_OPEN",
+            "navItems": [
+              {
+                "href": "/openings",
+                "icon": "briefcase",
+                "label": "Openings"
+              },
+              {
+                "href": "/pipeline",
+                "icon": "user-plus",
+                "label": "Pipeline"
+              },
+              {
+                "label": "Interviews",
+                "href": "/interviews",
+                "icon": "calendar"
+              },
+              {
+                "icon": "file-text",
+                "label": "Offers",
+                "href": "/offers"
+              }
+            ],
+            "appName": "ATSRecruiting"
+          },
+          "events": {
+            "SEARCH": "INTERVIEW_SEARCH",
+            "NOTIFY_CLICK": "INTERVIEW_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "ref": "InterviewSlot.traits.InterviewSlotSchedule",
+          "name": "InterviewScheduleList",
+          "config": {
+            "title": "Interview Schedule"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "InterviewSchedulePage",
+          "path": "/interviews",
+          "traits": [
+            {
+              "ref": "InterviewScheduleAppLayout"
+            },
+            {
+              "ref": "InterviewScheduleList"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OfferLetterFlowOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-offer-letter",
+          "as": "OfferLetter"
+        }
+      ],
+      "entity": {
+        "name": "OfferLetter",
+        "collection": "offerletters",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "position",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "salary",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "startDate",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "sent",
+              "accepted",
+              "rejected",
+              "expired"
+            ]
+          },
+          {
+            "name": "expiresAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "OfferLetterAppLayout",
+          "config": {
+            "appName": "ATSRecruiting",
+            "contentTrait": "@trait.OfferLetterList",
+            "navItems": [
+              {
+                "icon": "briefcase",
+                "label": "Openings",
+                "href": "/openings"
+              },
+              {
+                "href": "/pipeline",
+                "icon": "user-plus",
+                "label": "Pipeline"
+              },
+              {
+                "href": "/interviews",
+                "label": "Interviews",
+                "icon": "calendar"
+              },
+              {
+                "label": "Offers",
+                "icon": "file-text",
+                "href": "/offers"
+              }
+            ],
+            "notifications": [],
+            "searchEvent": "OFFER_SEARCH",
+            "notificationClickEvent": "OFFER_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "SEARCH": "OFFER_SEARCH",
+            "NOTIFY_CLICK": "OFFER_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "ref": "OfferLetter.traits.OfferLetterFlow",
+          "name": "OfferLetterList",
+          "config": {
+            "title": "Offer Letters"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "OfferLetterPage",
+          "path": "/offers",
+          "traits": [
+            {
+              "ref": "OfferLetterAppLayout"
+            },
+            {
+              "ref": "OfferLetterList"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

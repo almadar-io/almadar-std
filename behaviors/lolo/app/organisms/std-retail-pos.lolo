@@ -1,0 +1,382 @@
+app std-retail-pos "1.0.0"
+"Retail POS: sales ledger, checkout terminal, receipts, and customer accounts. Pick for general non-restaurant retail."
+
+orbital SaleOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Search       from "std/behaviors/std-search"
+  uses Filter       from "std/behaviors/std-filter"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
+  uses Browse       from "std/behaviors/std-browse"
+
+  entity Sale [persistent: sales] {
+    id            : string!
+    total         : number = 0
+    status        : "in-progress" | "completed" | "refunded" | "voided" = "in-progress"
+    paymentMethod : "cash" | "card" | "check" | "digital" = "card"
+    customerId    : string = ""
+    cashierId     : string = ""
+    completedAt   : string = ""
+    pendingId     : string = ""
+  }
+
+  trait SaleAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.SaleCatalog",
+      appName: "Retail POS",
+      navItems: [{ label: "Sales", href: "/sales", icon: "shopping-bag" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Receipts", href: "/receipts", icon: "receipt" }, { label: "Customers", href: "/customers", icon: "users" }],
+      searchEvent: "SALE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SALE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SALE_SEARCH
+      NOTIFY_CLICK: SALE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait SaleCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "shopping-bag" },
+              { type: "typography", content: "Sales", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Sale", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.SaleSearch",
+            "@trait.SaleFilter"
+          ]},
+          "@trait.SaleStats",
+          "@trait.SaleGraphs",
+          { type: "divider" },
+          "@trait.SaleBrowseList"
+        ]})
+      SALE_SEARCH -> composing
+      SALE_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to sales", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      SaleAppLayout.SALE_SEARCH -> SALE_SEARCH
+      SaleAppLayout.SALE_NOTIFICATIONS_OPEN -> SALE_NOTIFICATIONS_OPEN
+      SALE_SEARCH { value : string }
+      SALE_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait SaleSearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search sales…",
+      event: "SALE_SEARCH"
+    }
+  }
+
+  trait SaleFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status",        label: "Status",  filterType: "select", options: ["in-progress", "completed", "refunded", "voided"] },
+        { field: "paymentMethod", label: "Payment", filterType: "select", options: ["cash", "card", "check", "digital"] }
+      ],
+      event: "SALE_FILTER"
+    }
+  }
+
+  trait SaleStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Sales",
+      metrics: [
+        { aggregation: "count", label: "Total",       icon: "shopping-bag", variant: "primary", format: "number" },
+        { aggregation: "count", label: "Completed",   icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "completed"]] },
+        { aggregation: "sum",   label: "Revenue",     icon: "dollar-sign",  variant: "info",    format: "currency", field: "total", filter: ["fn", "row", ["=", "@row.status", "completed"]] }
+      ]
+    }
+    listens {
+      SaleBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait SaleGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Sales by Payment Method",
+      subtitle: "Volume across payment types",
+      chartType: "bar",
+      categoryField: "paymentMethod",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      SaleBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait SaleBrowseList = Browse.traits.BrowseItemBrowse -> Sale {
+    config: {
+      fields: [
+        { name: "id",            variant: "h4",      icon: "shopping-bag" },
+        { name: "status",        variant: "badge" },
+        { name: "paymentMethod", variant: "badge" },
+        { name: "total",         variant: "caption" },
+        { name: "completedAt",   variant: "caption" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      SaleSearch.SEARCH             -> REFETCH_QUERY
+      SaleFilter.FILTER             -> REFETCH_FILTER
+      SalePersistor.SALE_CREATED    -> INIT
+      SalePersistor.SALE_UPDATED    -> INIT
+      SalePersistor.SALE_DELETED    -> INIT
+    }
+  }
+
+  trait SaleCreate = Modal.traits.ModalRecordModal -> Sale {
+    config: {
+      icon: "plus-circle",
+      title: "New Sale",
+      mode: "create",
+      fields: ["total", "status", "paymentMethod", "customerId", "cashierId"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      SaleCatalog.CREATE -> CREATE
+      CREATE { id : string, row : Sale }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SaleEdit = Modal.traits.ModalRecordModal -> Sale {
+    config: {
+      icon: "edit",
+      title: "Edit Sale",
+      mode: "edit",
+      fields: ["total", "status", "paymentMethod", "customerId", "cashierId", "completedAt"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      SaleBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : Sale }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SaleView = Modal.traits.ModalRecordModal -> Sale {
+    config: {
+      icon: "eye",
+      title: "View Sale",
+      mode: "edit",
+      fields: ["total", "status", "paymentMethod", "customerId", "cashierId", "completedAt"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      SaleBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : Sale }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SaleDelete = Confirmation.traits.ConfirmActionConfirmation -> Sale {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Sale",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      SaleBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : Sale }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SalePersistor -> Sale [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create Sale @payload.data { emit: { success: "SALE_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update Sale @payload.data { emit: { success: "SALE_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete Sale @payload.id { emit: { success: "SALE_DELETED" } })
+    }
+    emits {
+      SALE_CREATED -> external { id : string }
+      SALE_UPDATED -> external { id : string }
+      SALE_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      SaleCreate.SAVE          -> DO_CREATE
+      SaleEdit.SAVE            -> DO_UPDATE
+      SaleDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/sales" as SalesPage -> SaleAppLayout, SaleCatalog, SaleSearch, SaleFilter, SaleStats, SaleGraphs, SaleBrowseList, SaleCreate, SaleEdit, SaleView, SaleDelete, SalePersistor
+}
+
+orbital CheckoutOrbital {
+  uses AppShell         from "std/behaviors/std-app-layout"
+  uses CheckoutTerminal from "std/behaviors/std-checkout-terminal"
+
+  entity CheckoutSession [persistent: checkoutsessions] {
+    id            : string!
+    terminalId    : string!
+    cashierId     : string = ""
+    cashierName   : string = ""
+    cartItemsJson : string = ""
+    subtotal      : number = 0
+    tax           : number = 0
+    total         : number = 0
+    paymentMethod : "cash" | "card" | "gift_card" | "split" = "card"
+    status        : "open" | "paying" | "completed" | "voided" = "open"
+    openedAt      : string = ""
+    completedAt   : string = ""
+  }
+
+  trait CheckoutAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.CheckoutTerminalBoard",
+      appName: "Retail POS",
+      navItems: [{ label: "Sales", href: "/sales", icon: "shopping-bag" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Receipts", href: "/receipts", icon: "receipt" }, { label: "Customers", href: "/customers", icon: "users" }],
+      searchEvent: "CHECKOUT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CHECKOUT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CHECKOUT_SEARCH
+      NOTIFY_CLICK: CHECKOUT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait CheckoutTerminalBoard = CheckoutTerminal.traits.CheckoutSessionTerminal {
+    config: {
+      title: "Open Terminals"
+    }
+  }
+
+  page "/checkout" as CheckoutPage -> CheckoutAppLayout, CheckoutTerminalBoard
+}
+
+orbital ReceiptOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Receipt  from "std/behaviors/std-receipt"
+
+  entity Receipt [persistent: receipts] {
+    id              : string!
+    receiptNumber   : string!
+    recipientName   : string = ""
+    recipientEmail  : string = ""
+    transactionId   : string = ""
+    transactionType : "purchase" | "refund" | "donation" | "service" = "purchase"
+    subtotal        : number = 0
+    tax             : number = 0
+    total           : number = 0
+    lineItemsJson   : string = ""
+    issuedAt        : string = ""
+    isEmailed       : boolean = false
+  }
+
+  trait ReceiptAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ReceiptLedger",
+      appName: "Retail POS",
+      navItems: [{ label: "Sales", href: "/sales", icon: "shopping-bag" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Receipts", href: "/receipts", icon: "receipt" }, { label: "Customers", href: "/customers", icon: "users" }],
+      searchEvent: "RECEIPT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "RECEIPT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: RECEIPT_SEARCH
+      NOTIFY_CLICK: RECEIPT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ReceiptLedger = Receipt.traits.ReceiptIssuer {
+    config: {
+      title: "Receipts"
+    }
+  }
+
+  page "/receipts" as ReceiptsPage -> ReceiptAppLayout, ReceiptLedger
+}
+
+orbital CustomerOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses CustomerAccount from "std/behaviors/std-customer-account"
+
+  entity CustomerAccount [persistent: customeraccounts] {
+    id                : string!
+    name              : string!
+    email             : string = ""
+    phone             : string = ""
+    loyaltyPoints     : number = 0
+    storeCreditAmount : number = 0
+    totalSpent        : number = 0
+    joinedAt          : string = ""
+    lastVisitAt       : string = ""
+    status            : "active" | "inactive" | "banned" = "active"
+  }
+
+  trait CustomerAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.CustomerDirectory",
+      appName: "Retail POS",
+      navItems: [{ label: "Sales", href: "/sales", icon: "shopping-bag" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Receipts", href: "/receipts", icon: "receipt" }, { label: "Customers", href: "/customers", icon: "users" }],
+      searchEvent: "CUSTOMER_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CUSTOMER_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CUSTOMER_SEARCH
+      NOTIFY_CLICK: CUSTOMER_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait CustomerDirectory = CustomerAccount.traits.CustomerAccountDirectory {
+    config: {
+      title: "Customers"
+    }
+  }
+
+  page "/customers" as CustomersPage -> CustomerAppLayout, CustomerDirectory
+}

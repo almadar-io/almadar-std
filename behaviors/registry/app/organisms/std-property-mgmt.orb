@@ -1,0 +1,903 @@
+{
+  "name": "std-property-mgmt",
+  "version": "1.0.0",
+  "description": "Property Management: owner-side properties, tenants, leases, rent collection, and maintenance. Pick for landlords / property managers.",
+  "orbitals": [
+    {
+      "name": "PropertyOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-lease",
+          "as": "Lease"
+        },
+        {
+          "from": "std/behaviors/std-tenant",
+          "as": "Tenant"
+        },
+        {
+          "from": "std/behaviors/std-rent-charge",
+          "as": "RentCharge"
+        },
+        {
+          "from": "std/behaviors/std-maintenance-request",
+          "as": "MaintenanceRequest"
+        }
+      ],
+      "entity": {
+        "name": "Property",
+        "collection": "properties",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "unitCount",
+            "type": "number",
+            "default": 1.0
+          },
+          {
+            "name": "propertyType",
+            "type": "string",
+            "default": "single-family",
+            "values": [
+              "single-family",
+              "multi-family",
+              "commercial",
+              "mixed-use"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "vacant",
+              "under-renovation"
+            ]
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "PropertyAppLayout",
+          "config": {
+            "searchEvent": "PROPERTY_SEARCH",
+            "notifications": [],
+            "appName": "Property Manager",
+            "notificationClickEvent": "PROPERTY_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.PropertyCatalog",
+            "navItems": [
+              {
+                "href": "/properties",
+                "icon": "home",
+                "label": "Properties"
+              },
+              {
+                "href": "/tenants",
+                "label": "Tenants",
+                "icon": "users"
+              },
+              {
+                "href": "/leases",
+                "icon": "file-text",
+                "label": "Leases"
+              },
+              {
+                "icon": "dollar-sign",
+                "label": "Rent",
+                "href": "/rent-charges"
+              },
+              {
+                "icon": "wrench",
+                "href": "/maintenance",
+                "label": "Maintenance"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "PROPERTY_SEARCH",
+            "NOTIFY_CLICK": "PROPERTY_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "PropertyCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "PROPERTY_SEARCH",
+              "triggers": "PROPERTY_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyAppLayout"
+              }
+            },
+            {
+              "event": "PROPERTY_NOTIFICATIONS_OPEN",
+              "triggers": "PROPERTY_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PROPERTY_SEARCH",
+                "name": "Property Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROPERTY_NOTIFICATIONS_OPEN",
+                "name": "Property Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "home"
+                                },
+                                {
+                                  "content": "Properties",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "New Property",
+                                  "variant": "primary",
+                                  "action": "CREATE",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@trait.PropertySearch",
+                            "@trait.PropertyFilter"
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        "@trait.PropertyStats",
+                        "@trait.PropertyGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.PropertyBrowseList"
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "PROPERTY_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "PROPERTY_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "label": "Back to properties",
+                          "action": "INIT",
+                          "variant": "ghost",
+                          "type": "button"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-8"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "PropertySearch",
+          "config": {
+            "event": "PROPERTY_SEARCH",
+            "placeholder": "Search properties…"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "PropertyFilter",
+          "config": {
+            "filters": [
+              {
+                "field": "propertyType",
+                "label": "Type",
+                "filterType": "select",
+                "options": [
+                  "single-family",
+                  "multi-family",
+                  "commercial",
+                  "mixed-use"
+                ]
+              },
+              {
+                "filterType": "select",
+                "options": [
+                  "active",
+                  "vacant",
+                  "under-renovation"
+                ],
+                "label": "Status",
+                "field": "status"
+              }
+            ],
+            "event": "PROPERTY_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "PropertyStats",
+          "config": {
+            "metrics": [
+              {
+                "icon": "home",
+                "label": "Total",
+                "aggregation": "count",
+                "variant": "primary",
+                "format": "number"
+              },
+              {
+                "aggregation": "count",
+                "label": "Active",
+                "icon": "check-circle",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "variant": "success"
+              },
+              {
+                "aggregation": "count",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "vacant"
+                  ]
+                ],
+                "label": "Vacant",
+                "format": "number",
+                "icon": "circle"
+              },
+              {
+                "label": "Total Units",
+                "icon": "layers",
+                "variant": "info",
+                "field": "unitCount",
+                "aggregation": "sum",
+                "format": "number"
+              }
+            ],
+            "title": "Properties"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "PropertyGraphs",
+          "config": {
+            "title": "Properties by Type",
+            "aggregation": "count",
+            "categoryField": "propertyType",
+            "height": 240.0,
+            "subtitle": "Portfolio composition across property types",
+            "chartType": "bar",
+            "showLegend": false
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "PropertyBrowseList",
+          "linkedEntity": "Property",
+          "config": {
+            "gap": "sm",
+            "fields": [
+              {
+                "icon": "home",
+                "name": "address",
+                "variant": "h3"
+              },
+              {
+                "variant": "badge",
+                "name": "propertyType"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "caption",
+                "name": "unitCount"
+              }
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "variant": "danger",
+                "event": "DELETE"
+              }
+            ],
+            "cols": 1.0
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertySearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyFilter"
+              }
+            },
+            {
+              "event": "PROPERTY_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyPersistor"
+              }
+            },
+            {
+              "event": "PROPERTY_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyPersistor"
+              }
+            },
+            {
+              "event": "PROPERTY_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PropertyCreate",
+          "linkedEntity": "Property",
+          "config": {
+            "fields": [
+              "address",
+              "unitCount",
+              "propertyType",
+              "status"
+            ],
+            "mode": "create",
+            "icon": "plus-circle",
+            "title": "New Property"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PropertyEdit",
+          "linkedEntity": "Property",
+          "config": {
+            "title": "Edit Property",
+            "mode": "edit",
+            "fields": [
+              "address",
+              "unitCount",
+              "propertyType",
+              "status"
+            ],
+            "icon": "edit"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "PropertyView",
+          "linkedEntity": "Property",
+          "config": {
+            "icon": "eye",
+            "title": "View Property",
+            "mode": "edit",
+            "fields": [
+              "address",
+              "unitCount",
+              "propertyType",
+              "status"
+            ]
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "PropertyDelete",
+          "linkedEntity": "Property",
+          "config": {
+            "title": "Delete Property",
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PropertyPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "Property",
+          "emits": [
+            {
+              "event": "PROPERTY_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PROPERTY_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PROPERTY_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "PropertyDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROPERTY_CREATED",
+                "name": "Property Created"
+              },
+              {
+                "key": "PROPERTY_UPDATED",
+                "name": "Property Updated"
+              },
+              {
+                "key": "PROPERTY_DELETED",
+                "name": "Property Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Property",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PROPERTY_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Property",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "PROPERTY_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Property",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "PROPERTY_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PropertiesPage",
+          "path": "/properties",
+          "traits": [
+            {
+              "ref": "PropertyAppLayout"
+            },
+            {
+              "ref": "PropertyCatalog"
+            },
+            {
+              "ref": "PropertySearch"
+            },
+            {
+              "ref": "PropertyFilter"
+            },
+            {
+              "ref": "PropertyStats"
+            },
+            {
+              "ref": "PropertyGraphs"
+            },
+            {
+              "ref": "PropertyBrowseList"
+            },
+            {
+              "ref": "PropertyCreate"
+            },
+            {
+              "ref": "PropertyEdit"
+            },
+            {
+              "ref": "PropertyView"
+            },
+            {
+              "ref": "PropertyDelete"
+            },
+            {
+              "ref": "PropertyPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

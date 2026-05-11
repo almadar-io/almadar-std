@@ -1,0 +1,263 @@
+app std-inventory "1.0.0"
+"Inventory: SKU catalog, multi-location stock levels, warehouse management, reorder rules, and adjustment history. Pick for ops/supply-chain apps."
+
+orbital InventoryItemOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses Modal           from "std/behaviors/std-modal"
+  uses Confirmation    from "std/behaviors/std-confirmation"
+  uses Search          from "std/behaviors/std-search"
+  uses Filter          from "std/behaviors/std-filter"
+  uses Stats           from "std/behaviors/std-stats"
+  uses Graphs          from "std/behaviors/std-graphs"
+  uses Browse          from "std/behaviors/std-browse"
+  uses StockAdjustment from "std/behaviors/std-stock-adjustment"
+  uses StockLevel      from "std/behaviors/std-stock-level"
+  uses Warehouse       from "std/behaviors/std-warehouse"
+  uses ReorderRule     from "std/behaviors/std-reorder-rule"
+
+  entity InventoryItem [persistent: inventoryitems] {
+    id              : string!
+    sku             : string!
+    name            : string!
+    category        : string = ""
+    defaultUnitCost : number = 0
+    status          : "active" | "discontinued" | "draft" = "active"
+    pendingId       : string = ""
+  }
+
+  trait InventoryAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.InventoryCatalog",
+      appName: "Inventory",
+      navItems: [
+        { label: "Items",         href: "/inventory",         icon: "package" },
+        { label: "Adjustments",   href: "/stock-adjustments", icon: "sliders" },
+        { label: "Stock Levels",  href: "/stock",             icon: "layers" },
+        { label: "Warehouses",    href: "/warehouses",        icon: "warehouse" },
+        { label: "Reorder Rules", href: "/reorder-rules",     icon: "repeat" }
+      ],
+      searchEvent: "INVENTORY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "INVENTORY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: INVENTORY_SEARCH
+      NOTIFY_CLICK: INVENTORY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait InventoryCatalog [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "package" },
+              { type: "typography", content: "Inventory Items", variant: "h2" }
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", children: [
+              { type: "button", label: "New Item", action: "CREATE", variant: "primary", icon: "plus" }
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [
+            "@trait.InventorySearch",
+            "@trait.InventoryFilter"
+          ]},
+          "@trait.InventoryStats",
+          "@trait.InventoryGraphs",
+          { type: "divider" },
+          "@trait.InventoryBrowseList"
+        ]})
+      INVENTORY_SEARCH -> composing
+      INVENTORY_NOTIFICATIONS_OPEN -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-8", children: [
+          { type: "icon", name: "bell" },
+          { type: "typography", variant: "h3", content: "No notifications" },
+          { type: "typography", variant: "caption", color: "muted", content: "You're all caught up." },
+          { type: "button", label: "Back to inventory", action: "INIT", variant: "ghost" }
+        ]})
+    }
+    emits {
+      CREATE -> external { source : string }
+    }
+    listens {
+      InventoryAppLayout.INVENTORY_SEARCH -> INVENTORY_SEARCH
+      InventoryAppLayout.INVENTORY_NOTIFICATIONS_OPEN -> INVENTORY_NOTIFICATIONS_OPEN
+      INVENTORY_SEARCH { value : string }
+      INVENTORY_NOTIFICATIONS_OPEN { id : string }
+    }
+  }
+
+  trait InventorySearch = Search.traits.SearchResultSearch {
+    config: {
+      placeholder: "Search SKUs, names, categories…",
+      event: "INVENTORY_SEARCH"
+    }
+  }
+
+  trait InventoryFilter = Filter.traits.FilterTargetFilter {
+    config: {
+      filters: [
+        { field: "status", label: "Status", filterType: "select", options: ["active", "discontinued", "draft"] }
+      ],
+      event: "INVENTORY_FILTER"
+    }
+  }
+
+  trait InventoryStats = Stats.traits.StatsItemStats {
+    config: {
+      title: "Inventory",
+      metrics: [
+        { aggregation: "count", label: "Total SKUs",     icon: "package",      variant: "primary", format: "number" },
+        { aggregation: "count", label: "Active",         icon: "check-circle", variant: "success", format: "number", filter: ["fn", "row", ["=", "@row.status", "active"]] },
+        { aggregation: "count", label: "Discontinued",   icon: "circle-off",   variant: "warning", format: "number", filter: ["fn", "row", ["=", "@row.status", "discontinued"]] }
+      ]
+    }
+    listens {
+      InventoryBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait InventoryGraphs = Graphs.traits.GraphItemGraph {
+    config: {
+      title: "Items by Category",
+      subtitle: "SKU distribution across categories",
+      chartType: "bar",
+      categoryField: "category",
+      aggregation: "count",
+      height: 240,
+      showLegend: false
+    }
+    listens {
+      InventoryBrowseList.BrowseItemLoaded -> ITEMS_LOADED
+    }
+  }
+
+  trait InventoryBrowseList = Browse.traits.BrowseItemBrowse -> InventoryItem {
+    config: {
+      fields: [
+        { name: "sku",             variant: "h4",      icon: "tag" },
+        { name: "name",            variant: "body" },
+        { name: "category",        variant: "caption" },
+        { name: "status",          variant: "badge" },
+        { name: "defaultUnitCost", variant: "caption" }
+      ],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
+      cols: 1,
+      gap: "sm"
+    }
+    listens {
+      InventorySearch.SEARCH                   -> REFETCH_QUERY
+      InventoryFilter.FILTER                   -> REFETCH_FILTER
+      InventoryPersistor.INVENTORY_CREATED     -> INIT
+      InventoryPersistor.INVENTORY_UPDATED     -> INIT
+      InventoryPersistor.INVENTORY_DELETED     -> INIT
+    }
+  }
+
+  trait InventoryCreate = Modal.traits.ModalRecordModal -> InventoryItem {
+    config: {
+      icon: "plus-circle",
+      title: "New Item",
+      mode: "create",
+      fields: ["sku", "name", "category", "defaultUnitCost", "status"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      InventoryCatalog.CREATE -> CREATE
+      CREATE { id : string, row : InventoryItem }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait InventoryEdit = Modal.traits.ModalRecordModal -> InventoryItem {
+    config: {
+      icon: "edit",
+      title: "Edit Item",
+      mode: "edit",
+      fields: ["sku", "name", "category", "defaultUnitCost", "status"]
+    }
+    events {
+      OPEN: EDIT
+    }
+    listens {
+      InventoryBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : InventoryItem }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait InventoryView = Modal.traits.ModalRecordModal -> InventoryItem {
+    config: {
+      icon: "eye",
+      title: "View Item",
+      mode: "edit",
+      fields: ["sku", "name", "category", "defaultUnitCost", "status"]
+    }
+    events {
+      OPEN: VIEW
+    }
+    listens {
+      InventoryBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : InventoryItem }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait InventoryDelete = Confirmation.traits.ConfirmActionConfirmation -> InventoryItem {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Item",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      InventoryBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : InventoryItem }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait InventoryPersistor -> InventoryItem [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create InventoryItem @payload.data { emit: { success: "INVENTORY_CREATED" } })
+      DO_UPDATE -> idle
+        (persist update InventoryItem @payload.data { emit: { success: "INVENTORY_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete InventoryItem @payload.id { emit: { success: "INVENTORY_DELETED" } })
+    }
+    emits {
+      INVENTORY_CREATED -> external { id : string }
+      INVENTORY_UPDATED -> external { id : string }
+      INVENTORY_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      InventoryCreate.SAVE           -> DO_CREATE
+      InventoryEdit.SAVE             -> DO_UPDATE
+      InventoryDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/inventory" as InventoryPage -> InventoryAppLayout, InventoryCatalog, InventorySearch, InventoryFilter, InventoryStats, InventoryGraphs, InventoryBrowseList, InventoryCreate, InventoryEdit, InventoryView, InventoryDelete, InventoryPersistor
+}

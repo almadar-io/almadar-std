@@ -1,0 +1,890 @@
+{
+  "name": "std-inventory",
+  "version": "1.0.0",
+  "description": "Inventory: SKU catalog, multi-location stock levels, warehouse management, reorder rules, and adjustment history. Pick for ops/supply-chain apps.",
+  "orbitals": [
+    {
+      "name": "InventoryItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-stock-adjustment",
+          "as": "StockAdjustment"
+        },
+        {
+          "from": "std/behaviors/std-stock-level",
+          "as": "StockLevel"
+        },
+        {
+          "from": "std/behaviors/std-warehouse",
+          "as": "Warehouse"
+        },
+        {
+          "from": "std/behaviors/std-reorder-rule",
+          "as": "ReorderRule"
+        }
+      ],
+      "entity": {
+        "name": "InventoryItem",
+        "collection": "inventoryitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "defaultUnitCost",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "discontinued",
+              "draft"
+            ]
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "InventoryAppLayout",
+          "config": {
+            "contentTrait": "@trait.InventoryCatalog",
+            "appName": "Inventory",
+            "searchEvent": "INVENTORY_SEARCH",
+            "navItems": [
+              {
+                "label": "Items",
+                "icon": "package",
+                "href": "/inventory"
+              },
+              {
+                "href": "/stock-adjustments",
+                "label": "Adjustments",
+                "icon": "sliders"
+              },
+              {
+                "label": "Stock Levels",
+                "href": "/stock",
+                "icon": "layers"
+              },
+              {
+                "icon": "warehouse",
+                "label": "Warehouses",
+                "href": "/warehouses"
+              },
+              {
+                "label": "Reorder Rules",
+                "href": "/reorder-rules",
+                "icon": "repeat"
+              }
+            ],
+            "notifications": [],
+            "notificationClickEvent": "INVENTORY_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "NOTIFY_CLICK": "INVENTORY_NOTIFICATIONS_OPEN",
+            "SEARCH": "INVENTORY_SEARCH"
+          }
+        },
+        {
+          "name": "InventoryCatalog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CREATE",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "source",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "INVENTORY_SEARCH",
+              "triggers": "INVENTORY_SEARCH",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryAppLayout"
+              }
+            },
+            {
+              "event": "INVENTORY_NOTIFICATIONS_OPEN",
+              "triggers": "INVENTORY_NOTIFICATIONS_OPEN",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryAppLayout"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "INVENTORY_SEARCH",
+                "name": "Inventory Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "INVENTORY_NOTIFICATIONS_OPEN",
+                "name": "Inventory Notifications Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "package"
+                                },
+                                {
+                                  "content": "Inventory Items",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "label": "New Item",
+                                  "icon": "plus",
+                                  "type": "button"
+                                }
+                              ]
+                            }
+                          ],
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@trait.InventorySearch",
+                            "@trait.InventoryFilter"
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        "@trait.InventoryStats",
+                        "@trait.InventoryGraphs",
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.InventoryBrowseList"
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INVENTORY_SEARCH"
+              },
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INVENTORY_NOTIFICATIONS_OPEN",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "content": "No notifications",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up."
+                        },
+                        {
+                          "label": "Back to inventory",
+                          "action": "INIT",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "className": "py-8",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "InventorySearch",
+          "config": {
+            "placeholder": "Search SKUs, names, categories…",
+            "event": "INVENTORY_SEARCH"
+          }
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "InventoryFilter",
+          "config": {
+            "filters": [
+              {
+                "field": "status",
+                "label": "Status",
+                "filterType": "select",
+                "options": [
+                  "active",
+                  "discontinued",
+                  "draft"
+                ]
+              }
+            ],
+            "event": "INVENTORY_FILTER"
+          }
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "InventoryStats",
+          "config": {
+            "metrics": [
+              {
+                "icon": "package",
+                "aggregation": "count",
+                "format": "number",
+                "variant": "primary",
+                "label": "Total SKUs"
+              },
+              {
+                "icon": "check-circle",
+                "aggregation": "count",
+                "format": "number",
+                "variant": "success",
+                "label": "Active",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ]
+              },
+              {
+                "icon": "circle-off",
+                "variant": "warning",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "discontinued"
+                  ]
+                ],
+                "aggregation": "count",
+                "label": "Discontinued"
+              }
+            ],
+            "title": "Inventory"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "InventoryGraphs",
+          "config": {
+            "showLegend": false,
+            "chartType": "bar",
+            "subtitle": "SKU distribution across categories",
+            "categoryField": "category",
+            "height": 240.0,
+            "title": "Items by Category",
+            "aggregation": "count"
+          },
+          "listens": [
+            {
+              "event": "BrowseItemLoaded",
+              "triggers": "ITEMS_LOADED",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "InventoryBrowseList",
+          "linkedEntity": "InventoryItem",
+          "config": {
+            "gap": "sm",
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "fields": [
+              {
+                "name": "sku",
+                "variant": "h4",
+                "icon": "tag"
+              },
+              {
+                "name": "name",
+                "variant": "body"
+              },
+              {
+                "variant": "caption",
+                "name": "category"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "defaultUnitCost"
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "SEARCH",
+              "triggers": "REFETCH_QUERY",
+              "source": {
+                "kind": "trait",
+                "trait": "InventorySearch"
+              }
+            },
+            {
+              "event": "FILTER",
+              "triggers": "REFETCH_FILTER",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryFilter"
+              }
+            },
+            {
+              "event": "INVENTORY_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryPersistor"
+              }
+            },
+            {
+              "event": "INVENTORY_UPDATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryPersistor"
+              }
+            },
+            {
+              "event": "INVENTORY_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryPersistor"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "InventoryCreate",
+          "linkedEntity": "InventoryItem",
+          "config": {
+            "fields": [
+              "sku",
+              "name",
+              "category",
+              "defaultUnitCost",
+              "status"
+            ],
+            "icon": "plus-circle",
+            "mode": "create",
+            "title": "New Item"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryCatalog"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "InventoryEdit",
+          "linkedEntity": "InventoryItem",
+          "config": {
+            "mode": "edit",
+            "fields": [
+              "sku",
+              "name",
+              "category",
+              "defaultUnitCost",
+              "status"
+            ],
+            "icon": "edit",
+            "title": "Edit Item"
+          },
+          "events": {
+            "OPEN": "EDIT"
+          },
+          "listens": [
+            {
+              "event": "EDIT",
+              "triggers": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "InventoryView",
+          "linkedEntity": "InventoryItem",
+          "config": {
+            "fields": [
+              "sku",
+              "name",
+              "category",
+              "defaultUnitCost",
+              "status"
+            ],
+            "title": "View Item",
+            "icon": "eye",
+            "mode": "edit"
+          },
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "listens": [
+            {
+              "event": "VIEW",
+              "triggers": "VIEW",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "InventoryDelete",
+          "linkedEntity": "InventoryItem",
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Delete Item",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryBrowseList"
+              }
+            }
+          ]
+        },
+        {
+          "name": "InventoryPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "InventoryItem",
+          "emits": [
+            {
+              "event": "INVENTORY_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "INVENTORY_UPDATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "INVENTORY_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryCreate"
+              }
+            },
+            {
+              "event": "SAVE",
+              "triggers": "DO_UPDATE",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryEdit"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "InventoryDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "INVENTORY_CREATED",
+                "name": "Inventory Created"
+              },
+              {
+                "key": "INVENTORY_UPDATED",
+                "name": "Inventory Updated"
+              },
+              {
+                "key": "INVENTORY_DELETED",
+                "name": "Inventory Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "InventoryItem",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "INVENTORY_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_UPDATE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "InventoryItem",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "INVENTORY_UPDATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "InventoryItem",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "INVENTORY_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InventoryPage",
+          "path": "/inventory",
+          "traits": [
+            {
+              "ref": "InventoryAppLayout"
+            },
+            {
+              "ref": "InventoryCatalog"
+            },
+            {
+              "ref": "InventorySearch"
+            },
+            {
+              "ref": "InventoryFilter"
+            },
+            {
+              "ref": "InventoryStats"
+            },
+            {
+              "ref": "InventoryGraphs"
+            },
+            {
+              "ref": "InventoryBrowseList"
+            },
+            {
+              "ref": "InventoryCreate"
+            },
+            {
+              "ref": "InventoryEdit"
+            },
+            {
+              "ref": "InventoryView"
+            },
+            {
+              "ref": "InventoryDelete"
+            },
+            {
+              "ref": "InventoryPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
