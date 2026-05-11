@@ -50,7 +50,7 @@ export interface StdTicketTierUpdatePayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;
@@ -70,7 +70,7 @@ export interface StdTicketTierSellPayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;
@@ -90,7 +90,7 @@ export interface StdTicketTierClosePayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;
@@ -123,7 +123,7 @@ export interface StdTicketTierTicketTierCreatedPayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;
@@ -141,7 +141,7 @@ export interface StdTicketTierTicketTierUpdatedPayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;
@@ -159,7 +159,7 @@ export interface StdTicketTierTicketTierSoldPayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;
@@ -177,7 +177,7 @@ export interface StdTicketTierTicketTierClosedPayload {
     price: number;
     currency?: string;
     quantityTotal: number;
-    quantitySold?: number;
+    quantitySold: number;
     availableFrom?: string;
     availableUntil?: string;
     status?: string;

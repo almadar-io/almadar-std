@@ -132,10 +132,10 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModQueueConfig {
-  /** Default: `"Moderation Queue"` */
-  title?: string;
   /** Default: `5` */
   autoEscalateThreshold?: number;
+  /** Default: `"Moderation Queue"` */
+  title?: string;
 }
 
 /**

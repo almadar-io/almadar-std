@@ -30,8 +30,8 @@ const ALIAS = 'Helpdesk';
  * without modifying its state-machine topology.
  */
 export interface StdHelpdeskConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -185,28 +185,28 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TicketAppLayout',
         'config': {
+          'notifications': [],
+          'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'href': '/tickets',
-              'label': 'Tickets',
               'icon': 'inbox',
+              'label': 'Tickets',
+              'href': '/tickets',
             },
             {
               'icon': 'message-circle',
-              'href': '/replies',
               'label': 'Replies',
+              'href': '/replies',
             },
             {
-              'label': 'Metrics',
-              'icon': 'layout-list',
               'href': '/metrics',
+              'icon': 'layout-list',
+              'label': 'Metrics',
             },
           ],
-          'notifications': [],
+          'searchEvent': 'TICKET_SEARCH',
           'contentTrait': '@trait.TicketCatalog',
           'appName': 'Helpdesk',
-          'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
-          'searchEvent': 'TICKET_SEARCH',
         },
         'events': {
           'SEARCH': 'TICKET_SEARCH',
@@ -293,22 +293,21 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'children': [
                       {
+                        'align': 'center',
+                        'gap': 'md',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
                         'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'inbox',
+                                'type': 'icon',
                               },
                               {
                                 'variant': 'h2',
@@ -316,39 +315,37 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                                 'content': 'Tickets',
                               },
                             ],
-                            'direction': 'horizontal',
                             'type': 'stack',
-                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'icon': 'plus',
                                 'label': 'New Ticket',
                                 'action': 'CREATE',
                                 'type': 'button',
                                 'variant': 'primary',
-                                'icon': 'plus',
                               },
                             ],
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'align': 'center',
-                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'children': [
                           '@trait.TicketSearch',
                           '@trait.TicketFilter',
                         ],
-                        'gap': 'md',
-                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       '@trait.TicketStats',
                       '@trait.TicketGraphs',
@@ -357,6 +354,9 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                       },
                       '@trait.TicketBrowseList',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -375,32 +375,32 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'gap': 'md',
                     'align': 'center',
                     'direction': 'vertical',
                     'type': 'stack',
+                    'className': 'py-8',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
+                        'variant': 'caption',
                       },
                       {
                         'action': 'INIT',
+                        'label': 'Back to tickets',
                         'variant': 'ghost',
                         'type': 'button',
-                        'label': 'Back to tickets',
                       },
                     ],
                   },
@@ -425,15 +425,15 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'config': {
           'filters': [
             {
-              'filterType': 'select',
               'options': [
                 'low',
                 'medium',
                 'high',
                 'critical',
               ],
-              'field': 'priority',
               'label': 'Priority',
+              'field': 'priority',
+              'filterType': 'select',
             },
             {
               'options': [
@@ -443,8 +443,8 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                 'closed',
               ],
               'label': 'Status',
-              'filterType': 'select',
               'field': 'status',
+              'filterType': 'select',
             },
           ],
           'event': 'TICKET_FILTER',
@@ -457,16 +457,14 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
           'title': 'Tickets',
           'metrics': [
             {
-              'format': 'number',
-              'variant': 'primary',
               'icon': 'inbox',
               'label': 'Total',
               'aggregation': 'count',
+              'variant': 'primary',
+              'format': 'number',
             },
             {
-              'icon': 'circle',
-              'label': 'Open',
-              'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -476,12 +474,15 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                   'open',
                 ],
               ],
+              'label': 'Open',
+              'aggregation': 'count',
+              'icon': 'circle',
               'variant': 'warning',
-              'format': 'number',
             },
             {
               'icon': 'check-circle',
-              'variant': 'success',
+              'label': 'Resolved',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -491,9 +492,8 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
                   'resolved',
                 ],
               ],
-              'format': 'number',
               'aggregation': 'count',
-              'label': 'Resolved',
+              'variant': 'success',
             },
           ],
         },
@@ -512,13 +512,13 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'TicketGraphs',
         'config': {
-          'subtitle': 'Volume across priority buckets',
-          'categoryField': 'priority',
-          'aggregation': 'count',
-          'showLegend': false,
-          'chartType': 'bar',
           'height': 240,
+          'categoryField': 'priority',
+          'showLegend': false,
           'title': 'Tickets by Priority',
+          'subtitle': 'Volume across priority buckets',
+          'chartType': 'bar',
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -537,6 +537,7 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'linkedEntity': 'Ticket',
         'config': {
           'gap': 'sm',
+          'cols': 1,
           'itemActions': [
             {
               'event': 'VIEW',
@@ -549,24 +550,24 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
               'variant': 'ghost',
             },
             {
+              'label': 'Delete',
               'variant': 'danger',
               'event': 'DELETE',
-              'label': 'Delete',
             },
           ],
           'fields': [
             {
+              'icon': 'inbox',
               'name': 'subject',
               'variant': 'h3',
-              'icon': 'inbox',
             },
             {
-              'variant': 'badge',
               'name': 'priority',
+              'variant': 'badge',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'assignee',
@@ -577,7 +578,6 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
               'variant': 'caption',
             },
           ],
-          'cols': 1,
         },
         'listens': [
           {
@@ -627,6 +627,8 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'name': 'TicketCreate',
         'linkedEntity': 'Ticket',
         'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
           'title': 'New Ticket',
           'fields': [
             'subject',
@@ -636,8 +638,6 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
             'assignee',
             'customerEmail',
           ],
-          'mode': 'create',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -658,7 +658,6 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'name': 'TicketEdit',
         'linkedEntity': 'Ticket',
         'config': {
-          'mode': 'edit',
           'icon': 'edit',
           'fields': [
             'subject',
@@ -668,6 +667,7 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
             'assignee',
             'customerEmail',
           ],
+          'mode': 'edit',
           'title': 'Edit Ticket',
         },
         'events': {
@@ -689,8 +689,6 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'name': 'TicketView',
         'linkedEntity': 'Ticket',
         'config': {
-          'icon': 'eye',
-          'mode': 'edit',
           'fields': [
             'subject',
             'description',
@@ -700,6 +698,8 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
             'customerEmail',
           ],
           'title': 'View Ticket',
+          'icon': 'eye',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -721,13 +721,13 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
         'linkedEntity': 'Ticket',
         'config': {
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
           'title': 'Delete Ticket',
-          'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1199,11 +1199,15 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
         'name': 'TicketReplyAppLayout',
         'linkedEntity': 'TicketReply',
         'config': {
+          'notificationClickEvent': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
+          'appName': 'Helpdesk',
+          'searchEvent': 'TICKET_REPLY_SEARCH',
+          'contentTrait': '@trait.TicketReplyBrowse',
           'navItems': [
             {
-              'icon': 'inbox',
-              'label': 'Tickets',
               'href': '/tickets',
+              'label': 'Tickets',
+              'icon': 'inbox',
             },
             {
               'icon': 'message-circle',
@@ -1212,19 +1216,15 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
             },
             {
               'label': 'Metrics',
-              'icon': 'layout-list',
               'href': '/metrics',
+              'icon': 'layout-list',
             },
           ],
-          'searchEvent': 'TICKET_REPLY_SEARCH',
           'notifications': [],
-          'contentTrait': '@trait.TicketReplyBrowse',
-          'appName': 'Helpdesk',
-          'notificationClickEvent': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
           'SEARCH': 'TICKET_REPLY_SEARCH',
+          'NOTIFY_CLICK': 'TICKET_REPLY_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -1340,22 +1340,22 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'md',
                     'className': 'py-12',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
-                        'content': 'Loading…',
                         'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'Loading…',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -1369,21 +1369,21 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'gap': 'md',
-                        'align': 'center',
                         'type': 'stack',
+                        'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'message-circle',
                                 'type': 'icon',
+                                'name': 'message-circle',
                               },
                               {
                                 'type': 'typography',
@@ -1392,13 +1392,14 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                               },
                             ],
                             'gap': 'sm',
+                            'align': 'center',
                           },
                           {
-                            'type': 'button',
-                            'label': 'Compose',
-                            'icon': 'edit',
-                            'variant': 'primary',
                             'action': 'CREATE',
+                            'label': 'Compose',
+                            'type': 'button',
+                            'variant': 'primary',
+                            'icon': 'edit',
                           },
                         ],
                         'justify': 'between',
@@ -1411,32 +1412,31 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                         'type': 'divider',
                       },
                       {
+                        'entity': '@payload.data',
                         'gap': 'sm',
-                        'type': 'data-list',
                         'fields': [
                           {
-                            'variant': 'h4',
-                            'name': 'author',
                             'icon': 'message-circle',
+                            'name': 'author',
+                            'variant': 'h4',
                           },
                           {
                             'variant': 'body',
                             'name': 'body',
                           },
                           {
-                            'name': 'createdAt',
                             'variant': 'caption',
                             'format': 'date',
+                            'name': 'createdAt',
                           },
                         ],
-                        'entity': '@payload.data',
                         'variant': 'card',
+                        'type': 'data-list',
                       },
                     ],
+                    'className': 'max-w-5xl mx-auto w-full',
                     'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
               ],
@@ -1450,7 +1450,6 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
                     'children': [
                       {
                         'name': 'alert-triangle',
@@ -1458,28 +1457,29 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                         'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Failed to load replies',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'content': '@payload.error',
-                        'type': 'typography',
-                        'color': 'muted',
                         'variant': 'body',
+                        'type': 'typography',
+                        'content': '@payload.error',
+                        'color': 'muted',
                       },
                       {
                         'label': 'Retry',
+                        'action': 'INIT',
+                        'type': 'button',
                         'variant': 'primary',
                         'icon': 'rotate-ccw',
-                        'type': 'button',
-                        'action': 'INIT',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                     'align': 'center',
+                    'gap': 'md',
+                    'className': 'py-12',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1545,39 +1545,39 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
                   'main',
                   {
                     'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'content': 'New reply',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'New reply',
                       },
                       {
                         'type': 'textarea',
                         'placeholder': 'Write your reply…',
                       },
                       {
-                        'direction': 'horizontal',
-                        'justify': 'end',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'icon': 'save',
                             'type': 'button',
                             'label': 'Save Draft',
+                            'icon': 'save',
                             'action': 'CREATE',
                             'variant': 'ghost',
                           },
                           {
-                            'type': 'button',
                             'label': 'Send Reply',
-                            'icon': 'send',
                             'variant': 'primary',
                             'action': 'SEND',
+                            'icon': 'send',
+                            'type': 'button',
                           },
                         ],
-                        'gap': 'sm',
+                        'justify': 'end',
                       },
                     ],
                   },
@@ -1593,8 +1593,6 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
         'name': 'TicketReplyCreate',
         'linkedEntity': 'TicketReply',
         'config': {
-          'mode': 'create',
-          'title': 'New Reply',
           'fields': [
             'ticketId',
             'body',
@@ -1603,6 +1601,8 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
             'subject',
           ],
           'icon': 'message-circle',
+          'mode': 'create',
+          'title': 'New Reply',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1631,10 +1631,10 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
         'name': 'TicketReplyEmail',
         'config': {
           'recipient': '',
-          'uiTrait': '@trait.TicketReplyComposerForm',
-          'body': '',
-          'subject': 'Re: your ticket',
           'sender': 'support@example.com',
+          'uiTrait': '@trait.TicketReplyComposerForm',
+          'subject': 'Re: your ticket',
+          'body': '',
         },
         'listens': [
           {
@@ -1977,21 +1977,19 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
         'name': 'SupportMetricsAppLayout',
         'linkedEntity': 'SupportMetric',
         'config': {
-          'searchEvent': 'SUPPORT_METRICS_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'SUPPORT_METRICS_NOTIFICATIONS_OPEN',
-          'appName': 'Helpdesk',
           'contentTrait': '@trait.SupportMetricsDisplay',
+          'appName': 'Helpdesk',
+          'notifications': [],
           'navItems': [
             {
               'icon': 'inbox',
-              'label': 'Tickets',
               'href': '/tickets',
+              'label': 'Tickets',
             },
             {
+              'label': 'Replies',
               'href': '/replies',
               'icon': 'message-circle',
-              'label': 'Replies',
             },
             {
               'href': '/metrics',
@@ -1999,6 +1997,8 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
               'label': 'Metrics',
             },
           ],
+          'notificationClickEvent': 'SUPPORT_METRICS_NOTIFICATIONS_OPEN',
+          'searchEvent': 'SUPPORT_METRICS_SEARCH',
         },
         'events': {
           'SEARCH': 'SUPPORT_METRICS_SEARCH',
@@ -2010,30 +2010,30 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
         'name': 'SupportMetricsBrowse',
         'linkedEntity': 'SupportMetric',
         'config': {
+          'displayPageSize': 5,
           'pageSize': 100,
           'fields': [
             {
-              'variant': 'h4',
-              'label': 'Name',
               'name': 'name',
+              'label': 'Name',
+              'variant': 'h4',
             },
             {
-              'variant': 'caption',
               'name': 'category',
               'label': 'Category',
+              'variant': 'caption',
             },
             {
-              'label': 'Status',
               'variant': 'badge',
               'name': 'status',
+              'label': 'Status',
             },
             {
-              'name': 'priority',
               'label': 'Priority',
+              'name': 'priority',
               'variant': 'badge',
             },
           ],
-          'displayPageSize': 5,
         },
       }),
       {
@@ -2062,38 +2062,38 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'activity',
                             'type': 'icon',
+                            'name': 'activity',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
                             'content': 'Support Metrics',
+                            'type': 'typography',
                           },
                         ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Recent',
                       },
                       '@trait.SupportMetricsBrowse',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],

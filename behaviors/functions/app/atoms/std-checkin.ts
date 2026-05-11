@@ -92,10 +92,10 @@ export interface StdCheckinCheckinFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCheckinConfig {
-  /** Default: `"geo"` */
-  mode?: string;
   /** Default: `"Check in"` */
   title?: string;
+  /** Default: `"geo"` */
+  mode?: string;
 }
 
 /**

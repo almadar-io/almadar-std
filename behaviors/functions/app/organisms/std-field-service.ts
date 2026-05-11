@@ -30,8 +30,8 @@ const ALIAS = 'FieldService';
  * without modifying its state-machine topology.
  */
 export interface StdFieldServiceConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -215,28 +215,28 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WorkOrderAppLayout',
         'config': {
-          'navItems': [
-            {
-              'href': '/workorders',
-              'label': 'Work Orders',
-              'icon': 'clipboard-list',
-            },
-            {
-              'icon': 'hard-hat',
-              'href': '/technicians',
-              'label': 'Technicians',
-            },
-            {
-              'label': 'Check In',
-              'icon': 'map-pin',
-              'href': '/jobs/checkin',
-            },
-          ],
           'notifications': [],
+          'appName': 'Field Service',
           'notificationClickEvent': 'WORK_ORDER_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.WorkOrderCatalog',
           'searchEvent': 'WORK_ORDER_SEARCH',
-          'appName': 'Field Service',
+          'navItems': [
+            {
+              'icon': 'clipboard-list',
+              'label': 'Work Orders',
+              'href': '/workorders',
+            },
+            {
+              'icon': 'hard-hat',
+              'label': 'Technicians',
+              'href': '/technicians',
+            },
+            {
+              'icon': 'map-pin',
+              'href': '/jobs/checkin',
+              'label': 'Check In',
+            },
+          ],
         },
         'events': {
           'SEARCH': 'WORK_ORDER_SEARCH',
@@ -323,59 +323,58 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
                         'direction': 'horizontal',
-                        'justify': 'between',
+                        'align': 'center',
                         'gap': 'md',
                         'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
                             'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'clipboard-list',
                                 'type': 'icon',
+                                'name': 'clipboard-list',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                                 'content': 'Work Orders',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'type': 'button',
                                 'label': 'New Work Order',
-                                'action': 'CREATE',
+                                'variant': 'primary',
                                 'icon': 'plus',
+                                'action': 'CREATE',
                               },
                             ],
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                         ],
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           '@trait.WorkOrderSearch',
                           '@trait.WorkOrderFilter',
                         ],
+                        'direction': 'horizontal',
                         'gap': 'md',
                       },
                       '@trait.WorkOrderStats',
@@ -388,22 +387,23 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                       },
                       {
                         'content': 'Dispatch',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       '@trait.WorkOrderDispatch',
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Routes',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Routes',
                       },
                       '@trait.WorkOrderRoutes',
                     ],
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -422,7 +422,10 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
                     'className': 'py-8',
                     'children': [
                       {
@@ -430,26 +433,23 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                         'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                         'variant': 'h3',
                       },
                       {
-                        'type': 'typography',
                         'color': 'muted',
+                        'type': 'typography',
                         'variant': 'caption',
                         'content': 'You\'re all caught up.',
                       },
                       {
-                        'label': 'Back to work orders',
-                        'variant': 'ghost',
-                        'type': 'button',
                         'action': 'INIT',
+                        'variant': 'ghost',
+                        'label': 'Back to work orders',
+                        'type': 'button',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -470,23 +470,21 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'WorkOrderFilter',
         'config': {
-          'event': 'WORK_ORDER_FILTER',
           'filters': [
             {
-              'field': 'priority',
-              'filterType': 'select',
-              'label': 'Priority',
               'options': [
                 'low',
                 'normal',
                 'high',
                 'urgent',
               ],
+              'field': 'priority',
+              'label': 'Priority',
+              'filterType': 'select',
             },
             {
-              'label': 'Status',
-              'field': 'status',
               'filterType': 'select',
+              'label': 'Status',
               'options': [
                 'created',
                 'assigned',
@@ -495,8 +493,10 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                 'completed',
                 'cancelled',
               ],
+              'field': 'status',
             },
           ],
+          'event': 'WORK_ORDER_FILTER',
         },
       }),
       makeTraitRef({
@@ -506,13 +506,15 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
           'title': 'Work Orders',
           'metrics': [
             {
-              'variant': 'primary',
-              'label': 'Total',
               'icon': 'clipboard-list',
               'format': 'number',
+              'variant': 'primary',
+              'label': 'Total',
               'aggregation': 'count',
             },
             {
+              'icon': 'circle',
+              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -522,17 +524,16 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'created',
                 ],
               ],
-              'icon': 'circle',
               'label': 'Open',
-              'aggregation': 'count',
-              'format': 'number',
               'variant': 'warning',
+              'format': 'number',
             },
             {
               'aggregation': 'count',
+              'label': 'On Site',
+              'variant': 'info',
               'icon': 'map-pin',
               'format': 'number',
-              'variant': 'info',
               'filter': [
                 'fn',
                 'row',
@@ -542,13 +543,8 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'on-site',
                 ],
               ],
-              'label': 'On Site',
             },
             {
-              'icon': 'check-circle',
-              'variant': 'success',
-              'aggregation': 'count',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -559,6 +555,10 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                 ],
               ],
               'label': 'Completed',
+              'aggregation': 'count',
+              'variant': 'success',
+              'icon': 'check-circle',
+              'format': 'number',
             },
           ],
         },
@@ -578,12 +578,11 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'name': 'WorkOrderBrowseList',
         'linkedEntity': 'WorkOrderRow',
         'config': {
-          'cols': 1,
           'itemActions': [
             {
-              'label': 'View',
               'variant': 'ghost',
               'event': 'VIEW',
+              'label': 'View',
             },
             {
               'label': 'Edit',
@@ -591,32 +590,34 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
               'variant': 'ghost',
             },
             {
+              'variant': 'danger',
               'label': 'Delete',
               'event': 'DELETE',
-              'variant': 'danger',
             },
           ],
+          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
-              'name': 'customerName',
               'variant': 'h4',
               'icon': 'user',
+              'name': 'customerName',
             },
             {
-              'name': 'serviceType',
               'variant': 'body',
+              'name': 'serviceType',
             },
             {
               'variant': 'caption',
               'name': 'address',
             },
             {
-              'name': 'priority',
               'variant': 'badge',
+              'name': 'priority',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'assignedTo',
@@ -627,7 +628,6 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
               'name': 'etaMinutes',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -675,7 +675,6 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       makeTraitRef({
         'ref': 'Dispatch.traits.TechnicianDispatch',
         'name': 'WorkOrderDispatch',
-        'linkedEntity': 'WorkOrderRow',
         'config': {
           'title': 'Available Technicians',
         },
@@ -692,6 +691,9 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'name': 'WorkOrderCreate',
         'linkedEntity': 'WorkOrderRow',
         'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'New Work Order',
           'fields': [
             'customerName',
             'serviceType',
@@ -703,9 +705,6 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
             'etaMinutes',
             'notes',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Work Order',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -726,8 +725,8 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'name': 'WorkOrderEdit',
         'linkedEntity': 'WorkOrderRow',
         'config': {
-          'title': 'Edit Work Order',
           'icon': 'edit',
+          'title': 'Edit Work Order',
           'mode': 'edit',
           'fields': [
             'customerName',
@@ -761,8 +760,6 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'linkedEntity': 'WorkOrderRow',
         'config': {
           'title': 'View Work Order',
-          'icon': 'eye',
-          'mode': 'edit',
           'fields': [
             'customerName',
             'serviceType',
@@ -774,6 +771,8 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
             'etaMinutes',
             'notes',
           ],
+          'mode': 'edit',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -794,14 +793,14 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'name': 'WorkOrderDelete',
         'linkedEntity': 'WorkOrderRow',
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Work Order',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Work Order',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1296,12 +1295,11 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TechnicianAppLayout',
-        'linkedEntity': 'TechnicianRow',
         'config': {
           'navItems': [
             {
-              'icon': 'clipboard-list',
               'href': '/workorders',
+              'icon': 'clipboard-list',
               'label': 'Work Orders',
             },
             {
@@ -1311,15 +1309,15 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
             },
             {
               'icon': 'map-pin',
-              'label': 'Check In',
               'href': '/jobs/checkin',
+              'label': 'Check In',
             },
           ],
-          'appName': 'Field Service',
           'searchEvent': 'TECHNICIAN_SEARCH',
-          'contentTrait': '@trait.TechnicianCatalog',
-          'notificationClickEvent': 'TECHNICIAN_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'contentTrait': '@trait.TechnicianCatalog',
+          'appName': 'Field Service',
+          'notificationClickEvent': 'TECHNICIAN_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'TECHNICIAN_NOTIFICATIONS_OPEN',
@@ -1407,47 +1405,45 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                   'main',
                   {
                     'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'justify': 'between',
-                        'type': 'stack',
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'hard-hat',
                                 'type': 'icon',
+                                'name': 'hard-hat',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Technicians',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                           },
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'variant': 'primary',
                                 'icon': 'user-plus',
                                 'type': 'button',
-                                'action': 'CREATE',
                                 'label': 'Add Technician',
+                                'action': 'CREATE',
                               },
                             ],
                           },
                         ],
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'gap': 'md',
                       },
                       {
@@ -1458,8 +1454,8 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'Dispatch Board',
                       },
                       '@trait.TechnicianDispatchBoard',
@@ -1467,12 +1463,14 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Field Check-In',
+                        'variant': 'h3',
                       },
                       '@trait.TechnicianFieldCheckin',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1491,6 +1489,10 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
@@ -1502,23 +1504,19 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                         'content': 'No notifications',
                       },
                       {
-                        'content': 'You\'re all caught up.',
                         'color': 'muted',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
                         'variant': 'ghost',
+                        'label': 'Back to technicians',
                         'action': 'INIT',
                         'type': 'button',
-                        'label': 'Back to technicians',
                       },
                     ],
-                    'className': 'py-8',
-                    'type': 'stack',
-                    'gap': 'md',
                     'direction': 'vertical',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -1532,11 +1530,13 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
         'name': 'TechnicianBrowseList',
         'linkedEntity': 'TechnicianRow',
         'config': {
+          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
+              'name': 'name',
               'variant': 'h4',
               'icon': 'hard-hat',
-              'name': 'name',
             },
             {
               'name': 'phone',
@@ -1551,16 +1551,14 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
               'variant': 'badge',
             },
             {
-              'name': 'currentOrderId',
               'variant': 'caption',
+              'name': 'currentOrderId',
             },
             {
-              'variant': 'caption',
               'name': 'lastSeenAt',
+              'variant': 'caption',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
           'itemActions': [
             {
               'variant': 'ghost',
@@ -1573,9 +1571,9 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
               'variant': 'ghost',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
         },
@@ -1616,7 +1614,6 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       makeTraitRef({
         'ref': 'Checkin.traits.CheckinScan',
         'name': 'TechnicianFieldCheckin',
-        'linkedEntity': 'TechnicianRow',
         'config': {
           'mode': 'geo',
           'title': 'Technician Check-In',
@@ -1628,8 +1625,8 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
         'linkedEntity': 'TechnicianRow',
         'config': {
           'title': 'Add Technician',
-          'icon': 'user-plus',
           'mode': 'create',
+          'icon': 'user-plus',
           'fields': [
             'name',
             'phone',
@@ -1660,7 +1657,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
         'linkedEntity': 'TechnicianRow',
         'config': {
           'icon': 'edit',
-          'mode': 'edit',
+          'title': 'Edit Technician',
           'fields': [
             'name',
             'phone',
@@ -1670,7 +1667,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
             'lat',
             'lng',
           ],
-          'title': 'Edit Technician',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1691,9 +1688,6 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
         'name': 'TechnicianView',
         'linkedEntity': 'TechnicianRow',
         'config': {
-          'title': 'View Technician',
-          'icon': 'eye',
-          'mode': 'edit',
           'fields': [
             'name',
             'phone',
@@ -1704,6 +1698,9 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
             'lng',
             'lastSeenAt',
           ],
+          'mode': 'edit',
+          'icon': 'eye',
+          'title': 'View Technician',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2120,30 +2117,29 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'JobCheckinAppLayout',
-        'linkedEntity': 'JobCheckinRow',
         'config': {
-          'notificationClickEvent': 'JOB_CHECKIN_NOTIFICATIONS_OPEN',
-          'searchEvent': 'JOB_CHECKIN_SEARCH',
-          'notifications': [],
-          'contentTrait': '@trait.JobCheckinComposer',
-          'appName': 'Field Service',
           'navItems': [
             {
-              'label': 'Work Orders',
               'href': '/workorders',
               'icon': 'clipboard-list',
+              'label': 'Work Orders',
             },
             {
-              'icon': 'hard-hat',
               'label': 'Technicians',
               'href': '/technicians',
+              'icon': 'hard-hat',
             },
             {
-              'label': 'Check In',
-              'icon': 'map-pin',
               'href': '/jobs/checkin',
+              'icon': 'map-pin',
+              'label': 'Check In',
             },
           ],
+          'notificationClickEvent': 'JOB_CHECKIN_NOTIFICATIONS_OPEN',
+          'appName': 'Field Service',
+          'searchEvent': 'JOB_CHECKIN_SEARCH',
+          'contentTrait': '@trait.JobCheckinComposer',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'JOB_CHECKIN_SEARCH',
@@ -2176,13 +2172,13 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                     'className': 'max-w-3xl mx-auto w-full',
                     'children': [
                       {
-                        'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
@@ -2194,31 +2190,31 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
                             'variant': 'h2',
                           },
                         ],
-                        'align': 'center',
                         'gap': 'sm',
-                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
+                        'content': 'Verify your arrival, complete the job, and capture the customer\'s signature.',
+                        'type': 'typography',
                         'variant': 'caption',
                         'color': 'muted',
-                        'type': 'typography',
-                        'content': 'Verify your arrival, complete the job, and capture the customer\'s signature.',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'content': '1. Arrival check-in',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       '@trait.JobArrivalCheckin',
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': '2. Customer signature',
                       },
                       '@trait.JobCompletionSignature',

@@ -30,8 +30,8 @@ const ALIAS = 'ApiGateway';
  * without modifying its state-machine topology.
  */
 export interface StdApiGatewayConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -183,19 +183,16 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'ref': 'AppShell.traits.AppLayout',
         'name': 'RouteAppLayout',
         'config': {
-          'contentTrait': '@trait.RouteCatalog',
-          'appName': 'API Gateway',
-          'notifications': [],
           'navItems': [
             {
+              'href': '/routes',
               'label': 'Routes',
               'icon': 'git-branch',
-              'href': '/routes',
             },
             {
+              'href': '/backends',
               'label': 'Backends',
               'icon': 'server',
-              'href': '/backends',
             },
             {
               'label': 'Analytics',
@@ -203,12 +200,15 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
               'icon': 'bar-chart-2',
             },
           ],
+          'contentTrait': '@trait.RouteCatalog',
           'searchEvent': 'ROUTE_SEARCH',
           'notificationClickEvent': 'ROUTE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'API Gateway',
         },
         'events': {
-          'NOTIFY_CLICK': 'ROUTE_NOTIFICATIONS_OPEN',
           'SEARCH': 'ROUTE_SEARCH',
+          'NOTIFY_CLICK': 'ROUTE_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -291,47 +291,46 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'children': [
                       {
+                        'gap': 'md',
                         'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'git-branch',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Routes',
-                                'variant': 'h2',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
-                            'gap': 'sm',
                             'children': [
                               {
+                                'type': 'button',
                                 'label': 'Create Route',
                                 'action': 'CREATE',
-                                'type': 'button',
                                 'variant': 'primary',
                                 'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
                           },
                         ],
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'direction': 'horizontal',
                         'justify': 'between',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
@@ -353,8 +352,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                       },
                       '@trait.RouteBrowseList',
                     ],
-                    'type': 'stack',
                     'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -373,34 +373,34 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'name': 'bell',
-                        'type': 'icon',
-                      },
-                      {
-                        'variant': 'h3',
-                        'content': 'No notifications',
-                        'type': 'typography',
-                      },
-                      {
-                        'type': 'typography',
-                        'variant': 'caption',
-                        'color': 'muted',
-                        'content': 'You\'re all caught up.',
-                      },
-                      {
-                        'label': 'Back to routes',
-                        'type': 'button',
-                        'action': 'INIT',
-                        'variant': 'ghost',
-                      },
-                    ],
-                    'align': 'center',
                     'type': 'stack',
-                    'gap': 'md',
                     'direction': 'vertical',
                     'className': 'py-8',
+                    'align': 'center',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                      },
+                      {
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'label': 'Back to routes',
+                        'type': 'button',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -413,26 +413,25 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'RouteSearch',
         'config': {
-          'event': 'ROUTE_SEARCH',
           'placeholder': 'Search routes…',
+          'event': 'ROUTE_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'RouteFilter',
         'config': {
-          'event': 'ROUTE_FILTER',
           'filters': [
             {
               'label': 'Method',
-              'field': 'method',
+              'filterType': 'select',
               'options': [
                 'GET',
                 'POST',
                 'PUT',
                 'DELETE',
               ],
-              'filterType': 'select',
+              'field': 'method',
             },
             {
               'options': [
@@ -444,6 +443,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
               'filterType': 'select',
             },
           ],
+          'event': 'ROUTE_FILTER',
         },
       }),
       makeTraitRef({
@@ -453,15 +453,13 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
           'title': 'Routes',
           'metrics': [
             {
-              'label': 'Total',
-              'icon': 'git-branch',
-              'variant': 'primary',
-              'format': 'number',
               'aggregation': 'count',
+              'label': 'Total',
+              'format': 'number',
+              'variant': 'primary',
+              'icon': 'git-branch',
             },
             {
-              'aggregation': 'count',
-              'label': 'Active',
               'format': 'number',
               'filter': [
                 'fn',
@@ -472,11 +470,14 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'active',
                 ],
               ],
-              'variant': 'success',
+              'label': 'Active',
+              'aggregation': 'count',
               'icon': 'check-circle',
+              'variant': 'success',
             },
             {
               'aggregation': 'count',
+              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -486,10 +487,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'disabled',
                 ],
               ],
-              'label': 'Disabled',
-              'format': 'number',
-              'variant': 'warning',
               'icon': 'x-circle',
+              'format': 'number',
+              'label': 'Disabled',
             },
           ],
         },
@@ -509,12 +509,12 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'name': 'RouteGraphs',
         'config': {
           'subtitle': 'Distribution across HTTP methods',
+          'chartType': 'pie',
           'categoryField': 'method',
           'aggregation': 'count',
-          'title': 'Routes by Method',
-          'chartType': 'pie',
           'height': 240,
           'showLegend': true,
+          'title': 'Routes by Method',
         },
         'listens': [
           {
@@ -532,49 +532,49 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'name': 'RouteBrowseList',
         'linkedEntity': 'Route',
         'config': {
-          'itemActions': [
-            {
-              'label': 'View',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
-            },
-          ],
+          'gap': 'sm',
           'fields': [
             {
               'name': 'path',
-              'variant': 'h3',
               'icon': 'git-branch',
+              'variant': 'h3',
             },
             {
-              'name': 'method',
               'variant': 'badge',
+              'name': 'method',
             },
             {
               'name': 'status',
               'variant': 'badge',
             },
             {
-              'variant': 'body',
               'name': 'target',
+              'variant': 'body',
             },
             {
-              'name': 'hits',
-              'variant': 'caption',
               'format': 'number',
+              'variant': 'caption',
+              'name': 'hits',
               'label': 'Hits',
             },
           ],
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
           'cols': 1,
         },
         'listens': [
@@ -626,8 +626,8 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'linkedEntity': 'Route',
         'config': {
           'icon': 'plus-circle',
-          'title': 'New Route',
           'mode': 'create',
+          'title': 'New Route',
           'fields': [
             'path',
             'method',
@@ -656,8 +656,8 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'linkedEntity': 'Route',
         'config': {
           'mode': 'edit',
-          'title': 'Edit Route',
           'icon': 'edit',
+          'title': 'Edit Route',
           'fields': [
             'path',
             'method',
@@ -685,9 +685,6 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'name': 'RouteView',
         'linkedEntity': 'Route',
         'config': {
-          'icon': 'eye',
-          'title': 'View Route',
-          'mode': 'edit',
           'fields': [
             'path',
             'method',
@@ -695,6 +692,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
             'target',
             'rateLimit',
           ],
+          'mode': 'edit',
+          'icon': 'eye',
+          'title': 'View Route',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -716,8 +716,8 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'linkedEntity': 'Route',
         'config': {
           'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
           'title': 'Delete Route',
+          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
@@ -1204,26 +1204,26 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
         'name': 'BackendAppLayout',
         'linkedEntity': 'Backend',
         'config': {
-          'searchEvent': 'BACKEND_SEARCH',
-          'contentTrait': '@trait.BackendCatalog',
           'notificationClickEvent': 'BACKEND_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.BackendCatalog',
           'notifications': [],
+          'searchEvent': 'BACKEND_SEARCH',
           'appName': 'API Gateway',
           'navItems': [
             {
               'icon': 'git-branch',
-              'href': '/routes',
               'label': 'Routes',
+              'href': '/routes',
             },
             {
-              'label': 'Backends',
               'href': '/backends',
               'icon': 'server',
+              'label': 'Backends',
             },
             {
               'label': 'Analytics',
-              'icon': 'bar-chart-2',
               'href': '/analytics',
+              'icon': 'bar-chart-2',
             },
           ],
         },
@@ -1312,26 +1312,16 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
                             'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'server',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
@@ -1339,22 +1329,29 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                                 'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'button',
-                                'action': 'CREATE',
+                                'label': 'Create Backend',
                                 'icon': 'plus',
                                 'variant': 'primary',
-                                'label': 'Create Backend',
+                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -1365,13 +1362,16 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                       },
                       {
                         'variant': 'h3',
-                        'content': 'Service Health',
                         'type': 'typography',
+                        'content': 'Service Health',
                       },
                       '@trait.BackendCircuitBreaker',
                       '@trait.BackendRateLimiter',
                       '@trait.BackendCache',
                     ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1390,7 +1390,9 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
                     'className': 'py-8',
                     'children': [
                       {
@@ -1398,26 +1400,24 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                         'name': 'bell',
                       },
                       {
+                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
                         'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'type': 'typography',
                         'variant': 'caption',
                       },
                       {
                         'type': 'button',
                         'variant': 'ghost',
-                        'action': 'INIT',
                         'label': 'Back to backends',
+                        'action': 'INIT',
                       },
                     ],
-                    'align': 'center',
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1431,6 +1431,24 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
         'name': 'BackendBrowseList',
         'linkedEntity': 'Backend',
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
+          'cols': 1,
           'fields': [
             {
               'variant': 'h3',
@@ -1442,35 +1460,17 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
               'variant': 'body',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
-              'name': 'latency',
-              'label': 'Latency',
               'variant': 'caption',
               'format': 'number',
-            },
-          ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
+              'label': 'Latency',
+              'name': 'latency',
             },
           ],
           'gap': 'sm',
-          'cols': 1,
         },
         'listens': [
           {
@@ -1517,14 +1517,14 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
         'linkedEntity': 'Backend',
         'config': {
           'mode': 'create',
-          'icon': 'plus-circle',
+          'title': 'New Backend',
           'fields': [
             'name',
             'url',
             'status',
             'latency',
           ],
-          'title': 'New Backend',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1545,8 +1545,8 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
         'name': 'BackendEdit',
         'linkedEntity': 'Backend',
         'config': {
-          'title': 'Edit Backend',
           'mode': 'edit',
+          'title': 'Edit Backend',
           'fields': [
             'name',
             'url',
@@ -1574,15 +1574,15 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
         'name': 'BackendView',
         'linkedEntity': 'Backend',
         'config': {
+          'icon': 'eye',
           'title': 'View Backend',
-          'mode': 'edit',
           'fields': [
             'name',
             'url',
             'status',
             'latency',
           ],
-          'icon': 'eye',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1603,14 +1603,14 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
         'name': 'BackendDelete',
         'linkedEntity': 'Backend',
         'config': {
-          'confirmLabel': 'Delete',
           'title': 'Delete Backend',
-          'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -2063,18 +2063,18 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
         'name': 'AnalyticsAppLayout',
         'linkedEntity': 'AnalyticsRecord',
         'config': {
-          'contentTrait': '@trait.AnalyticsDisplay',
-          'searchEvent': 'ANALYTICS_SEARCH',
+          'appName': 'API Gateway',
+          'notifications': [],
           'navItems': [
             {
+              'icon': 'git-branch',
               'href': '/routes',
               'label': 'Routes',
-              'icon': 'git-branch',
             },
             {
-              'label': 'Backends',
               'href': '/backends',
               'icon': 'server',
+              'label': 'Backends',
             },
             {
               'href': '/analytics',
@@ -2082,9 +2082,9 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
               'icon': 'bar-chart-2',
             },
           ],
-          'appName': 'API Gateway',
+          'searchEvent': 'ANALYTICS_SEARCH',
           'notificationClickEvent': 'ANALYTICS_NOTIFICATIONS_OPEN',
-          'notifications': [],
+          'contentTrait': '@trait.AnalyticsDisplay',
         },
         'events': {
           'NOTIFY_CLICK': 'ANALYTICS_NOTIFICATIONS_OPEN',
@@ -2101,14 +2101,14 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
           'cols': 1,
           'fields': [
             {
+              'icon': 'bar-chart-2',
+              'name': 'routePath',
               'label': 'Route',
               'variant': 'h4',
-              'name': 'routePath',
-              'icon': 'bar-chart-2',
             },
             {
-              'variant': 'badge',
               'label': 'Method',
+              'variant': 'badge',
               'name': 'method',
             },
             {
@@ -2117,16 +2117,16 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
               'name': 'statusCode',
             },
             {
-              'label': 'Latency',
               'name': 'latencyMs',
               'variant': 'caption',
+              'label': 'Latency',
               'format': 'number',
             },
             {
-              'name': 'timestamp',
-              'variant': 'caption',
-              'label': 'Time',
               'format': 'date',
+              'variant': 'caption',
+              'name': 'timestamp',
+              'label': 'Time',
             },
           ],
           'gap': 'sm',
@@ -2196,25 +2196,25 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'lg',
                     'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'bar-chart-2',
                             'type': 'icon',
+                            'name': 'bar-chart-2',
                           },
                           {
+                            'content': 'Analytics',
                             'variant': 'h2',
                             'type': 'typography',
-                            'content': 'Analytics',
                           },
                         ],
-                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -2226,7 +2226,7 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
                       },
                       '@trait.AnalyticsBrowseList',
                     ],
-                    'gap': 'lg',
+                    'direction': 'vertical',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
@@ -2246,34 +2246,34 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'className': 'py-8',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'caption',
                         'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
                         'type': 'button',
-                        'action': 'INIT',
                         'variant': 'ghost',
                         'label': 'Back to analytics',
+                        'action': 'INIT',
                       },
                     ],
                     'gap': 'md',
                     'direction': 'vertical',
-                    'type': 'stack',
-                    'align': 'center',
-                    'className': 'py-8',
                   },
                 ],
               ],

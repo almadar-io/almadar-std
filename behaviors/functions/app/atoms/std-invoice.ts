@@ -165,10 +165,10 @@ export interface StdInvoiceInvoiceRefundFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInvoiceConfig {
-  /** Default: `"Invoices"` */
-  title?: string;
   /** Default: `"[]"` */
   refundTiersJson?: string;
+  /** Default: `"Invoices"` */
+  title?: string;
 }
 
 /**

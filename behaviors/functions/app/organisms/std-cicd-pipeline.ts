@@ -30,8 +30,8 @@ const ALIAS = 'CicdPipeline';
  * without modifying its state-machine topology.
  */
 export interface StdCicdPipelineConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -184,10 +184,10 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BuildAppLayout',
         'config': {
-          'searchEvent': 'BUILD_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'BUILD_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.BuildCatalog',
+          'notificationClickEvent': 'BUILD_NOTIFICATIONS_OPEN',
+          'searchEvent': 'BUILD_SEARCH',
+          'appName': 'CI/CD Pipeline',
           'navItems': [
             {
               'icon': 'hammer',
@@ -195,17 +195,17 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
               'href': '/builds',
             },
             {
+              'href': '/stages',
               'icon': 'layers',
               'label': 'Stages',
-              'href': '/stages',
             },
             {
+              'href': '/deploy',
               'icon': 'rocket',
               'label': 'Deploy',
-              'href': '/deploy',
             },
           ],
-          'appName': 'CI/CD Pipeline',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'BUILD_SEARCH',
@@ -292,62 +292,59 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'md',
-                        'type': 'stack',
                         'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
                             'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'hammer',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Builds',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'align': 'center',
-                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'action': 'CREATE',
-                                'type': 'button',
-                                'icon': 'plus',
-                                'variant': 'primary',
                                 'label': 'Create Build',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'type': 'button',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'align': 'center',
                         'children': [
                           '@trait.BuildSearch',
                           '@trait.BuildFilter',
                         ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       '@trait.BuildStats',
                       '@trait.BuildGraphs',
@@ -356,6 +353,9 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
                       },
                       '@trait.BuildBrowseList',
                     ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -374,34 +374,34 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'color': 'muted',
+                        'type': 'typography',
                         'variant': 'caption',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'variant': 'ghost',
-                        'type': 'button',
                         'label': 'Back to builds',
+                        'type': 'button',
                         'action': 'INIT',
                       },
                     ],
+                    'className': 'py-8',
                     'type': 'stack',
                     'gap': 'md',
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -422,44 +422,41 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'BuildFilter',
         'config': {
-          'event': 'BUILD_FILTER',
           'filters': [
             {
-              'field': 'status',
               'label': 'Status',
+              'field': 'status',
+              'filterType': 'select',
               'options': [
                 'running',
                 'success',
                 'failed',
               ],
-              'filterType': 'select',
             },
             {
+              'field': 'branch',
               'filterType': 'text',
               'label': 'Branch',
-              'field': 'branch',
             },
           ],
+          'event': 'BUILD_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'BuildStats',
         'config': {
-          'title': 'Build Health',
           'metrics': [
             {
               'aggregation': 'count',
-              'format': 'number',
-              'icon': 'hammer',
               'label': 'Total Today',
               'variant': 'primary',
+              'format': 'number',
+              'icon': 'hammer',
             },
             {
               'aggregation': 'count',
-              'icon': 'check-circle',
               'format': 'number',
-              'label': 'Success',
               'filter': [
                 'fn',
                 'row',
@@ -470,11 +467,11 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
                 ],
               ],
               'variant': 'success',
+              'label': 'Success',
+              'icon': 'check-circle',
             },
             {
-              'variant': 'danger',
               'aggregation': 'count',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -486,16 +483,19 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
               ],
               'label': 'Failed',
               'icon': 'x-circle',
+              'variant': 'danger',
+              'format': 'number',
             },
             {
               'icon': 'clock',
+              'field': 'duration',
               'aggregation': 'avg',
               'label': 'Avg Duration',
-              'field': 'duration',
               'variant': 'default',
               'format': 'number',
             },
           ],
+          'title': 'Build Health',
         },
         'listens': [
           {
@@ -512,13 +512,13 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'BuildGraphs',
         'config': {
-          'subtitle': 'Volume across the past period',
           'aggregation': 'count',
-          'height': 240,
-          'showLegend': false,
-          'categoryField': 'day',
           'chartType': 'bar',
           'title': 'Builds per day',
+          'height': 240,
+          'categoryField': 'day',
+          'showLegend': false,
+          'subtitle': 'Volume across the past period',
         },
         'listens': [
           {
@@ -536,25 +536,6 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'name': 'BuildBrowseList',
         'linkedEntity': 'Build',
         'config': {
-          'cols': 1,
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'variant': 'ghost',
-              'label': 'View',
-            },
-            {
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
-            },
-          ],
-          'gap': 'sm',
           'fields': [
             {
               'name': 'id',
@@ -562,26 +543,45 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
             },
             {
               'icon': 'git-branch',
-              'variant': 'h4',
               'name': 'branch',
+              'variant': 'h4',
             },
             {
-              'name': 'commit',
               'variant': 'body',
+              'name': 'commit',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
-              'variant': 'caption',
               'name': 'duration',
+              'variant': 'caption',
             },
             {
               'name': 'startedAt',
-              'format': 'date',
               'variant': 'caption',
               'label': 'Started',
+              'format': 'date',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
             },
           ],
         },
@@ -633,8 +633,8 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'name': 'BuildCreate',
         'linkedEntity': 'Build',
         'config': {
-          'icon': 'plus-circle',
           'title': 'Create Build',
+          'mode': 'create',
           'fields': [
             'branch',
             'commit',
@@ -642,7 +642,7 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
             'duration',
             'triggeredBy',
           ],
-          'mode': 'create',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -670,9 +670,9 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
             'duration',
             'triggeredBy',
           ],
-          'icon': 'edit',
           'title': 'Edit Build',
           'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -693,9 +693,7 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'name': 'BuildView',
         'linkedEntity': 'Build',
         'config': {
-          'mode': 'edit',
           'icon': 'eye',
-          'title': 'View Build',
           'fields': [
             'branch',
             'commit',
@@ -703,6 +701,8 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
             'duration',
             'triggeredBy',
           ],
+          'mode': 'edit',
+          'title': 'View Build',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -723,10 +723,10 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
         'name': 'BuildDelete',
         'linkedEntity': 'Build',
         'config': {
-          'title': 'Delete Build',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'title': 'Delete Build',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -1207,9 +1207,6 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
         'name': 'StageAppLayout',
         'linkedEntity': 'Stage',
         'config': {
-          'contentTrait': '@trait.StageCatalog',
-          'searchEvent': 'STAGE_SEARCH',
-          'appName': 'CI/CD Pipeline',
           'navItems': [
             {
               'label': 'Builds',
@@ -1222,13 +1219,16 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
               'icon': 'layers',
             },
             {
-              'icon': 'rocket',
               'label': 'Deploy',
               'href': '/deploy',
+              'icon': 'rocket',
             },
           ],
-          'notifications': [],
+          'searchEvent': 'STAGE_SEARCH',
           'notificationClickEvent': 'STAGE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'CI/CD Pipeline',
+          'contentTrait': '@trait.StageCatalog',
         },
         'events': {
           'SEARCH': 'STAGE_SEARCH',
@@ -1315,55 +1315,55 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'layers',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Stages',
+                                'variant': 'h2',
                                 'type': 'typography',
                               },
                             ],
                           },
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'label': 'Create Stage',
                                 'action': 'CREATE',
+                                'variant': 'primary',
                                 'icon': 'plus',
                                 'type': 'button',
+                                'label': 'Create Stage',
                               },
                             ],
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'stack',
-                        'align': 'center',
+                        'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.StageBrowseList',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1382,7 +1382,11 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'align': 'center',
                     'className': 'py-8',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
                         'name': 'bell',
@@ -1390,8 +1394,8 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
                       },
                       {
                         'variant': 'h3',
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
                         'variant': 'caption',
@@ -1400,16 +1404,12 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
                         'type': 'typography',
                       },
                       {
+                        'action': 'INIT',
                         'variant': 'ghost',
                         'label': 'Back to stages',
-                        'action': 'INIT',
                         'type': 'button',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -1423,6 +1423,25 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
         'name': 'StageBrowseList',
         'linkedEntity': 'Stage',
         'config': {
+          'cols': 1,
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+            },
+          ],
+          'gap': 'sm',
           'fields': [
             {
               'name': 'name',
@@ -1430,13 +1449,13 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
               'icon': 'layers',
             },
             {
-              'label': 'Build',
-              'variant': 'caption',
               'name': 'buildId',
+              'variant': 'caption',
+              'label': 'Build',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'variant': 'caption',
@@ -1447,25 +1466,6 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
               'variant': 'body',
             },
           ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
-          'gap': 'sm',
-          'cols': 1,
         },
         'listens': [
           {
@@ -1499,7 +1499,6 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
         'name': 'StageCreate',
         'linkedEntity': 'Stage',
         'config': {
-          'mode': 'create',
           'title': 'Create Stage',
           'fields': [
             'name',
@@ -1509,6 +1508,7 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
             'output',
           ],
           'icon': 'plus-circle',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1529,6 +1529,7 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
         'name': 'StageEdit',
         'linkedEntity': 'Stage',
         'config': {
+          'icon': 'edit',
           'fields': [
             'name',
             'buildId',
@@ -1536,7 +1537,6 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
             'duration',
             'output',
           ],
-          'icon': 'edit',
           'mode': 'edit',
           'title': 'Edit Stage',
         },
@@ -1559,8 +1559,7 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
         'name': 'StageView',
         'linkedEntity': 'Stage',
         'config': {
-          'icon': 'eye',
-          'mode': 'edit',
+          'title': 'View Stage',
           'fields': [
             'name',
             'buildId',
@@ -1568,7 +1567,8 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
             'duration',
             'output',
           ],
-          'title': 'View Stage',
+          'mode': 'edit',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1589,10 +1589,10 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
         'name': 'StageDelete',
         'linkedEntity': 'Stage',
         'config': {
-          'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Stage',
-          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -2043,14 +2043,16 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
         'name': 'DeploymentAppLayout',
         'linkedEntity': 'Deployment',
         'config': {
-          'notifications': [],
-          'contentTrait': '@trait.DeploymentDisplay',
           'appName': 'CI/CD Pipeline',
+          'notifications': [],
+          'notificationClickEvent': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.DeploymentDisplay',
+          'searchEvent': 'DEPLOYMENT_SEARCH',
           'navItems': [
             {
-              'label': 'Builds',
-              'icon': 'hammer',
               'href': '/builds',
+              'icon': 'hammer',
+              'label': 'Builds',
             },
             {
               'label': 'Stages',
@@ -2058,13 +2060,11 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
               'icon': 'layers',
             },
             {
-              'label': 'Deploy',
-              'href': '/deploy',
               'icon': 'rocket',
+              'href': '/deploy',
+              'label': 'Deploy',
             },
           ],
-          'notificationClickEvent': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
-          'searchEvent': 'DEPLOYMENT_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'DEPLOYMENT_NOTIFICATIONS_OPEN',
@@ -2076,29 +2076,29 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
         'name': 'DeploymentBrowseList',
         'linkedEntity': 'Deployment',
         'config': {
-          'gap': 'sm',
-          'cols': 1,
           'fields': [
             {
               'icon': 'rocket',
-              'name': 'environment',
               'variant': 'h4',
+              'name': 'environment',
             },
             {
+              'variant': 'badge',
               'name': 'version',
-              'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
-              'label': 'Deployed',
-              'name': 'deployedAt',
               'variant': 'caption',
               'format': 'date',
+              'name': 'deployedAt',
+              'label': 'Deployed',
             },
           ],
+          'gap': 'sm',
+          'cols': 1,
         },
       }),
       {
@@ -2165,11 +2165,13 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'type': 'stack',
                         'children': [
                           {
@@ -2178,13 +2180,11 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                           },
                           {
                             'variant': 'h2',
-                            'content': 'Deployments',
                             'type': 'typography',
+                            'content': 'Deployments',
                           },
                         ],
-                        'gap': 'sm',
                         'align': 'center',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -2195,8 +2195,8 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Recent Commits',
+                        'type': 'typography',
                       },
                       '@trait.DeploymentGitHub',
                     ],
@@ -2218,34 +2218,34 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'type': 'typography',
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
                       },
                       {
-                        'color': 'muted',
                         'type': 'typography',
-                        'variant': 'caption',
+                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
                       },
                       {
                         'variant': 'ghost',
-                        'action': 'INIT',
                         'type': 'button',
                         'label': 'Back to deploy',
+                        'action': 'INIT',
                       },
                     ],
-                    'direction': 'vertical',
-                    'align': 'center',
                     'type': 'stack',
                     'className': 'py-8',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -2280,8 +2280,7 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'variant': 'info',
@@ -2289,7 +2288,8 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                         'message': 'Loading recent commits from GitHub…',
                       },
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2302,12 +2302,12 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
         'ref': 'GitHub.traits.ServiceGithubGithub',
         'name': 'DeploymentGitHub',
         'config': {
-          'owner': 'owner-placeholder',
-          'repo': 'repo-placeholder',
-          'uiTrait': '@trait.DeploymentCommitsPanel',
-          'ref': 'main',
           'path': '',
+          'uiTrait': '@trait.DeploymentCommitsPanel',
+          'owner': 'owner-placeholder',
           'op': 'listCommits',
+          'ref': 'main',
+          'repo': 'repo-placeholder',
         },
       }),
       {
@@ -2482,45 +2482,45 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'align': 'center',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'upload-cloud',
                             'type': 'icon',
                           },
                           {
+                            'variant': 'h2',
                             'type': 'typography',
                             'content': 'Deployment',
-                            'variant': 'h2',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Ready to start deployment operation.',
-                        'variant': 'body',
-                        'type': 'typography',
                         'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'body',
+                        'content': 'Ready to start deployment operation.',
                       },
                       {
+                        'type': 'button',
+                        'label': 'Start',
                         'icon': 'play',
                         'variant': 'primary',
-                        'label': 'Start',
-                        'type': 'button',
                         'action': 'START',
                       },
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2534,21 +2534,21 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'align': 'center',
                     'gap': 'lg',
-                    'type': 'stack',
                     'children': [
                       {
-                        'title': 'Deploying...',
                         'message': 'Processing deployment...',
                         'type': 'loading-state',
+                        'title': 'Deploying...',
                       },
                       {
                         'type': 'skeleton',
                         'variant': 'text',
                       },
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2565,8 +2565,8 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'DeploymentSaveFailed',
                       'success': 'DeploymentSaved',
+                      'failure': 'DeploymentSaveFailed',
                     },
                   },
                 ],
@@ -2574,7 +2574,7 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'gap': 'lg',
                     'children': [
                       {
                         'name': 'check-circle',
@@ -2586,24 +2586,24 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                         'message': 'Deployment successful.',
                       },
                       {
+                        'gap': 'sm',
+                        'justify': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
-                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                            'label': 'Reset',
                             'type': 'button',
                             'variant': 'ghost',
-                            'label': 'Reset',
-                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
                           },
                         ],
-                        'type': 'stack',
-                        'justify': 'center',
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                       },
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2617,8 +2617,6 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
                     'direction': 'vertical',
                     'children': [
                       {
@@ -2628,28 +2626,30 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                         'onRetry': 'RETRY',
                       },
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'sm',
-                        'justify': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'button',
                             'variant': 'primary',
+                            'type': 'button',
                             'icon': 'refresh-cw',
-                            'action': 'RETRY',
                             'label': 'Retry',
+                            'action': 'RETRY',
                           },
                           {
                             'label': 'Reset',
+                            'action': 'RESET',
                             'variant': 'ghost',
                             'type': 'button',
-                            'action': 'RESET',
                             'icon': 'rotate-ccw',
                           },
                         ],
+                        'justify': 'center',
+                        'gap': 'sm',
                       },
                     ],
+                    'gap': 'lg',
+                    'type': 'stack',
                     'align': 'center',
                   },
                 ],
@@ -2664,43 +2664,43 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'align': 'center',
+                        'gap': 'md',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'upload-cloud',
                           },
                           {
-                            'variant': 'h2',
                             'content': 'Deployment',
+                            'variant': 'h2',
                             'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Ready to start deployment operation.',
-                        'type': 'typography',
                         'variant': 'body',
+                        'type': 'typography',
                         'color': 'muted',
+                        'content': 'Ready to start deployment operation.',
                       },
                       {
-                        'icon': 'play',
                         'type': 'button',
+                        'action': 'START',
+                        'icon': 'play',
                         'label': 'Start',
                         'variant': 'primary',
-                        'action': 'START',
                       },
                     ],
                   },
@@ -2716,45 +2716,45 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'align': 'center',
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
                         'align': 'center',
-                        'type': 'stack',
                         'gap': 'md',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'upload-cloud',
                             'type': 'icon',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Deployment',
                             'variant': 'h2',
-                            'type': 'typography',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Ready to start deployment operation.',
-                        'variant': 'body',
                         'type': 'typography',
+                        'variant': 'body',
+                        'content': 'Ready to start deployment operation.',
                         'color': 'muted',
                       },
                       {
-                        'action': 'START',
-                        'variant': 'primary',
-                        'label': 'Start',
-                        'type': 'button',
                         'icon': 'play',
+                        'label': 'Start',
+                        'action': 'START',
+                        'type': 'button',
+                        'variant': 'primary',
                       },
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2771,18 +2771,18 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
                     'children': [
                       {
                         'type': 'loading-state',
-                        'title': 'Deploying...',
                         'message': 'Processing deployment...',
+                        'title': 'Deploying...',
                       },
                       {
                         'variant': 'text',
                         'type': 'skeleton',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],

@@ -30,8 +30,8 @@ const ALIAS = 'Listings';
  * without modifying its state-machine topology.
  */
 export interface StdListingsConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -216,21 +216,17 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ListingAppLayout',
         'config': {
-          'searchEvent': 'LISTING_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
           'appName': 'Listings',
-          'contentTrait': '@trait.ListingCatalog',
           'navItems': [
             {
+              'label': 'Browse',
               'href': '/listings',
               'icon': 'list',
-              'label': 'Browse',
             },
             {
+              'href': '/saved',
               'label': 'Saved',
               'icon': 'bookmark',
-              'href': '/saved',
             },
             {
               'href': '/inquiries',
@@ -238,10 +234,14 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
               'label': 'Inquiries',
             },
           ],
+          'contentTrait': '@trait.ListingCatalog',
+          'searchEvent': 'LISTING_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'LISTING_NOTIFICATIONS_OPEN',
           'SEARCH': 'LISTING_SEARCH',
+          'NOTIFY_CLICK': 'LISTING_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -340,54 +340,53 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   {
                     'gap': 'lg',
                     'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list',
+                                'type': 'icon',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Listings',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'align': 'center',
                           },
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
+                                'icon': 'bookmark',
                                 'variant': 'secondary',
+                                'action': 'SAVE_SEARCH',
                                 'label': 'Save Search',
                                 'type': 'button',
-                                'action': 'SAVE_SEARCH',
-                                'icon': 'bookmark',
                               },
                               {
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'label': 'New Listing',
                                 'type': 'button',
                                 'variant': 'primary',
-                                'label': 'New Listing',
-                                'icon': 'plus',
-                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'align': 'center',
                         'gap': 'md',
-                        'type': 'stack',
-                        'direction': 'horizontal',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
@@ -395,13 +394,13 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                       '@trait.ListingGeoSearch',
                       {
                         'type': 'stack',
+                        'align': 'start',
+                        'direction': 'horizontal',
                         'children': [
                           '@trait.ListingFilter',
                           '@trait.ListingTags',
                         ],
                         'gap': 'md',
-                        'direction': 'horizontal',
-                        'align': 'start',
                       },
                       '@trait.ListingStats',
                       {
@@ -409,6 +408,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                       },
                       '@trait.ListingBrowse',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -427,34 +427,34 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'type': 'typography',
                         'content': 'You\'re all caught up.',
+                        'type': 'typography',
                         'color': 'muted',
                         'variant': 'caption',
                       },
                       {
-                        'type': 'button',
                         'variant': 'ghost',
-                        'label': 'Back to listings',
+                        'type': 'button',
                         'action': 'INIT',
+                        'label': 'Back to listings',
                       },
                     ],
-                    'gap': 'md',
-                    'type': 'stack',
-                    'align': 'center',
                     'direction': 'vertical',
                     'className': 'py-8',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -468,32 +468,27 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'name': 'ListingGeoSearch',
         'config': {
           'placeholder': 'Search nearby listings…',
-          'defaultRadiusKm': 25,
           'event': 'LISTING_GEO_SEARCH',
+          'defaultRadiusKm': 25,
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ListingFilter',
         'config': {
+          'event': 'LISTING_FILTER',
           'filters': [
             {
-              'label': 'Status',
               'filterType': 'select',
+              'label': 'Status',
+              'field': 'status',
               'options': [
                 'active',
                 'sold',
                 'expired',
               ],
-              'field': 'status',
-            },
-            {
-              'field': 'location',
-              'label': 'Location',
-              'filterType': 'text',
             },
           ],
-          'event': 'LISTING_FILTER',
         },
       }),
       makeTraitRef({
@@ -515,27 +510,30 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'ref': 'Images.traits.UploadedImageUpload',
         'name': 'ListingImages',
         'config': {
-          'maxBytesPerImage': 10485760,
-          'title': 'Listing Photos',
           'maxImages': 10,
           'accept': 'image/*',
+          'title': 'Listing Photos',
+          'maxBytesPerImage': 10485760,
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'ListingStats',
         'config': {
+          'title': 'Listings',
           'metrics': [
             {
-              'format': 'number',
               'aggregation': 'count',
               'label': 'Total',
-              'variant': 'primary',
               'icon': 'list',
+              'variant': 'primary',
+              'format': 'number',
             },
             {
               'variant': 'success',
               'icon': 'check-circle',
+              'aggregation': 'count',
+              'format': 'number',
               'label': 'Active',
               'filter': [
                 'fn',
@@ -546,12 +544,8 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'active',
                 ],
               ],
-              'format': 'number',
-              'aggregation': 'count',
             },
             {
-              'variant': 'info',
-              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -561,20 +555,21 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'sold',
                 ],
               ],
-              'icon': 'tag',
               'label': 'Sold',
+              'icon': 'tag',
+              'aggregation': 'count',
+              'variant': 'info',
               'format': 'number',
             },
             {
-              'label': 'Avg Price',
-              'aggregation': 'avg',
-              'icon': 'trending-up',
-              'variant': 'warning',
               'format': 'number',
+              'label': 'Avg Price',
+              'icon': 'trending-up',
+              'aggregation': 'avg',
               'field': 'price',
+              'variant': 'warning',
             },
           ],
-          'title': 'Listings',
         },
         'listens': [
           {
@@ -592,16 +587,39 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'name': 'ListingBrowse',
         'linkedEntity': 'Listing',
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'event': 'INQUIRE',
+              'variant': 'secondary',
+              'label': 'Inquire',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'cols': 1,
           'gap': 'sm',
           'fields': [
             {
-              'variant': 'h3',
-              'icon': 'list',
               'name': 'title',
+              'icon': 'list',
+              'variant': 'h3',
             },
             {
-              'variant': 'badge',
               'name': 'price',
+              'variant': 'badge',
             },
             {
               'variant': 'badge',
@@ -616,29 +634,6 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
               'name': 'description',
             },
           ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'INQUIRE',
-              'variant': 'secondary',
-              'label': 'Inquire',
-            },
-            {
-              'variant': 'danger',
-              'event': 'DELETE',
-              'label': 'Delete',
-            },
-          ],
-          'cols': 1,
         },
         'listens': [
           {
@@ -688,7 +683,6 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'name': 'ListingCreate',
         'linkedEntity': 'Listing',
         'config': {
-          'title': 'New Listing',
           'mode': 'create',
           'fields': [
             'title',
@@ -698,6 +692,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
             'status',
           ],
           'icon': 'plus-circle',
+          'title': 'New Listing',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -718,9 +713,9 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'name': 'ListingEdit',
         'linkedEntity': 'Listing',
         'config': {
-          'icon': 'edit',
           'mode': 'edit',
           'title': 'Edit Listing',
+          'icon': 'edit',
           'fields': [
             'title',
             'description',
@@ -748,7 +743,6 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'name': 'ListingView',
         'linkedEntity': 'Listing',
         'config': {
-          'title': 'View Listing',
           'fields': [
             'title',
             'description',
@@ -756,8 +750,9 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
             'location',
             'status',
           ],
-          'mode': 'edit',
           'icon': 'eye',
+          'mode': 'edit',
+          'title': 'View Listing',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -779,13 +774,13 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'linkedEntity': 'Listing',
         'config': {
           'title': 'Delete Listing',
-          'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1455,15 +1450,15 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                       },
                       {
                         'type': 'typography',
-                        'variant': 'caption',
                         'content': 'Loading inquiries…',
+                        'variant': 'caption',
                         'color': 'muted',
                       },
                     ],
+                    'align': 'center',
+                    'type': 'stack',
                     'gap': 'md',
                     'className': 'py-12',
-                    'type': 'stack',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -1477,59 +1472,53 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'className': 'max-w-5xl mx-auto w-full',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'md',
-                        'align': 'center',
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
-                            'gap': 'sm',
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'message-circle',
+                                'type': 'icon',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Inquiries',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'button',
                             'label': 'New Inquiry',
                             'icon': 'edit',
                             'variant': 'primary',
+                            'type': 'button',
                             'action': 'CREATE',
                           },
                         ],
-                        'justify': 'between',
-                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'entity': '@payload.data',
-                        'type': 'data-list',
                         'fields': [
                           {
-                            'variant': 'h4',
-                            'name': 'subject',
                             'icon': 'message-circle',
+                            'name': 'subject',
+                            'variant': 'h4',
                           },
                           {
-                            'variant': 'body',
                             'name': 'message',
+                            'variant': 'body',
                           },
                           {
                             'name': 'status',
@@ -1537,21 +1526,27 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                           },
                           {
                             'name': 'createdAt',
-                            'variant': 'caption',
                             'format': 'date',
+                            'variant': 'caption',
                           },
                         ],
+                        'type': 'data-list',
+                        'variant': 'card',
+                        'entity': '@payload.data',
                         'itemActions': [
                           {
                             'label': 'Open',
-                            'event': 'VIEW',
                             'variant': 'ghost',
+                            'event': 'VIEW',
                           },
                         ],
-                        'variant': 'card',
                         'gap': 'sm',
                       },
                     ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
               ],
@@ -1565,33 +1560,33 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'align': 'center',
                     'type': 'stack',
                     'direction': 'vertical',
-                    'align': 'center',
                     'className': 'py-12',
-                    'gap': 'md',
                     'children': [
                       {
-                        'color': 'destructive',
                         'type': 'icon',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Failed to load inquiries',
                         'variant': 'h3',
+                        'content': 'Failed to load inquiries',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
-                        'color': 'muted',
                         'content': '@payload.error',
+                        'color': 'muted',
                         'variant': 'body',
+                        'type': 'typography',
                       },
                       {
                         'type': 'button',
-                        'label': 'Retry',
                         'icon': 'rotate-ccw',
                         'action': 'INIT',
+                        'label': 'Retry',
                         'variant': 'primary',
                       },
                     ],
@@ -1656,7 +1651,9 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
         'name': 'InquiryCreate',
         'linkedEntity': 'Inquiry',
         'config': {
+          'title': 'New Inquiry',
           'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'listingId',
             'subject',
@@ -1664,8 +1661,6 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
             'fromUserId',
             'toUserId',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Inquiry',
         },
         'events': {
           'OPEN': 'CREATE',

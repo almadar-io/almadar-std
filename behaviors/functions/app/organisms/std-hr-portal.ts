@@ -30,8 +30,8 @@ const ALIAS = 'HrPortal';
  * without modifying its state-machine topology.
  */
 export interface StdHrPortalConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -192,36 +192,36 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'name': 'EmployeeAppLayout',
         'config': {
           'appName': 'HRPortal',
+          'searchEvent': 'EMPLOYEE_SEARCH',
           'contentTrait': '@trait.EmployeeCatalog',
+          'notifications': [],
+          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'users',
-              'label': 'Employees',
               'href': '/employees',
+              'label': 'Employees',
+              'icon': 'users',
             },
             {
               'href': '/onboarding',
-              'label': 'Onboarding',
               'icon': 'clipboard-check',
+              'label': 'Onboarding',
             },
             {
-              'href': '/timeoff',
               'icon': 'calendar',
               'label': 'Time Off',
+              'href': '/timeoff',
             },
             {
               'icon': 'git-branch',
-              'href': '/org-chart',
               'label': 'Org Chart',
+              'href': '/org-chart',
             },
           ],
-          'searchEvent': 'EMPLOYEE_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
           'SEARCH': 'EMPLOYEE_SEARCH',
+          'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -304,61 +304,59 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
                         'gap': 'md',
-                        'direction': 'horizontal',
-                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'users',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Employees',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
+                                'type': 'button',
                                 'action': 'CREATE',
                                 'label': 'Add Employee',
-                                'type': 'button',
+                                'variant': 'primary',
                                 'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
                             'direction': 'horizontal',
                           },
                         ],
-                        'align': 'center',
-                        'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'children': [
                           '@trait.EmployeeSearch',
                           '@trait.EmployeeFilter',
                         ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       '@trait.EmployeeStats',
                       '@trait.EmployeeGraphs',
@@ -367,6 +365,8 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                       },
                       '@trait.EmployeeBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -385,33 +385,33 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-8',
+                    'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'No notifications',
                       },
                       {
-                        'color': 'muted',
                         'type': 'typography',
-                        'variant': 'caption',
+                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
                       },
                       {
                         'label': 'Back to employees',
+                        'type': 'button',
                         'action': 'INIT',
                         'variant': 'ghost',
-                        'type': 'button',
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
                   },
                 ],
@@ -435,7 +435,6 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'config': {
           'filters': [
             {
-              'field': 'department',
               'options': [
                 'engineering',
                 'design',
@@ -444,29 +443,30 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                 'hr',
                 'finance',
               ],
+              'field': 'department',
               'filterType': 'select',
               'label': 'Department',
             },
             {
+              'field': 'role',
               'options': [
                 'manager',
                 'lead',
                 'ic',
                 'intern',
               ],
-              'field': 'role',
-              'label': 'Role',
               'filterType': 'select',
+              'label': 'Role',
             },
             {
+              'field': 'status',
+              'label': 'Status',
               'options': [
                 'active',
                 'leave',
                 'terminated',
               ],
               'filterType': 'select',
-              'field': 'status',
-              'label': 'Status',
             },
           ],
           'event': 'FILTER',
@@ -476,30 +476,32 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'EmployeeStats',
         'config': {
-          'title': 'Workforce Overview',
           'metrics': [
             {
-              'icon': 'users',
-              'format': 'number',
-              'label': 'Total Employees',
               'variant': 'primary',
+              'format': 'number',
+              'icon': 'users',
+              'label': 'Total Employees',
               'aggregation': 'count',
             },
             {
+              'aggregation': 'count',
+              'format': 'number',
+              'variant': 'default',
               'label': 'By Department',
               'icon': 'layers',
-              'variant': 'default',
-              'aggregation': 'count',
-              'format': 'number',
             },
             {
-              'aggregation': 'count',
               'variant': 'info',
-              'icon': 'user-plus',
               'label': 'New This Month',
+              'icon': 'user-plus',
+              'aggregation': 'count',
               'format': 'number',
             },
             {
+              'icon': 'calendar-off',
+              'variant': 'warning',
+              'label': 'On Leave',
               'filter': [
                 'fn',
                 'row',
@@ -509,13 +511,11 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'leave',
                 ],
               ],
-              'icon': 'calendar-off',
-              'label': 'On Leave',
-              'variant': 'warning',
               'aggregation': 'count',
               'format': 'number',
             },
           ],
+          'title': 'Workforce Overview',
         },
         'listens': [
           {
@@ -532,13 +532,13 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'EmployeeGraphs',
         'config': {
-          'categoryField': 'department',
-          'title': 'Employees by Department',
-          'height': 280,
           'showLegend': true,
           'aggregation': 'count',
-          'subtitle': 'Headcount distribution',
           'chartType': 'pie',
+          'height': 280,
+          'title': 'Employees by Department',
+          'subtitle': 'Headcount distribution',
+          'categoryField': 'department',
         },
         'listens': [
           {
@@ -558,32 +558,32 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'config': {
           'itemActions': [
             {
-              'label': 'View',
-              'event': 'VIEW',
               'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
             },
             {
+              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
-              'label': 'Edit',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
           'gap': 'sm',
           'imageField': 'avatar',
           'fields': [
             {
+              'icon': 'user',
               'name': 'name',
               'variant': 'h3',
-              'icon': 'user',
             },
             {
-              'variant': 'body',
               'name': 'role',
+              'variant': 'body',
             },
             {
               'name': 'department',
@@ -658,9 +658,9 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'name': 'EmployeeCreate',
         'linkedEntity': 'Employee',
         'config': {
-          'icon': 'plus-circle',
-          'mode': 'create',
           'title': 'Add Employee',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'email',
@@ -690,7 +690,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'name': 'EmployeeEdit',
         'linkedEntity': 'Employee',
         'config': {
-          'title': 'Edit Employee',
+          'icon': 'edit',
           'fields': [
             'name',
             'email',
@@ -699,8 +699,8 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
             'hireDate',
             'status',
           ],
+          'title': 'Edit Employee',
           'mode': 'edit',
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -722,9 +722,6 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'name': 'EmployeeView',
         'linkedEntity': 'Employee',
         'config': {
-          'title': 'Employee Details',
-          'mode': 'edit',
-          'icon': 'eye',
           'fields': [
             'name',
             'email',
@@ -733,6 +730,9 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
             'hireDate',
             'status',
           ],
+          'title': 'Employee Details',
+          'mode': 'edit',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -754,13 +754,13 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'linkedEntity': 'Employee',
         'config': {
           'title': 'Delete Employee',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'EMPLOYEE_DELETED',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -964,15 +964,15 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'EmployeeAvatarUpload',
         'config': {
-          'bucket': 'employee-avatars',
           'maxSize': 5242880,
-          'acl': 'public-read',
+          'uiTrait': '@trait.EmployeeAvatarUploadForm',
           'allowedMimeTypes': [
             'image/jpeg',
             'image/png',
             'image/webp',
           ],
-          'uiTrait': '@trait.EmployeeAvatarUploadForm',
+          'acl': 'public-read',
+          'bucket': 'employee-avatars',
         },
       }),
       {
@@ -1018,12 +1018,14 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'main',
                   {
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'image',
                             'type': 'icon',
+                            'name': 'image',
                           },
                           {
                             'content': 'Upload Avatar',
@@ -1031,26 +1033,24 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                             'variant': 'h3',
                           },
                         ],
+                        'direction': 'horizontal',
                         'type': 'stack',
                         'gap': 'sm',
-                        'align': 'center',
-                        'direction': 'horizontal',
                       },
                       {
                         'inputType': 'text',
-                        'type': 'input',
                         'placeholder': 'Choose file path…',
+                        'type': 'input',
                       },
                       {
-                        'variant': 'primary',
-                        'type': 'button',
                         'action': 'UPLOAD',
-                        'icon': 'upload',
+                        'type': 'button',
+                        'variant': 'primary',
                         'label': 'Upload',
+                        'icon': 'upload',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1343,33 +1343,33 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
         'name': 'OnboardingAppLayout',
         'linkedEntity': 'Onboarding',
         'config': {
-          'appName': 'HRPortal',
           'navItems': [
             {
-              'label': 'Employees',
-              'href': '/employees',
               'icon': 'users',
+              'href': '/employees',
+              'label': 'Employees',
             },
             {
+              'label': 'Onboarding',
               'icon': 'clipboard-check',
               'href': '/onboarding',
-              'label': 'Onboarding',
             },
             {
-              'label': 'Time Off',
-              'href': '/timeoff',
               'icon': 'calendar',
+              'href': '/timeoff',
+              'label': 'Time Off',
             },
             {
-              'href': '/org-chart',
               'icon': 'git-branch',
               'label': 'Org Chart',
+              'href': '/org-chart',
             },
           ],
           'notifications': [],
-          'notificationClickEvent': 'ONBOARDING_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.OnboardingWizard',
+          'appName': 'HRPortal',
           'searchEvent': 'ONBOARDING_SEARCH',
+          'notificationClickEvent': 'ONBOARDING_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'ONBOARDING_SEARCH',
@@ -1639,11 +1639,14 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                     'direction': 'vertical',
                     'children': [
                       {
+                        'align': 'center',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'clipboard-check',
                             'type': 'icon',
+                            'name': 'clipboard-check',
                           },
                           {
                             'type': 'typography',
@@ -1651,32 +1654,31 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'variant': 'h2',
                           },
                         ],
-                        'align': 'center',
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
+                        'currentStep': 0,
+                        'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
-                        'currentStep': 0,
-                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Employee Details',
+                        'variant': 'h3',
                       },
                       {
-                        'type': 'form-section',
-                        'mode': 'create',
+                        'showCancel': false,
                         'submitEvent': 'NEXT',
+                        'mode': 'create',
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
                         'fields': [
                           {
                             'min': 2,
@@ -1684,8 +1686,8 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'required': true,
                           },
                           {
-                            'type': 'email',
                             'required': true,
+                            'type': 'email',
                             'name': 'email',
                           },
                           {
@@ -1693,13 +1695,11 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'name': 'department',
                           },
                         ],
-                        'submitLabel': 'Continue',
-                        'showCancel': false,
                       },
                     ],
                     'className': 'max-w-xl mx-auto w-full',
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1734,50 +1734,50 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'typography',
                         'content': 'Employee Onboarding',
+                        'type': 'typography',
                         'variant': 'h2',
                       },
                       {
-                        'currentStep': 1,
-                        'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
+                        'currentStep': 1,
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'typography',
-                        'content': 'Manager Assignment',
                         'variant': 'h3',
+                        'content': 'Manager Assignment',
                       },
                       {
-                        'cancelLabel': 'Back',
-                        'mode': 'edit',
-                        'entity': '@entity',
-                        'submitEvent': 'NEXT',
-                        'type': 'form-section',
                         'fields': [
                           {
-                            'name': 'manager',
                             'required': true,
+                            'name': 'manager',
                           },
                         ],
-                        'cancelEvent': 'PREV',
                         'submitLabel': 'Continue',
+                        'type': 'form-section',
+                        'mode': 'edit',
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
+                        'entity': '@entity',
+                        'cancelLabel': 'Back',
                       },
                     ],
-                    'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1803,24 +1803,23 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
+                    'type': 'stack',
                     'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'type': 'typography',
-                        'variant': 'h2',
                         'content': 'Employee Onboarding',
+                        'variant': 'h2',
                       },
                       {
-                        'currentStep': 2,
-                        'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
+                        'currentStep': 2,
                       },
                       {
                         'type': 'divider',
@@ -1831,20 +1830,21 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         'type': 'typography',
                       },
                       {
+                        'submitEvent': 'NEXT',
                         'type': 'form-section',
                         'mode': 'edit',
-                        'entity': '@entity',
                         'submitLabel': 'Continue',
+                        'cancelEvent': 'PREV',
+                        'entity': '@entity',
+                        'cancelLabel': 'Back',
                         'fields': [
                           'equipmentReady',
                           'accessGranted',
                         ],
-                        'cancelLabel': 'Back',
-                        'cancelEvent': 'PREV',
-                        'submitEvent': 'NEXT',
                       },
                     ],
-                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1859,8 +1859,7 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
                     'children': [
                       {
                         'content': 'Employee Onboarding',
@@ -1868,7 +1867,6 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         'variant': 'h2',
                       },
                       {
-                        'currentStep': 0,
                         'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
@@ -1876,21 +1874,23 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                           'Setup Checklist',
                           'Review',
                         ],
+                        'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Employee Details',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
-                        'showCancel': false,
-                        'submitLabel': 'Continue',
                         'mode': 'edit',
+                        'submitLabel': 'Continue',
+                        'submitEvent': 'NEXT',
                         'entity': '@entity',
                         'type': 'form-section',
+                        'showCancel': false,
                         'fields': [
                           {
                             'min': 2,
@@ -1899,18 +1899,18 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                           },
                           {
                             'name': 'email',
-                            'required': true,
                             'type': 'email',
+                            'required': true,
                           },
                           {
-                            'required': true,
                             'name': 'department',
+                            'required': true,
                           },
                         ],
-                        'submitEvent': 'NEXT',
                       },
                     ],
-                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1941,14 +1941,16 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
                     'children': [
                       {
-                        'content': 'Review Onboarding',
                         'type': 'typography',
                         'variant': 'h2',
+                        'content': 'Review Onboarding',
                       },
                       {
+                        'currentStep': 3,
                         'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
@@ -1956,20 +1958,21 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                           'Setup Checklist',
                           'Review',
                         ],
-                        'currentStep': 3,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'typography',
-                                'content': 'Employee',
                                 'variant': 'caption',
+                                'content': 'Employee',
+                                'type': 'typography',
                               },
                               {
                                 'type': 'typography',
@@ -1977,20 +1980,16 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                                 'content': '@entity.employeeName',
                               },
                             ],
-                            'justify': 'between',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
                           },
                           {
-                            'justify': 'between',
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'typography',
-                                'variant': 'caption',
                                 'content': 'Email',
+                                'variant': 'caption',
+                                'type': 'typography',
                               },
                               {
                                 'variant': 'body',
@@ -1999,16 +1998,17 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                               },
                             ],
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'gap': 'md',
+                            'type': 'stack',
                             'justify': 'between',
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'content': 'Department',
+                                'variant': 'caption',
                                 'type': 'typography',
                               },
                               {
@@ -2019,92 +2019,92 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             ],
                           },
                           {
-                            'justify': 'between',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'content': 'Manager',
                                 'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
-                                'variant': 'body',
                                 'type': 'typography',
+                                'variant': 'body',
                                 'content': '@entity.manager',
                               },
                             ],
                             'type': 'stack',
+                            'justify': 'between',
                             'gap': 'md',
                             'direction': 'horizontal',
                           },
                           {
                             'type': 'stack',
-                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'typography',
-                                'variant': 'caption',
                                 'content': 'Equipment Ready',
+                                'variant': 'caption',
                               },
                               {
+                                'variant': 'body',
                                 'type': 'typography',
                                 'content': '@entity.equipmentReady',
-                                'variant': 'body',
                               },
                             ],
-                            'direction': 'horizontal',
                             'justify': 'between',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
                                 'variant': 'caption',
-                                'content': 'Access Granted',
                                 'type': 'typography',
+                                'content': 'Access Granted',
                               },
                               {
+                                'content': '@entity.accessGranted',
                                 'type': 'typography',
                                 'variant': 'body',
-                                'content': '@entity.accessGranted',
                               },
                             ],
-                            'direction': 'horizontal',
                             'type': 'stack',
-                            'gap': 'md',
-                            'justify': 'between',
                           },
                         ],
                         'gap': 'sm',
                         'direction': 'vertical',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'button',
                             'action': 'PREV',
+                            'label': 'Back',
                             'variant': 'ghost',
                             'icon': 'arrow-left',
-                            'label': 'Back',
                           },
                           {
+                            'icon': 'check',
+                            'action': 'COMPLETE',
+                            'label': 'Complete Onboarding',
                             'variant': 'primary',
                             'type': 'button',
-                            'action': 'COMPLETE',
-                            'icon': 'check',
-                            'label': 'Complete Onboarding',
                           },
                         ],
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'justify': 'between',
-                        'gap': 'sm',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
-                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2121,47 +2121,47 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                     'children': [
                       {
                         'variant': 'h2',
-                        'type': 'typography',
                         'content': 'Employee Onboarding',
+                        'type': 'typography',
                       },
                       {
+                        'currentStep': 1,
+                        'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
-                        'type': 'wizard-progress',
-                        'currentStep': 1,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Manager Assignment',
                         'type': 'typography',
+                        'content': 'Manager Assignment',
                         'variant': 'h3',
                       },
                       {
-                        'submitEvent': 'NEXT',
-                        'cancelEvent': 'PREV',
-                        'submitLabel': 'Continue',
-                        'entity': '@entity',
                         'type': 'form-section',
-                        'cancelLabel': 'Back',
                         'fields': [
                           {
                             'name': 'manager',
                             'required': true,
                           },
                         ],
+                        'submitLabel': 'Continue',
                         'mode': 'edit',
+                        'submitEvent': 'NEXT',
+                        'entity': '@entity',
+                        'cancelEvent': 'PREV',
+                        'cancelLabel': 'Back',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                     'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2202,8 +2202,8 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   },
                   {
                     'emit': {
-                      'failure': 'OnboardingEmailFailed',
                       'success': 'OnboardingEmailSent',
+                      'failure': 'OnboardingEmailFailed',
                     },
                   },
                 ],
@@ -2223,6 +2223,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
+                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
                     'children': [
                       {
                         'name': 'check-circle',
@@ -2235,23 +2239,19 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                       },
                       {
                         'variant': 'body',
-                        'content': 'The new employee has been fully onboarded.',
                         'color': 'muted',
                         'type': 'typography',
+                        'content': 'The new employee has been fully onboarded.',
                       },
                       {
                         'type': 'button',
                         'action': 'RESTART',
+                        'icon': 'rotate-ccw',
                         'label': 'Start new onboarding',
                         'variant': 'ghost',
-                        'icon': 'rotate-ccw',
                       },
                     ],
                     'gap': 'lg',
-                    'align': 'center',
-                    'className': 'max-w-xl mx-auto w-full py-12',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2265,13 +2265,16 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'variant': 'h2',
-                        'type': 'typography',
                         'content': 'Employee Onboarding',
+                        'type': 'typography',
                       },
                       {
+                        'currentStep': 2,
                         'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
@@ -2279,34 +2282,31 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                           'Setup Checklist',
                           'Review',
                         ],
-                        'currentStep': 2,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'Setup Checklist',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
                         'entity': '@entity',
+                        'type': 'form-section',
+                        'submitEvent': 'NEXT',
+                        'mode': 'edit',
                         'submitLabel': 'Continue',
                         'cancelLabel': 'Back',
-                        'mode': 'edit',
                         'fields': [
                           'equipmentReady',
                           'accessGranted',
                         ],
                         'cancelEvent': 'PREV',
-                        'type': 'form-section',
-                        'submitEvent': 'NEXT',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
-                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2374,33 +2374,38 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
+                        'variant': 'h2',
                         'type': 'typography',
                         'content': 'Employee Onboarding',
-                        'variant': 'h2',
                       },
                       {
-                        'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
                         'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Employee Details',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
+                        'submitLabel': 'Continue',
                         'submitEvent': 'NEXT',
+                        'showCancel': false,
                         'fields': [
                           {
                             'name': 'employeeName',
@@ -2408,9 +2413,9 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'min': 2,
                           },
                           {
+                            'name': 'email',
                             'type': 'email',
                             'required': true,
-                            'name': 'email',
                           },
                           {
                             'name': 'department',
@@ -2419,13 +2424,8 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         ],
                         'mode': 'create',
                         'type': 'form-section',
-                        'showCancel': false,
-                        'submitLabel': 'Continue',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2698,21 +2698,23 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
         'name': 'TimeOffAppLayout',
         'linkedEntity': 'TimeOff',
         'config': {
+          'notificationClickEvent': 'TIME_OFF_NOTIFICATIONS_OPEN',
+          'notifications': [],
           'navItems': [
             {
-              'label': 'Employees',
-              'href': '/employees',
               'icon': 'users',
+              'href': '/employees',
+              'label': 'Employees',
             },
             {
               'label': 'Onboarding',
-              'icon': 'clipboard-check',
               'href': '/onboarding',
+              'icon': 'clipboard-check',
             },
             {
+              'icon': 'calendar',
               'label': 'Time Off',
               'href': '/timeoff',
-              'icon': 'calendar',
             },
             {
               'label': 'Org Chart',
@@ -2721,8 +2723,6 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
             },
           ],
           'contentTrait': '@trait.TimeOffCatalog',
-          'notifications': [],
-          'notificationClickEvent': 'TIME_OFF_NOTIFICATIONS_OPEN',
           'appName': 'HRPortal',
           'searchEvent': 'TIME_OFF_SEARCH',
         },
@@ -2773,46 +2773,49 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'calendar',
-                              },
-                              {
-                                'type': 'typography',
-                                'content': 'Time Off Requests',
-                                'variant': 'h2',
-                              },
-                            ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                          },
-                          {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'label': 'Request Time Off',
-                                'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'plus',
-                                'action': 'CREATE',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                          },
-                        ],
                         'justify': 'between',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'type': 'stack',
                         'align': 'center',
-                        'gap': 'md',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'calendar',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'Time Off Requests',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'Request Time Off',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'type': 'button',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                        ],
                       },
                       {
                         'type': 'divider',
@@ -2823,9 +2826,6 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
                       },
                       '@trait.TimeOffBrowseList',
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2875,57 +2875,57 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
         'name': 'TimeOffBrowseList',
         'linkedEntity': 'TimeOff',
         'config': {
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
           'fields': [
             {
-              'icon': 'user',
-              'name': 'employeeName',
-              'label': 'Employee',
               'variant': 'h4',
+              'label': 'Employee',
+              'name': 'employeeName',
+              'icon': 'user',
             },
             {
               'label': 'Type',
-              'variant': 'badge',
               'name': 'leaveType',
-            },
-            {
               'variant': 'badge',
+            },
+            {
               'name': 'status',
+              'variant': 'badge',
             },
             {
-              'format': 'date',
               'name': 'startDate',
-              'label': 'From',
+              'format': 'date',
               'variant': 'caption',
+              'label': 'From',
             },
             {
-              'variant': 'caption',
-              'name': 'endDate',
               'label': 'To',
+              'variant': 'caption',
               'format': 'date',
+              'name': 'endDate',
             },
             {
               'name': 'reason',
               'variant': 'caption',
             },
           ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
-            },
-          ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -2960,6 +2960,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
         'linkedEntity': 'TimeOff',
         'config': {
           'mode': 'create',
+          'title': 'Request Time Off',
           'icon': 'plus-circle',
           'fields': [
             'employeeName',
@@ -2970,11 +2971,10 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
             'reason',
             'status',
           ],
-          'title': 'Request Time Off',
         },
         'events': {
-          'SAVE': 'TIME_OFF_CREATED',
           'OPEN': 'CREATE',
+          'SAVE': 'TIME_OFF_CREATED',
         },
         'listens': [
           {
@@ -2992,8 +2992,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
         'name': 'TimeOffEdit',
         'linkedEntity': 'TimeOff',
         'config': {
-          'title': 'Edit Time Off',
           'icon': 'edit',
+          'title': 'Edit Time Off',
           'mode': 'edit',
           'fields': [
             'employeeName',
@@ -3006,8 +3006,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
           ],
         },
         'events': {
-          'SAVE': 'TIME_OFF_UPDATED',
           'OPEN': 'EDIT',
+          'SAVE': 'TIME_OFF_UPDATED',
         },
         'listens': [
           {
@@ -3025,6 +3025,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
         'name': 'TimeOffView',
         'linkedEntity': 'TimeOff',
         'config': {
+          'title': 'Time Off Details',
           'icon': 'eye',
           'fields': [
             'employeeName',
@@ -3035,7 +3036,6 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
             'reason',
             'status',
           ],
-          'title': 'Time Off Details',
           'mode': 'edit',
         },
         'events': {
@@ -3057,14 +3057,14 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
         'name': 'TimeOffDelete',
         'linkedEntity': 'TimeOff',
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
           'title': 'Delete Time Off Request',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'CONFIRM': 'TIME_OFF_DELETED',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'TIME_OFF_DELETED',
         },
         'listens': [
           {
@@ -3291,15 +3291,15 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
                   'email',
                   'send',
                   {
+                    'body': 'Your time-off request has been updated. Status: @payload.data.status.',
+                    'sender': 'hr@example.com',
                     'subject': 'Time-off @payload.data.status',
                     'recipient': '@payload.data.employeeEmail',
-                    'sender': 'hr@example.com',
-                    'body': 'Your time-off request has been updated. Status: @payload.data.status.',
                   },
                   {
                     'emit': {
-                      'failure': 'TimeOffEmailFailed',
                       'success': 'TimeOffEmailSent',
+                      'failure': 'TimeOffEmailFailed',
                     },
                   },
                 ],
@@ -3595,7 +3595,6 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
         'name': 'OrgChartAppLayout',
         'linkedEntity': 'OrgNode',
         'config': {
-          'notificationClickEvent': 'ORG_CHART_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'href': '/employees',
@@ -3603,29 +3602,30 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
               'label': 'Employees',
             },
             {
-              'label': 'Onboarding',
-              'href': '/onboarding',
               'icon': 'clipboard-check',
+              'href': '/onboarding',
+              'label': 'Onboarding',
             },
             {
               'icon': 'calendar',
-              'label': 'Time Off',
               'href': '/timeoff',
+              'label': 'Time Off',
             },
             {
               'href': '/org-chart',
-              'icon': 'git-branch',
               'label': 'Org Chart',
+              'icon': 'git-branch',
             },
           ],
-          'contentTrait': '@trait.OrgChartDisplay',
           'notifications': [],
-          'appName': 'HRPortal',
           'searchEvent': 'ORG_CHART_SEARCH',
+          'contentTrait': '@trait.OrgChartDisplay',
+          'notificationClickEvent': 'ORG_CHART_NOTIFICATIONS_OPEN',
+          'appName': 'HRPortal',
         },
         'events': {
-          'SEARCH': 'ORG_CHART_SEARCH',
           'NOTIFY_CLICK': 'ORG_CHART_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ORG_CHART_SEARCH',
         },
       }),
       makeTraitRef({
@@ -3741,8 +3741,8 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'OrgNode',
                   {
                     'emit': {
-                      'failure': 'OrgChartLoadFailed',
                       'success': 'OrgChartLoaded',
+                      'failure': 'OrgChartLoadFailed',
                     },
                   },
                 ],
@@ -3750,49 +3750,67 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'name': 'git-branch',
                                 'type': 'icon',
+                                'name': 'git-branch',
                               },
                               {
+                                'content': 'Org Chart',
                                 'type': 'typography',
                                 'variant': 'h2',
-                                'content': 'Org Chart',
                               },
                             ],
+                            'direction': 'horizontal',
                             'align': 'center',
                             'type': 'stack',
                           },
                           {
-                            'type': 'button',
                             'action': 'REFRESH',
                             'variant': 'secondary',
                             'label': 'Refresh',
+                            'type': 'button',
                             'icon': 'refresh-cw',
                           },
                         ],
+                        'justify': 'between',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'graph-view',
-                        'width': 800,
-                        'height': 400,
+                        'nodes': [
+                          {
+                            'id': 'ceo',
+                            'label': 'CEO',
+                          },
+                          {
+                            'id': 'vp-eng',
+                            'label': 'VP Engineering',
+                          },
+                          {
+                            'id': 'vp-sales',
+                            'label': 'VP Sales',
+                          },
+                          {
+                            'label': 'Frontend Lead',
+                            'id': 'lead-fe',
+                          },
+                          {
+                            'id': 'lead-be',
+                            'label': 'Backend Lead',
+                          },
+                        ],
                         'edges': [
                           {
                             'source': 'ceo',
@@ -3811,32 +3829,14 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                             'target': 'lead-be',
                           },
                         ],
-                        'nodes': [
-                          {
-                            'id': 'ceo',
-                            'label': 'CEO',
-                          },
-                          {
-                            'id': 'vp-eng',
-                            'label': 'VP Engineering',
-                          },
-                          {
-                            'label': 'VP Sales',
-                            'id': 'vp-sales',
-                          },
-                          {
-                            'label': 'Frontend Lead',
-                            'id': 'lead-fe',
-                          },
-                          {
-                            'label': 'Backend Lead',
-                            'id': 'lead-be',
-                          },
-                        ],
+                        'type': 'graph-view',
+                        'height': 400,
+                        'width': 800,
                       },
                     ],
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3850,14 +3850,11 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
                             'direction': 'horizontal',
@@ -3870,27 +3867,31 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                                 'content': 'Org Chart',
                               },
                             ],
                           },
                           {
-                            'variant': 'secondary',
-                            'label': 'Refresh',
                             'icon': 'refresh-cw',
+                            'label': 'Refresh',
                             'action': 'REFRESH',
                             'type': 'button',
+                            'variant': 'secondary',
                           },
                         ],
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'width': 800,
+                        'height': 400,
                         'nodes': [
                           {
                             'label': 'CEO',
@@ -3901,23 +3902,24 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                             'label': 'VP Engineering',
                           },
                           {
-                            'id': 'vp-sales',
                             'label': 'VP Sales',
+                            'id': 'vp-sales',
                           },
                           {
-                            'id': 'lead-fe',
                             'label': 'Frontend Lead',
+                            'id': 'lead-fe',
                           },
                           {
                             'label': 'Backend Lead',
                             'id': 'lead-be',
                           },
                         ],
-                        'height': 400,
+                        'type': 'graph-view',
+                        'width': 800,
                         'edges': [
                           {
-                            'source': 'ceo',
                             'target': 'vp-eng',
+                            'source': 'ceo',
                           },
                           {
                             'target': 'vp-sales',
@@ -3932,11 +3934,9 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                             'target': 'lead-be',
                           },
                         ],
-                        'type': 'graph-view',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -3951,8 +3951,8 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'OrgNode',
                   {
                     'emit': {
-                      'success': 'OrgChartLoaded',
                       'failure': 'OrgChartLoadFailed',
+                      'success': 'OrgChartLoaded',
                     },
                   },
                 ],
@@ -3961,21 +3961,21 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'main',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'className': 'py-12',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
-                        'content': 'Refreshing…',
+                        'variant': 'caption',
                         'color': 'muted',
+                        'content': 'Refreshing…',
                       },
                     ],
-                    'gap': 'md',
-                    'align': 'center',
-                    'direction': 'vertical',
                   },
                 ],
               ],

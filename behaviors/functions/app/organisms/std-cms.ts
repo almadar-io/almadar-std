@@ -30,8 +30,8 @@ const ALIAS = 'Cms';
  * without modifying its state-machine topology.
  */
 export interface StdCmsConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -189,22 +189,25 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ArticleAppLayout',
         'config': {
+          'searchEvent': 'ARTICLE_SEARCH',
+          'notifications': [],
+          'appName': 'CmsApp',
           'contentTrait': '@trait.ArticleCatalog',
           'navItems': [
             {
-              'icon': 'layout-grid',
               'label': 'CMS Hub',
               'href': '/cms-hub',
+              'icon': 'layout-grid',
             },
             {
-              'label': 'Articles',
               'icon': 'file-text',
               'href': '/articles',
+              'label': 'Articles',
             },
             {
+              'label': 'Media',
               'href': '/media',
               'icon': 'image',
-              'label': 'Media',
             },
             {
               'label': 'Categories',
@@ -212,14 +215,11 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
               'icon': 'folder',
             },
           ],
-          'notifications': [],
-          'appName': 'CmsApp',
           'notificationClickEvent': 'ARTICLE_NOTIFICATIONS_OPEN',
-          'searchEvent': 'ARTICLE_SEARCH',
         },
         'events': {
-          'NOTIFY_CLICK': 'ARTICLE_NOTIFICATIONS_OPEN',
           'SEARCH': 'ARTICLE_SEARCH',
+          'NOTIFY_CLICK': 'ARTICLE_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -302,66 +302,66 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
                             'children': [
                               {
-                                'name': 'file-text',
                                 'type': 'icon',
+                                'name': 'file-text',
                               },
                               {
-                                'content': 'Articles',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Articles',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'type': 'button',
-                                'label': 'Create Article',
                                 'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'Create Article',
                                 'action': 'CREATE',
+                                'type': 'button',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                         ],
-                        'align': 'center',
-                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           '@trait.ArticleSearch',
                           '@trait.ArticleFilter',
                         ],
+                        'type': 'stack',
                       },
                       '@trait.ArticleStats',
                       '@trait.ArticleGraphs',
                       '@trait.ArticleBrowseList',
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -380,34 +380,34 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
                         'variant': 'h3',
-                      },
-                      {
-                        'color': 'muted',
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                         'type': 'typography',
                       },
                       {
-                        'action': 'INIT',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
                         'variant': 'ghost',
-                        'type': 'button',
                         'label': 'Back to articles',
+                        'action': 'INIT',
+                        'type': 'button',
                       },
                     ],
                     'type': 'stack',
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -421,25 +421,26 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'name': 'ArticleBrowseList',
         'linkedEntity': 'Article',
         'config': {
+          'imageField': 'heroImage',
+          'gap': 'sm',
+          'variant': 'card',
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
               'label': 'View',
             },
             {
-              'variant': 'ghost',
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
             },
             {
               'event': 'DELETE',
-              'label': 'Delete',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-          'gap': 'sm',
-          'variant': 'card',
           'fields': [
             {
               'icon': 'file-text',
@@ -459,12 +460,11 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'publishedAt',
+              'variant': 'caption',
             },
           ],
           'cols': 1,
-          'imageField': 'heroImage',
         },
         'listens': [
           {
@@ -507,8 +507,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'config': {
           'facets': [
             {
-              'field': 'status',
               'label': 'Status',
+              'field': 'status',
               'values': [
                 'draft',
                 'published',
@@ -517,8 +517,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
             },
             {
               'label': 'Category',
-              'values': [],
               'field': 'category',
+              'values': [],
             },
           ],
         },
@@ -533,18 +533,18 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
               'label': 'Total',
             },
             {
-              'label': 'Published',
+              'aggregation': 'count',
               'filter': {
                 'status': 'published',
               },
-              'aggregation': 'count',
+              'label': 'Published',
             },
             {
+              'aggregation': 'count',
               'filter': {
                 'status': 'draft',
               },
               'label': 'Drafts',
-              'aggregation': 'count',
             },
           ],
         },
@@ -563,8 +563,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ArticleGraphs',
         'config': {
-          'categoryField': 'status',
           'chartType': 'pie',
+          'categoryField': 'status',
           'title': 'Articles by Status',
         },
         'listens': [
@@ -584,6 +584,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'linkedEntity': 'Article',
         'config': {
           'title': 'Create Article',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'slug',
@@ -594,8 +596,6 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
             'publishedAt',
             'heroImage',
           ],
-          'mode': 'create',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -616,8 +616,6 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'name': 'ArticleEdit',
         'linkedEntity': 'Article',
         'config': {
-          'mode': 'edit',
-          'icon': 'edit',
           'fields': [
             'title',
             'slug',
@@ -628,6 +626,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
             'publishedAt',
             'heroImage',
           ],
+          'mode': 'edit',
+          'icon': 'edit',
           'title': 'Edit Article',
         },
         'events': {
@@ -649,6 +649,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'name': 'ArticleView',
         'linkedEntity': 'Article',
         'config': {
+          'icon': 'eye',
           'fields': [
             'title',
             'slug',
@@ -661,7 +662,6 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           ],
           'title': 'View Article',
           'mode': 'view',
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -682,14 +682,14 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'name': 'ArticleDelete',
         'linkedEntity': 'Article',
         'config': {
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'title': 'Delete Article',
+          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -798,6 +798,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'sm',
                     'children': [
                       {
@@ -807,14 +809,12 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                       },
                       {
                         'type': 'button',
-                        'action': 'UPLOAD',
-                        'label': 'Upload Hero',
-                        'icon': 'upload',
                         'variant': 'secondary',
+                        'icon': 'upload',
+                        'label': 'Upload Hero',
+                        'action': 'UPLOAD',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1317,7 +1317,6 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
         'name': 'MediaAssetAppLayout',
         'linkedEntity': 'MediaAsset',
         'config': {
-          'searchEvent': 'MEDIA_SEARCH',
           'navItems': [
             {
               'label': 'CMS Hub',
@@ -1325,25 +1324,26 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
               'icon': 'layout-grid',
             },
             {
-              'href': '/articles',
-              'label': 'Articles',
               'icon': 'file-text',
+              'label': 'Articles',
+              'href': '/articles',
             },
             {
-              'href': '/media',
               'icon': 'image',
               'label': 'Media',
+              'href': '/media',
             },
             {
-              'label': 'Categories',
               'href': '/categories',
+              'label': 'Categories',
               'icon': 'folder',
             },
           ],
-          'contentTrait': '@trait.MediaCatalog',
-          'notificationClickEvent': 'MEDIA_NOTIFICATIONS_OPEN',
-          'appName': 'CmsApp',
+          'searchEvent': 'MEDIA_SEARCH',
           'notifications': [],
+          'notificationClickEvent': 'MEDIA_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.MediaCatalog',
+          'appName': 'CmsApp',
         },
         'events': {
           'SEARCH': 'MEDIA_SEARCH',
@@ -1392,74 +1392,48 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'CMS Hub',
-                        'icon': 'layout-grid',
-                        'href': '/cms-hub',
-                      },
-                      {
-                        'label': 'Articles',
-                        'href': '/articles',
-                        'icon': 'file-text',
-                      },
-                      {
-                        'label': 'Media',
-                        'href': '/media',
-                        'icon': 'image',
-                      },
-                      {
-                        'label': 'Categories',
-                        'href': '/categories',
-                        'icon': 'folder',
-                      },
-                    ],
-                    'appName': 'CmsApp',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
-                            'align': 'center',
+                            'gap': 'md',
                             'justify': 'between',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'direction': 'horizontal',
-                                'gap': 'sm',
                                 'type': 'stack',
-                                'align': 'center',
+                                'gap': 'sm',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'image',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                     'content': 'Media Library',
                                   },
                                 ],
+                                'align': 'center',
                               },
                               {
-                                'type': 'stack',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'label': 'Create MediaAsset',
-                                    'action': 'CREATE',
                                     'icon': 'plus',
                                     'type': 'button',
+                                    'label': 'Create MediaAsset',
                                     'variant': 'secondary',
+                                    'action': 'CREATE',
                                   },
                                 ],
                                 'direction': 'horizontal',
-                                'gap': 'sm',
+                                'type': 'stack',
                               },
                             ],
-                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'type': 'stack',
                           },
                           {
@@ -1468,9 +1442,35 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                           '@trait.MediaUpload',
                           '@trait.MediaAssetGallery',
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'appName': 'CmsApp',
+                    'navItems': [
+                      {
+                        'href': '/cms-hub',
+                        'label': 'CMS Hub',
+                        'icon': 'layout-grid',
+                      },
+                      {
+                        'label': 'Articles',
+                        'href': '/articles',
+                        'icon': 'file-text',
+                      },
+                      {
+                        'href': '/media',
+                        'icon': 'image',
+                        'label': 'Media',
+                      },
+                      {
+                        'icon': 'folder',
+                        'label': 'Categories',
+                        'href': '/categories',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -1485,8 +1485,8 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
         'linkedEntity': 'MediaAsset',
         'config': {
           'titleField': 'name',
-          'gap': 'md',
           'cols': 4,
+          'gap': 'md',
           'imageField': 'url',
         },
         'listens': [
@@ -1653,22 +1653,22 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   {
                     'direction': 'vertical',
                     'gap': 'sm',
-                    'type': 'stack',
-                    'align': 'center',
                     'children': [
                       {
-                        'placeholder': 'Paste file URL...',
                         'type': 'input',
                         'inputType': 'text',
+                        'placeholder': 'Paste file URL...',
                       },
                       {
                         'variant': 'primary',
-                        'label': 'Upload File',
-                        'icon': 'upload',
                         'type': 'button',
                         'action': 'UPLOAD',
+                        'icon': 'upload',
+                        'label': 'Upload File',
                       },
                     ],
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -1683,9 +1683,9 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'storage',
                   'upload',
                   {
-                    'bucket': 'media',
-                    'file': '@payload.file',
                     'acl': 'public',
+                    'file': '@payload.file',
+                    'bucket': 'media',
                   },
                   {
                     'emit': {
@@ -1721,8 +1721,8 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   },
                   {
                     'emit': {
-                      'success': 'MediaSaved',
                       'failure': 'MediaUploadFailed',
+                      'success': 'MediaSaved',
                     },
                   },
                 ],
@@ -1730,35 +1730,35 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'emit',
                   'MEDIA_UPLOADED',
                   {
-                    'url': '@payload.url',
                     'id': '@payload.id',
+                    'url': '@payload.url',
                   },
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'align': 'center',
-                    'gap': 'sm',
-                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'check-circle',
                         'type': 'icon',
+                        'name': 'check-circle',
                       },
                       {
-                        'variant': 'success',
                         'message': 'Upload complete.',
                         'type': 'alert',
+                        'variant': 'success',
                       },
                       {
-                        'action': 'INIT',
-                        'label': 'Upload Another',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'label': 'Upload Another',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1773,9 +1773,9 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'main',
                   {
                     'type': 'error-state',
-                    'message': '@payload.error',
-                    'onRetry': 'INIT',
                     'title': 'Upload Failed',
+                    'onRetry': 'INIT',
+                    'message': '@payload.error',
                   },
                 ],
               ],
@@ -1791,13 +1791,13 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
         'config': {
           'mode': 'create',
           'icon': 'plus-circle',
-          'title': 'Add Media Asset',
           'fields': [
             'name',
             'altText',
             'type',
             'url',
           ],
+          'title': 'Add Media Asset',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1818,8 +1818,8 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
         'name': 'MediaAssetView',
         'linkedEntity': 'MediaAsset',
         'config': {
-          'mode': 'view',
           'title': 'View Media Asset',
+          'mode': 'view',
           'icon': 'eye',
           'fields': [
             'name',
@@ -2189,33 +2189,33 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
         'name': 'CategoryAppLayout',
         'linkedEntity': 'Category',
         'config': {
-          'notificationClickEvent': 'CATEGORY_NOTIFICATIONS_OPEN',
-          'appName': 'CmsApp',
           'searchEvent': 'CATEGORY_SEARCH',
-          'contentTrait': '@trait.CategoryCatalog',
           'notifications': [],
+          'notificationClickEvent': 'CATEGORY_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'layout-grid',
               'label': 'CMS Hub',
               'href': '/cms-hub',
+              'icon': 'layout-grid',
             },
             {
-              'icon': 'file-text',
               'href': '/articles',
+              'icon': 'file-text',
               'label': 'Articles',
             },
             {
+              'label': 'Media',
               'icon': 'image',
               'href': '/media',
-              'label': 'Media',
             },
             {
-              'label': 'Categories',
-              'icon': 'folder',
               'href': '/categories',
+              'icon': 'folder',
+              'label': 'Categories',
             },
           ],
+          'contentTrait': '@trait.CategoryCatalog',
+          'appName': 'CmsApp',
         },
         'events': {
           'SEARCH': 'CATEGORY_SEARCH',
@@ -2264,73 +2264,75 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
                   'render-ui',
                   'main',
                   {
+                    'appName': 'CmsApp',
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'CMS Hub',
                         'href': '/cms-hub',
                         'icon': 'layout-grid',
+                        'label': 'CMS Hub',
                       },
                       {
                         'icon': 'file-text',
-                        'href': '/articles',
                         'label': 'Articles',
+                        'href': '/articles',
                       },
                       {
+                        'href': '/media',
                         'icon': 'image',
                         'label': 'Media',
-                        'href': '/media',
                       },
                       {
-                        'href': '/categories',
-                        'label': 'Categories',
                         'icon': 'folder',
+                        'label': 'Categories',
+                        'href': '/categories',
                       },
                     ],
                     'children': [
                       {
-                        'className': 'max-w-5xl mx-auto w-full',
                         'gap': 'lg',
+                        'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'justify': 'between',
-                            'align': 'center',
                             'children': [
                               {
-                                'gap': 'sm',
                                 'align': 'center',
-                                'type': 'stack',
-                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'name': 'folder',
                                     'type': 'icon',
                                   },
                                   {
-                                    'content': 'Categories',
                                     'type': 'typography',
+                                    'content': 'Categories',
                                     'variant': 'h2',
                                   },
                                 ],
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                               },
                               {
-                                'direction': 'horizontal',
                                 'type': 'stack',
+                                'direction': 'horizontal',
                                 'gap': 'sm',
                                 'children': [
                                   {
                                     'label': 'Create Category',
-                                    'action': 'CREATE',
                                     'type': 'button',
-                                    'icon': 'plus',
                                     'variant': 'primary',
+                                    'action': 'CREATE',
+                                    'icon': 'plus',
                                   },
                                 ],
                               },
                             ],
-                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -2338,10 +2340,8 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
                           '@trait.CategoryBrowseList',
                         ],
                         'type': 'stack',
-                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'CmsApp',
                   },
                 ],
               ],
@@ -2355,12 +2355,11 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
         'name': 'CategoryBrowseList',
         'linkedEntity': 'Category',
         'config': {
-          'variant': 'card',
           'itemActions': [
             {
-              'variant': 'ghost',
-              'label': 'View',
               'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
             },
             {
               'label': 'Edit',
@@ -2368,21 +2367,22 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
               'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
               'variant': 'danger',
               'label': 'Delete',
+              'event': 'DELETE',
             },
           ],
+          'variant': 'card',
           'fields': [
             {
-              'icon': 'folder',
               'name': 'name',
+              'icon': 'folder',
               'variant': 'h3',
             },
             {
               'variant': 'badge',
-              'name': 'articleCount',
               'label': 'Articles',
+              'name': 'articleCount',
               'format': 'number',
             },
             {
@@ -2390,8 +2390,8 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
               'variant': 'body',
             },
             {
-              'name': 'slug',
               'variant': 'caption',
+              'name': 'slug',
             },
           ],
           'cols': 1,
@@ -2429,9 +2429,6 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
         'name': 'CategoryCreate',
         'linkedEntity': 'Category',
         'config': {
-          'icon': 'plus-circle',
-          'title': 'Create Category',
-          'mode': 'create',
           'fields': [
             'name',
             'slug',
@@ -2439,6 +2436,9 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             'parentCategory',
             'articleCount',
           ],
+          'mode': 'create',
+          'title': 'Create Category',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2460,6 +2460,8 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
         'linkedEntity': 'Category',
         'config': {
           'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Category',
           'fields': [
             'name',
             'slug',
@@ -2467,8 +2469,6 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             'parentCategory',
             'articleCount',
           ],
-          'icon': 'edit',
-          'title': 'Edit Category',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2489,8 +2489,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
         'name': 'CategoryView',
         'linkedEntity': 'Category',
         'config': {
-          'icon': 'eye',
-          'title': 'View Category',
+          'mode': 'view',
           'fields': [
             'name',
             'slug',
@@ -2498,7 +2497,8 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             'parentCategory',
             'articleCount',
           ],
-          'mode': 'view',
+          'icon': 'eye',
+          'title': 'View Category',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2981,33 +2981,33 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
         'name': 'CmsHubAppLayout',
         'linkedEntity': 'HubArticle',
         'config': {
+          'notifications': [],
+          'notificationClickEvent': 'CMS_HUB_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.CmsHubDisplay',
           'appName': 'CmsApp',
           'navItems': [
             {
-              'icon': 'layout-grid',
               'label': 'CMS Hub',
+              'icon': 'layout-grid',
               'href': '/cms-hub',
             },
             {
-              'label': 'Articles',
               'href': '/articles',
               'icon': 'file-text',
+              'label': 'Articles',
             },
             {
-              'href': '/media',
-              'label': 'Media',
               'icon': 'image',
+              'label': 'Media',
+              'href': '/media',
             },
             {
+              'label': 'Categories',
               'href': '/categories',
               'icon': 'folder',
-              'label': 'Categories',
             },
           ],
           'searchEvent': 'CMS_HUB_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'CMS_HUB_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'CMS_HUB_SEARCH',
@@ -3040,45 +3040,6 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'CmsApp',
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'layout-grid',
-                              },
-                              {
-                                'content': 'CMS Hub',
-                                'type': 'typography',
-                                'variant': 'h2',
-                              },
-                            ],
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'content': 'Recent articles across the platform',
-                            'type': 'typography',
-                            'variant': 'caption',
-                            'color': 'muted',
-                          },
-                          '@trait.HubBrowseList',
-                        ],
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
                     'navItems': [
                       {
                         'icon': 'layout-grid',
@@ -3086,21 +3047,60 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
                         'href': '/cms-hub',
                       },
                       {
+                        'href': '/articles',
                         'label': 'Articles',
                         'icon': 'file-text',
-                        'href': '/articles',
                       },
                       {
-                        'icon': 'image',
-                        'label': 'Media',
                         'href': '/media',
+                        'label': 'Media',
+                        'icon': 'image',
                       },
                       {
-                        'label': 'Categories',
                         'icon': 'folder',
+                        'label': 'Categories',
                         'href': '/categories',
                       },
                     ],
+                    'appName': 'CmsApp',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'layout-grid',
+                                'type': 'icon',
+                              },
+                              {
+                                'content': 'CMS Hub',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Recent articles across the platform',
+                            'variant': 'caption',
+                            'color': 'muted',
+                          },
+                          '@trait.HubBrowseList',
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3114,30 +3114,30 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
         'name': 'HubBrowseList',
         'linkedEntity': 'HubArticle',
         'config': {
-          'variant': 'card',
           'fields': [
             {
+              'icon': 'file-text',
               'name': 'title',
               'variant': 'h3',
-              'icon': 'file-text',
             },
             {
               'name': 'status',
               'variant': 'badge',
             },
             {
-              'name': 'author',
               'variant': 'caption',
+              'name': 'author',
             },
             {
               'name': 'category',
               'variant': 'badge',
             },
           ],
-          'imageField': 'heroImage',
-          'gap': 'sm',
-          'itemActions': [],
+          'variant': 'card',
           'cols': 1,
+          'imageField': 'heroImage',
+          'itemActions': [],
+          'gap': 'sm',
         },
       }),
     ],

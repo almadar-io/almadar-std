@@ -30,7 +30,7 @@ orbital SeqChallengeOrbital {
         (fetch SeqChallenge { emit: { success: "SeqChallengeLoaded", failure: "SeqChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Sequencer Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, "@trait.SeqLessonVideo", { type: "sequencer-board", entity: "SeqChallenge", completeEvent: "COMPLETE" }] }] })
+        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, "@trait.SeqLessonVideo", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "typography", variant: "h3", content: "Sequencer Challenge" }, { type: "typography", variant: "body", color: "muted", content: "Arrange the action blocks in the correct order." }, { type: "button", label: "Complete", action: "COMPLETE", variant: "primary", icon: "check" }] }] }] }] })
       NAVIGATE -> menu
     }
     state playing {
@@ -67,6 +67,9 @@ orbital SeqChallengeOrbital {
   }
 
   trait SeqLessonPlayer [interaction, instance] {
+    config {
+      videoId : string = ""
+    }
     initial: ready
     state ready {
       INIT -> ready
@@ -126,7 +129,7 @@ orbital BuildChallengeOrbital {
         (fetch BuildChallenge { emit: { success: "BuildChallengeLoaded", failure: "BuildChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "builder-board", entity: "BuildChallenge", completeEvent: "COMPLETE" }] }] })
+        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "typography", variant: "h3", content: "Builder Challenge" }, { type: "typography", variant: "body", color: "muted", content: "Drag components into the slots to build the solution." }, { type: "button", label: "Complete", action: "COMPLETE", variant: "primary", icon: "check" }] }] }] }] })
       NAVIGATE -> menu
     }
     state playing {
@@ -173,7 +176,7 @@ orbital EventChallengeOrbital {
         (fetch EventChallenge { emit: { success: "EventChallengeLoaded", failure: "EventChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "game-menu", title: "Event Handler Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
-        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "event-handler-board", entity: "EventChallenge", completeEvent: "COMPLETE" }] }] })
+        (render-ui main { type: "game-shell", appName: "Coding Academy", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "typography", variant: "h3", content: "Event Handler Challenge" }, { type: "typography", variant: "body", color: "muted", content: "Wire the event handlers to fire on the right triggers." }, { type: "button", label: "Complete", action: "COMPLETE", variant: "primary", icon: "check" }] }] }] }] })
       NAVIGATE -> menu
     }
     state playing {
@@ -197,10 +200,12 @@ orbital EventChallengeOrbital {
 }
 
 orbital StudentProgressOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
-  uses Browse   from "std/behaviors/std-browse"
-  uses Stats    from "std/behaviors/std-stats"
-  uses Graphs   from "std/behaviors/std-graphs"
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Browse       from "std/behaviors/std-browse"
+  uses Stats        from "std/behaviors/std-stats"
+  uses Graphs       from "std/behaviors/std-graphs"
 
   entity StudentProgress [persistent: studentprogresses] {
     id : string!
@@ -300,35 +305,75 @@ orbital StudentProgressOrbital {
         { name: "student",          label: "Student",            variant: "h4", icon: "user" },
         { name: "lessonsCompleted", label: "Lessons Completed",  variant: "body" },
         { name: "avgScore",         label: "Avg Score",          variant: "badge" },
-        { name: "streak",           label: "Streak",             variant: "body", suffix: "d" },
+        { name: "streak",           label: "Streak",             variant: "body" },
         { name: "lastActiveAt",     label: "Last Active",        variant: "caption", format: "date" }
       ],
-      itemActions: [],
+      itemActions: [
+        { label: "View",   event: "VIEW",   variant: "ghost" },
+        { label: "Edit",   event: "EDIT",   variant: "ghost" },
+        { label: "Delete", event: "DELETE", variant: "danger" }
+      ],
       cols: 1,
       gap: "sm"
     }
+    listens {
+      StudentProgressPersistor.PROGRESS_UPDATED -> INIT
+      StudentProgressPersistor.PROGRESS_DELETED -> INIT
+    }
   }
 
-  ;; Absorber: drains Browse atom's default DELETE/EDIT/VIEW emits so
-  ;; the unused-emission validator sees a consumer. The list is read-only
-  ;; (itemActions: []) so these never fire at runtime.
-  trait StudentProgressItemSink [lifecycle, instance] {
+  trait StudentProgressView = Modal.traits.ModalRecordModal -> StudentProgress {
+    config: { icon: "eye", title: "View Progress", mode: "edit", fields: ["student", "lessonsCompleted", "avgScore", "streak", "totalTimeMinutes", "progressPct", "lastActiveAt"] }
+    events { OPEN: VIEW }
+    listens {
+      StudentProgressBrowseList.VIEW -> VIEW
+      VIEW { id : string, row : StudentProgress }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StudentProgressEdit = Modal.traits.ModalRecordModal -> StudentProgress {
+    config: { icon: "edit", title: "Edit Progress", mode: "edit", fields: ["student", "lessonsCompleted", "avgScore", "streak", "totalTimeMinutes", "progressPct", "lastActiveAt"] }
+    events { OPEN: EDIT }
+    listens {
+      StudentProgressBrowseList.EDIT -> EDIT
+      EDIT { id : string, row : StudentProgress }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StudentProgressDelete = Confirmation.traits.ConfirmActionConfirmation -> StudentProgress {
+    config: { icon: "alert-triangle", title: "Delete Progress", alertMessage: "This action cannot be undone.", confirmLabel: "Delete" }
+    events { REQUEST: DELETE, CONFIRM: CONFIRM_DELETE }
+    listens {
+      StudentProgressBrowseList.DELETE -> DELETE
+      DELETE { id : string, row : StudentProgress }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StudentProgressPersistor -> StudentProgress [lifecycle, instance] {
     initial: idle
     state idle {
       INIT -> idle
-      VIEW -> idle
-      EDIT -> idle
-      DELETE -> idle
+      DO_UPDATE -> idle
+        (persist update StudentProgress @payload.data { emit: { success: "PROGRESS_UPDATED" } })
+      DO_DELETE -> idle
+        (persist delete StudentProgress @payload.id { emit: { success: "PROGRESS_DELETED" } })
+    }
+    emits {
+      PROGRESS_UPDATED -> external { id : string }
+      PROGRESS_DELETED -> external { id : string }
     }
     listens {
-      VIEW   { id : string!, row : StudentProgress }
-      EDIT   { id : string!, row : StudentProgress }
-      DELETE { id : string!, row : StudentProgress }
-      StudentProgressBrowseList.VIEW   -> VIEW
-      StudentProgressBrowseList.EDIT   -> EDIT
-      StudentProgressBrowseList.DELETE -> DELETE
+      DO_UPDATE { data : object! }
+      DO_DELETE { id : string }
+      StudentProgressEdit.SAVE             -> DO_UPDATE
+      StudentProgressDelete.CONFIRM_DELETE -> DO_DELETE
     }
   }
 
-  page "/progress" -> StudentProgressAppLayout, StudentProgressCatalog, StudentProgressStats, StudentProgressGraphs, StudentProgressBrowseList, StudentProgressItemSink
+  page "/progress" -> StudentProgressAppLayout, StudentProgressCatalog, StudentProgressStats, StudentProgressGraphs, StudentProgressBrowseList, StudentProgressView, StudentProgressEdit, StudentProgressDelete, StudentProgressPersistor
 }

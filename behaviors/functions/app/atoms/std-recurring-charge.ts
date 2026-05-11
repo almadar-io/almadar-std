@@ -177,10 +177,10 @@ export interface StdRecurringChargeSubscriptionUpdatedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRecurringChargeConfig {
-  /** Default: `4` */
-  maxRetries?: number;
   /** Default: `"Subscriptions"` */
   title?: string;
+  /** Default: `4` */
+  maxRetries?: number;
 }
 
 /**
