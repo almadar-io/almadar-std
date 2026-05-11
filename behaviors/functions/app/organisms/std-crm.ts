@@ -41,16 +41,16 @@ export interface StdCrmConfig {
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdCrmContactOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -60,24 +60,15 @@ export interface StdCrmContactOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactStats' | 'ContactGraphs' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'ContactCatalog' | 'ContactPersistor' | 'ContactEmailSend',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -1129,11 +1120,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1144,34 +1131,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1186,7 +1147,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdCrmContactOrbital. */
+/** Manifest — describes the params surface of stdCrmContactOrbital. */
 export const StdCrmContactOrbitalManifest = {
   organism: 'std-crm',
   orbitalName: 'ContactOrbital',
@@ -1194,8 +1155,7 @@ export const StdCrmContactOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'ContactAppLayout',
@@ -1216,22 +1176,14 @@ export const StdCrmContactOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdCrmContactOrbitalParams keys. */
+/** Typed guard — runtime validates StdCrmContactOrbitalParams keys. */
 export function isStdCrmContactOrbitalParams(p: object): p is StdCrmContactOrbitalParams {
   type _OverrideRecord = NonNullable<StdCrmContactOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdCrmContactOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdCrmContactOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdCrmContactOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -1245,16 +1197,16 @@ export function isStdCrmContactOrbitalParams(p: object): p is StdCrmContactOrbit
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdCrmDealOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1264,24 +1216,15 @@ export interface StdCrmDealOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'DealAppLayout' | 'DealBrowseList' | 'DealCreate' | 'DealEdit' | 'DealView' | 'DealDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'DealCatalog' | 'DealPersistor',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -1912,11 +1855,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1927,34 +1866,8 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1969,7 +1882,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdCrmDealOrbital. */
+/** Manifest — describes the params surface of stdCrmDealOrbital. */
 export const StdCrmDealOrbitalManifest = {
   organism: 'std-crm',
   orbitalName: 'DealOrbital',
@@ -1977,8 +1890,7 @@ export const StdCrmDealOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'DealAppLayout',
@@ -1994,22 +1906,14 @@ export const StdCrmDealOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdCrmDealOrbitalParams keys. */
+/** Typed guard — runtime validates StdCrmDealOrbitalParams keys. */
 export function isStdCrmDealOrbitalParams(p: object): p is StdCrmDealOrbitalParams {
   type _OverrideRecord = NonNullable<StdCrmDealOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdCrmDealOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdCrmDealOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdCrmDealOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -2023,16 +1927,16 @@ export function isStdCrmDealOrbitalParams(p: object): p is StdCrmDealOrbitalPara
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdCrmPipelineOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2042,24 +1946,15 @@ export interface StdCrmPipelineOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'PipelineAppLayout',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'PipelineDisplay',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -2384,11 +2279,7 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2399,34 +2290,8 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -2441,7 +2306,7 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdCrmPipelineOrbital. */
+/** Manifest — describes the params surface of stdCrmPipelineOrbital. */
 export const StdCrmPipelineOrbitalManifest = {
   organism: 'std-crm',
   orbitalName: 'PipelineOrbital',
@@ -2449,8 +2314,7 @@ export const StdCrmPipelineOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'PipelineAppLayout',
@@ -2460,22 +2324,14 @@ export const StdCrmPipelineOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdCrmPipelineOrbitalParams keys. */
+/** Typed guard — runtime validates StdCrmPipelineOrbitalParams keys. */
 export function isStdCrmPipelineOrbitalParams(p: object): p is StdCrmPipelineOrbitalParams {
   type _OverrideRecord = NonNullable<StdCrmPipelineOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdCrmPipelineOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdCrmPipelineOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdCrmPipelineOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -2489,16 +2345,16 @@ export function isStdCrmPipelineOrbitalParams(p: object): p is StdCrmPipelineOrb
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdCrmNoteOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2508,24 +2364,15 @@ export interface StdCrmNoteOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'NoteAppLayout' | 'NoteBrowseList' | 'NoteCalendar' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'NoteCatalog' | 'NotePersistor',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -3184,11 +3031,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3199,34 +3042,8 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -3241,7 +3058,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdCrmNoteOrbital. */
+/** Manifest — describes the params surface of stdCrmNoteOrbital. */
 export const StdCrmNoteOrbitalManifest = {
   organism: 'std-crm',
   orbitalName: 'NoteOrbital',
@@ -3249,8 +3066,7 @@ export const StdCrmNoteOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'NoteAppLayout',
@@ -3267,22 +3083,14 @@ export const StdCrmNoteOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdCrmNoteOrbitalParams keys. */
+/** Typed guard — runtime validates StdCrmNoteOrbitalParams keys. */
 export function isStdCrmNoteOrbitalParams(p: object): p is StdCrmNoteOrbitalParams {
   type _OverrideRecord = NonNullable<StdCrmNoteOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdCrmNoteOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdCrmNoteOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdCrmNoteOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }

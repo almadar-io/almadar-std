@@ -112,16 +112,16 @@ export interface StdAgentTutorStudentAssessmentSaveFailedPayload {
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorTutorSessionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -131,24 +131,15 @@ export interface StdAgentTutorTutorSessionOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'TeachingSession',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -1233,11 +1224,7 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1248,34 +1235,8 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1290,7 +1251,7 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorTutorSessionOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorTutorSessionOrbital. */
 export const StdAgentTutorTutorSessionOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'TutorSessionOrbital',
@@ -1298,8 +1259,7 @@ export const StdAgentTutorTutorSessionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
   ] as const,
@@ -1308,22 +1268,14 @@ export const StdAgentTutorTutorSessionOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorTutorSessionOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorTutorSessionOrbitalParams keys. */
 export function isStdAgentTutorTutorSessionOrbitalParams(p: object): p is StdAgentTutorTutorSessionOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorTutorSessionOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorTutorSessionOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorTutorSessionOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorTutorSessionOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -1337,16 +1289,16 @@ export function isStdAgentTutorTutorSessionOrbitalParams(p: object): p is StdAge
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorQuizQuestionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1356,24 +1308,15 @@ export interface StdAgentTutorQuizQuestionOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'QuizEngine',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -2194,11 +2137,7 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2209,34 +2148,8 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -2251,7 +2164,7 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorQuizQuestionOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorQuizQuestionOrbital. */
 export const StdAgentTutorQuizQuestionOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'QuizQuestionOrbital',
@@ -2259,8 +2172,7 @@ export const StdAgentTutorQuizQuestionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
   ] as const,
@@ -2269,22 +2181,14 @@ export const StdAgentTutorQuizQuestionOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorQuizQuestionOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorQuizQuestionOrbitalParams keys. */
 export function isStdAgentTutorQuizQuestionOrbitalParams(p: object): p is StdAgentTutorQuizQuestionOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorQuizQuestionOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorQuizQuestionOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorQuizQuestionOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorQuizQuestionOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -2298,16 +2202,16 @@ export function isStdAgentTutorQuizQuestionOrbitalParams(p: object): p is StdAge
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorTutorChatOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2317,24 +2221,15 @@ export interface StdAgentTutorTutorChatOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'TutorConversation' | 'TutorChatAgent',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -3244,11 +3139,7 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3259,34 +3150,8 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -3301,7 +3166,7 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorTutorChatOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorTutorChatOrbital. */
 export const StdAgentTutorTutorChatOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'TutorChatOrbital',
@@ -3309,8 +3174,7 @@ export const StdAgentTutorTutorChatOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
   ] as const,
@@ -3320,22 +3184,14 @@ export const StdAgentTutorTutorChatOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorTutorChatOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorTutorChatOrbitalParams keys. */
 export function isStdAgentTutorTutorChatOrbitalParams(p: object): p is StdAgentTutorTutorChatOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorTutorChatOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorTutorChatOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorTutorChatOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorTutorChatOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -3349,16 +3205,16 @@ export function isStdAgentTutorTutorChatOrbitalParams(p: object): p is StdAgentT
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorConceptOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -3368,24 +3224,15 @@ export interface StdAgentTutorConceptOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'ConceptBrowse' | 'ConceptCreate' | 'ConceptAgent',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -4730,11 +4577,7 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -4745,34 +4588,8 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -4787,7 +4604,7 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorConceptOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorConceptOrbital. */
 export const StdAgentTutorConceptOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'ConceptOrbital',
@@ -4795,8 +4612,7 @@ export const StdAgentTutorConceptOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
   ] as const,
@@ -4807,22 +4623,14 @@ export const StdAgentTutorConceptOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorConceptOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorConceptOrbitalParams keys. */
 export function isStdAgentTutorConceptOrbitalParams(p: object): p is StdAgentTutorConceptOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorConceptOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorConceptOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorConceptOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorConceptOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -4836,16 +4644,16 @@ export function isStdAgentTutorConceptOrbitalParams(p: object): p is StdAgentTut
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorStudentAssessmentOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -4855,24 +4663,15 @@ export interface StdAgentTutorStudentAssessmentOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'LevelClassifier' | 'StudentAssessmentNotification' | 'StudentAssessmentAgent',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -6040,11 +5839,7 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6055,34 +5850,8 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -6097,7 +5866,7 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorStudentAssessmentOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorStudentAssessmentOrbital. */
 export const StdAgentTutorStudentAssessmentOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'StudentAssessmentOrbital',
@@ -6105,8 +5874,7 @@ export const StdAgentTutorStudentAssessmentOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
   ] as const,
@@ -6117,22 +5885,14 @@ export const StdAgentTutorStudentAssessmentOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorStudentAssessmentOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorStudentAssessmentOrbitalParams keys. */
 export function isStdAgentTutorStudentAssessmentOrbitalParams(p: object): p is StdAgentTutorStudentAssessmentOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorStudentAssessmentOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorStudentAssessmentOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorStudentAssessmentOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorStudentAssessmentOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -6146,16 +5906,16 @@ export function isStdAgentTutorStudentAssessmentOrbitalParams(p: object): p is S
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorTutorNavOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -6165,24 +5925,15 @@ export interface StdAgentTutorTutorNavOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'TutorTabs',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    never,
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -6265,11 +6016,7 @@ export function stdAgentTutorTutorNavOrbital(params: StdAgentTutorTutorNavOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6280,34 +6027,8 @@ export function stdAgentTutorTutorNavOrbital(params: StdAgentTutorTutorNavOrbita
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -6322,7 +6043,7 @@ export function stdAgentTutorTutorNavOrbital(params: StdAgentTutorTutorNavOrbita
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorTutorNavOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorTutorNavOrbital. */
 export const StdAgentTutorTutorNavOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'TutorNavOrbital',
@@ -6330,8 +6051,7 @@ export const StdAgentTutorTutorNavOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'TutorTabs',
@@ -6340,22 +6060,14 @@ export const StdAgentTutorTutorNavOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorTutorNavOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorTutorNavOrbitalParams keys. */
 export function isStdAgentTutorTutorNavOrbitalParams(p: object): p is StdAgentTutorTutorNavOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorTutorNavOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorTutorNavOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorTutorNavOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorTutorNavOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -6369,16 +6081,16 @@ export function isStdAgentTutorTutorNavOrbitalParams(p: object): p is StdAgentTu
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdAgentTutorConceptViewOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -6388,24 +6100,15 @@ export interface StdAgentTutorConceptViewOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'ConceptsBrowse',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    never,
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -6466,11 +6169,7 @@ export function stdAgentTutorConceptViewOrbital(params: StdAgentTutorConceptView
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6481,34 +6180,8 @@ export function stdAgentTutorConceptViewOrbital(params: StdAgentTutorConceptView
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -6523,7 +6196,7 @@ export function stdAgentTutorConceptViewOrbital(params: StdAgentTutorConceptView
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdAgentTutorConceptViewOrbital. */
+/** Manifest — describes the params surface of stdAgentTutorConceptViewOrbital. */
 export const StdAgentTutorConceptViewOrbitalManifest = {
   organism: 'std-agent-tutor',
   orbitalName: 'ConceptViewOrbital',
@@ -6531,8 +6204,7 @@ export const StdAgentTutorConceptViewOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'ConceptsBrowse',
@@ -6541,22 +6213,14 @@ export const StdAgentTutorConceptViewOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdAgentTutorConceptViewOrbitalParams keys. */
+/** Typed guard — runtime validates StdAgentTutorConceptViewOrbitalParams keys. */
 export function isStdAgentTutorConceptViewOrbitalParams(p: object): p is StdAgentTutorConceptViewOrbitalParams {
   type _OverrideRecord = NonNullable<StdAgentTutorConceptViewOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdAgentTutorConceptViewOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdAgentTutorConceptViewOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdAgentTutorConceptViewOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }

@@ -41,16 +41,16 @@ export interface StdRetailPosConfig {
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdRetailPosSaleOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -60,24 +60,15 @@ export interface StdRetailPosSaleOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'SaleAppLayout' | 'SaleSearch' | 'SaleFilter' | 'SaleStats' | 'SaleGraphs' | 'SaleBrowseList' | 'SaleCreate' | 'SaleEdit' | 'SaleView' | 'SaleDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    'SaleCatalog' | 'SalePersistor',
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -976,11 +967,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -991,34 +978,8 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1033,7 +994,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdRetailPosSaleOrbital. */
+/** Manifest — describes the params surface of stdRetailPosSaleOrbital. */
 export const StdRetailPosSaleOrbitalManifest = {
   organism: 'std-retail-pos',
   orbitalName: 'SaleOrbital',
@@ -1041,8 +1002,7 @@ export const StdRetailPosSaleOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'SaleAppLayout',
@@ -1062,22 +1022,14 @@ export const StdRetailPosSaleOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdRetailPosSaleOrbitalParams keys. */
+/** Typed guard — runtime validates StdRetailPosSaleOrbitalParams keys. */
 export function isStdRetailPosSaleOrbitalParams(p: object): p is StdRetailPosSaleOrbitalParams {
   type _OverrideRecord = NonNullable<StdRetailPosSaleOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdRetailPosSaleOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdRetailPosSaleOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdRetailPosSaleOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -1091,16 +1043,16 @@ export function isStdRetailPosSaleOrbitalParams(p: object): p is StdRetailPosSal
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdRetailPosCheckoutOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1110,24 +1062,15 @@ export interface StdRetailPosCheckoutOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'CheckoutAppLayout' | 'CheckoutTerminalBoard',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    never,
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -1289,11 +1232,7 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1304,34 +1243,8 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1346,7 +1259,7 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdRetailPosCheckoutOrbital. */
+/** Manifest — describes the params surface of stdRetailPosCheckoutOrbital. */
 export const StdRetailPosCheckoutOrbitalManifest = {
   organism: 'std-retail-pos',
   orbitalName: 'CheckoutOrbital',
@@ -1354,8 +1267,7 @@ export const StdRetailPosCheckoutOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'CheckoutAppLayout',
@@ -1365,22 +1277,14 @@ export const StdRetailPosCheckoutOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdRetailPosCheckoutOrbitalParams keys. */
+/** Typed guard — runtime validates StdRetailPosCheckoutOrbitalParams keys. */
 export function isStdRetailPosCheckoutOrbitalParams(p: object): p is StdRetailPosCheckoutOrbitalParams {
   type _OverrideRecord = NonNullable<StdRetailPosCheckoutOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdRetailPosCheckoutOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdRetailPosCheckoutOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdRetailPosCheckoutOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -1394,16 +1298,16 @@ export function isStdRetailPosCheckoutOrbitalParams(p: object): p is StdRetailPo
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdRetailPosReceiptOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1413,24 +1317,15 @@ export interface StdRetailPosReceiptOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'ReceiptAppLayout' | 'ReceiptLedger',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    never,
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -1586,11 +1481,7 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1601,34 +1492,8 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1643,7 +1508,7 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdRetailPosReceiptOrbital. */
+/** Manifest — describes the params surface of stdRetailPosReceiptOrbital. */
 export const StdRetailPosReceiptOrbitalManifest = {
   organism: 'std-retail-pos',
   orbitalName: 'ReceiptOrbital',
@@ -1651,8 +1516,7 @@ export const StdRetailPosReceiptOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'ReceiptAppLayout',
@@ -1662,22 +1526,14 @@ export const StdRetailPosReceiptOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdRetailPosReceiptOrbitalParams keys. */
+/** Typed guard — runtime validates StdRetailPosReceiptOrbitalParams keys. */
 export function isStdRetailPosReceiptOrbitalParams(p: object): p is StdRetailPosReceiptOrbitalParams {
   type _OverrideRecord = NonNullable<StdRetailPosReceiptOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdRetailPosReceiptOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdRetailPosReceiptOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdRetailPosReceiptOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
@@ -1691,16 +1547,16 @@ export function isStdRetailPosReceiptOrbitalParams(p: object): p is StdRetailPos
  * The factory hardcodes `linkedEntity` to the canonical entity on
  * every trait/page; renaming the entity would desync those references.
  *
- * Override surface (Phase 9):
- *   fields            — extra entity fields (appended)
- *   pagePath          — first-page URL override
- *   persistence       — entity persistence mode
- *   traitOverrides    — Zone 1: per-imported-trait override surface
- *                       (config / events / effects / listens / emitsScope /
- *                       linkedEntity). Atom owns topology.
- *   interactionStates — Zone 2: inline-trait state-machine splice
- *                       (states / events / transitions). Factory
- *                       owns topology.
+ * Override surface (narrow):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
+ *                    Mirrors `.lolo`'s trait-composition surface 1:1.
+ *                    Free-form authoring (events / effects / listens /
+ *                    emitsScope / state-machine splices) is NOT exposed;
+ *                    anything that needs those becomes a canonical-atom
+ *                    gap surfaced in evals.
  */
 export interface StdRetailPosCustomerOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1710,24 +1566,15 @@ export interface StdRetailPosCustomerOrbitalParams {
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
   /**
-   * Zone 1 — per-imported-trait override surface. Keyed on each
-   * imported trait's local `name`. The atom owns state-machine
-   * topology (states/events/transitions); these fields rewrite the
-   * caller-side surface only.
+   * Per-imported-trait override surface. Keyed on each imported
+   * trait's local `name`. Only `config` (typed to the atom's
+   * declared config schema by convention) and `linkedEntity` are
+   * accepted. State machine topology, events, effects, listens,
+   * and emit scope are atom-owned and not overridable per call.
    */
   traitOverrides?: Partial<Record<
     'CustomerAppLayout' | 'CustomerDirectory',
-    Pick<MakeTraitRefOpts, 'config' | 'events' | 'effects' | 'listens' | 'emitsScope' | 'linkedEntity'>
-  >>;
-  /**
-   * Zone 2 — inline-trait state-machine splice. Keyed on each inline
-   * (factory-authored, no `ref:`) trait's `name`. Merges into the
-   * matching inline trait's `stateMachine` block. Factory owns topology;
-   * splice inserts caller-named states/events/transitions.
-   */
-  interactionStates?: Partial<Record<
-    never,
-    Partial<Pick<NonNullable<Trait['stateMachine']>, 'states' | 'events' | 'transitions'>>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
   >>;
 }
 
@@ -1872,11 +1719,7 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "events" | "effects" | "listens" | "emitsScope" | "linkedEntity">;
-  type _InlineSplice = Partial<Pick<NonNullable<Trait["stateMachine"]>, "states" | "events" | "transitions">>;
-  // Zone 1: per-imported-trait override surface, keyed by trait `name`.
-  // After the `ref:`-string filter, the trait variant is TraitReference,
-  // whose surface matches the override surface 1:1.
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1887,34 +1730,8 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
       if (!override) return t;
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
-      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
-      if (override.effects !== undefined) merged.effects = { ...(tr.effects ?? {}), ...override.effects };
-      if (override.listens !== undefined) merged.listens = override.listens;
-      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       return merged;
-    });
-  }
-  // Zone 2: inline-trait state-machine splice, keyed by inline trait `name`.
-  // After the `ref:`-not-set filter, the trait variant is Trait, whose
-  // stateMachine block is what we splice into.
-  if (built.traits && params.interactionStates !== undefined) {
-    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
-      if (!t || typeof t !== "object") return t;
-      const tr = t as Trait & { ref?: string };
-      if (typeof tr.ref === "string" || typeof tr.name !== "string") return t;
-      const splices = params.interactionStates as Record<string, _InlineSplice | undefined> | undefined;
-      const splice = splices?.[tr.name];
-      if (!splice || !tr.stateMachine) return t;
-      const sm = tr.stateMachine;
-      const mergedSm: StateMachine = {
-        ...sm,
-        ...(splice.states !== undefined ? { states: [...(sm.states ?? []), ...splice.states] } : {}),
-        ...(splice.events !== undefined ? { events: [...(sm.events ?? []), ...splice.events] } : {}),
-        ...(splice.transitions !== undefined ? { transitions: [...(sm.transitions ?? []), ...splice.transitions] } : {}),
-      };
-      const mergedTrait: Trait = { ...tr, stateMachine: mergedSm };
-      return mergedTrait;
     });
   }
   if (built.pages && params.pagePath !== undefined) {
@@ -1929,7 +1746,7 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
   return built;
 }
 
-/** Phase 9 manifest — describes the params surface of stdRetailPosCustomerOrbital. */
+/** Manifest — describes the params surface of stdRetailPosCustomerOrbital. */
 export const StdRetailPosCustomerOrbitalManifest = {
   organism: 'std-retail-pos',
   orbitalName: 'CustomerOrbital',
@@ -1937,8 +1754,7 @@ export const StdRetailPosCustomerOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, MakeTraitRefOpts>>', description: 'Zone 1 — per-imported-trait override surface (config / events / effects / listens / emitsScope / linkedEntity). Atom owns topology.' },
-    { name: 'interactionStates', type: 'Partial<Record<InlineTraitName, StateMachineSplice>>', description: 'Zone 2 — inline-trait state-machine splice (states / events / transitions). Factory owns topology.' },
+    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
   ] as const,
   traitNames: [
     'CustomerAppLayout',
@@ -1948,22 +1764,14 @@ export const StdRetailPosCustomerOrbitalManifest = {
   ] as const,
 };
 
-/** Phase 9 typed guard — runtime validates StdRetailPosCustomerOrbitalParams keys. */
+/** Typed guard — runtime validates StdRetailPosCustomerOrbitalParams keys. */
 export function isStdRetailPosCustomerOrbitalParams(p: object): p is StdRetailPosCustomerOrbitalParams {
   type _OverrideRecord = NonNullable<StdRetailPosCustomerOrbitalParams['traitOverrides']>;
-  type _SpliceRecord = NonNullable<StdRetailPosCustomerOrbitalParams['interactionStates']>;
-  const obj = p as { traitOverrides?: _OverrideRecord; interactionStates?: _SpliceRecord };
+  const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
     const allowed: readonly string[] = StdRetailPosCustomerOrbitalManifest.traitNames;
     for (const k of Object.keys(obj.traitOverrides)) {
-      if (!allowed.includes(k)) return false;
-    }
-  }
-  if (obj.interactionStates !== undefined) {
-    if (typeof obj.interactionStates !== "object" || obj.interactionStates === null) return false;
-    const allowed: readonly string[] = StdRetailPosCustomerOrbitalManifest.inlineTraitNames;
-    for (const k of Object.keys(obj.interactionStates)) {
       if (!allowed.includes(k)) return false;
     }
   }
