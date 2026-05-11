@@ -30,7 +30,7 @@ orbital FleetOrbital {
     config: {
       contentTrait: "@trait.FleetCatalog",
       appName: "Fleet Manager",
-      navItems: [{ label: "Fleets", href: "/fleets", icon: "truck" }, { label: "Vehicles", href: "/vehicles", icon: "truck" }, { label: "Drivers", href: "/drivers", icon: "users" }, { label: "Events", href: "/telematics-events", icon: "activity" }],
+      navItems: [{ label: "Fleets", href: "/fleets", icon: "truck" }, { label: "Vehicles", href: "/vehicles", icon: "truck" }, { label: "Drivers", href: "/drivers", icon: "user" }, { label: "Telematics", href: "/telematics", icon: "activity" }],
       searchEvent: "FLEET_SEARCH",
       notifications: [],
       notificationClickEvent: "FLEET_NOTIFICATIONS_OPEN"
@@ -256,4 +256,176 @@ orbital FleetOrbital {
   }
 
   page "/fleets" as FleetsPage -> FleetAppLayout, FleetCatalog, FleetSearch, FleetFilter, FleetStats, FleetGraphs, FleetBrowseList, FleetCreate, FleetEdit, FleetView, FleetDelete, FleetPersistor
+}
+
+orbital VehiclePanelOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Vehicle  from "std/behaviors/std-vehicle"
+
+  entity Vehicle [persistent: vehicles] {
+    id               : string!
+    vin              : string!
+    licensePlate     : string!
+    make             : string = ""
+    model            : string = ""
+    year             : number = 2020
+    vehicleType      : "car" | "truck" | "van" | "trailer" | "motorcycle" = "car"
+    odometer         : number = 0
+    fuelType         : "gasoline" | "diesel" | "electric" | "hybrid" = "gasoline"
+    status           : "active" | "maintenance" | "retired" | "in-transit" = "active"
+    assignedDriverId : string = ""
+    pendingId        : string = ""
+  }
+
+  trait VehicleAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.VehiclePanel",
+      appName: "Fleet Management",
+      navItems: [{ label: "Fleets", href: "/fleets", icon: "truck" }, { label: "Vehicles", href: "/vehicles", icon: "truck" }, { label: "Drivers", href: "/drivers", icon: "user" }, { label: "Telematics", href: "/telematics", icon: "activity" }],
+      searchEvent: "VEHICLE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "VEHICLE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: VEHICLE_SEARCH
+      NOTIFY_CLICK: VEHICLE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait VehiclePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "truck" },
+            { type: "typography", variant: "h2", content: "Vehicles" }
+          ]},
+          { type: "divider" },
+          "@trait.VehicleView"
+        ]})
+    }
+  }
+
+  trait VehicleView = Vehicle.traits.VehicleFleet {
+    config: {
+      title: "Fleet Vehicles"
+    }
+  }
+
+  page "/vehicles" as VehiclesPage -> VehicleAppLayout, VehiclePanel, VehicleView
+}
+
+orbital DriverPanelOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Driver   from "std/behaviors/std-driver"
+
+  entity Driver [persistent: drivers] {
+    id                : string!
+    name              : string!
+    licenseNumber     : string!
+    licenseClass      : "A" | "B" | "C" | "CDL-A" | "CDL-B" | "CDL-C" = "C"
+    licenseExpiresAt  : string = ""
+    hiredAt           : string = ""
+    phone             : string = ""
+    email             : string = ""
+    status            : "active" | "on-leave" | "terminated" | "suspended" = "active"
+    assignedVehicleId : string = ""
+    pendingId         : string = ""
+  }
+
+  trait DriverAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.DriverPanel",
+      appName: "Fleet Management",
+      navItems: [{ label: "Fleets", href: "/fleets", icon: "truck" }, { label: "Vehicles", href: "/vehicles", icon: "truck" }, { label: "Drivers", href: "/drivers", icon: "user" }, { label: "Telematics", href: "/telematics", icon: "activity" }],
+      searchEvent: "DRIVER_SEARCH",
+      notifications: [],
+      notificationClickEvent: "DRIVER_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: DRIVER_SEARCH
+      NOTIFY_CLICK: DRIVER_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait DriverPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "user" },
+            { type: "typography", variant: "h2", content: "Drivers" }
+          ]},
+          { type: "divider" },
+          "@trait.DriverView"
+        ]})
+    }
+  }
+
+  trait DriverView = Driver.traits.DriverRoster {
+    config: {
+      title: "Driver Roster"
+    }
+  }
+
+  page "/drivers" as DriversPage -> DriverAppLayout, DriverPanel, DriverView
+}
+
+orbital TelematicsEventPanelOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses TelematicsEvent from "std/behaviors/std-telematics-event"
+
+  entity TelematicsEvent [persistent: telematicsevents] {
+    id              : string!
+    vehicleId       : string!
+    eventType       : "hard-brake" | "speeding" | "idle" | "harsh-acceleration" | "geofence-violation" | "engine-fault" | "low-fuel" = "speeding"
+    severity        : "info" | "warning" | "critical" = "info"
+    speed           : number = 0
+    locationLat     : number = 0
+    locationLng     : number = 0
+    occurredAt      : string = ""
+    acknowledged    : boolean = false
+    acknowledgedBy  : string = ""
+    acknowledgedAt  : string = ""
+  }
+
+  trait TelematicsEventAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.TelematicsEventPanel",
+      appName: "Fleet Management",
+      navItems: [{ label: "Fleets", href: "/fleets", icon: "truck" }, { label: "Vehicles", href: "/vehicles", icon: "truck" }, { label: "Drivers", href: "/drivers", icon: "user" }, { label: "Telematics", href: "/telematics", icon: "activity" }],
+      searchEvent: "TELEMATICS_EVENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TELEMATICS_EVENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TELEMATICS_EVENT_SEARCH
+      NOTIFY_CLICK: TELEMATICS_EVENT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait TelematicsEventPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "activity" },
+            { type: "typography", variant: "h2", content: "Telematics Events" }
+          ]},
+          { type: "divider" },
+          "@trait.TelematicsEventView"
+        ]})
+    }
+  }
+
+  trait TelematicsEventView = TelematicsEvent.traits.TelematicsEventStream {
+    config: {
+      title: "Event Stream"
+    }
+  }
+
+  page "/telematics" as TelematicsPage -> TelematicsEventAppLayout, TelematicsEventPanel, TelematicsEventView
 }

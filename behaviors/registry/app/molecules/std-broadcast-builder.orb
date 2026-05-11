@@ -257,8 +257,8 @@
                     "BroadcastDraft",
                     {
                       "emit": {
-                        "failure": "BroadcastDraftLoadFailed",
-                        "success": "BroadcastDraftLoaded"
+                        "success": "BroadcastDraftLoaded",
+                        "failure": "BroadcastDraftLoadFailed"
                       }
                     }
                   ],
@@ -266,22 +266,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading broadcasts…",
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Loading broadcasts…"
                         }
                       ],
-                      "className": "py-12"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -295,25 +295,31 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
+                          "entity": "BroadcastDraft",
+                          "type": "hero-organism"
+                        },
+                        {
+                          "justify": "between",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "name": "send",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "send"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Broadcasts",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Broadcasts"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
                               "action": "CREATE",
@@ -323,40 +329,165 @@
                               "variant": "primary"
                             }
                           ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "stats-grid",
+                          "columns": 4.0,
+                          "stats": [
+                            {
+                              "label": "Sent this month",
+                              "value": "128"
+                            },
+                            {
+                              "label": "Open rate",
+                              "value": "42%"
+                            },
+                            {
+                              "value": "11%",
+                              "label": "Click rate"
+                            },
+                            {
+                              "value": "0.8%",
+                              "label": "Bounce rate"
+                            }
+                          ]
+                        },
+                        {
+                          "currentStep": 2.0,
+                          "type": "wizard-progress",
+                          "steps": [
+                            {
+                              "label": "Audience",
+                              "id": "audience"
+                            },
+                            {
+                              "id": "template",
+                              "label": "Template"
+                            },
+                            {
+                              "id": "schedule",
+                              "label": "Schedule"
+                            },
+                            {
+                              "id": "review",
+                              "label": "Review"
+                            },
+                            {
+                              "id": "send",
+                              "label": "Send"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "progress-dots",
+                          "currentIndex": 2.0,
+                          "size": "md",
+                          "count": 5.0
+                        },
+                        {
+                          "tabs": [
+                            {
+                              "content": {
+                                "content": "Broadcast drafts awaiting completion.",
+                                "type": "typography"
+                              },
+                              "label": "Drafts",
+                              "id": "drafts"
+                            },
+                            {
+                              "id": "scheduled",
+                              "label": "Scheduled",
+                              "content": {
+                                "type": "typography",
+                                "content": "Queued for future delivery."
+                              }
+                            },
+                            {
+                              "label": "Sent",
+                              "id": "sent",
+                              "content": {
+                                "type": "typography",
+                                "content": "Delivered broadcasts and reports."
+                              }
+                            }
+                          ],
+                          "type": "tabbed-container",
+                          "defaultTab": "drafts"
+                        },
+                        {
+                          "title": "Boost engagement with segmented broadcasts",
+                          "background": "gradient",
+                          "align": "center",
+                          "subtitle": "Target the right cohort at the right time.",
+                          "type": "cta-banner"
+                        },
+                        {
+                          "type": "feature-grid-organism",
+                          "entity": "BroadcastDraft"
+                        },
+                        {
                           "type": "stack",
                           "gap": "md",
-                          "justify": "between",
+                          "children": [
+                            {
+                              "description": "Reach the contacts most likely to convert.",
+                              "icon": "users",
+                              "type": "feature-card",
+                              "title": "Audience segmentation",
+                              "linkLabel": "View segments"
+                            },
+                            {
+                              "title": "Template library",
+                              "icon": "file-text",
+                              "description": "Reusable email and SMS templates.",
+                              "type": "feature-card",
+                              "linkLabel": "Open library"
+                            },
+                            {
+                              "description": "Pick send windows that match recipient time zones.",
+                              "title": "Send-time scheduling",
+                              "linkLabel": "Schedule",
+                              "type": "feature-card",
+                              "icon": "clock"
+                            }
+                          ],
                           "direction": "horizontal"
+                        },
+                        {
+                          "type": "install-box",
+                          "command": "npx almadar broadcast --new",
+                          "label": "Author a broadcast from the CLI"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "event": "REQUEST_DELETE",
                               "variant": "danger",
-                              "label": "Delete"
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE"
                             }
                           ],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "name",
                               "variant": "h4",
                               "label": "Name",
-                              "icon": "send"
+                              "icon": "send",
+                              "name": "name"
                             },
                             {
                               "name": "subject",
-                              "label": "Subject",
-                              "variant": "body"
+                              "variant": "body",
+                              "label": "Subject"
                             },
                             {
                               "name": "segmentName",
-                              "label": "Segment",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Segment"
                             },
                             {
                               "label": "Template",
@@ -364,20 +495,21 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "label": "Scheduled",
-                              "name": "scheduledAt"
+                              "name": "scheduledAt",
+                              "variant": "caption"
                             },
                             {
+                              "variant": "badge",
                               "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "label": "Status"
                             }
                           ]
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -391,36 +523,36 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
+                          "name": "alert-triangle",
                           "color": "destructive",
-                          "type": "icon",
-                          "name": "alert-triangle"
+                          "type": "icon"
                         },
                         {
-                          "content": "Failed to load broadcasts",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load broadcasts"
                         },
                         {
+                          "variant": "body",
                           "type": "typography",
                           "color": "muted",
-                          "content": "@payload.error",
-                          "variant": "body"
+                          "content": "@payload.error"
                         },
                         {
                           "label": "Retry",
-                          "action": "INIT",
+                          "variant": "primary",
                           "icon": "rotate-ccw",
                           "type": "button",
-                          "variant": "primary"
+                          "action": "INIT"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -435,8 +567,8 @@
                     "BroadcastDraft",
                     {
                       "emit": {
-                        "failure": "BroadcastDraftLoadFailed",
-                        "success": "BroadcastDraftLoaded"
+                        "success": "BroadcastDraftLoaded",
+                        "failure": "BroadcastDraftLoadFailed"
                       }
                     }
                   ],
@@ -459,8 +591,8 @@
                     "BroadcastDraft",
                     {
                       "emit": {
-                        "failure": "BroadcastDraftLoadFailed",
-                        "success": "BroadcastDraftLoaded"
+                        "success": "BroadcastDraftLoaded",
+                        "failure": "BroadcastDraftLoadFailed"
                       }
                     }
                   ],
@@ -482,7 +614,6 @@
           "name": "BroadcastDraftCreate",
           "linkedEntity": "BroadcastDraft",
           "config": {
-            "title": "New Broadcast",
             "mode": "create",
             "icon": "plus-circle",
             "fields": [
@@ -491,7 +622,8 @@
               "templateId",
               "subject",
               "scheduledAt"
-            ]
+            ],
+            "title": "New Broadcast"
           },
           "events": {
             "OPEN": "CREATE"
@@ -512,10 +644,10 @@
           "name": "BroadcastDraftDelete",
           "linkedEntity": "BroadcastDraft",
           "config": {
-            "title": "Delete Draft",
-            "alertMessage": "This will discard the draft.",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "alertMessage": "This will discard the draft.",
+            "icon": "alert-triangle",
+            "title": "Delete Draft"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",

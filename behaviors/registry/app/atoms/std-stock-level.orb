@@ -186,22 +186,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading stock levels…",
-                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading stock levels…",
+                          "variant": "caption"
                         }
-                      ],
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -215,11 +215,11 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -230,62 +230,136 @@
                               "type": "typography",
                               "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "items": [
+                            {
+                              "src": "https://picsum.photos/seed/sku1/800/400",
+                              "alt": "Featured SKU 1"
+                            },
+                            {
+                              "src": "https://picsum.photos/seed/sku2/800/400",
+                              "alt": "Featured SKU 2"
+                            },
+                            {
+                              "alt": "Featured SKU 3",
+                              "src": "https://picsum.photos/seed/sku3/800/400"
+                            }
+                          ],
+                          "type": "carousel",
+                          "showDots": true,
+                          "showArrows": true,
+                          "autoPlayInterval": 5000.0,
+                          "autoPlay": true,
+                          "loop": true
+                        },
+                        {
+                          "variant": "primary",
+                          "tags": [
+                            {
+                              "label": "Electronics"
+                            },
+                            {
+                              "label": "Apparel"
+                            },
+                            {
+                              "label": "Home Goods"
+                            },
+                            {
+                              "label": "Grocery"
+                            },
+                            {
+                              "label": "Outdoor"
+                            },
+                            {
+                              "label": "Books"
+                            }
+                          ],
+                          "type": "tag-cloud"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Total SKUs",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Reorder Threshold",
+                              "value": 0.0
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "On Hand",
+                              "value": 0.0
+                            }
+                          ],
+                          "cols": 3.0,
+                          "type": "simple-grid"
+                        },
+                        {
                           "cols": 1.0,
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "label": "SKU",
+                              "name": "sku",
                               "variant": "caption",
-                              "name": "sku"
+                              "label": "SKU"
                             },
                             {
-                              "label": "Product",
                               "name": "productName",
+                              "label": "Product",
                               "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "locationId",
-                              "label": "Location",
+                              "label": "Location"
+                            },
+                            {
+                              "name": "onHand",
+                              "label": "On Hand",
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
-                              "name": "onHand",
-                              "label": "On Hand"
-                            },
-                            {
-                              "variant": "caption",
                               "name": "reorderPoint",
-                              "label": "Reorder At"
+                              "label": "Reorder At",
+                              "variant": "caption"
                             }
                           ],
-                          "type": "data-grid",
-                          "gap": "sm",
                           "itemActions": [
                             {
-                              "variant": "primary",
+                              "event": "ADJUST_STOCK",
                               "icon": "sliders",
                               "label": "Adjust",
-                              "event": "ADJUST_STOCK"
+                              "variant": "primary"
                             },
                             {
-                              "event": "RECOUNT",
-                              "label": "Recount",
+                              "variant": "ghost",
                               "icon": "clipboard-check",
-                              "variant": "ghost"
+                              "event": "RECOUNT",
+                              "label": "Recount"
                             }
-                          ],
-                          "entity": "@payload.data"
+                          ]
+                        },
+                        {
+                          "hasMore": true,
+                          "threshold": "200px",
+                          "isLoading": false,
+                          "type": "infinite-scroll-sentinel",
+                          "loadMoreEvent": "INIT"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -299,8 +373,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -320,9 +394,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
                       "message": "Stock adjustment requested",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -341,9 +415,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
+                      "message": "Recount scheduled",
                       "type": "alert",
-                      "message": "Recount scheduled"
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -358,8 +432,8 @@
                     "StockLevel",
                     {
                       "emit": {
-                        "success": "StockLevelLoaded",
-                        "failure": "StockLevelLoadFailed"
+                        "failure": "StockLevelLoadFailed",
+                        "success": "StockLevelLoaded"
                       }
                     }
                   ],

@@ -212,47 +212,97 @@
                     "render-ui",
                     "main",
                     {
-                      "entity": "@payload.data",
-                      "itemActions": [
+                      "type": "stack",
+                      "children": [
                         {
-                          "variant": "primary",
-                          "event": "ACTIVATE_TENANT",
-                          "label": "Activate"
+                          "type": "stack",
+                          "children": [
+                            {
+                              "mapWidth": 1000.0,
+                              "tiles": [],
+                              "type": "mini-map",
+                              "units": [],
+                              "width": 120.0,
+                              "height": 80.0,
+                              "mapHeight": 1000.0
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "users",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h3",
+                                  "type": "typography",
+                                  "content": "@config.title"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center"
                         },
                         {
-                          "event": "MOVE_OUT",
-                          "variant": "danger",
-                          "label": "Move Out"
+                          "type": "map-view",
+                          "zoom": 10.0,
+                          "height": "240px",
+                          "markers": []
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "name": "name",
+                              "label": "Name"
+                            },
+                            {
+                              "name": "email",
+                              "label": "Email",
+                              "variant": "body"
+                            },
+                            {
+                              "name": "phone",
+                              "label": "Phone",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            },
+                            {
+                              "name": "moveInDate",
+                              "label": "Move-In",
+                              "variant": "caption"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "ACTIVATE_TENANT",
+                              "variant": "primary",
+                              "label": "Activate"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Move Out",
+                              "event": "MOVE_OUT"
+                            }
+                          ]
                         }
                       ],
-                      "type": "data-grid",
-                      "fields": [
-                        {
-                          "label": "Name",
-                          "name": "name",
-                          "variant": "h4"
-                        },
-                        {
-                          "name": "email",
-                          "label": "Email",
-                          "variant": "body"
-                        },
-                        {
-                          "name": "phone",
-                          "label": "Phone",
-                          "variant": "caption"
-                        },
-                        {
-                          "variant": "badge",
-                          "name": "status",
-                          "label": "Status"
-                        },
-                        {
-                          "variant": "caption",
-                          "label": "Move-In",
-                          "name": "moveInDate"
-                        }
-                      ]
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -266,10 +316,10 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
-                      "type": "alert",
+                      "message": "@payload.error",
                       "title": "Failed to load tenants",
-                      "message": "@payload.error"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -318,8 +368,8 @@
                     "Tenant",
                     {
                       "emit": {
-                        "failure": "TenantLoadFailed",
-                        "success": "TenantLoaded"
+                        "success": "TenantLoaded",
+                        "failure": "TenantLoadFailed"
                       }
                     }
                   ]

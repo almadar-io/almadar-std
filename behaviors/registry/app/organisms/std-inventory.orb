@@ -107,42 +107,42 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "InventoryAppLayout",
           "config": {
-            "contentTrait": "@trait.InventoryCatalog",
-            "appName": "Inventory",
+            "notificationClickEvent": "INVENTORY_NOTIFICATIONS_OPEN",
             "searchEvent": "INVENTORY_SEARCH",
             "navItems": [
               {
-                "label": "Items",
                 "icon": "package",
+                "label": "Items",
                 "href": "/inventory"
               },
               {
-                "href": "/stock-adjustments",
-                "label": "Adjustments",
-                "icon": "sliders"
-              },
-              {
+                "icon": "package",
                 "label": "Stock Levels",
-                "href": "/stock",
-                "icon": "layers"
+                "href": "/stock-levels"
               },
               {
-                "icon": "warehouse",
                 "label": "Warehouses",
+                "icon": "warehouse",
                 "href": "/warehouses"
               },
               {
+                "icon": "refresh-ccw",
                 "label": "Reorder Rules",
-                "href": "/reorder-rules",
-                "icon": "repeat"
+                "href": "/reorder-rules"
+              },
+              {
+                "icon": "edit",
+                "href": "/adjustments",
+                "label": "Adjustments"
               }
             ],
+            "appName": "Inventory Management",
             "notifications": [],
-            "notificationClickEvent": "INVENTORY_NOTIFICATIONS_OPEN"
+            "contentTrait": "@trait.InventoryCatalog"
           },
           "events": {
-            "NOTIFY_CLICK": "INVENTORY_NOTIFICATIONS_OPEN",
-            "SEARCH": "INVENTORY_SEARCH"
+            "SEARCH": "INVENTORY_SEARCH",
+            "NOTIFY_CLICK": "INVENTORY_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -226,58 +226,59 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "package"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Inventory Items",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack"
+                              "align": "center"
                             },
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm",
                               "children": [
                                 {
+                                  "icon": "plus",
+                                  "label": "New Item",
                                   "action": "CREATE",
                                   "variant": "primary",
-                                  "label": "New Item",
-                                  "icon": "plus",
                                   "type": "button"
                                 }
                               ]
                             }
-                          ],
-                          "justify": "between",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.InventorySearch",
                             "@trait.InventoryFilter"
                           ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
                           "align": "center"
                         },
                         "@trait.InventoryStats",
@@ -287,7 +288,6 @@
                         },
                         "@trait.InventoryBrowseList"
                       ],
-                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -307,34 +307,34 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
                           "content": "No notifications",
-                          "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "You're all caught up."
                         },
                         {
                           "label": "Back to inventory",
-                          "action": "INIT",
                           "type": "button",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "action": "INIT"
                         }
                       ],
-                      "className": "py-8",
-                      "type": "stack"
+                      "gap": "md",
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -358,13 +358,13 @@
             "filters": [
               {
                 "field": "status",
-                "label": "Status",
-                "filterType": "select",
                 "options": [
                   "active",
                   "discontinued",
                   "draft"
-                ]
+                ],
+                "label": "Status",
+                "filterType": "select"
               }
             ],
             "event": "INVENTORY_FILTER"
@@ -374,20 +374,20 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "InventoryStats",
           "config": {
+            "title": "Inventory",
             "metrics": [
               {
+                "variant": "primary",
                 "icon": "package",
                 "aggregation": "count",
                 "format": "number",
-                "variant": "primary",
                 "label": "Total SKUs"
               },
               {
-                "icon": "check-circle",
                 "aggregation": "count",
-                "format": "number",
-                "variant": "success",
                 "label": "Active",
+                "variant": "success",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -396,12 +396,15 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "format": "number"
               },
               {
                 "icon": "circle-off",
+                "aggregation": "count",
                 "variant": "warning",
                 "format": "number",
+                "label": "Discontinued",
                 "filter": [
                   "fn",
                   "row",
@@ -410,12 +413,9 @@
                     "@row.status",
                     "discontinued"
                   ]
-                ],
-                "aggregation": "count",
-                "label": "Discontinued"
+                ]
               }
-            ],
-            "title": "Inventory"
+            ]
           },
           "listens": [
             {
@@ -432,13 +432,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "InventoryGraphs",
           "config": {
-            "showLegend": false,
-            "chartType": "bar",
-            "subtitle": "SKU distribution across categories",
-            "categoryField": "category",
-            "height": 240.0,
             "title": "Items by Category",
-            "aggregation": "count"
+            "aggregation": "count",
+            "subtitle": "SKU distribution across categories",
+            "height": 240.0,
+            "showLegend": false,
+            "categoryField": "category",
+            "chartType": "bar"
           },
           "listens": [
             {
@@ -456,8 +456,31 @@
           "name": "InventoryBrowseList",
           "linkedEntity": "InventoryItem",
           "config": {
-            "gap": "sm",
+            "fields": [
+              {
+                "icon": "tag",
+                "variant": "h4",
+                "name": "sku"
+              },
+              {
+                "name": "name",
+                "variant": "body"
+              },
+              {
+                "name": "category",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "defaultUnitCost",
+                "variant": "caption"
+              }
+            ],
             "cols": 1.0,
+            "gap": "sm",
             "itemActions": [
               {
                 "event": "VIEW",
@@ -471,31 +494,8 @@
               },
               {
                 "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
-              }
-            ],
-            "fields": [
-              {
-                "name": "sku",
-                "variant": "h4",
-                "icon": "tag"
-              },
-              {
-                "name": "name",
-                "variant": "body"
-              },
-              {
-                "variant": "caption",
-                "name": "category"
-              },
-              {
-                "name": "status",
-                "variant": "badge"
-              },
-              {
-                "variant": "caption",
-                "name": "defaultUnitCost"
+                "variant": "danger",
+                "label": "Delete"
               }
             ]
           },
@@ -547,6 +547,8 @@
           "name": "InventoryCreate",
           "linkedEntity": "InventoryItem",
           "config": {
+            "mode": "create",
+            "title": "New Item",
             "fields": [
               "sku",
               "name",
@@ -554,9 +556,7 @@
               "defaultUnitCost",
               "status"
             ],
-            "icon": "plus-circle",
-            "mode": "create",
-            "title": "New Item"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -577,7 +577,6 @@
           "name": "InventoryEdit",
           "linkedEntity": "InventoryItem",
           "config": {
-            "mode": "edit",
             "fields": [
               "sku",
               "name",
@@ -585,6 +584,7 @@
               "defaultUnitCost",
               "status"
             ],
+            "mode": "edit",
             "icon": "edit",
             "title": "Edit Item"
           },
@@ -614,9 +614,9 @@
               "defaultUnitCost",
               "status"
             ],
-            "title": "View Item",
             "icon": "eye",
-            "mode": "edit"
+            "mode": "edit",
+            "title": "View Item"
           },
           "events": {
             "OPEN": "VIEW"
@@ -643,8 +643,8 @@
             "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -881,6 +881,808 @@
             },
             {
               "ref": "InventoryPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "StockLevelPanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-stock-level",
+          "as": "StockLevel"
+        }
+      ],
+      "entity": {
+        "name": "StockLevel",
+        "collection": "stocklevels",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "productName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "locationId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "onHand",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reserved",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reorderPoint",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lastCounted",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "StockLevelAppLayout",
+          "config": {
+            "notifications": [],
+            "navItems": [
+              {
+                "label": "Items",
+                "href": "/inventory",
+                "icon": "package"
+              },
+              {
+                "href": "/stock-levels",
+                "icon": "package",
+                "label": "Stock Levels"
+              },
+              {
+                "href": "/warehouses",
+                "label": "Warehouses",
+                "icon": "warehouse"
+              },
+              {
+                "href": "/reorder-rules",
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules"
+              },
+              {
+                "icon": "edit",
+                "label": "Adjustments",
+                "href": "/adjustments"
+              }
+            ],
+            "searchEvent": "STOCK_LEVEL_SEARCH",
+            "contentTrait": "@trait.StockLevelPanel",
+            "appName": "Inventory Management",
+            "notificationClickEvent": "STOCK_LEVEL_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "NOTIFY_CLICK": "STOCK_LEVEL_NOTIFICATIONS_OPEN",
+            "SEARCH": "STOCK_LEVEL_SEARCH"
+          }
+        },
+        {
+          "name": "StockLevelPanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "package"
+                            },
+                            {
+                              "content": "Stock Levels",
+                              "variant": "h2",
+                              "type": "typography"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.StockLevelView"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "StockLevel.traits.StockLevelLedger",
+          "name": "StockLevelView",
+          "config": {
+            "title": "Stock Levels"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "StockLevelsPage",
+          "path": "/stock-levels",
+          "traits": [
+            {
+              "ref": "StockLevelAppLayout"
+            },
+            {
+              "ref": "StockLevelPanel"
+            },
+            {
+              "ref": "StockLevelView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WarehousePanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-warehouse",
+          "as": "Warehouse"
+        }
+      ],
+      "entity": {
+        "name": "Warehouse",
+        "collection": "warehouses",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "code",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "type",
+            "type": "string",
+            "default": "warehouse",
+            "values": [
+              "warehouse",
+              "store",
+              "transit"
+            ]
+          },
+          {
+            "name": "isActive",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "totalSkus",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "WarehouseAppLayout",
+          "config": {
+            "notifications": [],
+            "navItems": [
+              {
+                "label": "Items",
+                "icon": "package",
+                "href": "/inventory"
+              },
+              {
+                "icon": "package",
+                "label": "Stock Levels",
+                "href": "/stock-levels"
+              },
+              {
+                "label": "Warehouses",
+                "href": "/warehouses",
+                "icon": "warehouse"
+              },
+              {
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules",
+                "href": "/reorder-rules"
+              },
+              {
+                "label": "Adjustments",
+                "icon": "edit",
+                "href": "/adjustments"
+              }
+            ],
+            "appName": "Inventory Management",
+            "contentTrait": "@trait.WarehousePanel",
+            "searchEvent": "WAREHOUSE_SEARCH",
+            "notificationClickEvent": "WAREHOUSE_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "SEARCH": "WAREHOUSE_SEARCH",
+            "NOTIFY_CLICK": "WAREHOUSE_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "WarehousePanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "warehouse"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Warehouses"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.WarehouseView"
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Warehouse.traits.WarehouseDirectory",
+          "name": "WarehouseView",
+          "config": {
+            "title": "Locations"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "WarehousesPage",
+          "path": "/warehouses",
+          "traits": [
+            {
+              "ref": "WarehouseAppLayout"
+            },
+            {
+              "ref": "WarehousePanel"
+            },
+            {
+              "ref": "WarehouseView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ReorderRulePanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-reorder-rule",
+          "as": "ReorderRule"
+        }
+      ],
+      "entity": {
+        "name": "ReorderRule",
+        "collection": "reorderrules",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "locationId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "thresholdQty",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reorderQty",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "vendor",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "leadTimeDays",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "isActive",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "ReorderRuleAppLayout",
+          "config": {
+            "notifications": [],
+            "notificationClickEvent": "REORDER_RULE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.ReorderRulePanel",
+            "searchEvent": "REORDER_RULE_SEARCH",
+            "navItems": [
+              {
+                "icon": "package",
+                "label": "Items",
+                "href": "/inventory"
+              },
+              {
+                "label": "Stock Levels",
+                "href": "/stock-levels",
+                "icon": "package"
+              },
+              {
+                "href": "/warehouses",
+                "icon": "warehouse",
+                "label": "Warehouses"
+              },
+              {
+                "icon": "refresh-ccw",
+                "href": "/reorder-rules",
+                "label": "Reorder Rules"
+              },
+              {
+                "href": "/adjustments",
+                "label": "Adjustments",
+                "icon": "edit"
+              }
+            ],
+            "appName": "Inventory Management"
+          },
+          "events": {
+            "NOTIFY_CLICK": "REORDER_RULE_NOTIFICATIONS_OPEN",
+            "SEARCH": "REORDER_RULE_SEARCH"
+          }
+        },
+        {
+          "name": "ReorderRulePanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "refresh-ccw"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Reorder Rules"
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.ReorderRuleView"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "ReorderRule.traits.ReorderRuleManager",
+          "name": "ReorderRuleView",
+          "config": {
+            "title": "Reorder Rules"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ReorderRulesPage",
+          "path": "/reorder-rules",
+          "traits": [
+            {
+              "ref": "ReorderRuleAppLayout"
+            },
+            {
+              "ref": "ReorderRulePanel"
+            },
+            {
+              "ref": "ReorderRuleView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "StockAdjustmentPanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-stock-adjustment",
+          "as": "StockAdjustment"
+        }
+      ],
+      "entity": {
+        "name": "StockAdjustment",
+        "collection": "stockadjustments",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "stockLevelId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "warehouseId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "warehouseName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "quantityDelta",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "default": "manual",
+            "values": [
+              "manual",
+              "damaged",
+              "transfer_in",
+              "transfer_out",
+              "shrinkage",
+              "recount"
+            ]
+          },
+          {
+            "name": "adjustedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "adjustedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "StockAdjustmentAppLayout",
+          "config": {
+            "contentTrait": "@trait.StockAdjustmentPanel",
+            "navItems": [
+              {
+                "icon": "package",
+                "label": "Items",
+                "href": "/inventory"
+              },
+              {
+                "href": "/stock-levels",
+                "icon": "package",
+                "label": "Stock Levels"
+              },
+              {
+                "label": "Warehouses",
+                "href": "/warehouses",
+                "icon": "warehouse"
+              },
+              {
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules",
+                "href": "/reorder-rules"
+              },
+              {
+                "href": "/adjustments",
+                "label": "Adjustments",
+                "icon": "edit"
+              }
+            ],
+            "notificationClickEvent": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN",
+            "appName": "Inventory Management",
+            "notifications": [],
+            "searchEvent": "STOCK_ADJUSTMENT_SEARCH"
+          },
+          "events": {
+            "SEARCH": "STOCK_ADJUSTMENT_SEARCH",
+            "NOTIFY_CLICK": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "StockAdjustmentPanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "edit",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Stock Adjustments"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.StockAdjustmentBrowse"
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "StockAdjustment.traits.StockAdjustmentBrowse",
+          "name": "StockAdjustmentBrowse"
+        },
+        {
+          "ref": "StockAdjustment.traits.StockAdjustmentCreate",
+          "name": "StockAdjustmentCreate"
+        },
+        {
+          "ref": "StockAdjustment.traits.StockAdjustmentDelete",
+          "name": "StockAdjustmentDelete"
+        },
+        {
+          "ref": "StockAdjustment.traits.StockAdjustmentPersistor",
+          "name": "StockAdjustmentPersistor"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AdjustmentsPage",
+          "path": "/adjustments",
+          "traits": [
+            {
+              "ref": "StockAdjustmentAppLayout"
+            },
+            {
+              "ref": "StockAdjustmentPanel"
+            },
+            {
+              "ref": "StockAdjustmentBrowse"
+            },
+            {
+              "ref": "StockAdjustmentCreate"
+            },
+            {
+              "ref": "StockAdjustmentDelete"
+            },
+            {
+              "ref": "StockAdjustmentPersistor"
             }
           ]
         }

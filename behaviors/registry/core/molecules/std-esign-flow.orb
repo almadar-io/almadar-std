@@ -338,16 +338,16 @@
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading signature requests…",
                           "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Loading signature requests…"
+                          "variant": "caption"
                         }
                       ],
                       "type": "stack",
-                      "align": "center",
                       "className": "py-12",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -361,17 +361,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
-                          "justify": "between",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
@@ -379,49 +377,151 @@
                                 },
                                 {
                                   "content": "Signature Requests",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "md"
+                              "type": "stack"
                             },
                             {
-                              "type": "button",
-                              "action": "CREATE",
-                              "icon": "plus",
                               "variant": "primary",
+                              "type": "button",
+                              "icon": "plus",
+                              "action": "CREATE",
                               "label": "New Signature Request"
                             }
-                          ]
+                          ],
+                          "justify": "between"
+                        },
+                        {
+                          "coverImageUrl": "https://picsum.photos/seed/esign-cover/1200/400",
+                          "title": "Document Bundle",
+                          "type": "book-cover-page",
+                          "subtitle": "Pending signature review",
+                          "author": "Legal Operations"
+                        },
+                        {
+                          "currentChapterId": "ch-a",
+                          "parts": [
+                            {
+                              "id": "part-1",
+                              "title": "Pending",
+                              "chapters": [
+                                {
+                                  "id": "ch-a",
+                                  "title": "Awaiting Recipient"
+                                },
+                                {
+                                  "title": "Awaiting Counter-Signer",
+                                  "id": "ch-b"
+                                }
+                              ]
+                            },
+                            {
+                              "chapters": [
+                                {
+                                  "id": "ch-c",
+                                  "title": "Signed"
+                                },
+                                {
+                                  "title": "Declined",
+                                  "id": "ch-d"
+                                }
+                              ],
+                              "title": "Completed",
+                              "id": "part-2"
+                            }
+                          ],
+                          "type": "book-table-of-contents"
+                        },
+                        {
+                          "data": [
+                            {
+                              "title": "Master Services Agreement",
+                              "id": "doc-1"
+                            },
+                            {
+                              "title": "Statement of Work",
+                              "id": "doc-2"
+                            },
+                            {
+                              "id": "doc-3",
+                              "title": "Non-Disclosure Agreement"
+                            }
+                          ],
+                          "type": "book-viewer",
+                          "page": 1.0,
+                          "pageSize": 3.0,
+                          "totalCount": 3.0
+                        },
+                        {
+                          "language": "json",
+                          "title": "Sample envelope payload",
+                          "code": "document MSA-2026.pdf to alex@example.com status sent",
+                          "type": "code-example",
+                          "copyable": true
+                        },
+                        {
+                          "showLanguageBadge": true,
+                          "code": "POST /api/esign/send",
+                          "showCopyButton": true,
+                          "type": "code-block",
+                          "language": "http"
+                        },
+                        {
+                          "code": "Signature recipient alex@example.com doc MSA-2026.pdf",
+                          "language": "xml",
+                          "title": "Document structure",
+                          "type": "doc-code-block",
+                          "showLineNumbers": true
+                        },
+                        {
+                          "wordWrap": false,
+                          "type": "code-viewer",
+                          "showCopy": true,
+                          "showLineNumbers": true,
+                          "language": "javascript",
+                          "code": "sendEnvelope doc recipient via api esign send"
+                        },
+                        {
+                          "defaultExpanded": false,
+                          "data": {
+                            "recipients": 2.0,
+                            "kind": "envelope",
+                            "status": "pending",
+                            "documents": 3.0
+                          },
+                          "type": "code-view",
+                          "label": "Inspect envelope JSON"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "label": "Resend",
-                              "event": "RESEND_REQUEST",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "RESEND_REQUEST"
                             },
                             {
-                              "variant": "danger",
                               "label": "Cancel",
+                              "variant": "danger",
                               "event": "REQUEST_DELETE"
                             }
                           ],
-                          "type": "data-grid",
                           "fields": [
                             {
+                              "variant": "h4",
                               "name": "documentName",
-                              "icon": "file-text",
                               "label": "Document",
-                              "variant": "h4"
+                              "icon": "file-text"
                             },
                             {
-                              "label": "Recipient",
+                              "name": "recipientName",
                               "variant": "body",
-                              "name": "recipientName"
+                              "label": "Recipient"
                             },
                             {
                               "label": "Email",
@@ -429,19 +529,20 @@
                               "name": "recipientEmail"
                             },
                             {
-                              "label": "Status",
                               "variant": "badge",
-                              "name": "status"
+                              "name": "status",
+                              "label": "Status"
                             },
                             {
-                              "variant": "caption",
                               "name": "sentAt",
-                              "label": "Sent"
+                              "label": "Sent",
+                              "variant": "caption"
                             }
                           ],
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg"
                     }
@@ -457,35 +558,35 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
+                          "name": "alert-triangle",
                           "color": "destructive",
-                          "type": "icon",
-                          "name": "alert-triangle"
+                          "type": "icon"
                         },
                         {
-                          "content": "Failed to load signature requests",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load signature requests"
                         },
                         {
-                          "variant": "body",
+                          "content": "@payload.error",
                           "type": "typography",
                           "color": "muted",
-                          "content": "@payload.error"
+                          "variant": "body"
                         },
                         {
-                          "label": "Retry",
+                          "icon": "rotate-ccw",
                           "action": "INIT",
                           "type": "button",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "label": "Retry"
                         }
                       ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -501,8 +602,8 @@
                     "SignatureSession",
                     {
                       "emit": {
-                        "success": "SignatureSessionLoaded",
-                        "failure": "SignatureSessionLoadFailed"
+                        "failure": "SignatureSessionLoadFailed",
+                        "success": "SignatureSessionLoaded"
                       }
                     }
                   ],
@@ -525,8 +626,8 @@
                     "SignatureSession",
                     {
                       "emit": {
-                        "success": "SignatureSessionLoaded",
-                        "failure": "SignatureSessionLoadFailed"
+                        "failure": "SignatureSessionLoadFailed",
+                        "success": "SignatureSessionLoaded"
                       }
                     }
                   ],
@@ -548,16 +649,16 @@
           "name": "SignatureSessionCreate",
           "linkedEntity": "SignatureSession",
           "config": {
-            "mode": "create",
+            "icon": "file-signature",
             "title": "New Signature Request",
+            "openButtonLabel": "New Signature Request",
             "fields": [
               "documentId",
               "recipientName",
               "recipientEmail",
               "requesterName"
             ],
-            "icon": "file-signature",
-            "openButtonLabel": "New Signature Request"
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -578,14 +679,14 @@
           "name": "SignatureSessionDelete",
           "linkedEntity": "SignatureSession",
           "config": {
-            "alertMessage": "Are you sure you want to cancel this signature request?",
             "confirmLabel": "Cancel Request",
-            "title": "Cancel Signature Request",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "alertMessage": "Are you sure you want to cancel this signature request?",
+            "title": "Cancel Signature Request"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {

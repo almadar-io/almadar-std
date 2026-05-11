@@ -196,22 +196,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
                           "content": "Loading files…",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -225,36 +225,144 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "@config.title",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
-                          "type": "data-grid",
-                          "fields": [
+                          "items": [
                             {
-                              "label": "Name",
-                              "name": "name"
+                              "href": "/",
+                              "label": "Workspace"
                             },
                             {
-                              "name": "folder",
-                              "label": "Folder"
+                              "href": "/files",
+                              "label": "Files"
                             },
                             {
-                              "name": "mimeType",
-                              "label": "Type"
-                            },
-                            {
-                              "name": "sizeBytes",
-                              "label": "Size"
-                            },
-                            {
-                              "name": "uploadedAt",
-                              "label": "Uploaded"
+                              "label": "All Documents"
                             }
                           ],
+                          "type": "doc-breadcrumb"
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "file-tree",
+                              "tree": [
+                                {
+                                  "name": "Contracts",
+                                  "children": [
+                                    {
+                                      "name": "Active.pdf"
+                                    },
+                                    {
+                                      "name": "Archived.pdf"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "name": "HR.docx"
+                                    },
+                                    {
+                                      "name": "Security.md"
+                                    }
+                                  ],
+                                  "name": "Policies"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "name": "Invoice.docx"
+                                    },
+                                    {
+                                      "name": "NDA.pdf"
+                                    }
+                                  ],
+                                  "name": "Templates"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "maxFiles": 5.0,
+                                  "maxSize": 10485760.0,
+                                  "icon": "upload",
+                                  "label": "Drop files here",
+                                  "description": "or click to browse",
+                                  "type": "upload-drop-zone",
+                                  "accept": "*/*"
+                                },
+                                {
+                                  "type": "accordion",
+                                  "items": [
+                                    {
+                                      "title": "Recent Uploads",
+                                      "id": "recent",
+                                      "content": "Files uploaded in the last 7 days."
+                                    },
+                                    {
+                                      "id": "shared",
+                                      "title": "Shared With Me",
+                                      "content": "Files shared by collaborators."
+                                    },
+                                    {
+                                      "id": "starred",
+                                      "content": "Files you have flagged for quick access.",
+                                      "title": "Starred"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "tag-cloud",
+                          "variant": "primary",
+                          "tags": [
+                            {
+                              "label": "Contracts",
+                              "weight": 8.0
+                            },
+                            {
+                              "label": "Policies",
+                              "weight": 6.0
+                            },
+                            {
+                              "weight": 5.0,
+                              "label": "Templates"
+                            },
+                            {
+                              "weight": 3.0,
+                              "label": "Archive"
+                            },
+                            {
+                              "weight": 4.0,
+                              "label": "Drafts"
+                            },
+                            {
+                              "weight": 2.0,
+                              "label": "Public"
+                            }
+                          ]
+                        },
+                        {
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "variant": "primary",
@@ -267,12 +375,39 @@
                               "label": "Archive"
                             }
                           ],
-                          "entity": "@payload.data"
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "name": "name",
+                              "label": "Name"
+                            },
+                            {
+                              "label": "Folder",
+                              "name": "folder"
+                            },
+                            {
+                              "label": "Type",
+                              "name": "mimeType"
+                            },
+                            {
+                              "name": "sizeBytes",
+                              "label": "Size"
+                            },
+                            {
+                              "name": "uploadedAt",
+                              "label": "Uploaded"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "pagination",
+                          "totalItems": 80.0,
+                          "showPageSize": false,
+                          "totalPages": 8.0,
+                          "showTotal": true,
+                          "currentPage": 1.0
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -286,8 +421,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -307,9 +442,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "info",
-                      "message": "Download requested"
+                      "message": "Download requested",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -328,9 +463,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Archive requested",
+                      "type": "alert",
                       "variant": "info",
-                      "type": "alert"
+                      "message": "Archive requested"
                     }
                   ]
                 ]
@@ -354,22 +489,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "align": "center",
                       "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "content": "Loading files…",
                           "variant": "caption",
-                          "content": "Loading files…"
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]

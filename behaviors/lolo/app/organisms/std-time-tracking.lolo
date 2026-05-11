@@ -31,7 +31,7 @@ orbital EmployeeOrbital {
     config: {
       contentTrait: "@trait.EmployeeCatalog",
       appName: "Time Tracking",
-      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "calendar" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable-hours", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "clipboard" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
       searchEvent: "EMPLOYEE_SEARCH",
       notifications: [],
       notificationClickEvent: "EMPLOYEE_NOTIFICATIONS_OPEN"
@@ -258,4 +258,236 @@ orbital EmployeeOrbital {
   }
 
   page "/employees" as EmployeesPage -> EmployeeAppLayout, EmployeeCatalog, EmployeeSearch, EmployeeFilter, EmployeeStats, EmployeeGraphs, EmployeeBrowseList, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete, EmployeePersistor
+}
+
+orbital TimesheetPanelOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses Timesheet from "std/behaviors/std-timesheet"
+
+  entity Timesheet [persistent: timesheets] {
+    id            : string!
+    employeeId    : string!
+    employeeName  : string = ""
+    periodStart   : string!
+    periodEnd     : string!
+    totalHours    : number = 0
+    billableHours : number = 0
+    status        : "draft" | "submitted" | "approved" | "rejected" | "needs-revision" = "draft"
+    submittedAt   : string = ""
+    approvedBy    : string = ""
+    approvedAt    : string = ""
+    notes         : string = ""
+    pendingId     : string = ""
+  }
+
+  trait TimesheetAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.TimesheetPanel",
+      appName: "Time Tracking",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "clipboard" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
+      searchEvent: "TIMESHEET_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TIMESHEET_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TIMESHEET_SEARCH
+      NOTIFY_CLICK: TIMESHEET_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait TimesheetPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "clipboard" },
+            { type: "typography", variant: "h2", content: "Timesheets" }
+          ]},
+          { type: "divider" },
+          "@trait.TimesheetLedgerView"
+        ]})
+    }
+  }
+
+  trait TimesheetLedgerView = Timesheet.traits.TimesheetLedger {
+    config: {
+      title: "Timesheets"
+    }
+  }
+
+  page "/timesheets" as TimesheetsPage -> TimesheetAppLayout, TimesheetPanel, TimesheetLedgerView
+}
+
+orbital TimeEntryPanelOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses TimeEntry from "std/behaviors/std-time-entry"
+
+  entity TimeEntry [persistent: timeentries] {
+    id              : string!
+    timesheetId     : string!
+    projectId       : string = ""
+    projectName     : string = ""
+    taskDescription : string!
+    workDate        : string!
+    hours           : number = 0
+    billable        : boolean = false
+    hourlyRate      : number = 0
+    status          : "draft" | "submitted" | "approved" | "rejected" = "draft"
+    notes           : string = ""
+    pendingId       : string = ""
+  }
+
+  trait TimeEntryAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.TimeEntryPanel",
+      appName: "Time Tracking",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "clipboard" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
+      searchEvent: "TIME_ENTRY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TIME_ENTRY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TIME_ENTRY_SEARCH
+      NOTIFY_CLICK: TIME_ENTRY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait TimeEntryPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "clock" },
+            { type: "typography", variant: "h2", content: "Time Entries" }
+          ]},
+          { type: "divider" },
+          "@trait.TimeEntryLogView"
+        ]})
+    }
+  }
+
+  trait TimeEntryLogView = TimeEntry.traits.TimeEntryLog {
+    config: {
+      title: "Time Entries"
+    }
+  }
+
+  page "/time-entries" as TimeEntriesPage -> TimeEntryAppLayout, TimeEntryPanel, TimeEntryLogView
+}
+
+orbital BillableHourTimeTrackingOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses BillableHour from "std/behaviors/std-billable-hour"
+
+  entity BillableHour [persistent: billablehours] {
+    id            : string!
+    workerId      : string!
+    workerName    : string = ""
+    matterId      : string = ""
+    projectId     : string = ""
+    workDate      : string!
+    hours         : number = 0
+    rate          : number = 0
+    description   : string = ""
+    isBillable    : boolean = true
+    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" = "unbilled"
+  }
+
+  trait BillableHourAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.BillableHourPanel",
+      appName: "Time Tracking",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "clipboard" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
+      searchEvent: "BILLABLE_HOUR_SEARCH",
+      notifications: [],
+      notificationClickEvent: "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: BILLABLE_HOUR_SEARCH
+      NOTIFY_CLICK: BILLABLE_HOUR_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait BillableHourPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "dollar-sign" },
+            { type: "typography", variant: "h2", content: "Billable Hours" }
+          ]},
+          { type: "divider" },
+          "@trait.BillableHourTimesheetView"
+        ]})
+    }
+  }
+
+  trait BillableHourTimesheetView = BillableHour.traits.BillableHourTimesheet {
+    config: {
+      title: "Billable Hours"
+    }
+  }
+
+  page "/billable" as BillablePage -> BillableHourAppLayout, BillableHourPanel, BillableHourTimesheetView
+}
+
+orbital ApprovalRequestPanelOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses ApprovalRequest from "std/behaviors/std-approval-request"
+
+  entity ApprovalRequest [persistent: approvalrequests] {
+    id                : string!
+    title             : string!
+    targetType        : "timesheet" | "expense-report" | "pto-request" | "purchase-order" | "change-order" | "other" = "timesheet"
+    targetId          : string!
+    requestedBy       : string!
+    requestedAt       : string = ""
+    assignedApprover  : string = ""
+    approverDecision  : "pending" | "approved" | "rejected" | "needs-info" = "pending"
+    decidedAt         : string = ""
+    comment           : string = ""
+    status            : "draft" | "submitted" | "approved" | "rejected" | "withdrawn" = "draft"
+    pendingId         : string = ""
+  }
+
+  trait ApprovalRequestAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ApprovalRequestPanel",
+      appName: "Time Tracking",
+      navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Timesheets", href: "/timesheets", icon: "clipboard" }, { label: "Time Entries", href: "/time-entries", icon: "clock" }, { label: "Billable Hours", href: "/billable", icon: "dollar-sign" }, { label: "Approvals", href: "/approvals", icon: "check-circle" }],
+      searchEvent: "APPROVAL_REQUEST_SEARCH",
+      notifications: [],
+      notificationClickEvent: "APPROVAL_REQUEST_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: APPROVAL_REQUEST_SEARCH
+      NOTIFY_CLICK: APPROVAL_REQUEST_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ApprovalRequestPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "check-circle" },
+            { type: "typography", variant: "h2", content: "Approvals" }
+          ]},
+          { type: "divider" },
+          "@trait.ApprovalRequestPipelineView"
+        ]})
+    }
+  }
+
+  trait ApprovalRequestPipelineView = ApprovalRequest.traits.ApprovalRequestPipeline {
+    config: {
+      title: "Approval Requests"
+    }
+  }
+
+  page "/approvals" as ApprovalsPage -> ApprovalRequestAppLayout, ApprovalRequestPanel, ApprovalRequestPipelineView
 }

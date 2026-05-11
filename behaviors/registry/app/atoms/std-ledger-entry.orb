@@ -203,22 +203,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Loading journal entries…"
                         }
                       ],
-                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -232,80 +232,211 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "book-open"
+                              "name": "book-open",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
                               "content": "@config.title",
                               "variant": "h3"
+                            },
+                            {
+                              "content": "Running ledger balance computed from posted debits minus credits.",
+                              "position": "right",
+                              "type": "tooltip",
+                              "children": [
+                                {
+                                  "name": "info",
+                                  "type": "icon"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "items": [
+                            {
+                              "label": "Journal",
+                              "id": "journal"
+                            },
+                            {
+                              "label": "Ledger",
+                              "id": "ledger"
+                            },
+                            {
+                              "id": "reports",
+                              "label": "Reports"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "tabs",
+                          "activeTab": "journal"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "animated": true,
+                              "value": 12480.0,
+                              "type": "score-display",
+                              "label": "Net Balance"
+                            },
+                            {
+                              "color": "muted",
+                              "opacity": 0.35,
+                              "rows": 4.0,
+                              "type": "svg-grid",
+                              "x": 0.0,
+                              "y": 0.0,
+                              "spacing": 24.0,
+                              "cols": 8.0,
+                              "nodeRadius": 2.0
+                            },
+                            {
+                              "strokeWidth": 2.0,
+                              "points": [
+                                {
+                                  "x": 10.0,
+                                  "y": 30.0
+                                },
+                                {
+                                  "y": 30.0,
+                                  "x": 80.0
+                                },
+                                {
+                                  "y": 30.0,
+                                  "x": 160.0
+                                }
+                              ],
+                              "animated": true,
+                              "color": "primary",
+                              "type": "svg-flow"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "minCardWidth": 240.0,
+                          "fields": [
+                            {
+                              "label": "Date",
+                              "variant": "caption",
+                              "name": "entryDate"
+                            },
+                            {
+                              "label": "Account",
+                              "variant": "caption",
+                              "name": "accountName"
+                            },
+                            {
+                              "label": "Debit",
+                              "variant": "caption",
+                              "name": "debit"
+                            },
+                            {
+                              "name": "credit",
+                              "variant": "caption",
+                              "label": "Credit"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "entity-cards",
+                          "gap": "md",
+                          "maxCols": 3.0
+                        },
+                        {
+                          "variant": "card",
+                          "type": "entity-list",
+                          "entity": "@payload.data",
+                          "showDividers": true,
+                          "fields": [
+                            {
+                              "label": "Date",
+                              "name": "entryDate"
+                            },
+                            {
+                              "label": "Account",
+                              "name": "accountName"
+                            },
+                            {
+                              "name": "description",
+                              "label": "Description"
+                            },
+                            {
+                              "label": "Debit",
+                              "name": "debit"
+                            },
+                            {
+                              "name": "credit",
+                              "label": "Credit"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "fields": [
                             {
-                              "label": "Date",
                               "name": "entryDate",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "accountName",
                               "variant": "caption",
-                              "label": "Account"
+                              "label": "Date"
                             },
                             {
+                              "variant": "caption",
+                              "label": "Account",
+                              "name": "accountName"
+                            },
+                            {
+                              "variant": "caption",
                               "name": "description",
-                              "label": "Description",
-                              "variant": "caption"
+                              "label": "Description"
                             },
                             {
                               "variant": "caption",
-                              "name": "debit",
-                              "label": "Debit"
+                              "label": "Debit",
+                              "name": "debit"
                             },
                             {
-                              "label": "Credit",
+                              "variant": "caption",
                               "name": "credit",
-                              "variant": "caption"
+                              "label": "Credit"
                             },
                             {
-                              "name": "isReconciled",
+                              "label": "Reconciled",
                               "variant": "badge",
-                              "label": "Reconciled"
+                              "name": "isReconciled"
                             }
                           ],
-                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Reconcile",
                               "event": "RECONCILE_ENTRY",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Reconcile"
                             },
                             {
-                              "event": "REVERSE_ENTRY",
                               "label": "Reverse",
+                              "event": "REVERSE_ENTRY",
                               "variant": "danger"
                             }
                           ],
                           "type": "data-grid",
+                          "gap": "sm",
+                          "entity": "@payload.data",
                           "cols": 1.0
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -379,8 +510,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

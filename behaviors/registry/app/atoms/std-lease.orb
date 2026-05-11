@@ -193,8 +193,8 @@
                     "Lease",
                     {
                       "emit": {
-                        "success": "LeaseLoaded",
-                        "failure": "LeaseLoadFailed"
+                        "failure": "LeaseLoadFailed",
+                        "success": "LeaseLoaded"
                       }
                     }
                   ],
@@ -202,22 +202,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading leases…",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Loading leases…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -236,26 +236,157 @@
                       "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "opacity": 0.05,
+                          "variant": "star8",
+                          "color": "primary",
+                          "mode": "background",
+                          "type": "geometric-pattern"
+                        },
+                        {
+                          "type": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "file-text"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file-text"
+                                },
+                                {
+                                  "content": "@config.title",
+                                  "type": "typography",
+                                  "variant": "h3"
+                                },
+                                {
+                                  "label": "Active",
+                                  "variant": "success",
+                                  "type": "badge"
+                                }
+                              ]
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "lg",
+                          "type": "split",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "accordion",
+                                  "items": [
+                                    {
+                                      "id": "term",
+                                      "title": "Lease Term",
+                                      "content": "Start to end dates, renewal options, notice period."
+                                    },
+                                    {
+                                      "content": "Monthly rent, security deposit, late fees.",
+                                      "id": "rent",
+                                      "title": "Rent & Fees"
+                                    },
+                                    {
+                                      "title": "Terms & Conditions",
+                                      "id": "terms",
+                                      "content": "Tenant responsibilities, owner obligations, restrictions."
+                                    }
+                                  ]
+                                },
+                                {
+                                  "options": [
+                                    {
+                                      "value": "current",
+                                      "label": "Current Term"
+                                    },
+                                    {
+                                      "value": "next",
+                                      "label": "Renewal Period"
+                                    }
+                                  ],
+                                  "selected": "current",
+                                  "type": "date-range-selector"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "items": [
+                                    {
+                                      "alt": "Property",
+                                      "src": "https://picsum.photos/seed/lease1/800/600"
+                                    },
+                                    {
+                                      "src": "https://picsum.photos/seed/lease2/800/600",
+                                      "alt": "Property"
+                                    },
+                                    {
+                                      "src": "https://picsum.photos/seed/lease3/800/600",
+                                      "alt": "Property"
+                                    },
+                                    {
+                                      "alt": "Property",
+                                      "src": "https://picsum.photos/seed/lease4/800/600"
+                                    }
+                                  ],
+                                  "type": "media-gallery",
+                                  "columns": 2.0,
+                                  "title": "Property photos"
+                                },
+                                {
+                                  "showDots": true,
+                                  "type": "carousel",
+                                  "items": [
+                                    {
+                                      "src": "https://picsum.photos/seed/lease1/1200/800",
+                                      "alt": "Photo 1"
+                                    },
+                                    {
+                                      "src": "https://picsum.photos/seed/lease2/1200/800",
+                                      "alt": "Photo 2"
+                                    },
+                                    {
+                                      "src": "https://picsum.photos/seed/lease3/1200/800",
+                                      "alt": "Photo 3"
+                                    }
+                                  ],
+                                  "showArrows": true
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md"
+                            }
+                          ],
+                          "ratio": "1:1"
+                        },
+                        {
+                          "images": [
+                            {
+                              "src": "https://picsum.photos/seed/lease1/1200/800",
+                              "alt": "Property",
+                              "caption": "Property"
+                            }
+                          ],
+                          "showCounter": true,
+                          "isOpen": false,
+                          "type": "lightbox",
+                          "currentIndex": 0.0
+                        },
+                        {
                           "cols": 1.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "gap": "sm",
                           "itemActions": [
                             {
                               "label": "Renew",
@@ -264,42 +395,39 @@
                             },
                             {
                               "event": "TERMINATE_LEASE",
-                              "variant": "danger",
-                              "label": "Terminate"
+                              "label": "Terminate",
+                              "variant": "danger"
                             }
                           ],
-                          "gap": "sm",
-                          "entity": "@payload.data",
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "variant": "caption",
                               "label": "Tenant",
-                              "name": "tenantName"
+                              "name": "tenantName",
+                              "variant": "caption"
                             },
                             {
                               "name": "unitLabel",
-                              "label": "Unit",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Unit"
                             },
                             {
-                              "name": "startDate",
                               "label": "Start",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "startDate"
                             },
                             {
                               "name": "endDate",
-                              "label": "End",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Monthly Rent",
                               "variant": "caption",
-                              "name": "monthlyRent"
+                              "label": "End"
                             },
                             {
-                              "variant": "badge",
+                              "variant": "caption",
+                              "name": "monthlyRent",
+                              "label": "Monthly Rent"
+                            },
+                            {
                               "name": "status",
+                              "variant": "badge",
                               "label": "Status"
                             }
                           ]
@@ -318,9 +446,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -340,8 +468,8 @@
                     "main",
                     {
                       "message": "Lease renewal requested",
-                      "variant": "success",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -377,8 +505,8 @@
                     "Lease",
                     {
                       "emit": {
-                        "failure": "LeaseLoadFailed",
-                        "success": "LeaseLoaded"
+                        "success": "LeaseLoaded",
+                        "failure": "LeaseLoadFailed"
                       }
                     }
                   ],
@@ -386,8 +514,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

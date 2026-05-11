@@ -344,8 +344,8 @@
                     "JournalTransaction",
                     {
                       "emit": {
-                        "success": "JournalTransactionLoaded",
-                        "failure": "JournalTransactionLoadFailed"
+                        "failure": "JournalTransactionLoadFailed",
+                        "success": "JournalTransactionLoaded"
                       }
                     }
                   ],
@@ -353,22 +353,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
+                          "content": "Loading transactions…",
                           "color": "muted",
-                          "content": "Loading transactions…"
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -382,23 +382,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "book-open"
+                                  "name": "book-open",
+                                  "type": "icon"
                                 },
                                 {
                                   "variant": "h2",
@@ -408,25 +407,96 @@
                               ]
                             },
                             {
-                              "icon": "plus",
-                              "variant": "primary",
                               "type": "button",
+                              "icon": "plus",
                               "label": "New Transaction",
-                              "action": "CREATE"
+                              "action": "CREATE",
+                              "variant": "primary"
+                            }
+                          ]
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "steps": [
+                            {
+                              "id": "draft",
+                              "title": "Draft"
+                            },
+                            {
+                              "title": "Balance Check",
+                              "id": "balance-check"
+                            },
+                            {
+                              "id": "review",
+                              "title": "Review"
+                            },
+                            {
+                              "id": "post",
+                              "title": "Post"
                             }
                           ],
-                          "type": "stack"
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "transition-arrow",
+                          "from": {
+                            "y": 30.0,
+                            "x": 60.0
+                          },
+                          "eventLabel": "POST_TRANSACTION",
+                          "guardHint": "debit == credit",
+                          "to": {
+                            "x": 240.0,
+                            "y": 30.0
+                          },
+                          "isActive": true
+                        },
+                        {
+                          "layoutData": {
+                            "transitions": [
+                              {
+                                "label": "POST",
+                                "from": "draft",
+                                "to": "posted"
+                              },
+                              {
+                                "to": "voided",
+                                "label": "VOID",
+                                "from": "draft"
+                              }
+                            ],
+                            "states": [
+                              {
+                                "y": 40.0,
+                                "id": "draft",
+                                "label": "Draft",
+                                "x": 40.0
+                              },
+                              {
+                                "x": 220.0,
+                                "id": "posted",
+                                "y": 40.0,
+                                "label": "Posted"
+                              },
+                              {
+                                "x": 220.0,
+                                "id": "voided",
+                                "label": "Voided",
+                                "y": 140.0
+                              }
+                            ]
+                          },
+                          "type": "state-machine-view"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "itemActions": [
                             {
+                              "event": "POST_TRANSACTION",
                               "variant": "primary",
-                              "label": "Post",
-                              "event": "POST_TRANSACTION"
+                              "label": "Post"
                             },
                             {
                               "variant": "danger",
@@ -434,10 +504,11 @@
                               "label": "Delete"
                             }
                           ],
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "transactionDate",
                               "label": "Date",
+                              "name": "transactionDate",
                               "variant": "caption"
                             },
                             {
@@ -446,9 +517,9 @@
                               "label": "Description"
                             },
                             {
-                              "name": "debitAccountName",
                               "variant": "caption",
-                              "label": "Debit"
+                              "label": "Debit",
+                              "name": "debitAccountName"
                             },
                             {
                               "name": "creditAccountName",
@@ -456,19 +527,21 @@
                               "label": "Credit"
                             },
                             {
-                              "label": "Amount",
                               "name": "amount",
+                              "label": "Amount",
                               "variant": "badge"
                             },
                             {
-                              "label": "Posted",
+                              "name": "isPosted",
                               "variant": "badge",
-                              "name": "isPosted"
+                              "label": "Posted"
                             }
                           ],
                           "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -482,36 +555,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
+                          "color": "destructive"
                         },
                         {
-                          "content": "Failed to load transactions",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "Failed to load transactions"
                         },
                         {
+                          "content": "@payload.error",
                           "type": "typography",
                           "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.error"
+                          "color": "muted"
                         },
                         {
-                          "variant": "primary",
-                          "label": "Retry",
-                          "type": "button",
                           "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "type": "button",
+                          "label": "Retry",
+                          "action": "INIT",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -573,9 +646,6 @@
           "name": "JournalTransactionCreate",
           "linkedEntity": "JournalTransaction",
           "config": {
-            "title": "New Transaction",
-            "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "transactionDate",
               "description",
@@ -584,7 +654,10 @@
               "amount",
               "referenceType",
               "referenceId"
-            ]
+            ],
+            "title": "New Transaction",
+            "icon": "plus-circle",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -605,10 +678,10 @@
           "name": "JournalTransactionDelete",
           "linkedEntity": "JournalTransaction",
           "config": {
-            "icon": "alert-triangle",
-            "confirmLabel": "Delete",
+            "title": "Delete Transaction",
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Transaction"
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",

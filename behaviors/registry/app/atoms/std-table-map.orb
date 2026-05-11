@@ -381,8 +381,8 @@
                     "TableNode",
                     {
                       "emit": {
-                        "failure": "TableLoadFailed",
-                        "success": "TableLoaded"
+                        "success": "TableLoaded",
+                        "failure": "TableLoadFailed"
                       }
                     }
                   ],
@@ -391,21 +391,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "content": "Loading floor plan…",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Loading floor plan…"
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -420,61 +420,61 @@
                     "main",
                     {
                       "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "layout-grid",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "layout-grid"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
                           "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "onSelect": "SELECT_TABLE",
-                          "type": "positioned-canvas",
-                          "editable": true,
-                          "onMove": "MOVE_TABLE",
+                          "width": "@config.canvasWidth",
+                          "items": "@payload.data",
                           "selectedId": "@entity.id",
                           "height": "@config.canvasHeight",
-                          "items": "@payload.data",
-                          "width": "@config.canvasWidth"
+                          "onSelect": "SELECT_TABLE",
+                          "type": "positioned-canvas",
+                          "onMove": "MOVE_TABLE",
+                          "editable": true
                         },
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "justify": "end",
                           "children": [
                             {
                               "icon": "users",
-                              "action": "SEAT",
+                              "type": "button",
                               "label": "Seat Party",
                               "variant": "primary",
-                              "type": "button"
+                              "action": "SEAT"
                             },
                             {
+                              "action": "CLEAR_TABLE",
                               "label": "Clear Table",
                               "variant": "secondary",
-                              "type": "button",
-                              "action": "CLEAR_TABLE",
-                              "icon": "eraser"
+                              "icon": "eraser",
+                              "type": "button"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -582,10 +582,10 @@
                     "update",
                     "TableNode",
                     {
+                      "partySize": "@payload.partySize",
                       "status": "seated",
                       "serverName": "@payload.serverName",
-                      "id": "@payload.id",
-                      "partySize": "@payload.partySize"
+                      "id": "@payload.id"
                     },
                     {
                       "emit": {
@@ -622,8 +622,8 @@
                     "TableNode",
                     {
                       "id": "@payload.id",
-                      "partySize": 0.0,
-                      "status": "empty"
+                      "status": "empty",
+                      "partySize": 0.0
                     },
                     {
                       "emit": {
@@ -698,8 +698,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -707,13 +707,13 @@
             ]
           },
           "config": {
-            "canvasWidth": {
-              "type": "number",
-              "default": 800.0
-            },
             "title": {
               "type": "string",
               "default": "Floor Plan"
+            },
+            "canvasWidth": {
+              "type": "number",
+              "default": 800.0
             },
             "canvasHeight": {
               "type": "number",

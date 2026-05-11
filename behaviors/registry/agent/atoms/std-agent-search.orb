@@ -188,8 +188,8 @@
                     "AgentSearch",
                     {
                       "emit": {
-                        "failure": "AgentSearchLoadFailed",
-                        "success": "AgentSearchLoaded"
+                        "success": "AgentSearchLoaded",
+                        "failure": "AgentSearchLoadFailed"
                       }
                     }
                   ],
@@ -197,22 +197,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading searches…",
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Loading searches…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -226,87 +226,91 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "justify": "between",
-                          "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
                               "type": "stack",
-                              "align": "center",
-                              "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "search",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "search"
                                 },
                                 {
-                                  "content": "AgentSearch",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "AgentSearch"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "gap": "sm"
                             },
                             {
                               "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "action": "SEARCH",
-                                  "type": "button",
-                                  "label": "Search",
                                   "variant": "primary",
-                                  "icon": "search"
+                                  "icon": "search",
+                                  "type": "button",
+                                  "action": "SEARCH",
+                                  "label": "Search"
                                 },
                                 {
                                   "type": "button",
-                                  "action": "CLEAR",
-                                  "label": "Clear",
                                   "variant": "ghost",
-                                  "icon": "x"
+                                  "icon": "x",
+                                  "action": "CLEAR",
+                                  "label": "Clear"
                                 }
                               ],
                               "type": "stack"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "label": "View",
+                              "variant": "ghost"
+                            }
+                          ],
                           "fields": [
                             {
-                              "icon": "search",
-                              "variant": "h4",
                               "label": "Query",
-                              "name": "query"
+                              "name": "query",
+                              "variant": "h4",
+                              "icon": "search"
                             },
                             {
+                              "label": "Language",
                               "variant": "badge",
                               "name": "language",
                               "colorMap": {
-                                "done": "success",
-                                "inactive": "neutral",
-                                "scheduled": "warning",
-                                "archived": "neutral",
-                                "failed": "destructive",
-                                "completed": "success",
                                 "draft": "warning",
+                                "scheduled": "warning",
+                                "pending": "warning",
+                                "error": "destructive",
                                 "active": "success",
                                 "cancelled": "destructive",
+                                "failed": "destructive",
+                                "completed": "success",
+                                "done": "success",
+                                "archived": "neutral",
                                 "disabled": "neutral",
-                                "pending": "warning",
-                                "error": "destructive"
-                              },
-                              "label": "Language"
+                                "inactive": "neutral"
+                              }
                             },
                             {
                               "variant": "caption",
@@ -314,17 +318,13 @@
                               "label": "Result Count"
                             }
                           ],
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "event": "VIEW",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -338,10 +338,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -349,25 +345,29 @@
                           "color": "destructive"
                         },
                         {
-                          "variant": "h3",
                           "content": "Failed to load searches",
+                          "variant": "h3",
                           "type": "typography"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
                           "variant": "body",
-                          "content": "@payload.error",
-                          "type": "typography"
+                          "content": "@payload.error"
                         },
                         {
-                          "label": "Retry",
                           "type": "button",
+                          "action": "INIT",
+                          "label": "Retry",
                           "variant": "primary",
-                          "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "className": "py-12"
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -406,8 +406,8 @@
                     "AgentSearch",
                     {
                       "emit": {
-                        "failure": "AgentSearchLoadFailed",
-                        "success": "AgentSearchLoaded"
+                        "success": "AgentSearchLoaded",
+                        "failure": "AgentSearchLoadFailed"
                       }
                     }
                   ],
@@ -575,10 +575,10 @@
                     "render-ui",
                     "main",
                     {
-                      "description": "Code Search is ready",
-                      "title": "Code Search",
+                      "type": "empty-state",
                       "icon": "search",
-                      "type": "empty-state"
+                      "title": "Code Search",
+                      "description": "Code Search is ready"
                     }
                   ]
                 ]
@@ -605,8 +605,8 @@
                     "AgentSearch",
                     {
                       "emit": {
-                        "failure": "AgentSearchLoadFailed",
-                        "success": "AgentSearchLoaded"
+                        "success": "AgentSearchLoaded",
+                        "failure": "AgentSearchLoadFailed"
                       }
                     }
                   ],
@@ -614,8 +614,8 @@
                     "emit",
                     "SEARCHED",
                     {
-                      "resultCount": 0.0,
-                      "query": "@payload.query"
+                      "query": "@payload.query",
+                      "resultCount": 0.0
                     }
                   ]
                 ]

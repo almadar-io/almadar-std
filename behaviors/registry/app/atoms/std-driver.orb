@@ -577,21 +577,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "content": "Loading drivers…",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading drivers…"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
+                      "align": "center",
                       "className": "py-12"
                     }
                   ]
@@ -606,30 +606,42 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "truck",
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "content": "@config.title"
                             },
                             {
-                              "label": "New Driver",
+                              "pulse": true,
+                              "type": "status-dot",
+                              "label": "On duty",
+                              "status": "online",
+                              "size": "md"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "On Duty"
+                            },
+                            {
+                              "action": "CREATE",
                               "variant": "primary",
-                              "type": "button",
-                              "action": "CREATE"
+                              "label": "New Driver",
+                              "type": "button"
                             }
                           ],
+                          "type": "stack",
                           "align": "center",
                           "direction": "horizontal"
                         },
@@ -638,7 +650,46 @@
                         },
                         {
                           "type": "data-grid",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "variant": "secondary",
+                              "label": "View"
+                            },
+                            {
+                              "label": "Edit",
+                              "variant": "secondary",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Suspend",
+                              "event": "SUSPEND",
+                              "variant": "secondary"
+                            },
+                            {
+                              "variant": "secondary",
+                              "event": "REINSTATE",
+                              "label": "Reinstate"
+                            },
+                            {
+                              "event": "TERMINATE",
+                              "variant": "danger",
+                              "label": "Terminate"
+                            },
+                            {
+                              "event": "ASSIGN_VEHICLE",
+                              "variant": "primary",
+                              "label": "Assign Vehicle"
+                            },
+                            {
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger",
+                              "label": "Delete"
+                            }
+                          ],
                           "fields": [
                             {
                               "variant": "caption",
@@ -651,9 +702,9 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "licenseClass",
+                              "variant": "badge",
                               "label": "Class",
-                              "variant": "badge"
+                              "name": "licenseClass"
                             },
                             {
                               "name": "licenseExpiresAt",
@@ -661,55 +712,16 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "badge",
+                              "name": "status",
                               "label": "Status",
-                              "name": "status"
+                              "variant": "badge"
                             },
                             {
-                              "variant": "caption",
+                              "label": "Vehicle",
                               "name": "assignedVehicleId",
-                              "label": "Vehicle"
+                              "variant": "caption"
                             }
-                          ],
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "variant": "secondary",
-                              "label": "View"
-                            },
-                            {
-                              "variant": "secondary",
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "variant": "secondary",
-                              "label": "Suspend",
-                              "event": "SUSPEND"
-                            },
-                            {
-                              "label": "Reinstate",
-                              "variant": "secondary",
-                              "event": "REINSTATE"
-                            },
-                            {
-                              "label": "Terminate",
-                              "event": "TERMINATE",
-                              "variant": "danger"
-                            },
-                            {
-                              "variant": "primary",
-                              "label": "Assign Vehicle",
-                              "event": "ASSIGN_VEHICLE"
-                            },
-                            {
-                              "event": "REQUEST_DELETE",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ],
-                          "cols": 1.0
+                          ]
                         }
                       ]
                     }
@@ -751,10 +763,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "align": "center",
+                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
@@ -762,11 +773,12 @@
                         },
                         {
                           "color": "muted",
-                          "variant": "caption",
                           "content": "Refreshing drivers…",
+                          "variant": "caption",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -781,8 +793,8 @@
                     "Driver",
                     {
                       "emit": {
-                        "failure": "DriverLoadFailed",
-                        "success": "DriverLoaded"
+                        "success": "DriverLoaded",
+                        "failure": "DriverLoadFailed"
                       }
                     }
                   ],
@@ -790,22 +802,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Searching drivers…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Searching drivers…",
+                          "type": "typography"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -829,21 +841,21 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Filtering drivers…",
                           "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Filtering drivers…"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
+                      "type": "stack",
                       "className": "py-12"
                     }
                   ]
@@ -906,8 +918,8 @@
                     "main",
                     {
                       "message": "Driver terminated",
-                      "variant": "error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -926,9 +938,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
                       "message": "Vehicle assigned",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -963,9 +975,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "info",
-                      "message": "Viewing driver"
+                      "message": "Viewing driver",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -984,8 +996,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
                       "message": "Editing driver",
+                      "variant": "info",
                       "type": "alert"
                     }
                   ]
@@ -1005,9 +1017,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "warning",
-                      "message": "Delete requested"
+                      "message": "Delete requested",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -1031,8 +1043,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

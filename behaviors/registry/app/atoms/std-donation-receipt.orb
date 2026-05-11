@@ -201,20 +201,20 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading donation receipts…"
+                          "color": "muted",
+                          "content": "Loading donation receipts…",
+                          "variant": "caption"
                         }
                       ]
                     }
@@ -232,61 +232,68 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "receipt",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "receipt"
                             },
                             {
-                              "content": "@config.title",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "stats-grid",
+                          "stats": [
+                            {
+                              "label": "Receipts issued",
+                              "value": "1,248"
+                            },
+                            {
+                              "value": "$482,300",
+                              "label": "Total deductible"
+                            },
+                            {
+                              "value": "2025",
+                              "label": "Tax year"
+                            },
+                            {
+                              "label": "Emailed",
+                              "value": "94%"
+                            }
+                          ],
+                          "columns": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "sm",
-                          "entity": "@payload.data",
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "EMAIL_RECEIPT",
-                              "label": "Email",
-                              "variant": "primary"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Void",
-                              "event": "VOID_RECEIPT"
-                            }
-                          ],
                           "fields": [
                             {
                               "name": "receiptNumber",
-                              "label": "Receipt #",
+                              "variant": "caption",
+                              "label": "Receipt #"
+                            },
+                            {
+                              "label": "Donor",
+                              "name": "donorName",
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
-                              "label": "Donor",
-                              "name": "donorName"
-                            },
-                            {
-                              "variant": "caption",
                               "name": "amount",
-                              "label": "Amount"
+                              "label": "Amount",
+                              "variant": "caption"
                             },
                             {
                               "label": "Date",
-                              "name": "donationDate",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "donationDate"
                             },
                             {
                               "name": "taxYear",
@@ -294,16 +301,31 @@
                               "variant": "caption"
                             },
                             {
+                              "name": "isEmailed",
                               "variant": "badge",
-                              "label": "Emailed",
-                              "name": "isEmailed"
+                              "label": "Emailed"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "label": "Email",
+                              "variant": "primary",
+                              "event": "EMAIL_RECEIPT"
+                            },
+                            {
+                              "label": "Void",
+                              "event": "VOID_RECEIPT",
+                              "variant": "danger"
                             }
                           ]
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -317,9 +339,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -338,9 +360,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
+                      "message": "Receipt emailed",
                       "type": "alert",
-                      "message": "Receipt emailed"
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -359,9 +381,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Receipt voided",
                       "type": "alert",
-                      "variant": "info",
-                      "message": "Receipt voided"
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -376,8 +398,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "success": "DonationReceiptLoaded",
-                        "failure": "DonationReceiptLoadFailed"
+                        "failure": "DonationReceiptLoadFailed",
+                        "success": "DonationReceiptLoaded"
                       }
                     }
                   ],

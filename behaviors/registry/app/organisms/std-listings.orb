@@ -135,27 +135,27 @@
           "name": "ListingAppLayout",
           "config": {
             "appName": "Listings",
+            "searchEvent": "LISTING_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.ListingCatalog",
             "navItems": [
               {
-                "label": "Browse",
+                "icon": "list",
                 "href": "/listings",
-                "icon": "list"
+                "label": "Browse"
               },
               {
-                "href": "/saved",
                 "label": "Saved",
+                "href": "/saved",
                 "icon": "bookmark"
               },
               {
-                "href": "/inquiries",
                 "icon": "message-circle",
+                "href": "/inquiries",
                 "label": "Inquiries"
               }
-            ],
-            "contentTrait": "@trait.ListingCatalog",
-            "searchEvent": "LISTING_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN"
+            ]
           },
           "events": {
             "SEARCH": "LISTING_SEARCH",
@@ -256,55 +256,55 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
+                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
+                          "justify": "between",
                           "children": [
                             {
+                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "list",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "list"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Listings",
-                                  "variant": "h2"
+                                  "content": "Listings"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "type": "stack",
-                              "align": "center"
+                              "gap": "sm"
                             },
                             {
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "icon": "bookmark",
+                                  "type": "button",
                                   "variant": "secondary",
+                                  "icon": "bookmark",
                                   "action": "SAVE_SEARCH",
-                                  "label": "Save Search",
-                                  "type": "button"
+                                  "label": "Save Search"
                                 },
                                 {
-                                  "action": "CREATE",
-                                  "icon": "plus",
-                                  "label": "New Listing",
                                   "type": "button",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "label": "New Listing",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             }
-                          ],
-                          "gap": "md",
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -312,13 +312,13 @@
                         "@trait.ListingGeoSearch",
                         {
                           "type": "stack",
+                          "gap": "md",
                           "align": "start",
-                          "direction": "horizontal",
                           "children": [
                             "@trait.ListingFilter",
                             "@trait.ListingTags"
                           ],
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         "@trait.ListingStats",
                         {
@@ -326,7 +326,7 @@
                         },
                         "@trait.ListingBrowse"
                       ],
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -345,34 +345,34 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-8",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
-                          "content": "No notifications",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "No notifications"
                         },
                         {
-                          "content": "You're all caught up.",
                           "type": "typography",
                           "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "You're all caught up."
                         },
                         {
-                          "variant": "ghost",
                           "type": "button",
-                          "action": "INIT",
-                          "label": "Back to listings"
+                          "label": "Back to listings",
+                          "variant": "ghost",
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-8",
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -385,9 +385,9 @@
           "ref": "GeoSearch.traits.GeoSearchResultSearch",
           "name": "ListingGeoSearch",
           "config": {
-            "placeholder": "Search nearby listings…",
+            "defaultRadiusKm": 25.0,
             "event": "LISTING_GEO_SEARCH",
-            "defaultRadiusKm": 25.0
+            "placeholder": "Search nearby listings…"
           }
         },
         {
@@ -398,8 +398,8 @@
             "filters": [
               {
                 "filterType": "select",
-                "label": "Status",
                 "field": "status",
+                "label": "Status",
                 "options": [
                   "active",
                   "sold",
@@ -428,10 +428,10 @@
           "ref": "Images.traits.UploadedImageUpload",
           "name": "ListingImages",
           "config": {
-            "maxImages": 10.0,
             "accept": "image/*",
-            "title": "Listing Photos",
-            "maxBytesPerImage": 10485760.0
+            "maxBytesPerImage": 10485760.0,
+            "maxImages": 10.0,
+            "title": "Listing Photos"
           }
         },
         {
@@ -441,18 +441,14 @@
             "title": "Listings",
             "metrics": [
               {
-                "aggregation": "count",
                 "label": "Total",
                 "icon": "list",
                 "variant": "primary",
-                "format": "number"
+                "format": "number",
+                "aggregation": "count"
               },
               {
-                "variant": "success",
-                "icon": "check-circle",
-                "aggregation": "count",
                 "format": "number",
-                "label": "Active",
                 "filter": [
                   "fn",
                   "row",
@@ -461,9 +457,16 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "label": "Active",
+                "icon": "check-circle",
+                "aggregation": "count",
+                "variant": "success"
               },
               {
+                "variant": "info",
+                "icon": "tag",
+                "label": "Sold",
                 "filter": [
                   "fn",
                   "row",
@@ -473,19 +476,16 @@
                     "sold"
                   ]
                 ],
-                "label": "Sold",
-                "icon": "tag",
-                "aggregation": "count",
-                "variant": "info",
-                "format": "number"
+                "format": "number",
+                "aggregation": "count"
               },
               {
-                "format": "number",
-                "label": "Avg Price",
                 "icon": "trending-up",
+                "label": "Avg Price",
+                "variant": "warning",
                 "aggregation": "avg",
-                "field": "price",
-                "variant": "warning"
+                "format": "number",
+                "field": "price"
               }
             ]
           },
@@ -505,16 +505,17 @@
           "name": "ListingBrowse",
           "linkedEntity": "Listing",
           "config": {
+            "gap": "sm",
             "itemActions": [
               {
                 "variant": "ghost",
-                "event": "VIEW",
-                "label": "View"
+                "label": "View",
+                "event": "VIEW"
               },
               {
-                "event": "EDIT",
                 "variant": "ghost",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
                 "event": "INQUIRE",
@@ -522,26 +523,24 @@
                 "label": "Inquire"
               },
               {
+                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
+                "variant": "danger"
               }
             ],
-            "cols": 1.0,
-            "gap": "sm",
             "fields": [
               {
+                "variant": "h3",
                 "name": "title",
-                "icon": "list",
-                "variant": "h3"
-              },
-              {
-                "name": "price",
-                "variant": "badge"
+                "icon": "list"
               },
               {
                 "variant": "badge",
-                "name": "status"
+                "name": "price"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "name": "location",
@@ -551,7 +550,8 @@
                 "variant": "caption",
                 "name": "description"
               }
-            ]
+            ],
+            "cols": 1.0
           },
           "listens": [
             {
@@ -601,7 +601,6 @@
           "name": "ListingCreate",
           "linkedEntity": "Listing",
           "config": {
-            "mode": "create",
             "fields": [
               "title",
               "description",
@@ -609,8 +608,9 @@
               "location",
               "status"
             ],
-            "icon": "plus-circle",
-            "title": "New Listing"
+            "title": "New Listing",
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -631,7 +631,6 @@
           "name": "ListingEdit",
           "linkedEntity": "Listing",
           "config": {
-            "mode": "edit",
             "title": "Edit Listing",
             "icon": "edit",
             "fields": [
@@ -640,7 +639,8 @@
               "price",
               "location",
               "status"
-            ]
+            ],
+            "mode": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -661,6 +661,8 @@
           "name": "ListingView",
           "linkedEntity": "Listing",
           "config": {
+            "mode": "edit",
+            "title": "View Listing",
             "fields": [
               "title",
               "description",
@@ -668,9 +670,7 @@
               "location",
               "status"
             ],
-            "icon": "eye",
-            "mode": "edit",
-            "title": "View Listing"
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -691,14 +691,14 @@
           "name": "ListingDelete",
           "linkedEntity": "Listing",
           "config": {
+            "icon": "alert-triangle",
             "title": "Delete Listing",
             "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle"
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -1197,22 +1197,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Loading inquiries…",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Loading inquiries…",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
-                      "className": "py-12"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1226,81 +1226,81 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "justify": "between",
-                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
+                              "gap": "sm",
                               "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "message-circle",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "message-circle"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "Inquiries",
                                   "variant": "h2"
                                 }
-                              ],
-                              "align": "center",
-                              "gap": "sm"
+                              ]
                             },
                             {
+                              "action": "CREATE",
+                              "variant": "primary",
                               "label": "New Inquiry",
                               "icon": "edit",
-                              "variant": "primary",
-                              "type": "button",
-                              "action": "CREATE"
+                              "type": "button"
                             }
                           ],
-                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "gap": "sm",
                           "fields": [
                             {
+                              "variant": "h4",
                               "icon": "message-circle",
-                              "name": "subject",
-                              "variant": "h4"
+                              "name": "subject"
                             },
                             {
                               "name": "message",
                               "variant": "body"
                             },
                             {
-                              "name": "status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "status"
                             },
                             {
+                              "variant": "caption",
                               "name": "createdAt",
-                              "format": "date",
-                              "variant": "caption"
+                              "format": "date"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "variant": "ghost",
+                              "label": "Open"
                             }
                           ],
                           "type": "data-list",
-                          "variant": "card",
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "variant": "ghost",
-                              "event": "VIEW"
-                            }
-                          ],
-                          "gap": "sm"
+                          "variant": "card"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1314,36 +1314,36 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "Failed to load inquiries",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
                           "content": "@payload.error",
-                          "color": "muted",
                           "variant": "body",
+                          "color": "muted",
                           "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "icon": "rotate-ccw",
-                          "action": "INIT",
                           "label": "Retry",
-                          "variant": "primary"
+                          "action": "INIT",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1358,8 +1358,8 @@
                     "Inquiry",
                     {
                       "emit": {
-                        "failure": "InquiryLoadFailed",
-                        "success": "InquiryLoaded"
+                        "success": "InquiryLoaded",
+                        "failure": "InquiryLoadFailed"
                       }
                     }
                   ],
@@ -1405,16 +1405,16 @@
           "name": "InquiryCreate",
           "linkedEntity": "Inquiry",
           "config": {
-            "title": "New Inquiry",
             "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "listingId",
               "subject",
               "message",
               "fromUserId",
               "toUserId"
-            ]
+            ],
+            "icon": "plus-circle",
+            "title": "New Inquiry"
           },
           "events": {
             "OPEN": "CREATE"

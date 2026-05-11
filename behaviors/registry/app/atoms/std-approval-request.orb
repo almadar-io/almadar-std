@@ -602,8 +602,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ],
@@ -611,22 +611,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading approval requests…",
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading approval requests…"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -640,14 +640,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
@@ -655,22 +653,142 @@
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "@config.title",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
-                              "type": "button",
                               "action": "CREATE",
                               "variant": "primary",
-                              "label": "New Approval Request"
+                              "label": "New Approval Request",
+                              "type": "button"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "type": "wizard-progress",
+                          "steps": [
+                            {
+                              "title": "Submitted",
+                              "id": "submitted"
+                            },
+                            {
+                              "id": "review",
+                              "title": "Review"
+                            },
+                            {
+                              "id": "decision",
+                              "title": "Decision"
+                            },
+                            {
+                              "id": "closed",
+                              "title": "Closed"
                             }
                           ]
+                        },
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "currentTurn": 2.0,
+                              "phase": "Review",
+                              "type": "turn-indicator",
+                              "size": "md",
+                              "activeTeam": "Approver",
+                              "maxTurns": 4.0
+                            },
+                            {
+                              "direction": "up",
+                              "showValue": true,
+                              "label": "Approval rate trend",
+                              "type": "trend-indicator",
+                              "value": 12.5,
+                              "size": "md"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "maxTurns": 4.0,
+                          "type": "turn-panel",
+                          "phase": "Review",
+                          "actions": [
+                            {
+                              "label": "Approve",
+                              "event": "APPROVE",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Reject",
+                              "event": "REJECT"
+                            }
+                          ],
+                          "activeTeam": "Approver",
+                          "currentTurn": 2.0
+                        },
+                        {
+                          "fields": [
+                            {
+                              "name": "title",
+                              "label": "Step"
+                            },
+                            {
+                              "label": "Date",
+                              "name": "date"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status"
+                            },
+                            {
+                              "label": "Notes",
+                              "name": "description"
+                            }
+                          ],
+                          "items": [
+                            {
+                              "date": "2026-05-08",
+                              "description": "Request submitted",
+                              "status": "completed",
+                              "id": "submitted",
+                              "title": "Submitted"
+                            },
+                            {
+                              "date": "2026-05-09",
+                              "id": "assigned",
+                              "status": "completed",
+                              "description": "Approver assigned",
+                              "title": "Assigned"
+                            },
+                            {
+                              "title": "Review",
+                              "status": "current",
+                              "description": "Approver reviewing",
+                              "date": "2026-05-11",
+                              "id": "review"
+                            },
+                            {
+                              "id": "decision",
+                              "title": "Decision",
+                              "description": "Pending decision",
+                              "status": "upcoming",
+                              "date": "2026-05-12"
+                            }
+                          ],
+                          "type": "timeline",
+                          "title": "Approval Chronology"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "gap": "sm",
                           "itemActions": [
                             {
                               "label": "View",
@@ -678,51 +796,51 @@
                               "event": "VIEW"
                             },
                             {
-                              "label": "Edit",
+                              "event": "EDIT",
                               "variant": "secondary",
-                              "event": "EDIT"
+                              "label": "Edit"
                             },
                             {
+                              "variant": "primary",
                               "label": "Approve",
-                              "event": "APPROVE",
-                              "variant": "primary"
+                              "event": "APPROVE"
                             },
                             {
-                              "label": "Reject",
+                              "variant": "danger",
                               "event": "REJECT",
-                              "variant": "danger"
-                            },
-                            {
-                              "label": "Request Info",
-                              "event": "REQUEST_INFO",
-                              "variant": "ghost"
+                              "label": "Reject"
                             },
                             {
                               "variant": "ghost",
-                              "label": "Withdraw",
-                              "event": "WITHDRAW"
+                              "event": "REQUEST_INFO",
+                              "label": "Request Info"
                             },
                             {
-                              "event": "REQUEST_DELETE",
+                              "variant": "ghost",
+                              "event": "WITHDRAW",
+                              "label": "Withdraw"
+                            },
+                            {
                               "variant": "danger",
-                              "label": "Delete"
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE"
                             }
                           ],
                           "fields": [
                             {
-                              "label": "Title",
                               "name": "title",
+                              "label": "Title",
                               "variant": "caption"
                             },
                             {
-                              "label": "Target",
+                              "name": "targetType",
                               "variant": "badge",
-                              "name": "targetType"
+                              "label": "Target"
                             },
                             {
-                              "name": "requestedBy",
+                              "label": "Requested By",
                               "variant": "caption",
-                              "label": "Requested By"
+                              "name": "requestedBy"
                             },
                             {
                               "name": "assignedApprover",
@@ -730,27 +848,26 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "approverDecision",
                               "variant": "badge",
+                              "name": "approverDecision",
                               "label": "Decision"
                             },
                             {
-                              "label": "Status",
                               "variant": "badge",
-                              "name": "status"
+                              "name": "status",
+                              "label": "Status"
                             },
                             {
-                              "name": "decidedAt",
                               "label": "Decided",
+                              "name": "decidedAt",
                               "variant": "caption"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "type": "data-grid",
                           "cols": 1.0,
-                          "gap": "sm"
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -764,9 +881,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.message",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -792,17 +909,17 @@
                     {
                       "type": "stack",
                       "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Refreshing approval requests…",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Refreshing approval requests…",
+                          "color": "muted"
                         }
                       ],
                       "gap": "md"
@@ -829,22 +946,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
+                          "content": "Searching approval requests…",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Searching approval requests…"
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -859,8 +976,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -868,7 +985,6 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -881,9 +997,10 @@
                         }
                       ],
                       "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "align": "center",
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -907,22 +1024,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "content": "Filtering approval requests…",
-                          "type": "typography"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -936,8 +1053,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Creating new approval request",
                       "variant": "info",
+                      "message": "Creating new approval request",
                       "type": "alert"
                     }
                   ]
@@ -957,8 +1074,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Viewing approval request",
                       "type": "alert",
+                      "message": "Viewing approval request",
                       "variant": "info"
                     }
                   ]
@@ -979,8 +1096,8 @@
                     "main",
                     {
                       "message": "Editing approval request",
-                      "variant": "info",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -999,9 +1116,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Approval recorded",
                       "type": "alert",
-                      "variant": "success",
-                      "message": "Approval recorded"
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -1020,9 +1137,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "warning",
                       "message": "Rejection recorded",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "warning"
                     }
                   ]
                 ]
@@ -1041,9 +1158,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "More information requested",
-                      "variant": "info"
+                      "variant": "info",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -1063,8 +1180,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "Request withdrawn",
-                      "variant": "info"
+                      "variant": "info",
+                      "message": "Request withdrawn"
                     }
                   ]
                 ]
@@ -1083,9 +1200,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Delete requested",
                       "type": "alert",
-                      "variant": "warning"
+                      "variant": "warning",
+                      "message": "Delete requested"
                     }
                   ]
                 ]

@@ -189,8 +189,8 @@
                     "ApBill",
                     {
                       "emit": {
-                        "failure": "ApBillLoadFailed",
-                        "success": "ApBillLoaded"
+                        "success": "ApBillLoaded",
+                        "failure": "ApBillLoadFailed"
                       }
                     }
                   ],
@@ -198,6 +198,7 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -205,14 +206,13 @@
                         {
                           "content": "Loading bills…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -227,60 +227,93 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
+                        },
+                        {
+                          "options": [
+                            {
+                              "value": "this-month",
+                              "label": "This Month"
+                            },
+                            {
+                              "value": "last-month",
+                              "label": "Last Month"
+                            },
+                            {
+                              "value": "this-quarter",
+                              "label": "This Quarter"
+                            },
+                            {
+                              "label": "This Year",
+                              "value": "this-year"
+                            }
+                          ],
+                          "type": "date-range-selector",
+                          "selected": "this-month"
+                        },
+                        {
+                          "lineColor": "primary",
+                          "type": "line-chart",
+                          "data": [
+                            {
+                              "date": "Jan",
+                              "value": 12400.0
+                            },
+                            {
+                              "date": "Feb",
+                              "value": 9850.0
+                            },
+                            {
+                              "date": "Mar",
+                              "value": 15320.0
+                            },
+                            {
+                              "date": "Apr",
+                              "value": 11070.0
+                            },
+                            {
+                              "date": "May",
+                              "value": 13980.0
+                            }
+                          ],
+                          "showGrid": true,
+                          "showArea": true
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "event": "PAY_BILL",
-                              "label": "Pay"
-                            },
-                            {
-                              "event": "VOID_BILL",
-                              "variant": "danger",
-                              "label": "Void"
-                            }
-                          ],
-                          "gap": "sm",
                           "entity": "@payload.data",
-                          "cols": 1.0,
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "label": "Vendor",
                               "name": "vendor",
+                              "label": "Vendor",
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "label": "Bill #",
+                              "variant": "caption",
                               "name": "billNumber"
                             },
                             {
+                              "label": "Bill Date",
                               "name": "billDate",
-                              "variant": "caption",
-                              "label": "Bill Date"
+                              "variant": "caption"
                             },
                             {
                               "variant": "caption",
@@ -289,18 +322,35 @@
                             },
                             {
                               "label": "Total",
-                              "variant": "caption",
-                              "name": "amountTotal"
+                              "name": "amountTotal",
+                              "variant": "caption"
                             },
                             {
                               "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
+                              "name": "status",
+                              "label": "Status"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "label": "Pay",
+                              "event": "PAY_BILL",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Void",
+                              "variant": "danger",
+                              "event": "VOID_BILL"
                             }
                           ]
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]

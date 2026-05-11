@@ -466,8 +466,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "success": "TrialLoaded",
-                        "failure": "TrialLoadFailed"
+                        "failure": "TrialLoadFailed",
+                        "success": "TrialLoaded"
                       }
                     }
                   ],
@@ -476,10 +476,6 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -487,10 +483,14 @@
                         {
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "Loading trials…"
+                          "content": "Loading trials…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -504,21 +504,23 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "name": "clock",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm"
                         },
@@ -526,8 +528,105 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
+                          "entity": {
+                            "title": "Free trial",
+                            "body": "Try every feature for fourteen days. No credit card needed."
+                          },
+                          "type": "about-page-template"
+                        },
+                        {
+                          "value": 9.0,
+                          "color": "primary",
+                          "showPercentage": false,
+                          "label": "Trial day nine of fourteen",
+                          "max": 14.0,
+                          "type": "progress-bar"
+                        },
+                        {
+                          "back": {
+                            "align": "center",
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "children": [
+                              {
+                                "type": "typography",
+                                "content": "Upgrade soon",
+                                "variant": "h4"
+                              },
+                              {
+                                "content": "Convert to keep your data and unlock unlimited usage.",
+                                "type": "typography",
+                                "variant": "caption"
+                              }
+                            ],
+                            "className": "p-6",
+                            "type": "stack"
+                          },
+                          "height": "h-48",
+                          "front": {
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "type": "stack",
+                            "align": "center",
+                            "className": "p-6",
+                            "children": [
+                              {
+                                "name": "sparkles",
+                                "type": "icon"
+                              },
+                              {
+                                "type": "typography",
+                                "content": "Your trial",
+                                "variant": "h4"
+                              },
+                              {
+                                "content": "Hover or tap to see what's next",
+                                "variant": "caption",
+                                "color": "muted",
+                                "type": "typography"
+                              }
+                            ]
+                          },
+                          "type": "flip-card"
+                        },
+                        {
+                          "duration": 600.0,
+                          "type": "animated-reveal",
+                          "children": [
+                            {
+                              "message": "Convert your trial today to keep your current usage tier.",
+                              "variant": "info",
+                              "title": "Lock in your plan",
+                              "type": "alert"
+                            }
+                          ],
+                          "animation": "fade-up",
+                          "trigger": "scroll"
+                        },
+                        {
                           "cols": 1.0,
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "CONVERT",
+                              "label": "Convert",
+                              "icon": "check",
+                              "variant": "primary"
+                            },
+                            {
+                              "icon": "clock",
+                              "label": "Expire",
+                              "variant": "secondary",
+                              "event": "EXPIRE"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Cancel",
+                              "icon": "x",
+                              "event": "CANCEL"
+                            }
+                          ],
+                          "type": "data-grid",
                           "fields": [
                             {
                               "name": "customerId",
@@ -535,18 +634,18 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "planId",
                               "label": "Plan",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "planId"
                             },
                             {
                               "name": "status",
-                              "variant": "badge",
-                              "label": "Status"
+                              "label": "Status",
+                              "variant": "badge"
                             },
                             {
-                              "variant": "caption",
                               "name": "startedAt",
+                              "variant": "caption",
                               "label": "Started"
                             },
                             {
@@ -555,42 +654,19 @@
                               "variant": "caption"
                             },
                             {
+                              "name": "convertedAt",
                               "variant": "caption",
-                              "label": "Converted",
-                              "name": "convertedAt"
+                              "label": "Converted"
                             },
                             {
                               "label": "Notified",
-                              "name": "notifiedAt",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "notifiedAt"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "label": "Convert",
-                              "event": "CONVERT",
-                              "icon": "check"
-                            },
-                            {
-                              "variant": "secondary",
-                              "label": "Expire",
-                              "icon": "clock",
-                              "event": "EXPIRE"
-                            },
-                            {
-                              "icon": "x",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "danger"
-                            }
-                          ],
-                          "type": "data-grid",
                           "gap": "sm"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -668,8 +744,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "TrialLoadFailed",
-                        "success": "TrialConverted"
+                        "success": "TrialConverted",
+                        "failure": "TrialLoadFailed"
                       }
                     }
                   ],
@@ -677,6 +753,8 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
                       "gap": "md",
                       "className": "py-12",
                       "direction": "vertical",
@@ -685,14 +763,12 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Converting trial…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Converting trial…"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -754,8 +830,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "TrialLoadFailed",
-                        "success": "TrialUpdated"
+                        "success": "TrialUpdated",
+                        "failure": "TrialLoadFailed"
                       }
                     }
                   ]
@@ -852,8 +928,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "success": "TrialLoaded",
-                        "failure": "TrialLoadFailed"
+                        "failure": "TrialLoadFailed",
+                        "success": "TrialLoaded"
                       }
                     }
                   ]
@@ -869,8 +945,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "failure": "TrialLoadFailed",
-                        "success": "TrialLoaded"
+                        "success": "TrialLoaded",
+                        "failure": "TrialLoadFailed"
                       }
                     }
                   ],

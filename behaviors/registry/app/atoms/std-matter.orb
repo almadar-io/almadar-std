@@ -365,22 +365,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Loading matters…",
+                          "variant": "caption",
                           "type": "typography",
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -394,31 +394,267 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
+                          "entity": {
+                            "id": "matter-overview",
+                            "subtitle": "Litigation, contracts, and regulatory cases",
+                            "title": "Matter Overview"
+                          },
+                          "type": "feature-detail-page-template"
+                        },
+                        {
+                          "type": "breadcrumb",
+                          "items": [
+                            {
+                              "label": "Court"
+                            },
+                            {
+                              "label": "Cases"
+                            },
+                            {
+                              "label": "Matter"
+                            }
+                          ]
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "steps": [
+                            {
+                              "id": "intake",
+                              "label": "Intake"
+                            },
+                            {
+                              "label": "Discovery",
+                              "id": "discovery"
+                            },
+                            {
+                              "label": "Pre-Trial",
+                              "id": "pretrial"
+                            },
+                            {
+                              "id": "trial",
+                              "label": "Trial"
+                            },
+                            {
+                              "id": "closed",
+                              "label": "Closed"
+                            }
+                          ],
+                          "type": "wizard-progress"
+                        },
+                        {
                           "gap": "sm",
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "scale"
                             },
                             {
-                              "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "tree": [
+                                {
+                                  "name": "Pleadings",
+                                  "children": [
+                                    {
+                                      "name": "Complaint.pdf"
+                                    },
+                                    {
+                                      "name": "Answer.pdf"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "Discovery",
+                                  "children": [
+                                    {
+                                      "name": "Interrogatories.pdf"
+                                    },
+                                    {
+                                      "name": "Depositions",
+                                      "children": [
+                                        {
+                                          "name": "Smith.pdf"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "name": "Motion-to-Dismiss.pdf"
+                                    }
+                                  ],
+                                  "name": "Motions"
+                                }
+                              ],
+                              "type": "file-tree"
+                            },
+                            {
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "accordion",
+                                  "items": [
+                                    {
+                                      "id": "facts",
+                                      "title": "Facts of the Case",
+                                      "content": "Plaintiff alleges breach of contract dated 2025-08-01."
+                                    },
+                                    {
+                                      "id": "issues",
+                                      "title": "Legal Issues",
+                                      "content": "Material breach, damages calculation, statute of limitations."
+                                    },
+                                    {
+                                      "title": "Strategy",
+                                      "content": "Motion practice followed by summary judgment.",
+                                      "id": "strategy"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "position": "top",
+                                  "children": [
+                                    {
+                                      "content": "Rule 12(b)(6) motion pending",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "type": "law-reference-tooltip",
+                                  "reference": {
+                                    "title": "Failure to State a Claim",
+                                    "citation": "Fed. R. Civ. P. 12(b)(6)"
+                                  }
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "document-viewer",
+                          "src": "/docs/complaint.pdf",
+                          "documentType": "pdf",
+                          "title": "Complaint.pdf",
+                          "showToolbar": true,
+                          "totalPages": 24.0,
+                          "currentPage": 1.0
+                        },
+                        {
+                          "type": "doc-pagination",
+                          "prev": {
+                            "action": "DOC_PREV",
+                            "label": "Previous Page"
+                          },
+                          "next": {
+                            "action": "DOC_NEXT",
+                            "label": "Next Page"
+                          }
+                        },
+                        {
+                          "quests": [
+                            {
+                              "status": "active",
+                              "title": "File Answer",
+                              "id": "answer-due",
+                              "deadline": "2026-06-15"
+                            },
+                            {
+                              "status": "pending",
+                              "id": "discovery-cutoff",
+                              "deadline": "2026-08-01",
+                              "title": "Discovery Cutoff"
+                            },
+                            {
+                              "title": "Pretrial Brief",
+                              "status": "pending",
+                              "deadline": "2026-09-15",
+                              "id": "pretrial-brief"
+                            }
+                          ],
+                          "type": "quest-tracker",
+                          "activeQuestId": "answer-due"
+                        },
+                        {
+                          "data": {
+                            "current": "discovery",
+                            "initial": "intake",
+                            "states": [
+                              "intake",
+                              "discovery",
+                              "pretrial",
+                              "trial",
+                              "closed"
+                            ]
+                          },
+                          "type": "behavior-view"
+                        },
+                        {
+                          "features": [
+                            {
+                              "type": "venue",
+                              "id": "courthouse",
+                              "label": "Superior Court"
+                            },
+                            {
+                              "type": "person",
+                              "id": "judge",
+                              "label": "Hon. J. Carter"
+                            },
+                            {
+                              "id": "opposing",
+                              "type": "party",
+                              "label": "Opposing Counsel"
+                            }
+                          ],
+                          "type": "feature-renderer"
+                        },
+                        {
+                          "type": "content-renderer",
+                          "content": "Status conference scheduled. All parties to appear. Discovery is ongoing.",
+                          "direction": "ltr"
+                        },
+                        {
                           "cols": 1.0,
-                          "entity": "@payload.data",
                           "gap": "sm",
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "CLOSE_MATTER",
+                              "label": "Close",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "HOLD_MATTER",
+                              "variant": "ghost",
+                              "label": "Hold"
+                            },
+                            {
+                              "label": "Reopen",
+                              "variant": "ghost",
+                              "event": "REOPEN_MATTER"
+                            }
+                          ],
                           "fields": [
                             {
                               "name": "matterNumber",
@@ -426,9 +662,9 @@
                               "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "title",
-                              "label": "Title",
-                              "variant": "caption"
+                              "label": "Title"
                             },
                             {
                               "variant": "caption",
@@ -437,41 +673,24 @@
                             },
                             {
                               "name": "practiceArea",
-                              "label": "Practice",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "leadAttorney",
-                              "variant": "caption",
-                              "label": "Lead"
-                            },
-                            {
-                              "label": "Status",
                               "variant": "badge",
-                              "name": "status"
+                              "label": "Practice"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Lead",
+                              "name": "leadAttorney"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "event": "CLOSE_MATTER",
-                              "label": "Close"
-                            },
-                            {
-                              "label": "Hold",
-                              "variant": "ghost",
-                              "event": "HOLD_MATTER"
-                            },
-                            {
-                              "label": "Reopen",
-                              "event": "REOPEN_MATTER",
-                              "variant": "ghost"
-                            }
-                          ]
+                          "type": "data-grid"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -507,9 +726,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Matter closed",
                       "type": "alert",
-                      "variant": "success"
+                      "variant": "success",
+                      "message": "Matter closed"
                     }
                   ]
                 ]
@@ -529,8 +748,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "Matter on hold",
-                      "variant": "info"
+                      "variant": "info",
+                      "message": "Matter on hold"
                     }
                   ]
                 ]
@@ -550,8 +769,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "info",
-                      "message": "Matter reopened"
+                      "message": "Matter reopened",
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -566,8 +785,8 @@
                     "Matter",
                     {
                       "emit": {
-                        "failure": "MatterLoadFailed",
-                        "success": "MatterLoaded"
+                        "success": "MatterLoaded",
+                        "failure": "MatterLoadFailed"
                       }
                     }
                   ],

@@ -472,22 +472,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
                       "type": "stack",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "content": "Loading pages…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -501,38 +501,101 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "items": [
+                            {
+                              "label": "Workspace",
+                              "href": "/"
+                            },
+                            {
+                              "label": "Pages",
+                              "href": "/pages"
+                            },
+                            {
+                              "label": "Browse"
+                            }
+                          ],
+                          "type": "breadcrumb"
+                        },
+                        {
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "name": "list-tree",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "list-tree"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@config.title",
                                   "variant": "h3",
-                                  "content": "@config.title"
+                                  "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
+                              "icon": "plus",
                               "label": "Add Page",
                               "action": "ADD_PAGE",
-                              "icon": "plus",
-                              "type": "button",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "button"
+                            }
+                          ],
+                          "justify": "between",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "file-tree",
+                          "tree": [
+                            {
+                              "name": "Getting Started",
+                              "children": [
+                                {
+                                  "name": "Overview.md"
+                                },
+                                {
+                                  "name": "Quickstart.md"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Architecture",
+                              "children": [
+                                {
+                                  "name": "Overview.md"
+                                },
+                                {
+                                  "name": "State Machine.md"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "name": "Persist.md"
+                                    },
+                                    {
+                                      "name": "Fetch.md"
+                                    }
+                                  ],
+                                  "name": "Effects"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "name": "Incident.md"
+                                },
+                                {
+                                  "name": "Deployment.md"
+                                }
+                              ],
+                              "name": "Runbooks"
                             }
                           ]
                         },
@@ -540,21 +603,19 @@
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "reorderEvent": "REORDER",
-                          "entity": "@payload.data",
-                          "type": "data-list",
                           "reorderable": true,
+                          "type": "data-list",
+                          "reorderEvent": "REORDER",
                           "fields": [
                             {
-                              "name": "title",
                               "label": "Title",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "name": "title"
                             },
                             {
-                              "name": "slug",
+                              "variant": "caption",
                               "label": "Slug",
-                              "variant": "caption"
+                              "name": "slug"
                             },
                             {
                               "name": "parentId",
@@ -569,20 +630,31 @@
                           ],
                           "itemActions": [
                             {
-                              "variant": "ghost",
                               "label": "Open",
+                              "variant": "ghost",
                               "icon": "chevron-right",
                               "event": "SELECT_PAGE"
                             },
                             {
                               "variant": "danger",
                               "event": "DELETE_PAGE",
-                              "label": "Delete",
-                              "icon": "trash"
+                              "icon": "trash",
+                              "label": "Delete"
                             }
-                          ]
+                          ],
+                          "entity": "@payload.data",
+                          "gap": "sm"
+                        },
+                        {
+                          "threshold": "200px",
+                          "isLoading": false,
+                          "loadMoreEvent": "INIT",
+                          "type": "infinite-scroll-sentinel",
+                          "hasMore": true
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -634,8 +706,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "PageNodeLoadFailed",
-                        "success": "PageNodeAdded"
+                        "success": "PageNodeAdded",
+                        "failure": "PageNodeLoadFailed"
                       }
                     }
                   ]
@@ -758,8 +830,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "failure": "PageNodeLoadFailed",
-                        "success": "PageNodeLoaded"
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
                       }
                     }
                   ]
@@ -791,8 +863,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -820,8 +892,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "failure": "PageNodeLoadFailed",
-                        "success": "PageNodeLoaded"
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
                       }
                     }
                   ]
@@ -837,8 +909,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "success": "PageNodeLoaded",
-                        "failure": "PageNodeLoadFailed"
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
                       }
                     }
                   ]
@@ -854,8 +926,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "failure": "PageNodeLoadFailed",
-                        "success": "PageNodeLoaded"
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
                       }
                     }
                   ]
@@ -870,9 +942,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]

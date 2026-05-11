@@ -638,22 +638,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "align": "center",
                       "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "Loading subscriptions…",
                           "variant": "caption",
-                          "content": "Loading subscriptions…"
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -667,56 +667,138 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
+                          "items": [
                             {
-                              "name": "repeat",
-                              "type": "icon"
+                              "href": "/billing",
+                              "label": "Billing"
                             },
                             {
-                              "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "href": "/plans",
+                              "label": "Plans"
+                            },
+                            {
+                              "label": "@config.title"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "breadcrumb"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "itemActions": [
+                          "entity": "Subscription",
+                          "type": "pricing-page-template"
+                        },
+                        {
+                          "type": "pricing-organism",
+                          "heading": "Compare plans",
+                          "entity": "Subscription",
+                          "subtitle": "Pick a tier that matches your usage."
+                        },
+                        {
+                          "plans": [
                             {
-                              "variant": "primary",
-                              "icon": "credit-card",
-                              "event": "CHARGE",
-                              "label": "Charge"
+                              "price": "$9",
+                              "name": "Starter",
+                              "cta": {
+                                "label": "Choose Starter",
+                                "action": "CHARGE"
+                              },
+                              "description": "For solo accounts getting started",
+                              "features": [
+                                "Ten thousand events",
+                                "Email support",
+                                "One seat"
+                              ]
                             },
                             {
-                              "icon": "calculator",
-                              "label": "Prorate",
-                              "variant": "secondary",
-                              "event": "PRORATE"
+                              "name": "Team",
+                              "price": "$29",
+                              "description": "For growing teams who need headroom",
+                              "features": [
+                                "Hundred thousand events",
+                                "Priority support",
+                                "Ten seats"
+                              ],
+                              "cta": {
+                                "action": "CHARGE",
+                                "label": "Choose Team"
+                              },
+                              "highlighted": true
                             },
                             {
-                              "label": "Cancel",
-                              "icon": "x",
-                              "variant": "danger",
-                              "event": "CANCEL"
+                              "price": "$99",
+                              "features": [
+                                "One million events",
+                                "Round the clock support",
+                                "Unlimited seats"
+                              ],
+                              "cta": {
+                                "action": "CHARGE",
+                                "label": "Choose Scale"
+                              },
+                              "description": "High-volume usage with SLA",
+                              "name": "Scale"
                             }
                           ],
+                          "type": "pricing-grid"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "meter",
+                              "label": "Usage this period",
+                              "min": 0.0,
+                              "unit": "%",
+                              "max": 100.0,
+                              "value": 68.0,
+                              "variant": "linear",
+                              "showValue": true
+                            },
+                            {
+                              "label": "Retries",
+                              "min": 0.0,
+                              "showValue": true,
+                              "type": "meter",
+                              "segments": 4.0,
+                              "variant": "segmented",
+                              "max": 4.0,
+                              "value": 4.0
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "cols": 1.0,
                           "fields": [
                             {
-                              "variant": "caption",
+                              "label": "Customer",
                               "name": "customerId",
-                              "label": "Customer"
+                              "variant": "caption"
                             },
                             {
                               "variant": "caption",
@@ -724,14 +806,14 @@
                               "label": "Plan"
                             },
                             {
-                              "label": "Status",
+                              "variant": "badge",
                               "name": "status",
-                              "variant": "badge"
+                              "label": "Status"
                             },
                             {
+                              "name": "amount",
                               "label": "Amount",
-                              "variant": "caption",
-                              "name": "amount"
+                              "variant": "caption"
                             },
                             {
                               "variant": "caption",
@@ -740,25 +822,45 @@
                             },
                             {
                               "label": "Interval",
-                              "variant": "badge",
-                              "name": "interval"
+                              "name": "interval",
+                              "variant": "badge"
                             },
                             {
                               "name": "nextBillingAt",
-                              "variant": "caption",
-                              "label": "Next Bill"
+                              "label": "Next Bill",
+                              "variant": "caption"
                             },
                             {
-                              "name": "attemptCount",
                               "label": "Retries",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "attemptCount"
                             }
                           ],
                           "gap": "sm",
-                          "type": "data-grid"
+                          "itemActions": [
+                            {
+                              "icon": "credit-card",
+                              "label": "Charge",
+                              "variant": "primary",
+                              "event": "CHARGE"
+                            },
+                            {
+                              "event": "PRORATE",
+                              "label": "Prorate",
+                              "variant": "secondary",
+                              "icon": "calculator"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "icon": "x"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "entity": "@payload.data"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -874,22 +976,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
                           "content": "Charging subscription…"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -988,8 +1090,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ChargeFailed",
-                        "success": "SubscriptionUpdated"
+                        "success": "SubscriptionUpdated",
+                        "failure": "ChargeFailed"
                       }
                     }
                   ]
@@ -1093,8 +1195,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Subscription updated",
                       "variant": "success",
+                      "message": "Subscription updated",
                       "type": "alert"
                     }
                   ]
@@ -1192,8 +1294,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "failure": "SubscriptionLoadFailed",
-                        "success": "SubscriptionLoaded"
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
                       }
                     }
                   ]
@@ -1229,9 +1331,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -1255,8 +1357,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1264,13 +1366,13 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Subscriptions"
-            },
             "maxRetries": {
               "type": "number",
               "default": 4.0
+            },
+            "title": {
+              "type": "string",
+              "default": "Subscriptions"
             }
           },
           "scope": "collection"

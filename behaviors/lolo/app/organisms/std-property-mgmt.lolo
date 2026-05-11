@@ -27,8 +27,8 @@ orbital PropertyOrbital {
   trait PropertyAppLayout = AppShell.traits.AppLayout {
     config: {
       contentTrait: "@trait.PropertyCatalog",
-      appName: "Property Manager",
-      navItems: [{ label: "Properties", href: "/properties", icon: "home" }, { label: "Tenants", href: "/tenants", icon: "users" }, { label: "Leases", href: "/leases", icon: "file-text" }, { label: "Rent", href: "/rent-charges", icon: "dollar-sign" }, { label: "Maintenance", href: "/maintenance", icon: "wrench" }],
+      appName: "Property Management",
+      navItems: [{ label: "Properties", href: "/properties", icon: "home" }, { label: "Leases", href: "/leases", icon: "file-text" }, { label: "Tenants", href: "/tenants", icon: "users" }, { label: "Rent Charges", href: "/rent-charges", icon: "credit-card" }, { label: "Maintenance", href: "/maintenance", icon: "wrench" }],
       searchEvent: "PROPERTY_SEARCH",
       notifications: [],
       notificationClickEvent: "PROPERTY_NOTIFICATIONS_OPEN"
@@ -254,4 +254,228 @@ orbital PropertyOrbital {
   }
 
   page "/properties" as PropertiesPage -> PropertyAppLayout, PropertyCatalog, PropertySearch, PropertyFilter, PropertyStats, PropertyGraphs, PropertyBrowseList, PropertyCreate, PropertyEdit, PropertyView, PropertyDelete, PropertyPersistor
+}
+
+orbital LeasePanelOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Lease    from "std/behaviors/std-lease"
+
+  entity Lease [persistent: leases] {
+    id           : string!
+    tenantId     : string!
+    tenantName   : string = ""
+    unitId       : string = ""
+    unitLabel    : string = ""
+    startDate    : string!
+    endDate      : string = ""
+    monthlyRent  : number = 0
+    status       : "active" | "expired" | "terminated" | "pending" = "pending"
+    notes        : string = ""
+  }
+
+  trait LeaseAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.LeasePanel",
+      appName: "Property Management",
+      navItems: [{ label: "Properties", href: "/properties", icon: "home" }, { label: "Leases", href: "/leases", icon: "file-text" }, { label: "Tenants", href: "/tenants", icon: "users" }, { label: "Rent Charges", href: "/rent-charges", icon: "credit-card" }, { label: "Maintenance", href: "/maintenance", icon: "wrench" }],
+      searchEvent: "LEASE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "LEASE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: LEASE_SEARCH
+      NOTIFY_CLICK: LEASE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait LeasePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "file-text" },
+            { type: "typography", variant: "h2", content: "Leases" }
+          ]},
+          { type: "divider" },
+          "@trait.LeaseView"
+        ]})
+    }
+  }
+
+  trait LeaseView = Lease.traits.LeaseManager {
+    config: {
+      title: "Leases"
+    }
+  }
+
+  page "/leases" as LeasesPage -> LeaseAppLayout, LeasePanel, LeaseView
+}
+
+orbital TenantPanelOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Tenant   from "std/behaviors/std-tenant"
+
+  entity Tenant [persistent: tenants] {
+    id          : string!
+    name        : string!
+    email       : string = ""
+    phone       : string = ""
+    leaseId     : string = ""
+    moveInDate  : string = ""
+    moveOutDate : string = ""
+    status      : "current" | "former" | "prospective" = "prospective"
+    notes       : string = ""
+  }
+
+  trait TenantAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.TenantPanel",
+      appName: "Property Management",
+      navItems: [{ label: "Properties", href: "/properties", icon: "home" }, { label: "Leases", href: "/leases", icon: "file-text" }, { label: "Tenants", href: "/tenants", icon: "users" }, { label: "Rent Charges", href: "/rent-charges", icon: "credit-card" }, { label: "Maintenance", href: "/maintenance", icon: "wrench" }],
+      searchEvent: "TENANT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "TENANT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: TENANT_SEARCH
+      NOTIFY_CLICK: TENANT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait TenantPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "users" },
+            { type: "typography", variant: "h2", content: "Tenants" }
+          ]},
+          { type: "divider" },
+          "@trait.TenantView"
+        ]})
+    }
+  }
+
+  trait TenantView = Tenant.traits.TenantDirectory {
+    config: {
+      title: "Tenants"
+    }
+  }
+
+  page "/tenants" as TenantsPage -> TenantAppLayout, TenantPanel, TenantView
+}
+
+orbital RentChargePanelOrbital {
+  uses AppShell   from "std/behaviors/std-app-layout"
+  uses RentCharge from "std/behaviors/std-rent-charge"
+
+  entity RentCharge [persistent: rentcharges] {
+    id       : string!
+    tenantId : string!
+    leaseId  : string = ""
+    amount   : number = 0
+    dueDate  : string!
+    paidAt   : string = ""
+    status   : "unpaid" | "paid" | "overdue" | "waived" = "unpaid"
+    lateFee  : number = 0
+    notes    : string = ""
+  }
+
+  trait RentChargeAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.RentChargePanel",
+      appName: "Property Management",
+      navItems: [{ label: "Properties", href: "/properties", icon: "home" }, { label: "Leases", href: "/leases", icon: "file-text" }, { label: "Tenants", href: "/tenants", icon: "users" }, { label: "Rent Charges", href: "/rent-charges", icon: "credit-card" }, { label: "Maintenance", href: "/maintenance", icon: "wrench" }],
+      searchEvent: "RENT_CHARGE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "RENT_CHARGE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: RENT_CHARGE_SEARCH
+      NOTIFY_CLICK: RENT_CHARGE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait RentChargePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "credit-card" },
+            { type: "typography", variant: "h2", content: "Rent Charges" }
+          ]},
+          { type: "divider" },
+          "@trait.RentChargeView"
+        ]})
+    }
+  }
+
+  trait RentChargeView = RentCharge.traits.RentChargeLedger {
+    config: {
+      title: "Rent Charges"
+    }
+  }
+
+  page "/rent-charges" as RentChargesPage -> RentChargeAppLayout, RentChargePanel, RentChargeView
+}
+
+orbital MaintenanceRequestPanelOrbital {
+  uses AppShell           from "std/behaviors/std-app-layout"
+  uses MaintenanceRequest from "std/behaviors/std-maintenance-request"
+
+  entity MaintenanceRequest [persistent: maintenancerequests] {
+    id            : string!
+    unitId        : string!
+    tenantId      : string = ""
+    requesterName : string = ""
+    description   : string!
+    priority      : "low" | "medium" | "high" | "urgent" = "medium"
+    status        : "open" | "scheduled" | "in_progress" | "completed" | "cancelled" = "open"
+    assignedTo    : string = ""
+    requestedAt   : string = ""
+    scheduledAt   : string = ""
+    completedAt   : string = ""
+    notes         : string = ""
+  }
+
+  trait MaintenanceRequestAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.MaintenanceRequestPanel",
+      appName: "Property Management",
+      navItems: [{ label: "Properties", href: "/properties", icon: "home" }, { label: "Leases", href: "/leases", icon: "file-text" }, { label: "Tenants", href: "/tenants", icon: "users" }, { label: "Rent Charges", href: "/rent-charges", icon: "credit-card" }, { label: "Maintenance", href: "/maintenance", icon: "wrench" }],
+      searchEvent: "MAINTENANCE_REQUEST_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MAINTENANCE_REQUEST_SEARCH
+      NOTIFY_CLICK: MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait MaintenanceRequestPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "tool" },
+            { type: "typography", variant: "h2", content: "Maintenance Requests" }
+          ]},
+          { type: "divider" },
+          "@trait.MaintenanceRequestView"
+        ]})
+    }
+  }
+
+  trait MaintenanceRequestView = MaintenanceRequest.traits.MaintenanceRequestQueue {
+    config: {
+      title: "Maintenance Requests"
+    }
+  }
+
+  page "/maintenance" as MaintenancePage -> MaintenanceRequestAppLayout, MaintenanceRequestPanel, MaintenanceRequestView
 }

@@ -32,7 +32,7 @@ orbital MatterOrbital {
     config: {
       contentTrait: "@trait.MatterCatalog",
       appName: "Legal Case",
-      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Cases", href: "/cases", icon: "folder" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
       searchEvent: "MATTER_SEARCH",
       notifications: [],
       notificationClickEvent: "MATTER_NOTIFICATIONS_OPEN"
@@ -284,7 +284,7 @@ orbital BillableHourPanelOrbital {
     config: {
       contentTrait: "@trait.BillableHourPanel",
       appName: "Legal Case",
-      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Cases", href: "/cases", icon: "folder" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
       searchEvent: "BILLABLE_HOUR_SEARCH",
       notifications: [],
       notificationClickEvent: "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
@@ -340,7 +340,7 @@ orbital CourtDeadlinePanelOrbital {
     config: {
       contentTrait: "@trait.CourtDeadlinePanel",
       appName: "Legal Case",
-      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Cases", href: "/cases", icon: "folder" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
       searchEvent: "COURT_DEADLINE_SEARCH",
       notifications: [],
       notificationClickEvent: "COURT_DEADLINE_NOTIFICATIONS_OPEN"
@@ -373,4 +373,60 @@ orbital CourtDeadlinePanelOrbital {
   }
 
   page "/deadlines" as DeadlinesPage -> CourtDeadlineAppLayout, CourtDeadlinePanel, CourtDeadlineDocketView
+}
+
+orbital MatterPanelOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Matter   from "std/behaviors/std-matter"
+
+  entity MatterCase [persistent: matters] {
+    id            : string!
+    matterNumber  : string!
+    title         : string!
+    clientName    : string!
+    practiceArea  : "litigation" | "transactional" | "regulatory" | "ip" | "immigration" | "family" | "other" = "other"
+    leadAttorney  : string = ""
+    status        : "open" | "active" | "on_hold" | "closed" | "archived" = "open"
+    openedAt      : string = ""
+    closedAt      : string = ""
+    notes         : string = ""
+  }
+
+  trait MatterCaseAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.MatterCasePanel",
+      appName: "Legal Case",
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Cases", href: "/cases", icon: "folder" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }],
+      searchEvent: "MATTER_CASE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MATTER_CASE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MATTER_CASE_SEARCH
+      NOTIFY_CLICK: MATTER_CASE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait MatterCasePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "folder" },
+            { type: "typography", variant: "h2", content: "Cases" }
+          ]},
+          { type: "divider" },
+          "@trait.MatterCaseDocketView"
+        ]})
+    }
+  }
+
+  trait MatterCaseDocketView = Matter.traits.MatterDocket -> MatterCase {
+    config: {
+      title: "Case Files"
+    }
+  }
+
+  page "/cases" as CasesPage -> MatterCaseAppLayout, MatterCasePanel, MatterCaseDocketView
 }

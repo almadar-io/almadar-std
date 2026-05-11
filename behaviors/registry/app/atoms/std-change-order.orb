@@ -477,8 +477,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -486,22 +486,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading change orders…",
+                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading change orders…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -515,90 +515,83 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "file-text",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "file-text"
                                 },
                                 {
                                   "content": "@config.title",
-                                  "type": "typography",
-                                  "variant": "h3"
+                                  "variant": "h3",
+                                  "type": "typography"
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
-                              "variant": "primary",
+                              "type": "button",
+                              "label": "New Change Order",
                               "actionPayload": {
                                 "source": "header"
                               },
-                              "type": "button",
-                              "label": "New Change Order",
+                              "variant": "primary",
                               "action": "CREATE"
                             }
                           ],
-                          "gap": "sm"
+                          "align": "center",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "currentStep": 1.0,
+                          "type": "wizard-progress",
+                          "steps": [
+                            {
+                              "title": "Draft",
+                              "id": "draft"
+                            },
+                            {
+                              "id": "pending-approval",
+                              "title": "Pending Approval"
+                            },
+                            {
+                              "id": "approved",
+                              "title": "Approved"
+                            },
+                            {
+                              "title": "Executed",
+                              "id": "executed"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "name": "coNumber",
-                              "label": "CO #",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "description",
-                              "variant": "caption",
-                              "label": "Description"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Cost Impact",
-                              "name": "costImpact"
-                            },
-                            {
-                              "name": "scheduleImpactDays",
-                              "variant": "caption",
-                              "label": "Days"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Requested By",
-                              "name": "requestedBy"
-                            }
-                          ],
-                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "gap": "sm",
+                          "type": "data-grid",
+                          "cols": 1.0,
                           "itemActions": [
                             {
+                              "variant": "ghost",
                               "event": "VIEW",
-                              "label": "View",
-                              "variant": "ghost"
+                              "label": "View"
                             },
                             {
                               "event": "EDIT",
-                              "label": "Edit",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "label": "Edit"
                             },
                             {
                               "variant": "primary",
@@ -612,22 +605,51 @@
                             },
                             {
                               "label": "Reject",
-                              "event": "REJECT",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "event": "REJECT"
                             },
                             {
-                              "variant": "ghost",
                               "label": "Delete",
+                              "variant": "ghost",
                               "event": "REQUEST_DELETE"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "cols": 1.0
+                          "fields": [
+                            {
+                              "name": "coNumber",
+                              "variant": "caption",
+                              "label": "CO #"
+                            },
+                            {
+                              "label": "Description",
+                              "name": "description",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "costImpact",
+                              "label": "Cost Impact"
+                            },
+                            {
+                              "name": "scheduleImpactDays",
+                              "label": "Days",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Status",
+                              "name": "status"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Requested By",
+                              "name": "requestedBy"
+                            }
+                          ]
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -684,8 +706,8 @@
                     "main",
                     {
                       "variant": "success",
-                      "type": "alert",
-                      "message": "Change order approved"
+                      "message": "Change order approved",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -704,8 +726,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Change order rejected",
                       "type": "alert",
+                      "message": "Change order rejected",
                       "variant": "error"
                     }
                   ]
@@ -725,9 +747,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "Change order executed",
-                      "variant": "success",
-                      "type": "alert"
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -741,9 +763,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Creating new change order",
                       "variant": "info",
-                      "type": "alert",
-                      "message": "Creating new change order"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -767,8 +789,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -798,9 +820,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
+                      "type": "alert",
                       "message": "Filtering by status",
-                      "type": "alert"
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -819,9 +841,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Viewing change order",
                       "type": "alert",
-                      "variant": "info",
-                      "message": "Viewing change order"
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -840,8 +862,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Editing change order",
                       "type": "alert",
+                      "message": "Editing change order",
                       "variant": "info"
                     }
                   ]
@@ -862,8 +884,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "Delete requested",
-                      "variant": "warning"
+                      "variant": "warning",
+                      "message": "Delete requested"
                     }
                   ]
                 ]
@@ -878,8 +900,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "success": "ChangeOrderLoaded",
-                        "failure": "ChangeOrderLoadFailed"
+                        "failure": "ChangeOrderLoadFailed",
+                        "success": "ChangeOrderLoaded"
                       }
                     }
                   ],
@@ -887,8 +909,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

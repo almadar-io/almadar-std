@@ -479,8 +479,8 @@
                     "Document",
                     {
                       "emit": {
-                        "success": "DocumentLoaded",
-                        "failure": "DocumentLoadFailed"
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
                       }
                     }
                   ],
@@ -488,22 +488,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
                           "content": "Loading documents…",
-                          "variant": "caption",
-                          "type": "typography"
+                          "variant": "caption"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -517,53 +517,196 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
+                        {
+                          "type": "book-cover-page",
+                          "subtitle": "Wiki / CMS Notion-style Docs",
+                          "author": "Team Knowledge Base",
+                          "title": "@config.title",
+                          "coverImageUrl": "https://picsum.photos/seed/notes-cover/1200/400"
+                        },
+                        {
+                          "chapterTitle": "Getting Started",
+                          "totalPages": 24.0,
+                          "type": "book-nav-bar",
+                          "currentPage": 1.0
+                        },
                         {
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "@config.title"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "doc-toc",
+                          "items": [
+                            {
+                              "id": "intro",
+                              "level": 1.0,
+                              "label": "Introduction"
+                            },
+                            {
+                              "label": "Block Types",
+                              "id": "blocks",
+                              "level": 1.0
+                            },
+                            {
+                              "label": "Publishing Workflow",
+                              "id": "publish",
+                              "level": 1.0
+                            },
+                            {
+                              "level": 2.0,
+                              "id": "archive",
+                              "label": "Archived Docs"
+                            }
+                          ],
+                          "activeId": "blocks"
+                        },
+                        {
+                          "type": "tag-cloud",
+                          "tags": [
+                            {
+                              "weight": 9.0,
+                              "label": "Engineering"
+                            },
+                            {
+                              "label": "Product",
+                              "weight": 7.0
+                            },
+                            {
+                              "label": "Design",
+                              "weight": 6.0
+                            },
+                            {
+                              "label": "Operations",
+                              "weight": 4.0
+                            },
+                            {
+                              "label": "Onboarding",
+                              "weight": 5.0
+                            },
+                            {
+                              "weight": 3.0,
+                              "label": "Runbooks"
+                            }
+                          ],
+                          "variant": "primary"
+                        },
+                        {
+                          "type": "accordion",
+                          "items": [
+                            {
+                              "id": "drafts",
+                              "content": "All in-progress documents that have not yet been published.",
+                              "title": "Drafts"
+                            },
+                            {
+                              "title": "Published",
+                              "content": "Documents visible to readers across the workspace.",
+                              "id": "published"
+                            },
+                            {
+                              "content": "Read-only legacy documents preserved for historical reference.",
+                              "id": "archived",
+                              "title": "Archived"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "pull-quote",
+                          "children": "Documents are the long-term memory of the organization."
+                        },
+                        {
+                          "content": "Welcome to the wiki workspace.",
+                          "type": "markdown-content",
+                          "direction": "ltr"
+                        },
+                        {
+                          "chapter": {
+                            "body": "This chapter walks through composing your first document and publishing it to the workspace.",
+                            "title": "Introduction",
+                            "number": 1.0,
+                            "id": "intro"
+                          },
+                          "type": "book-chapter-view"
+                        },
+                        {
+                          "type": "code-block",
+                          "language": "javascript",
+                          "showCopyButton": true,
+                          "showLanguageBadge": true,
+                          "code": "const greet = name => 'Hello ' + name",
+                          "foldable": true
+                        },
+                        {
+                          "showLineNumbers": true,
+                          "language": "json",
+                          "type": "doc-code-block",
+                          "title": "Sample document payload",
+                          "code": "title: Release Notes, version: 1.2.0, status: published"
+                        },
+                        {
+                          "data": {
+                            "version": 12.0,
+                            "kind": "document",
+                            "blocks": 7.0,
+                            "status": "published"
+                          },
+                          "label": "Inspect document JSON",
+                          "type": "code-view",
+                          "defaultExpanded": false
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Pro tip: pin the most-edited document to the workspace home for one-click access.",
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ],
+                          "highlightType": "note",
+                          "annotationId": "tip-1",
+                          "type": "text-highlight"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "entity": "@payload.data",
-                          "type": "data-grid",
+                          "gap": "sm",
                           "itemActions": [
                             {
-                              "event": "OPEN",
                               "label": "Open",
+                              "icon": "edit",
                               "variant": "primary",
-                              "icon": "edit"
+                              "event": "OPEN"
                             },
                             {
-                              "event": "PUBLISH",
                               "icon": "send",
+                              "variant": "secondary",
                               "label": "Publish",
-                              "variant": "secondary"
+                              "event": "PUBLISH"
                             }
                           ],
                           "cols": 1.0,
-                          "gap": "sm",
+                          "type": "data-grid",
                           "fields": [
                             {
                               "name": "title",
-                              "variant": "caption",
-                              "label": "Title"
+                              "label": "Title",
+                              "variant": "caption"
                             },
                             {
                               "name": "kind",
@@ -571,23 +714,25 @@
                               "variant": "badge"
                             },
                             {
-                              "variant": "badge",
+                              "label": "Status",
                               "name": "status",
-                              "label": "Status"
+                              "variant": "badge"
                             },
                             {
                               "label": "v",
-                              "name": "version",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "version"
                             },
                             {
+                              "name": "updatedAt",
                               "label": "Updated",
-                              "variant": "caption",
-                              "name": "updatedAt"
+                              "variant": "caption"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -601,9 +746,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -668,27 +813,28 @@
                     "main",
                     {
                       "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
+                              "content": "@entity.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@entity.title"
+                              "type": "typography"
                             },
                             {
-                              "variant": "secondary",
                               "label": "@entity.status",
+                              "variant": "secondary",
                               "type": "badge"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack"
                         },
                         {
@@ -696,34 +842,33 @@
                         },
                         {
                           "type": "rich-block-editor",
-                          "changeEvent": "BLOCKS_CHANGE",
-                          "showToolbar": true,
                           "initialBlocks": "@entity.blocksJson",
-                          "placeholder": "Start writing…"
+                          "changeEvent": "BLOCKS_CHANGE",
+                          "placeholder": "Start writing…",
+                          "showToolbar": true
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "SAVE",
+                              "icon": "save",
                               "label": "Save",
+                              "action": "SAVE",
                               "variant": "primary",
-                              "type": "button",
-                              "icon": "save"
+                              "type": "button"
                             },
                             {
-                              "variant": "secondary",
-                              "type": "button",
-                              "label": "Publish",
                               "action": "PUBLISH",
-                              "icon": "send"
+                              "label": "Publish",
+                              "variant": "secondary",
+                              "icon": "send",
+                              "type": "button"
                             }
                           ],
                           "type": "stack"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -790,8 +935,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "DocumentPublished",
-                        "failure": "DocumentSaveFailed"
+                        "failure": "DocumentSaveFailed",
+                        "success": "DocumentPublished"
                       }
                     }
                   ]
@@ -916,9 +1061,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "Saved",
                       "variant": "success",
-                      "message": "Saved"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -966,8 +1111,8 @@
                     "Document",
                     {
                       "emit": {
-                        "failure": "DocumentLoadFailed",
-                        "success": "DocumentLoaded"
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
                       }
                     }
                   ],

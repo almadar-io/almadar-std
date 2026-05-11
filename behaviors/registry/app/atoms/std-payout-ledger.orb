@@ -427,22 +427,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading payouts…",
                           "type": "typography",
+                          "content": "Loading payouts…",
                           "variant": "caption",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -456,90 +456,74 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "name": "wallet",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "wallet"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "icon": "clock",
+                              "format": "currency",
+                              "variant": "warning",
                               "value": 0.0,
                               "label": "Pending",
                               "type": "stat-display",
-                              "variant": "warning",
-                              "format": "currency"
+                              "icon": "clock"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Paid",
-                              "type": "stat-display",
                               "variant": "success",
+                              "icon": "check-circle",
                               "format": "currency",
-                              "value": 0.0,
-                              "icon": "check-circle"
+                              "value": 0.0
                             },
                             {
-                              "value": "@config.minimumWithdrawal",
-                              "type": "stat-display",
+                              "label": "Minimum Withdrawal",
                               "variant": "info",
                               "format": "currency",
-                              "icon": "dollar-sign",
-                              "label": "Minimum Withdrawal"
+                              "type": "stat-display",
+                              "value": "@config.minimumWithdrawal",
+                              "icon": "dollar-sign"
                             }
                           ],
-                          "cols": 3.0,
-                          "type": "simple-grid"
+                          "cols": 3.0
                         },
                         {
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "REQUEST_WITHDRAW",
-                              "variant": "primary",
-                              "icon": "send",
-                              "label": "Withdraw"
-                            },
-                            {
-                              "event": "MARK_PAID",
-                              "label": "Mark Paid",
-                              "variant": "secondary",
-                              "icon": "check"
-                            }
-                          ],
                           "entity": "@payload.data",
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "name": "vendorId",
+                              "label": "Vendor",
                               "variant": "caption",
-                              "label": "Vendor"
+                              "name": "vendorId"
                             },
                             {
                               "variant": "caption",
-                              "label": "Amount",
-                              "name": "amount"
+                              "name": "amount",
+                              "label": "Amount"
                             },
                             {
                               "label": "Currency",
-                              "variant": "badge",
-                              "name": "currency"
+                              "name": "currency",
+                              "variant": "badge"
                             },
                             {
                               "name": "status",
@@ -547,21 +531,37 @@
                               "variant": "badge"
                             },
                             {
-                              "label": "Bank",
+                              "name": "bankAccountMasked",
                               "variant": "caption",
-                              "name": "bankAccountMasked"
+                              "label": "Bank"
                             },
                             {
                               "label": "Requested",
                               "variant": "caption",
                               "name": "requestedAt"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "REQUEST_WITHDRAW",
+                              "label": "Withdraw",
+                              "icon": "send",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "secondary",
+                              "event": "MARK_PAID",
+                              "label": "Mark Paid",
+                              "icon": "check"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "cols": 1.0
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -576,8 +576,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -639,14 +639,14 @@
                     "stripe-payout",
                     "create",
                     {
-                      "amount": "@payload.amount",
+                      "currency": "@entity.currency",
                       "vendorId": "@payload.vendorId",
-                      "currency": "@entity.currency"
+                      "amount": "@payload.amount"
                     },
                     {
                       "emit": {
-                        "failure": "PayoutWithdrawFailed",
-                        "success": "PayoutWithdrawn"
+                        "success": "PayoutWithdrawn",
+                        "failure": "PayoutWithdrawFailed"
                       }
                     }
                   ]
@@ -704,8 +704,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "PayoutUpdated",
-                        "failure": "PayoutWithdrawFailed"
+                        "failure": "PayoutWithdrawFailed",
+                        "success": "PayoutUpdated"
                       }
                     }
                   ]
@@ -715,6 +715,23 @@
                 "from": "browsing",
                 "to": "loading",
                 "event": "PayoutUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Payout",
+                    {
+                      "emit": {
+                        "failure": "PayoutLoadFailed",
+                        "success": "PayoutLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "PayoutWithdrawn",
                 "effects": [
                   [
                     "fetch",
@@ -730,23 +747,6 @@
               },
               {
                 "from": "browsing",
-                "to": "loading",
-                "event": "PayoutWithdrawn",
-                "effects": [
-                  [
-                    "fetch",
-                    "Payout",
-                    {
-                      "emit": {
-                        "failure": "PayoutLoadFailed",
-                        "success": "PayoutLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
                 "to": "browsing",
                 "event": "PayoutWithdrawFailed",
                 "effects": [
@@ -754,9 +754,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -771,8 +771,8 @@
                     "Payout",
                     {
                       "emit": {
-                        "failure": "PayoutLoadFailed",
-                        "success": "PayoutLoaded"
+                        "success": "PayoutLoaded",
+                        "failure": "PayoutLoadFailed"
                       }
                     }
                   ]
@@ -804,9 +804,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -830,8 +830,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

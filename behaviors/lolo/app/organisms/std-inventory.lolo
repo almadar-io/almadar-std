@@ -28,13 +28,13 @@ orbital InventoryItemOrbital {
   trait InventoryAppLayout = AppShell.traits.AppLayout {
     config: {
       contentTrait: "@trait.InventoryCatalog",
-      appName: "Inventory",
+      appName: "Inventory Management",
       navItems: [
-        { label: "Items",         href: "/inventory",         icon: "package" },
-        { label: "Adjustments",   href: "/stock-adjustments", icon: "sliders" },
-        { label: "Stock Levels",  href: "/stock",             icon: "layers" },
-        { label: "Warehouses",    href: "/warehouses",        icon: "warehouse" },
-        { label: "Reorder Rules", href: "/reorder-rules",     icon: "repeat" }
+        { label: "Items",         href: "/inventory",      icon: "package" },
+        { label: "Stock Levels",  href: "/stock-levels",   icon: "package" },
+        { label: "Warehouses",    href: "/warehouses",     icon: "warehouse" },
+        { label: "Reorder Rules", href: "/reorder-rules",  icon: "refresh-ccw" },
+        { label: "Adjustments",   href: "/adjustments",    icon: "edit" }
       ],
       searchEvent: "INVENTORY_SEARCH",
       notifications: [],
@@ -260,4 +260,255 @@ orbital InventoryItemOrbital {
   }
 
   page "/inventory" as InventoryPage -> InventoryAppLayout, InventoryCatalog, InventorySearch, InventoryFilter, InventoryStats, InventoryGraphs, InventoryBrowseList, InventoryCreate, InventoryEdit, InventoryView, InventoryDelete, InventoryPersistor
+}
+
+orbital StockLevelPanelOrbital {
+  uses AppShell   from "std/behaviors/std-app-layout"
+  uses StockLevel from "std/behaviors/std-stock-level"
+
+  entity StockLevel [persistent: stocklevels] {
+    id           : string!
+    sku          : string!
+    productName  : string = ""
+    locationId   : string = ""
+    onHand       : number = 0
+    reserved     : number = 0
+    reorderPoint : number = 0
+    lastCounted  : string = ""
+  }
+
+  trait StockLevelAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.StockLevelPanel",
+      appName: "Inventory Management",
+      navItems: [
+        { label: "Items",         href: "/inventory",      icon: "package" },
+        { label: "Stock Levels",  href: "/stock-levels",   icon: "package" },
+        { label: "Warehouses",    href: "/warehouses",     icon: "warehouse" },
+        { label: "Reorder Rules", href: "/reorder-rules",  icon: "refresh-ccw" },
+        { label: "Adjustments",   href: "/adjustments",    icon: "edit" }
+      ],
+      searchEvent: "STOCK_LEVEL_SEARCH",
+      notifications: [],
+      notificationClickEvent: "STOCK_LEVEL_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: STOCK_LEVEL_SEARCH
+      NOTIFY_CLICK: STOCK_LEVEL_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait StockLevelPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "package" },
+            { type: "typography", variant: "h2", content: "Stock Levels" }
+          ]},
+          { type: "divider" },
+          "@trait.StockLevelView"
+        ]})
+    }
+  }
+
+  trait StockLevelView = StockLevel.traits.StockLevelLedger {
+    config: {
+      title: "Stock Levels"
+    }
+  }
+
+  page "/stock-levels" as StockLevelsPage -> StockLevelAppLayout, StockLevelPanel, StockLevelView
+}
+
+orbital WarehousePanelOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses Warehouse from "std/behaviors/std-warehouse"
+
+  entity Warehouse [persistent: warehouses] {
+    id        : string!
+    name      : string!
+    code      : string = ""
+    address   : string = ""
+    type      : "warehouse" | "store" | "transit" = "warehouse"
+    isActive  : boolean = true
+    totalSkus : number = 0
+  }
+
+  trait WarehouseAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.WarehousePanel",
+      appName: "Inventory Management",
+      navItems: [
+        { label: "Items",         href: "/inventory",      icon: "package" },
+        { label: "Stock Levels",  href: "/stock-levels",   icon: "package" },
+        { label: "Warehouses",    href: "/warehouses",     icon: "warehouse" },
+        { label: "Reorder Rules", href: "/reorder-rules",  icon: "refresh-ccw" },
+        { label: "Adjustments",   href: "/adjustments",    icon: "edit" }
+      ],
+      searchEvent: "WAREHOUSE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "WAREHOUSE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: WAREHOUSE_SEARCH
+      NOTIFY_CLICK: WAREHOUSE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait WarehousePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "warehouse" },
+            { type: "typography", variant: "h2", content: "Warehouses" }
+          ]},
+          { type: "divider" },
+          "@trait.WarehouseView"
+        ]})
+    }
+  }
+
+  trait WarehouseView = Warehouse.traits.WarehouseDirectory {
+    config: {
+      title: "Locations"
+    }
+  }
+
+  page "/warehouses" as WarehousesPage -> WarehouseAppLayout, WarehousePanel, WarehouseView
+}
+
+orbital ReorderRulePanelOrbital {
+  uses AppShell    from "std/behaviors/std-app-layout"
+  uses ReorderRule from "std/behaviors/std-reorder-rule"
+
+  entity ReorderRule [persistent: reorderrules] {
+    id           : string!
+    sku          : string!
+    locationId   : string = ""
+    thresholdQty : number = 0
+    reorderQty   : number = 0
+    vendor       : string = ""
+    leadTimeDays : number = 0
+    isActive     : boolean = true
+  }
+
+  trait ReorderRuleAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.ReorderRulePanel",
+      appName: "Inventory Management",
+      navItems: [
+        { label: "Items",         href: "/inventory",      icon: "package" },
+        { label: "Stock Levels",  href: "/stock-levels",   icon: "package" },
+        { label: "Warehouses",    href: "/warehouses",     icon: "warehouse" },
+        { label: "Reorder Rules", href: "/reorder-rules",  icon: "refresh-ccw" },
+        { label: "Adjustments",   href: "/adjustments",    icon: "edit" }
+      ],
+      searchEvent: "REORDER_RULE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "REORDER_RULE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: REORDER_RULE_SEARCH
+      NOTIFY_CLICK: REORDER_RULE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ReorderRulePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "refresh-ccw" },
+            { type: "typography", variant: "h2", content: "Reorder Rules" }
+          ]},
+          { type: "divider" },
+          "@trait.ReorderRuleView"
+        ]})
+    }
+  }
+
+  trait ReorderRuleView = ReorderRule.traits.ReorderRuleManager {
+    config: {
+      title: "Reorder Rules"
+    }
+  }
+
+  page "/reorder-rules" as ReorderRulesPage -> ReorderRuleAppLayout, ReorderRulePanel, ReorderRuleView
+}
+
+orbital StockAdjustmentPanelOrbital {
+  uses AppShell        from "std/behaviors/std-app-layout"
+  uses StockAdjustment from "std/behaviors/std-stock-adjustment"
+
+  entity StockAdjustment [persistent: stockadjustments] {
+    id            : string!
+    stockLevelId  : string!
+    sku           : string = ""
+    name          : string = ""
+    warehouseId   : string = ""
+    warehouseName : string = ""
+    quantityDelta : number = 0
+    reason        : "manual" | "damaged" | "transfer_in" | "transfer_out" | "shrinkage" | "recount" = "manual"
+    adjustedBy    : string = ""
+    adjustedAt    : string = ""
+    notes         : string = ""
+    pendingId     : string = ""
+  }
+
+  trait StockAdjustmentAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.StockAdjustmentPanel",
+      appName: "Inventory Management",
+      navItems: [
+        { label: "Items",         href: "/inventory",      icon: "package" },
+        { label: "Stock Levels",  href: "/stock-levels",   icon: "package" },
+        { label: "Warehouses",    href: "/warehouses",     icon: "warehouse" },
+        { label: "Reorder Rules", href: "/reorder-rules",  icon: "refresh-ccw" },
+        { label: "Adjustments",   href: "/adjustments",    icon: "edit" }
+      ],
+      searchEvent: "STOCK_ADJUSTMENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: STOCK_ADJUSTMENT_SEARCH
+      NOTIFY_CLICK: STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait StockAdjustmentPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "edit" },
+            { type: "typography", variant: "h2", content: "Stock Adjustments" }
+          ]},
+          { type: "divider" },
+          "@trait.StockAdjustmentBrowse"
+        ]})
+    }
+  }
+
+  trait StockAdjustmentBrowse = StockAdjustment.traits.StockAdjustmentBrowse {
+    config: {}
+  }
+
+  trait StockAdjustmentCreate = StockAdjustment.traits.StockAdjustmentCreate {
+    config: {}
+  }
+  trait StockAdjustmentDelete = StockAdjustment.traits.StockAdjustmentDelete {
+    config: {}
+  }
+  trait StockAdjustmentPersistor = StockAdjustment.traits.StockAdjustmentPersistor {
+    config: {}
+  }
+
+  page "/adjustments" as AdjustmentsPage -> StockAdjustmentAppLayout, StockAdjustmentPanel, StockAdjustmentBrowse, StockAdjustmentCreate, StockAdjustmentDelete, StockAdjustmentPersistor
 }

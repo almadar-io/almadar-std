@@ -549,8 +549,8 @@
                     "InvoiceRecord",
                     {
                       "emit": {
-                        "failure": "InvoiceLoadFailed",
-                        "success": "InvoiceLoaded"
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
                       }
                     }
                   ],
@@ -558,20 +558,20 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading invoices…",
+                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
                       "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12",
                       "gap": "md",
                       "align": "center"
                     }
@@ -587,10 +587,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "gap": "sm",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -601,48 +605,15 @@
                               "type": "typography",
                               "content": "@config.title"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "variant": "secondary",
-                              "label": "View",
-                              "icon": "eye"
-                            },
-                            {
-                              "label": "Send",
-                              "icon": "send",
-                              "event": "SEND",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "MARK_PAID",
-                              "icon": "check",
-                              "label": "Mark Paid",
-                              "variant": "primary"
-                            },
-                            {
-                              "icon": "x",
-                              "label": "Void",
-                              "variant": "danger",
-                              "event": "VOID"
-                            },
-                            {
-                              "variant": "danger",
-                              "event": "REFUND",
-                              "icon": "rotate-ccw",
-                              "label": "Refund"
-                            }
-                          ],
                           "type": "data-grid",
                           "entity": "@payload.data",
+                          "cols": 1.0,
                           "gap": "sm",
                           "fields": [
                             {
@@ -651,36 +622,65 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "name": "customerId",
-                              "label": "Customer"
-                            },
-                            {
-                              "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "Total",
-                              "name": "total",
+                              "label": "Customer",
                               "variant": "caption"
                             },
                             {
-                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Total",
+                              "name": "total"
+                            },
+                            {
                               "name": "currency",
-                              "label": "Currency"
+                              "label": "Currency",
+                              "variant": "badge"
                             },
                             {
                               "name": "dueAt",
-                              "variant": "caption",
-                              "label": "Due"
+                              "label": "Due",
+                              "variant": "caption"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "variant": "secondary",
+                              "event": "VIEW",
+                              "label": "View",
+                              "icon": "eye"
+                            },
+                            {
+                              "icon": "send",
+                              "variant": "primary",
+                              "label": "Send",
+                              "event": "SEND"
+                            },
+                            {
+                              "label": "Mark Paid",
+                              "variant": "primary",
+                              "event": "MARK_PAID",
+                              "icon": "check"
+                            },
+                            {
+                              "event": "VOID",
+                              "label": "Void",
+                              "icon": "x",
+                              "variant": "danger"
+                            },
+                            {
+                              "event": "REFUND",
+                              "icon": "rotate-ccw",
+                              "label": "Refund",
+                              "variant": "danger"
                             }
                           ]
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -694,9 +694,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -754,74 +754,92 @@
                       "children": [
                         {
                           "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "receipt",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "receipt"
                             },
                             {
                               "content": "@entity.invoiceNumber",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "variant": "secondary",
+                              "type": "badge",
                               "label": "@entity.status",
-                              "type": "badge"
+                              "variant": "secondary"
                             }
                           ]
+                        },
+                        {
+                          "highlighted": true,
+                          "price": "@entity.currency",
+                          "badge": "@entity.status",
+                          "action": {
+                            "event": "SEND",
+                            "label": "Send Invoice"
+                          },
+                          "name": "@entity.invoiceNumber",
+                          "type": "pricing-card",
+                          "features": [
+                            "Subtotal billed",
+                            "Tax applied",
+                            "Issued on file",
+                            "Due on record"
+                          ],
+                          "description": "Invoice summary card with line-item totals and tax."
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "gap": "lg",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Issued",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body2",
+                                  "content": "@entity.issuedAt"
+                                }
+                              ],
+                              "gap": "xs",
                               "type": "stack",
+                              "direction": "vertical"
+                            },
+                            {
                               "children": [
                                 {
                                   "type": "typography",
-                                  "content": "Issued",
+                                  "content": "Due",
                                   "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.issuedAt",
-                                  "variant": "body2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "xs"
-                            },
-                            {
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "content": "Due",
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
                                   "content": "@entity.dueAt",
-                                  "variant": "body2",
-                                  "type": "typography"
+                                  "variant": "body2"
                                 }
                               ],
                               "type": "stack",
-                              "gap": "xs"
+                              "gap": "xs",
+                              "direction": "vertical"
                             },
                             {
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Currency",
                                   "variant": "caption",
+                                  "content": "Currency",
+                                  "type": "typography",
                                   "color": "muted"
                                 },
                                 {
@@ -835,63 +853,63 @@
                               "gap": "xs"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "color": "muted",
                           "content": "@entity.notes",
                           "variant": "body2",
-                          "type": "typography",
-                          "color": "muted"
+                          "type": "typography"
                         },
                         {
-                          "direction": "horizontal",
                           "justify": "end",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "primary",
-                              "action": "SEND",
                               "label": "Send",
                               "type": "button",
+                              "action": "SEND",
                               "icon": "send"
                             },
                             {
-                              "variant": "primary",
-                              "icon": "check",
                               "label": "Mark Paid",
+                              "action": "MARK_PAID",
+                              "variant": "primary",
                               "type": "button",
-                              "action": "MARK_PAID"
+                              "icon": "check"
                             },
                             {
-                              "action": "VOID",
+                              "label": "Void",
                               "type": "button",
                               "icon": "x",
-                              "label": "Void",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "action": "VOID"
                             },
                             {
                               "icon": "rotate-ccw",
-                              "variant": "danger",
                               "label": "Refund",
                               "type": "button",
-                              "action": "REFUND"
+                              "action": "REFUND",
+                              "variant": "danger"
                             },
                             {
-                              "variant": "secondary",
                               "action": "INIT",
-                              "label": "Back",
                               "type": "button",
-                              "icon": "arrow-left"
+                              "icon": "arrow-left",
+                              "label": "Back",
+                              "variant": "secondary"
                             }
                           ],
                           "type": "stack",
                           "gap": "sm"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -923,8 +941,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "InvoiceUpdated",
-                        "failure": "InvoiceUpdateFailed"
+                        "failure": "InvoiceUpdateFailed",
+                        "success": "InvoiceUpdated"
                       }
                     }
                   ],
@@ -971,8 +989,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "InvoiceUpdateFailed",
-                        "success": "InvoiceUpdated"
+                        "success": "InvoiceUpdated",
+                        "failure": "InvoiceUpdateFailed"
                       }
                     }
                   ]
@@ -1027,8 +1045,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "InvoiceRefundFailed",
-                        "success": "InvoiceRefunded"
+                        "success": "InvoiceRefunded",
+                        "failure": "InvoiceRefundFailed"
                       }
                     }
                   ]
@@ -1044,8 +1062,8 @@
                     "InvoiceRecord",
                     {
                       "emit": {
-                        "success": "InvoiceLoaded",
-                        "failure": "InvoiceLoadFailed"
+                        "failure": "InvoiceLoadFailed",
+                        "success": "InvoiceLoaded"
                       }
                     }
                   ]
@@ -1060,8 +1078,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -1093,9 +1111,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -1144,8 +1162,8 @@
                     "InvoiceRecord",
                     {
                       "emit": {
-                        "failure": "InvoiceLoadFailed",
-                        "success": "InvoiceLoaded"
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
                       }
                     }
                   ],
@@ -1153,8 +1171,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

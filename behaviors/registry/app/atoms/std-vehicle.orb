@@ -541,22 +541,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Loading vehicles…"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -570,72 +570,168 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
+                          "items": [
+                            {
+                              "label": "Fleet",
+                              "href": "/"
+                            },
+                            {
+                              "label": "Region"
+                            },
+                            {
+                              "label": "Vehicles"
+                            }
+                          ],
+                          "type": "breadcrumb"
+                        },
+                        {
+                          "items": [
+                            {
+                              "id": "vehicles",
+                              "isActive": true,
+                              "label": "Vehicles",
+                              "href": "/vehicles"
+                            },
+                            {
+                              "id": "drivers",
+                              "href": "/drivers",
+                              "label": "Drivers"
+                            },
+                            {
+                              "href": "/telematics-events",
+                              "label": "Events",
+                              "id": "events"
+                            }
+                          ],
+                          "orientation": "horizontal",
+                          "type": "navigation"
+                        },
+                        {
                           "children": [
                             {
                               "name": "truck",
                               "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography"
                             },
                             {
-                              "action": "CREATE",
+                              "type": "button",
                               "label": "New Vehicle",
                               "variant": "primary",
-                              "type": "button"
+                              "action": "CREATE"
                             }
                           ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "height": "240px",
+                          "markers": [],
+                          "type": "map-view",
+                          "zoom": 10.0
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "height": 80.0,
+                              "mapHeight": 1000.0,
+                              "tiles": [],
+                              "units": [],
+                              "type": "mini-map",
+                              "width": 120.0,
+                              "mapWidth": 1000.0
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "waypoint-marker",
+                                  "size": "md",
+                                  "label": "Depot",
+                                  "active": true
+                                },
+                                {
+                                  "size": "sm",
+                                  "label": "Stop 1",
+                                  "type": "waypoint-marker"
+                                },
+                                {
+                                  "type": "waypoint-marker",
+                                  "size": "sm",
+                                  "label": "Stop 2"
+                                },
+                                {
+                                  "size": "md",
+                                  "label": "Destination",
+                                  "completed": true,
+                                  "type": "waypoint-marker"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "radius": 40.0,
+                          "type": "svg-mesh",
+                          "nodes": 6.0,
+                          "cx": 100.0,
+                          "color": "primary",
+                          "connectionDensity": 0.5,
+                          "cy": 60.0
+                        },
+                        {
                           "fields": [
                             {
-                              "variant": "caption",
+                              "label": "Plate",
                               "name": "licensePlate",
-                              "label": "Plate"
+                              "variant": "caption"
                             },
                             {
-                              "variant": "caption",
+                              "label": "Make",
                               "name": "make",
-                              "label": "Make"
+                              "variant": "caption"
                             },
                             {
                               "variant": "caption",
-                              "label": "Model",
-                              "name": "model"
+                              "name": "model",
+                              "label": "Model"
                             },
                             {
-                              "label": "Year",
+                              "name": "year",
                               "variant": "caption",
-                              "name": "year"
+                              "label": "Year"
                             },
                             {
                               "name": "vehicleType",
-                              "label": "Type",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "label": "Type"
                             },
                             {
+                              "name": "odometer",
                               "variant": "caption",
-                              "label": "Odometer",
-                              "name": "odometer"
+                              "label": "Odometer"
                             },
                             {
                               "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "status"
                             },
                             {
                               "name": "assignedDriverId",
@@ -643,43 +739,72 @@
                               "variant": "caption"
                             }
                           ],
+                          "type": "data-grid",
                           "entity": "@payload.data",
                           "cols": 1.0,
                           "gap": "sm",
                           "itemActions": [
                             {
-                              "variant": "secondary",
+                              "label": "View",
                               "event": "VIEW",
-                              "label": "View"
+                              "variant": "secondary"
                             },
                             {
+                              "event": "EDIT",
                               "label": "Edit",
-                              "variant": "secondary",
-                              "event": "EDIT"
+                              "variant": "secondary"
                             },
                             {
-                              "label": "Assign Driver",
+                              "variant": "primary",
                               "event": "ASSIGN_DRIVER",
-                              "variant": "primary"
+                              "label": "Assign Driver"
                             },
                             {
+                              "event": "MARK_MAINTENANCE",
                               "variant": "secondary",
-                              "label": "Maintenance",
-                              "event": "MARK_MAINTENANCE"
+                              "label": "Maintenance"
                             },
                             {
+                              "variant": "ghost",
                               "label": "Retire",
-                              "event": "RETIRE",
-                              "variant": "ghost"
+                              "event": "RETIRE"
                             },
                             {
                               "event": "REQUEST_DELETE",
-                              "label": "Delete",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Delete"
                             }
                           ]
+                        },
+                        {
+                          "title": "Vehicle Detail",
+                          "isOpen": false,
+                          "width": "md",
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "content": "Selected vehicle",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "View detail",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ],
+                          "position": "right",
+                          "type": "drawer"
                         }
                       ],
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -694,9 +819,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -720,22 +845,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Refreshing vehicles…",
-                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Refreshing vehicles…"
                         }
                       ],
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -759,21 +884,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Searching vehicles…",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Searching vehicles…"
                         }
                       ],
                       "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -789,8 +914,8 @@
                     "Vehicle",
                     {
                       "emit": {
-                        "success": "VehicleLoaded",
-                        "failure": "VehicleLoadFailed"
+                        "failure": "VehicleLoadFailed",
+                        "success": "VehicleLoaded"
                       }
                     }
                   ],
@@ -798,22 +923,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "content": "Filtering vehicles…",
-                          "type": "typography"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
                       "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -837,9 +962,6 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -847,12 +969,15 @@
                         {
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Filtering vehicles…"
+                          "content": "Filtering vehicles…",
+                          "color": "muted"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -872,8 +997,8 @@
                     "main",
                     {
                       "variant": "info",
-                      "type": "alert",
-                      "message": "Vehicle retired"
+                      "message": "Vehicle retired",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -893,8 +1018,8 @@
                     "main",
                     {
                       "message": "Vehicle marked for maintenance",
-                      "variant": "warning",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "warning"
                     }
                   ]
                 ]
@@ -913,9 +1038,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "success",
-                      "message": "Driver assigned",
-                      "type": "alert"
+                      "message": "Driver assigned"
                     }
                   ]
                 ]
@@ -929,9 +1054,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "info",
-                      "message": "Creating new vehicle"
+                      "message": "Creating new vehicle",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -950,9 +1075,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "info",
-                      "message": "Viewing vehicle",
-                      "type": "alert"
+                      "message": "Viewing vehicle"
                     }
                   ]
                 ]
@@ -992,9 +1117,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "warning",
+                      "type": "alert",
                       "message": "Delete requested",
-                      "type": "alert"
+                      "variant": "warning"
                     }
                   ]
                 ]
@@ -1009,8 +1134,8 @@
                     "Vehicle",
                     {
                       "emit": {
-                        "failure": "VehicleLoadFailed",
-                        "success": "VehicleLoaded"
+                        "success": "VehicleLoaded",
+                        "failure": "VehicleLoadFailed"
                       }
                     }
                   ],

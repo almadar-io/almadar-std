@@ -121,34 +121,31 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "database"
+                              "name": "database",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Redis Cache",
                               "variant": "h2",
-                              "content": "Redis Cache"
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
                               "options": [
@@ -177,17 +174,20 @@
                             },
                             {
                               "type": "input",
-                              "placeholder": "ttl seconds",
-                              "inputType": "number"
+                              "inputType": "number",
+                              "placeholder": "ttl seconds"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "vertical"
                         },
                         {
-                          "type": "button",
-                          "icon": "play",
-                          "label": "Execute",
                           "variant": "primary",
-                          "action": "EXEC"
+                          "type": "button",
+                          "label": "Execute",
+                          "action": "EXEC",
+                          "icon": "play"
                         }
                       ],
                       "align": "center"
@@ -385,8 +385,8 @@
                     "ServiceRedis",
                     {
                       "emit": {
-                        "success": "ServiceRedisLoaded",
-                        "failure": "ServiceRedisLoadFailed"
+                        "failure": "ServiceRedisLoadFailed",
+                        "success": "ServiceRedisLoaded"
                       }
                     }
                   ],
@@ -394,12 +394,12 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -413,9 +413,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Running redis operation...",
+                      "type": "loading-state",
                       "title": "Executing...",
-                      "type": "loading-state"
+                      "message": "Running redis operation..."
                     }
                   ],
                   [
@@ -423,14 +423,14 @@
                     "redis",
                     "@config.op",
                     {
-                      "ttl": "@config.ttl",
                       "key": "@config.key",
+                      "ttl": "@config.ttl",
                       "value": "@config.value"
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "RedisDone"
+                        "success": "RedisDone",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -465,32 +465,32 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
                       "align": "center",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
                           "variant": "success",
-                          "type": "alert",
-                          "message": "Operation complete"
+                          "message": "Operation complete",
+                          "type": "alert"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
                           "content": "@entity.result",
                           "variant": "body"
                         },
                         {
-                          "variant": "ghost",
                           "label": "Reset",
-                          "action": "RESET",
+                          "variant": "ghost",
                           "icon": "rotate-ccw",
-                          "type": "button"
+                          "type": "button",
+                          "action": "RESET"
                         }
                       ]
                     }
@@ -519,8 +519,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
                       "onRetry": "RESET",
+                      "message": "@entity.error",
                       "title": "Redis Error",
                       "type": "error-state"
                     }
@@ -537,10 +537,10 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
+                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -565,12 +565,12 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        "@config.uiTrait"
-                      ],
+                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
-                      "type": "stack"
+                      "children": [
+                        "@config.uiTrait"
+                      ]
                     }
                   ]
                 ]
@@ -591,13 +591,13 @@
                 "del"
               ]
             },
-            "value": {
-              "type": "string",
-              "default": ""
-            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceRedisDefaultForm"
+            },
+            "value": {
+              "type": "string",
+              "default": ""
             },
             "ttl": {
               "type": "number",

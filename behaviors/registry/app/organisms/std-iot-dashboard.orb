@@ -71,32 +71,32 @@
           "name": "SensorAppLayout",
           "linkedEntity": "SensorReading",
           "config": {
-            "searchEvent": "SENSOR_SEARCH",
+            "appName": "IoT Dashboard",
+            "contentTrait": "@trait.SensorCatalog",
             "navItems": [
               {
                 "href": "/sensors",
-                "icon": "layout-list",
-                "label": "Sensors"
+                "label": "Sensors",
+                "icon": "layout-list"
               },
               {
-                "label": "Devices",
                 "icon": "cpu",
-                "href": "/devices"
+                "href": "/devices",
+                "label": "Devices"
               },
               {
-                "label": "Alerts",
                 "icon": "bell",
+                "label": "Alerts",
                 "href": "/alerts"
               }
             ],
-            "notificationClickEvent": "SENSOR_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.SensorCatalog",
+            "searchEvent": "SENSOR_SEARCH",
             "notifications": [],
-            "appName": "IoT Dashboard"
+            "notificationClickEvent": "SENSOR_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "SENSOR_SEARCH",
-            "NOTIFY_CLICK": "SENSOR_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "SENSOR_NOTIFICATIONS_OPEN",
+            "SEARCH": "SENSOR_SEARCH"
           }
         },
         {
@@ -125,32 +125,35 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "justify": "between",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "align": "center",
+                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "thermometer"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Sensor Readings",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -159,19 +162,16 @@
                         "@trait.SensorGraphs",
                         {
                           "type": "meter",
-                          "value": "@entity.value",
-                          "min": 0.0,
                           "max": "@entity.threshold",
-                          "label": "Latest reading vs threshold"
+                          "value": "@entity.value",
+                          "label": "Latest reading vs threshold",
+                          "min": 0.0
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.SensorBrowseList"
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -184,10 +184,12 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "SensorStats",
           "config": {
+            "title": "Sensors",
             "metrics": [
               {
-                "label": "Active Sensors",
-                "variant": "primary",
+                "format": "number",
+                "aggregation": "count",
+                "icon": "activity",
                 "filter": [
                   "fn",
                   "row",
@@ -197,19 +199,23 @@
                     ""
                   ]
                 ],
-                "format": "number",
-                "icon": "activity",
-                "aggregation": "count"
+                "label": "Active Sensors",
+                "variant": "primary"
               },
               {
+                "aggregation": "average",
                 "variant": "success",
-                "format": "number",
                 "field": "value",
+                "format": "number",
                 "label": "Avg Reading",
-                "icon": "trending-up",
-                "aggregation": "average"
+                "icon": "trending-up"
               },
               {
+                "aggregation": "count",
+                "format": "number",
+                "icon": "alert-triangle",
+                "label": "Anomalies",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -218,15 +224,9 @@
                     "@row.value",
                     "@row.threshold"
                   ]
-                ],
-                "variant": "warning",
-                "aggregation": "count",
-                "label": "Anomalies",
-                "format": "number",
-                "icon": "alert-triangle"
+                ]
               }
-            ],
-            "title": "Sensors"
+            ]
           },
           "listens": [
             {
@@ -243,13 +243,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "SensorGraphs",
           "config": {
-            "showLegend": true,
             "subtitle": "Sensor values across time",
-            "chartType": "line",
             "dateField": "timestamp",
-            "valueField": "value",
+            "showLegend": true,
+            "height": 240.0,
             "title": "Readings over time",
-            "height": 240.0
+            "chartType": "line",
+            "valueField": "value"
           },
           "listens": [
             {
@@ -270,19 +270,19 @@
             "gap": "sm",
             "fields": [
               {
-                "variant": "h4",
-                "name": "sensorId",
+                "label": "Sensor",
                 "icon": "thermometer",
-                "label": "Sensor"
+                "variant": "h4",
+                "name": "sensorId"
               },
               {
-                "label": "Type",
                 "variant": "badge",
-                "name": "type"
+                "name": "type",
+                "label": "Type"
               },
               {
-                "format": "number",
                 "name": "value",
+                "format": "number",
                 "label": "Value",
                 "variant": "h4"
               },
@@ -292,9 +292,9 @@
                 "label": "Unit"
               },
               {
+                "name": "timestamp",
                 "label": "Timestamp",
                 "variant": "caption",
-                "name": "timestamp",
                 "format": "date"
               }
             ],
@@ -400,32 +400,32 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "DeviceAppLayout",
           "config": {
-            "searchEvent": "DEVICE_SEARCH",
-            "notifications": [],
             "notificationClickEvent": "DEVICE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.DeviceCatalog",
             "appName": "IoT Dashboard",
             "navItems": [
               {
+                "icon": "layout-list",
                 "label": "Sensors",
-                "href": "/sensors",
-                "icon": "layout-list"
+                "href": "/sensors"
               },
               {
+                "icon": "cpu",
                 "label": "Devices",
-                "href": "/devices",
-                "icon": "cpu"
+                "href": "/devices"
               },
               {
-                "href": "/alerts",
+                "icon": "bell",
                 "label": "Alerts",
-                "icon": "bell"
+                "href": "/alerts"
               }
             ],
-            "contentTrait": "@trait.DeviceCatalog"
+            "searchEvent": "DEVICE_SEARCH",
+            "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "DEVICE_NOTIFICATIONS_OPEN",
-            "SEARCH": "DEVICE_SEARCH"
+            "SEARCH": "DEVICE_SEARCH",
+            "NOTIFY_CLICK": "DEVICE_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -514,56 +514,56 @@
                       "children": [
                         {
                           "direction": "horizontal",
-                          "justify": "between",
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "cpu"
+                                  "name": "cpu",
+                                  "type": "icon"
                                 },
                                 {
-                                  "content": "Devices",
+                                  "type": "typography",
                                   "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "action": "CREATE",
-                                  "type": "button",
-                                  "icon": "plus",
-                                  "variant": "primary",
-                                  "label": "Create Device"
+                                  "content": "Devices"
                                 }
                               ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "action": "CREATE",
+                                  "label": "Create Device",
+                                  "type": "button",
+                                  "icon": "plus"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "justify": "between",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             "@trait.DeviceSearch",
                             "@trait.DeviceFilter"
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -588,34 +588,34 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-8",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "type": "typography"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
                           "content": "You're all caught up.",
+                          "variant": "caption",
                           "color": "muted"
                         },
                         {
                           "type": "button",
+                          "variant": "ghost",
                           "action": "INIT",
-                          "label": "Back",
-                          "variant": "ghost"
+                          "label": "Back"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-8",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -636,30 +636,30 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "DeviceFilter",
           "config": {
-            "event": "DEVICE_FILTER",
             "filters": [
               {
+                "filterType": "select",
+                "field": "status",
                 "label": "Status",
                 "options": [
                   "online",
                   "offline",
                   "maintenance"
-                ],
-                "filterType": "select",
-                "field": "status"
+                ]
               },
               {
+                "label": "Type",
                 "options": [
                   "sensor",
                   "gateway",
                   "actuator",
                   "controller"
                 ],
-                "filterType": "select",
                 "field": "type",
-                "label": "Type"
+                "filterType": "select"
               }
-            ]
+            ],
+            "event": "DEVICE_FILTER"
           }
         },
         {
@@ -667,12 +667,10 @@
           "name": "DeviceBrowseList",
           "linkedEntity": "Device",
           "config": {
-            "cols": 3.0,
-            "gap": "md",
             "fields": [
               {
-                "icon": "cpu",
                 "name": "name",
+                "icon": "cpu",
                 "variant": "h3"
               },
               {
@@ -680,33 +678,35 @@
                 "variant": "badge"
               },
               {
-                "name": "type",
-                "variant": "body"
+                "variant": "body",
+                "name": "type"
               },
               {
-                "name": "lastSeen",
                 "label": "Last Seen",
                 "format": "date",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "lastSeen"
               }
             ],
             "itemActions": [
               {
                 "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "VIEW"
               },
               {
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "EDIT"
               },
               {
-                "event": "DELETE",
+                "variant": "danger",
                 "label": "Delete",
-                "variant": "danger"
+                "event": "DELETE"
               }
-            ]
+            ],
+            "cols": 3.0,
+            "gap": "md"
           },
           "listens": [
             {
@@ -756,15 +756,15 @@
           "name": "DeviceCreate",
           "linkedEntity": "Device",
           "config": {
+            "icon": "plus-circle",
+            "title": "Create Device",
             "fields": [
               "name",
               "type",
               "status",
               "lastSeen"
             ],
-            "title": "Create Device",
-            "mode": "create",
-            "icon": "plus-circle"
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -785,15 +785,15 @@
           "name": "DeviceEdit",
           "linkedEntity": "Device",
           "config": {
-            "icon": "edit",
-            "mode": "edit",
             "title": "Edit Device",
             "fields": [
               "name",
               "type",
               "status",
               "lastSeen"
-            ]
+            ],
+            "icon": "edit",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -814,7 +814,7 @@
           "name": "DeviceView",
           "linkedEntity": "Device",
           "config": {
-            "title": "View Device",
+            "icon": "eye",
             "fields": [
               "name",
               "type",
@@ -822,7 +822,7 @@
               "lastSeen"
             ],
             "mode": "edit",
-            "icon": "eye"
+            "title": "View Device"
           },
           "events": {
             "OPEN": "VIEW"
@@ -843,14 +843,14 @@
           "name": "DeviceDelete",
           "linkedEntity": "Device",
           "config": {
-            "title": "Delete Device",
+            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "title": "Delete Device",
+            "icon": "alert-triangle"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -1173,28 +1173,28 @@
           "name": "DeviceAlertAppLayout",
           "linkedEntity": "DeviceAlert",
           "config": {
-            "contentTrait": "@trait.AlertCatalog",
-            "notificationClickEvent": "ALERT_NOTIFICATIONS_OPEN",
             "notifications": [],
+            "contentTrait": "@trait.AlertCatalog",
             "appName": "IoT Dashboard",
+            "notificationClickEvent": "ALERT_NOTIFICATIONS_OPEN",
+            "searchEvent": "ALERT_SEARCH",
             "navItems": [
               {
+                "label": "Sensors",
                 "href": "/sensors",
-                "icon": "layout-list",
-                "label": "Sensors"
+                "icon": "layout-list"
               },
               {
-                "label": "Devices",
                 "href": "/devices",
-                "icon": "cpu"
+                "icon": "cpu",
+                "label": "Devices"
               },
               {
+                "label": "Alerts",
                 "href": "/alerts",
-                "icon": "bell",
-                "label": "Alerts"
+                "icon": "bell"
               }
-            ],
-            "searchEvent": "ALERT_SEARCH"
+            ]
           },
           "events": {
             "NOTIFY_CLICK": "ALERT_NOTIFICATIONS_OPEN",
@@ -1243,46 +1243,49 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "bell"
+                                  "name": "bell",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Alerts",
+                                  "variant": "h2",
                                   "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "action": "CREATE",
-                                  "label": "New Alert",
-                                  "variant": "primary",
+                                  "type": "button",
                                   "icon": "plus",
-                                  "type": "button"
+                                  "variant": "primary",
+                                  "label": "New Alert"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between",
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1292,10 +1295,7 @@
                           "type": "divider"
                         },
                         "@trait.DeviceAlertCircuitBreaker"
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1309,14 +1309,29 @@
           "name": "AlertBrowseList",
           "linkedEntity": "DeviceAlert",
           "config": {
-            "gap": "sm",
-            "cols": 1.0,
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
             "fields": [
               {
-                "name": "deviceId",
-                "variant": "h4",
+                "label": "Device",
                 "icon": "cpu",
-                "label": "Device"
+                "variant": "h4",
+                "name": "deviceId"
               },
               {
                 "variant": "badge",
@@ -1325,33 +1340,18 @@
               },
               {
                 "variant": "body",
-                "name": "message",
-                "label": "Message"
+                "label": "Message",
+                "name": "message"
               },
               {
                 "format": "boolean",
                 "label": "Acknowledged",
-                "variant": "badge",
-                "name": "acknowledged"
+                "name": "acknowledged",
+                "variant": "badge"
               }
             ],
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              },
-              {
-                "event": "EDIT",
-                "label": "Edit",
-                "variant": "ghost"
-              },
-              {
-                "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
-              }
-            ]
+            "cols": 1.0,
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1385,15 +1385,15 @@
           "name": "AlertCreate",
           "linkedEntity": "DeviceAlert",
           "config": {
-            "icon": "plus-circle",
-            "mode": "create",
             "title": "New Alert",
             "fields": [
               "deviceId",
               "severity",
               "message",
               "acknowledged"
-            ]
+            ],
+            "icon": "plus-circle",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1415,14 +1415,14 @@
           "linkedEntity": "DeviceAlert",
           "config": {
             "title": "Edit Alert",
+            "mode": "edit",
             "icon": "edit",
             "fields": [
               "deviceId",
               "severity",
               "message",
               "acknowledged"
-            ],
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -1443,15 +1443,15 @@
           "name": "AlertView",
           "linkedEntity": "DeviceAlert",
           "config": {
+            "mode": "edit",
+            "title": "View Alert",
             "fields": [
               "deviceId",
               "severity",
               "message",
               "acknowledged"
             ],
-            "icon": "eye",
-            "mode": "edit",
-            "title": "View Alert"
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1472,9 +1472,9 @@
           "name": "AlertDelete",
           "linkedEntity": "DeviceAlert",
           "config": {
+            "alertMessage": "This action cannot be undone.",
             "icon": "alert-triangle",
             "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone.",
             "title": "Delete Alert"
           },
           "events": {
@@ -1701,9 +1701,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
+                      "type": "alert",
                       "message": "Critical alerts auto-notify on-call ops via email.",
-                      "type": "alert"
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -1718,9 +1718,9 @@
           "config": {
             "body": "A critical alert was raised on a device. Investigate immediately.",
             "subject": "Critical alert raised",
-            "sender": "alerts@example.com",
+            "recipient": "ops@example.com",
             "uiTrait": "@trait.AlertEmailNotice",
-            "recipient": "ops@example.com"
+            "sender": "alerts@example.com"
           },
           "listens": [
             {
@@ -1859,38 +1859,41 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "shield-check",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "shield-check"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Circuit Breaker",
-                                  "variant": "h3"
+                                  "variant": "h3",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
                               "type": "status-dot",
                               "pulse": false,
-                              "status": "online",
-                              "label": "Closed"
+                              "label": "Closed",
+                              "status": "online"
                             }
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "message": "Service is healthy. All requests are being processed.",
@@ -1898,11 +1901,12 @@
                           "type": "alert"
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
+                              "value": "@entity.failureCount",
                               "label": "Failures",
-                              "type": "stat-display",
-                              "value": "@entity.failureCount"
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
@@ -1910,19 +1914,15 @@
                               "value": "@entity.successCount"
                             }
                           ],
-                          "cols": 2.0,
                           "type": "simple-grid"
                         },
                         {
-                          "max": "@entity.threshold",
                           "type": "meter",
                           "value": "@entity.failureCount",
+                          "max": "@entity.threshold",
                           "min": 0.0
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1938,43 +1938,42 @@
                     {
                       "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
                               "align": "center",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "alert-triangle",
                                   "type": "icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Circuit Breaker",
-                                  "variant": "h3",
-                                  "type": "typography"
+                                  "variant": "h3"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
-                              "label": "Open",
                               "type": "status-dot",
                               "status": "critical",
+                              "label": "Open",
                               "pulse": true
                             }
                           ],
+                          "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center"
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
-                          "variant": "error",
                           "type": "alert",
+                          "variant": "error",
                           "message": "Circuit is open. Requests are being rejected to prevent cascading failures."
                         },
                         {
@@ -1987,26 +1986,27 @@
                               "type": "stat-display"
                             },
                             {
+                              "value": "@entity.successCount",
                               "label": "Successes",
-                              "type": "stat-display",
-                              "value": "@entity.successCount"
+                              "type": "stat-display"
                             }
                           ]
                         },
                         {
-                          "type": "meter",
                           "min": 0.0,
                           "max": "@entity.threshold",
+                          "type": "meter",
                           "value": "@entity.failureCount"
                         },
                         {
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
-                          "type": "button",
                           "label": "Reset",
-                          "action": "RESET"
+                          "type": "button",
+                          "variant": "ghost",
+                          "action": "RESET",
+                          "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2021,38 +2021,39 @@
                     "main",
                     {
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
                               "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "shield-check"
                                 },
                                 {
-                                  "variant": "h3",
                                   "content": "Circuit Breaker",
+                                  "variant": "h3",
                                   "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
                               "type": "status-dot",
-                              "status": "online",
                               "label": "Closed",
-                              "pulse": false
+                              "pulse": false,
+                              "status": "online"
                             }
-                          ]
+                          ],
+                          "justify": "between",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "variant": "success",
@@ -2064,26 +2065,25 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "value": "@entity.failureCount",
                               "type": "stat-display",
-                              "label": "Failures"
+                              "label": "Failures",
+                              "value": "@entity.failureCount"
                             },
                             {
+                              "value": "@entity.successCount",
                               "type": "stat-display",
-                              "label": "Successes",
-                              "value": "@entity.successCount"
+                              "label": "Successes"
                             }
                           ]
                         },
                         {
                           "min": 0.0,
-                          "type": "meter",
                           "value": "@entity.failureCount",
-                          "max": "@entity.threshold"
+                          "max": "@entity.threshold",
+                          "type": "meter"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2097,64 +2097,64 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity"
+                                  "name": "activity",
+                                  "type": "icon"
                                 },
                                 {
-                                  "content": "Circuit Breaker",
                                   "type": "typography",
+                                  "content": "Circuit Breaker",
                                   "variant": "h3"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md"
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
-                              "status": "warning",
-                              "pulse": true,
                               "type": "status-dot",
-                              "label": "Half-Open"
+                              "label": "Half-Open",
+                              "status": "warning",
+                              "pulse": true
                             }
                           ],
+                          "justify": "between",
                           "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
-                          "message": "Testing recovery. Limited requests allowed.",
                           "type": "alert",
-                          "variant": "warning"
+                          "variant": "warning",
+                          "message": "Testing recovery. Limited requests allowed."
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
-                              "label": "Failures",
                               "type": "stat-display",
+                              "label": "Failures",
                               "value": "@entity.failureCount"
                             },
                             {
-                              "label": "Successes",
                               "type": "stat-display",
-                              "value": "@entity.successCount"
+                              "value": "@entity.successCount",
+                              "label": "Successes"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          "type": "simple-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2169,14 +2169,14 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -2188,50 +2188,50 @@
                                   "variant": "h3"
                                 }
                               ],
-                              "gap": "md",
-                              "align": "center"
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "pulse": false,
+                              "type": "status-dot",
                               "label": "Closed",
-                              "status": "online",
-                              "type": "status-dot"
+                              "status": "online"
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center"
+                          "justify": "between"
                         },
                         {
                           "variant": "success",
-                          "type": "alert",
-                          "message": "Service is healthy."
+                          "message": "Service is healthy.",
+                          "type": "alert"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 2.0,
                           "children": [
                             {
-                              "label": "Failures",
                               "type": "stat-display",
+                              "label": "Failures",
                               "value": "@entity.failureCount"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Successes",
-                              "value": "@entity.successCount",
-                              "type": "stat-display"
+                              "value": "@entity.successCount"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "min": 0.0,
                           "type": "meter",
                           "value": "@entity.failureCount",
-                          "max": "@entity.threshold"
+                          "max": "@entity.threshold",
+                          "min": 0.0
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2250,16 +2250,13 @@
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "align": "center",
                               "children": [
                                 {
@@ -2267,27 +2264,29 @@
                                   "type": "icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Circuit Breaker",
-                                  "variant": "h3",
-                                  "type": "typography"
+                                  "variant": "h3"
                                 }
                               ]
                             },
                             {
-                              "pulse": false,
-                              "status": "online",
                               "type": "status-dot",
+                              "status": "online",
+                              "pulse": false,
                               "label": "Closed"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "variant": "success",
-                          "message": "Service is healthy.",
-                          "type": "alert"
+                          "type": "alert",
+                          "message": "Service is healthy."
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 2.0,
                           "children": [
                             {
@@ -2297,16 +2296,17 @@
                             },
                             {
                               "type": "stat-display",
-                              "value": "@entity.successCount",
-                              "label": "Successes"
+                              "label": "Successes",
+                              "value": "@entity.successCount"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
+                          "max": "@entity.threshold",
                           "type": "meter",
-                          "min": 0.0,
                           "value": "@entity.failureCount",
-                          "max": "@entity.threshold"
+                          "min": 0.0
                         }
                       ]
                     }
@@ -2325,74 +2325,74 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "align": "center",
+                          "justify": "between",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "alert-triangle"
                                 },
                                 {
+                                  "variant": "h3",
                                   "type": "typography",
-                                  "content": "Circuit Breaker",
-                                  "variant": "h3"
+                                  "content": "Circuit Breaker"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
-                              "label": "Open",
-                              "status": "critical",
                               "type": "status-dot",
-                              "pulse": true
+                              "label": "Open",
+                              "pulse": true,
+                              "status": "critical"
                             }
                           ],
-                          "justify": "between",
-                          "type": "stack",
-                          "gap": "md",
                           "direction": "horizontal"
                         },
                         {
-                          "message": "Circuit is open.",
+                          "type": "alert",
                           "variant": "error",
-                          "type": "alert"
+                          "message": "Circuit is open."
                         },
                         {
+                          "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "type": "stat-display",
-                              "label": "Failures",
-                              "value": "@entity.failureCount"
+                              "value": "@entity.failureCount",
+                              "label": "Failures"
                             },
                             {
+                              "label": "Successes",
                               "value": "@entity.successCount",
-                              "type": "stat-display",
-                              "label": "Successes"
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "type": "meter",
-                          "value": "@entity.failureCount",
+                          "max": "@entity.threshold",
                           "min": 0.0,
-                          "max": "@entity.threshold"
+                          "type": "meter",
+                          "value": "@entity.failureCount"
                         },
                         {
+                          "action": "RESET",
                           "type": "button",
                           "variant": "ghost",
                           "icon": "rotate-ccw",
-                          "action": "RESET",
                           "label": "Reset"
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2407,68 +2407,68 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "shield-check"
                                 },
                                 {
-                                  "content": "Circuit Breaker",
+                                  "variant": "h3",
                                   "type": "typography",
-                                  "variant": "h3"
+                                  "content": "Circuit Breaker"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "status": "online",
                               "type": "status-dot",
+                              "pulse": false,
                               "label": "Closed",
-                              "pulse": false
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "justify": "between",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "success",
-                          "message": "Service is healthy."
-                        },
-                        {
-                          "type": "simple-grid",
-                          "cols": 2.0,
-                          "children": [
-                            {
-                              "label": "Failures",
-                              "type": "stat-display",
-                              "value": "@entity.failureCount"
-                            },
-                            {
-                              "label": "Successes",
-                              "value": "@entity.successCount",
-                              "type": "stat-display"
+                              "status": "online"
                             }
                           ]
                         },
                         {
-                          "max": "@entity.threshold",
+                          "type": "alert",
+                          "message": "Service is healthy.",
+                          "variant": "success"
+                        },
+                        {
+                          "cols": 2.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": "@entity.failureCount"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.successCount"
+                            }
+                          ]
+                        },
+                        {
                           "min": 0.0,
+                          "value": "@entity.failureCount",
                           "type": "meter",
-                          "value": "@entity.failureCount"
+                          "max": "@entity.threshold"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]

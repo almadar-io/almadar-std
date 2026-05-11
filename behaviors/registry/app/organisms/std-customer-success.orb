@@ -121,14 +121,13 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CsAccountAppLayout",
           "config": {
-            "searchEvent": "CS_ACCOUNT_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "CS_ACCOUNT_NOTIFICATIONS_OPEN",
+            "appName": "Customer Success",
+            "contentTrait": "@trait.CsAccountCatalog",
             "navItems": [
               {
-                "icon": "users",
                 "label": "Accounts",
-                "href": "/cs-accounts"
+                "href": "/cs-accounts",
+                "icon": "users"
               },
               {
                 "href": "/health-scores",
@@ -136,22 +135,23 @@
                 "icon": "activity"
               },
               {
-                "label": "NPS",
                 "href": "/nps-surveys",
+                "label": "NPS",
                 "icon": "message-square"
               },
               {
-                "icon": "alert-triangle",
                 "href": "/renewal-risks",
+                "icon": "alert-triangle",
                 "label": "Renewal Risks"
               }
             ],
-            "contentTrait": "@trait.CsAccountCatalog",
-            "appName": "Customer Success"
+            "searchEvent": "CS_ACCOUNT_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "CS_ACCOUNT_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "CS_ACCOUNT_SEARCH",
-            "NOTIFY_CLICK": "CS_ACCOUNT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "CS_ACCOUNT_NOTIFICATIONS_OPEN",
+            "SEARCH": "CS_ACCOUNT_SEARCH"
           }
         },
         {
@@ -234,62 +234,61 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "users"
+                                  "name": "users",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "Accounts",
                                   "type": "typography",
-                                  "content": "Accounts"
+                                  "variant": "h2"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "type": "stack",
                               "children": [
                                 {
-                                  "label": "New Account",
                                   "variant": "primary",
+                                  "icon": "plus",
                                   "action": "CREATE",
-                                  "type": "button",
-                                  "icon": "plus"
+                                  "label": "New Account",
+                                  "type": "button"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
                           "justify": "between",
+                          "gap": "md",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             "@trait.CsAccountSearch",
                             "@trait.CsAccountFilter"
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center"
+                          "type": "stack"
                         },
                         "@trait.CsAccountStats",
                         "@trait.CsAccountGraphs",
@@ -297,7 +296,8 @@
                           "type": "divider"
                         },
                         "@trait.CsAccountBrowseList"
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -316,32 +316,32 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
+                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
+                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "You're all caught up.",
-                          "variant": "caption"
+                          "content": "You're all caught up."
                         },
                         {
-                          "type": "button",
-                          "action": "INIT",
                           "label": "Back to accounts",
+                          "action": "INIT",
+                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
+                      "className": "py-8",
                       "type": "stack",
                       "align": "center"
                     }
@@ -366,7 +366,6 @@
           "config": {
             "filters": [
               {
-                "filterType": "select",
                 "options": [
                   "trial",
                   "starter",
@@ -374,11 +373,11 @@
                   "enterprise"
                 ],
                 "field": "plan",
-                "label": "Plan"
+                "label": "Plan",
+                "filterType": "select"
               },
               {
                 "field": "status",
-                "filterType": "select",
                 "options": [
                   "onboarding",
                   "healthy",
@@ -386,7 +385,8 @@
                   "churned",
                   "renewed"
                 ],
-                "label": "Status"
+                "label": "Status",
+                "filterType": "select"
               }
             ],
             "event": "CS_ACCOUNT_FILTER"
@@ -396,15 +396,20 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "CsAccountStats",
           "config": {
+            "title": "Customer Success",
             "metrics": [
               {
-                "aggregation": "count",
-                "label": "Total",
-                "icon": "users",
                 "variant": "primary",
+                "aggregation": "count",
+                "icon": "users",
+                "label": "Total",
                 "format": "number"
               },
               {
+                "aggregation": "count",
+                "label": "Healthy",
+                "icon": "check-circle",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -414,15 +419,13 @@
                     "healthy"
                   ]
                 ],
-                "label": "Healthy",
-                "icon": "check-circle",
-                "format": "number",
-                "aggregation": "count",
                 "variant": "success"
               },
               {
-                "icon": "alert-triangle",
+                "label": "At Risk",
                 "format": "number",
+                "aggregation": "count",
+                "icon": "alert-triangle",
                 "variant": "warning",
                 "filter": [
                   "fn",
@@ -432,20 +435,17 @@
                     "@row.status",
                     "at-risk"
                   ]
-                ],
-                "aggregation": "count",
-                "label": "At Risk"
+                ]
               },
               {
-                "label": "Total ARR",
-                "icon": "dollar-sign",
-                "aggregation": "sum",
                 "variant": "info",
                 "field": "arrAmount",
+                "aggregation": "sum",
+                "label": "Total ARR",
+                "icon": "dollar-sign",
                 "format": "number"
               }
-            ],
-            "title": "Customer Success"
+            ]
           },
           "listens": [
             {
@@ -462,13 +462,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "CsAccountGraphs",
           "config": {
-            "height": 240.0,
-            "showLegend": false,
             "title": "Accounts by Plan",
-            "chartType": "bar",
-            "categoryField": "plan",
+            "subtitle": "Portfolio composition across subscription plans",
             "aggregation": "count",
-            "subtitle": "Portfolio composition across subscription plans"
+            "showLegend": false,
+            "height": 240.0,
+            "chartType": "bar",
+            "categoryField": "plan"
           },
           "listens": [
             {
@@ -487,48 +487,48 @@
           "linkedEntity": "CsAccount",
           "config": {
             "gap": "sm",
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ],
             "fields": [
               {
                 "variant": "h3",
-                "name": "name",
-                "icon": "users"
+                "icon": "users",
+                "name": "name"
               },
               {
-                "name": "plan",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "plan"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "variant": "caption",
-                "name": "csm"
+                "name": "csm",
+                "variant": "caption"
               },
               {
                 "name": "arrAmount",
                 "variant": "caption"
               },
               {
-                "name": "renewalDate",
-                "variant": "caption"
-              }
-            ],
-            "itemActions": [
-              {
-                "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
-              },
-              {
-                "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
-              },
-              {
-                "variant": "danger",
-                "label": "Delete",
-                "event": "DELETE"
+                "variant": "caption",
+                "name": "renewalDate"
               }
             ],
             "cols": 1.0
@@ -581,6 +581,7 @@
           "name": "CsAccountCreate",
           "linkedEntity": "CsAccount",
           "config": {
+            "title": "New Account",
             "mode": "create",
             "fields": [
               "name",
@@ -591,8 +592,7 @@
               "renewalDate",
               "signedAt"
             ],
-            "icon": "plus-circle",
-            "title": "New Account"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -622,9 +622,9 @@
               "renewalDate",
               "signedAt"
             ],
-            "icon": "edit",
             "title": "Edit Account",
-            "mode": "edit"
+            "mode": "edit",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -645,8 +645,8 @@
           "name": "CsAccountView",
           "linkedEntity": "CsAccount",
           "config": {
-            "mode": "edit",
             "icon": "eye",
+            "mode": "edit",
             "fields": [
               "name",
               "plan",
@@ -678,9 +678,9 @@
           "linkedEntity": "CsAccount",
           "config": {
             "title": "Delete Account",
+            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle",
-            "confirmLabel": "Delete"
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",

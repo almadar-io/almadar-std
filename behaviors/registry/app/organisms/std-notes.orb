@@ -116,8 +116,6 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "NoteAppLayout",
           "config": {
-            "appName": "Notes",
-            "searchEvent": "NOTE_SEARCH",
             "navItems": [
               {
                 "icon": "file-text",
@@ -126,27 +124,29 @@
               },
               {
                 "href": "/notes/tree",
-                "label": "Tree",
-                "icon": "list-tree"
+                "icon": "list-tree",
+                "label": "Tree"
               },
               {
                 "label": "Editor",
-                "icon": "edit",
-                "href": "/notes/editor"
+                "href": "/notes/editor",
+                "icon": "edit"
               },
               {
+                "href": "/notes/favorites",
                 "label": "Favorites",
-                "icon": "star",
-                "href": "/notes/favorites"
+                "icon": "star"
               }
             ],
             "notifications": [],
+            "appName": "Notes",
+            "searchEvent": "NOTE_SEARCH",
             "contentTrait": "@trait.NoteCatalog",
             "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "NOTE_SEARCH",
-            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN",
+            "SEARCH": "NOTE_SEARCH"
           }
         },
         {
@@ -229,46 +229,47 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
                           "justify": "between",
-                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "file-text"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Notes",
+                                  "variant": "h2",
                                   "type": "typography"
                                 }
                               ],
-                              "align": "center",
-                              "gap": "sm",
                               "type": "stack",
+                              "gap": "sm",
                               "direction": "horizontal"
                             },
                             {
-                              "children": [
-                                {
-                                  "action": "CREATE",
-                                  "type": "button",
-                                  "label": "New Note",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                }
-                              ],
                               "type": "stack",
                               "gap": "sm",
+                              "children": [
+                                {
+                                  "label": "New Note",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "type": "button",
+                                  "action": "CREATE"
+                                }
+                              ],
                               "direction": "horizontal"
                             }
                           ],
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -278,10 +279,10 @@
                             "@trait.NoteSearch",
                             "@trait.NoteFilter"
                           ],
-                          "align": "center",
+                          "gap": "md",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          "align": "center",
+                          "type": "stack"
                         },
                         "@trait.NoteStats",
                         "@trait.NoteGraphs",
@@ -291,7 +292,6 @@
                         "@trait.NoteBrowseList"
                       ],
                       "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -311,34 +311,34 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-8",
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
+                          "type": "typography",
                           "variant": "h3",
-                          "content": "No notifications",
-                          "type": "typography"
+                          "content": "No notifications"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "You're all caught up."
+                          "content": "You're all caught up.",
+                          "variant": "caption"
                         },
                         {
-                          "action": "INIT",
-                          "variant": "ghost",
                           "type": "button",
-                          "label": "Back to notes"
+                          "variant": "ghost",
+                          "label": "Back to notes",
+                          "action": "INIT"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "className": "py-8",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -351,8 +351,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "NoteSearch",
           "config": {
-            "event": "NOTE_FULLTEXT_SEARCH",
-            "placeholder": "Search notes…"
+            "placeholder": "Search notes…",
+            "event": "NOTE_FULLTEXT_SEARCH"
           }
         },
         {
@@ -361,13 +361,13 @@
           "config": {
             "filters": [
               {
-                "filterType": "select",
+                "label": "Favorite",
+                "field": "isFavorite",
                 "options": [
                   "true",
                   "false"
                 ],
-                "field": "isFavorite",
-                "label": "Favorite"
+                "filterType": "select"
               }
             ],
             "event": "NOTE_FILTER"
@@ -377,19 +377,17 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "NoteStats",
           "config": {
-            "title": "Notes",
             "metrics": [
               {
-                "variant": "primary",
-                "format": "number",
-                "icon": "file-text",
                 "label": "Total",
-                "aggregation": "count"
+                "icon": "file-text",
+                "aggregation": "count",
+                "variant": "primary",
+                "format": "number"
               },
               {
-                "variant": "warning",
-                "label": "Favorites",
                 "icon": "star",
+                "variant": "warning",
                 "format": "number",
                 "filter": [
                   "fn",
@@ -400,13 +398,14 @@
                     true
                   ]
                 ],
-                "aggregation": "count"
+                "aggregation": "count",
+                "label": "Favorites"
               },
               {
                 "icon": "folder",
                 "aggregation": "count",
-                "format": "number",
                 "variant": "info",
+                "format": "number",
                 "label": "Top-level",
                 "filter": [
                   "fn",
@@ -418,7 +417,8 @@
                   ]
                 ]
               }
-            ]
+            ],
+            "title": "Notes"
           },
           "listens": [
             {
@@ -435,13 +435,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "NoteGraphs",
           "config": {
-            "showLegend": false,
             "subtitle": "Distribution of note icons across your tree",
-            "chartType": "bar",
             "title": "Notes by Icon",
+            "showLegend": false,
+            "height": 240.0,
+            "chartType": "bar",
             "categoryField": "icon",
-            "aggregation": "count",
-            "height": 240.0
+            "aggregation": "count"
           },
           "listens": [
             {
@@ -462,35 +462,35 @@
             "cols": 1.0,
             "itemActions": [
               {
-                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
-                "label": "Edit",
+                "event": "EDIT",
                 "variant": "ghost",
-                "event": "EDIT"
+                "label": "Edit"
               },
               {
+                "variant": "danger",
                 "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
+                "label": "Delete"
               }
             ],
             "gap": "sm",
             "fields": [
               {
+                "icon": "file-text",
                 "name": "title",
-                "variant": "h3",
-                "icon": "file-text"
-              },
-              {
-                "name": "icon",
-                "variant": "badge"
+                "variant": "h3"
               },
               {
                 "variant": "badge",
-                "name": "isFavorite"
+                "name": "icon"
+              },
+              {
+                "name": "isFavorite",
+                "variant": "badge"
               },
               {
                 "name": "lastEditedAt",
@@ -554,6 +554,8 @@
           "name": "NoteCreate",
           "linkedEntity": "Note",
           "config": {
+            "title": "New Note",
+            "icon": "plus-circle",
             "mode": "create",
             "fields": [
               "title",
@@ -562,9 +564,7 @@
               "parentId",
               "icon",
               "isFavorite"
-            ],
-            "title": "New Note",
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -616,9 +616,9 @@
           "name": "NoteView",
           "linkedEntity": "Note",
           "config": {
+            "icon": "eye",
             "mode": "edit",
             "title": "View Note",
-            "icon": "eye",
             "fields": [
               "title",
               "content",
@@ -647,14 +647,14 @@
           "name": "NoteDelete",
           "linkedEntity": "Note",
           "config": {
+            "confirmLabel": "Delete",
             "icon": "alert-triangle",
             "title": "Delete Note",
-            "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -987,6 +987,217 @@
             },
             {
               "ref": "NotePersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RichEditorPanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-rich-editor",
+          "as": "RichEditor"
+        }
+      ],
+      "entity": {
+        "name": "Document",
+        "collection": "documents",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "blocksJson",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          {
+            "name": "authorId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "parentId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "default": "page",
+            "values": [
+              "page",
+              "doc",
+              "post"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          {
+            "name": "version",
+            "type": "number",
+            "default": 1.0
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "RichEditorAppLayout",
+          "config": {
+            "appName": "Notes",
+            "searchEvent": "RICH_EDITOR_SEARCH",
+            "notificationClickEvent": "RICH_EDITOR_NOTIFICATIONS_OPEN",
+            "notifications": [],
+            "contentTrait": "@trait.RichEditorPanel",
+            "navItems": [
+              {
+                "label": "Notes",
+                "href": "/notes",
+                "icon": "file-text"
+              },
+              {
+                "icon": "list-tree",
+                "label": "Tree",
+                "href": "/notes/tree"
+              },
+              {
+                "label": "Editor",
+                "icon": "edit",
+                "href": "/notes/editor"
+              },
+              {
+                "href": "/notes/favorites",
+                "icon": "star",
+                "label": "Favorites"
+              },
+              {
+                "label": "Editor",
+                "href": "/editor",
+                "icon": "edit"
+              }
+            ]
+          },
+          "events": {
+            "SEARCH": "RICH_EDITOR_SEARCH",
+            "NOTIFY_CLICK": "RICH_EDITOR_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "RichEditorPanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "edit"
+                            },
+                            {
+                              "variant": "h2",
+                              "content": "Rich Editor",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.RichEditorDocumentEdit"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "RichEditor.traits.DocumentEdit",
+          "name": "RichEditorDocumentEdit",
+          "config": {
+            "title": "Documents"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "EditorPage",
+          "path": "/editor",
+          "traits": [
+            {
+              "ref": "RichEditorAppLayout"
+            },
+            {
+              "ref": "RichEditorPanel"
+            },
+            {
+              "ref": "RichEditorDocumentEdit"
             }
           ]
         }

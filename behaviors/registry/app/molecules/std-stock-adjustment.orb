@@ -265,8 +265,8 @@
                     "StockAdjustment",
                     {
                       "emit": {
-                        "failure": "StockAdjustmentLoadFailed",
-                        "success": "StockAdjustmentLoaded"
+                        "success": "StockAdjustmentLoaded",
+                        "failure": "StockAdjustmentLoadFailed"
                       }
                     }
                   ],
@@ -274,22 +274,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
+                          "content": "Loading adjustments…",
                           "type": "typography",
-                          "content": "Loading adjustments…"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
                       "type": "stack",
-                      "className": "py-12"
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -303,89 +303,122 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "justify": "between",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "name": "sliders",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "sliders"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Stock Adjustments",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
+                              "label": "New Adjustment",
+                              "action": "CREATE",
                               "icon": "plus",
                               "variant": "primary",
-                              "label": "New Adjustment",
-                              "action": "CREATE"
+                              "type": "button"
+                            }
+                          ]
+                        },
+                        {
+                          "icon": "file-spreadsheet",
+                          "maxSize": 10485760.0,
+                          "maxFiles": 1.0,
+                          "action": "CREATE",
+                          "label": "Drop CSV here for bulk import",
+                          "description": "or click to browse",
+                          "accept": ".csv,text/csv",
+                          "type": "upload-drop-zone"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "color": "muted",
+                              "type": "typography",
+                              "content": "Quick quantity adjust"
+                            },
+                            {
+                              "type": "number-stepper",
+                              "action": "CREATE",
+                              "min": -100.0,
+                              "size": "md",
+                              "step": 1.0,
+                              "max": 100.0,
+                              "value": 0.0
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger"
+                            }
+                          ],
                           "fields": [
                             {
-                              "variant": "h4",
+                              "label": "SKU",
                               "name": "sku",
-                              "icon": "tag",
-                              "label": "SKU"
+                              "variant": "h4",
+                              "icon": "tag"
                             },
                             {
+                              "name": "warehouseName",
                               "label": "Warehouse",
-                              "variant": "body",
-                              "name": "warehouseName"
+                              "variant": "body"
                             },
                             {
-                              "variant": "badge",
+                              "label": "Delta",
                               "name": "quantityDelta",
-                              "label": "Delta"
-                            },
-                            {
-                              "name": "reason",
-                              "label": "Reason",
                               "variant": "badge"
                             },
                             {
-                              "label": "Adjusted At",
+                              "variant": "badge",
+                              "name": "reason",
+                              "label": "Reason"
+                            },
+                            {
                               "variant": "caption",
+                              "label": "Adjusted At",
                               "name": "adjustedAt"
                             },
                             {
                               "variant": "caption",
-                              "name": "adjustedBy",
-                              "label": "Adjusted By"
+                              "label": "Adjusted By",
+                              "name": "adjustedBy"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "label": "Delete",
-                              "variant": "danger",
-                              "event": "REQUEST_DELETE"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -399,36 +432,36 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "name": "alert-triangle",
-                          "type": "icon",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
-                          "content": "Failed to load adjustments",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "@payload.error",
-                          "variant": "body",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "h3",
+                          "content": "Failed to load adjustments"
                         },
                         {
-                          "icon": "rotate-ccw",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "@payload.error"
+                        },
+                        {
                           "label": "Retry",
-                          "type": "button",
                           "variant": "primary",
-                          "action": "INIT"
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "type": "button"
                         }
                       ],
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -490,16 +523,16 @@
           "name": "StockAdjustmentCreate",
           "linkedEntity": "StockAdjustment",
           "config": {
-            "title": "New Adjustment",
-            "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "sku",
               "warehouseId",
               "quantityDelta",
               "reason",
               "notes"
-            ]
+            ],
+            "title": "New Adjustment",
+            "icon": "plus-circle",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -520,14 +553,14 @@
           "name": "StockAdjustmentDelete",
           "linkedEntity": "StockAdjustment",
           "config": {
-            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
             "title": "Delete Adjustment",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {

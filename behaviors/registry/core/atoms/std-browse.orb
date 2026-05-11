@@ -282,20 +282,20 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      },
                       "offset": 0.0,
-                      "limit": "@config.pageSize"
+                      "limit": "@config.pageSize",
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -310,19 +310,19 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "@config.gap",
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
-                          "cols": "@config.cols",
+                          "itemActions": "@config.itemActions",
                           "pageSize": "@config.displayPageSize",
-                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "gap": "@config.gap",
+                          "cols": "@config.cols",
+                          "fields": "@config.fields",
                           "imageField": "@config.imageField",
-                          "itemActions": "@config.itemActions"
+                          "type": "data-grid"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -336,8 +336,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "caption",
                       "content": "@payload.error",
+                      "variant": "caption",
                       "color": "error",
                       "type": "typography"
                     }
@@ -399,8 +399,8 @@
                         ]
                       ],
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       },
                       "limit": "@config.pageSize"
                     }
@@ -416,6 +416,8 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -433,12 +435,10 @@
                           "@payload.value"
                         ]
                       ],
-                      "limit": "@config.pageSize",
                       "emit": {
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
-                      },
-                      "offset": 0.0
+                      }
                     }
                   ]
                 ]
@@ -452,9 +452,10 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       },
                       "offset": [
                         "*",
@@ -464,8 +465,7 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ],
-                      "limit": "@config.pageSize"
+                      ]
                     }
                   ]
                 ]
@@ -479,20 +479,20 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "imageField": "@config.imageField",
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
                           "cols": "@config.cols",
                           "pageSize": "@config.displayPageSize",
+                          "imageField": "@config.imageField",
+                          "fields": "@config.fields",
+                          "gap": "@config.gap",
                           "type": "data-grid",
-                          "itemActions": "@config.itemActions",
-                          "gap": "@config.gap"
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -506,12 +506,12 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
+                      "limit": "@config.pageSize",
                       "offset": 0.0,
-                      "limit": "@config.pageSize"
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      }
                     }
                   ],
                   [
@@ -527,33 +527,25 @@
             ]
           },
           "config": {
-            "imageField": {
-              "type": "string",
-              "default": ""
-            },
-            "cols": {
-              "type": "number",
-              "default": 1.0
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 10.0
-            },
-            "gap": {
-              "type": "string",
-              "default": "md"
-            },
             "displayPageSize": {
               "type": "number",
               "default": 10.0
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": []
+            },
+            "imageField": {
+              "type": "string",
+              "default": ""
             },
             "fields": {
               "type": "[object]",
               "default": [
                 {
                   "name": "name",
-                  "variant": "h4",
-                  "label": "Name"
+                  "label": "Name",
+                  "variant": "h4"
                 },
                 {
                   "label": "Description",
@@ -562,14 +554,22 @@
                 },
                 {
                   "name": "status",
-                  "variant": "badge",
-                  "label": "Status"
+                  "label": "Status",
+                  "variant": "badge"
                 }
               ]
             },
-            "itemActions": {
-              "type": "[object]",
-              "default": []
+            "cols": {
+              "type": "number",
+              "default": 1.0
+            },
+            "gap": {
+              "type": "string",
+              "default": "md"
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 10.0
             }
           },
           "scope": "collection"

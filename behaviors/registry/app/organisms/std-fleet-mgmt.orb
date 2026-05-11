@@ -114,37 +114,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "FleetAppLayout",
           "config": {
-            "notificationClickEvent": "FLEET_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "label": "Fleets",
                 "href": "/fleets",
+                "label": "Fleets",
                 "icon": "truck"
               },
               {
-                "icon": "truck",
                 "href": "/vehicles",
+                "icon": "truck",
                 "label": "Vehicles"
               },
               {
-                "icon": "users",
                 "label": "Drivers",
-                "href": "/drivers"
+                "href": "/drivers",
+                "icon": "user"
               },
               {
-                "href": "/telematics-events",
-                "label": "Events",
-                "icon": "activity"
+                "icon": "activity",
+                "label": "Telematics",
+                "href": "/telematics"
               }
             ],
+            "notificationClickEvent": "FLEET_NOTIFICATIONS_OPEN",
             "searchEvent": "FLEET_SEARCH",
             "appName": "Fleet Manager",
             "contentTrait": "@trait.FleetCatalog",
             "notifications": []
           },
           "events": {
-            "SEARCH": "FLEET_SEARCH",
-            "NOTIFY_CLICK": "FLEET_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "FLEET_NOTIFICATIONS_OPEN",
+            "SEARCH": "FLEET_SEARCH"
           }
         },
         {
@@ -227,62 +227,60 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "justify": "between",
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "truck"
+                                  "name": "truck",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
-                                  "content": "Fleets"
+                                  "content": "Fleets",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack"
+                              "align": "center"
                             },
                             {
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "action": "CREATE",
-                                  "label": "New Fleet",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                }
-                              ],
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "label": "New Fleet",
+                                  "type": "button",
+                                  "action": "CREATE"
+                                }
+                              ]
                             }
                           ],
-                          "justify": "between"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             "@trait.FleetSearch",
                             "@trait.FleetFilter"
                           ],
                           "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center"
                         },
                         "@trait.FleetStats",
                         "@trait.FleetGraphs",
@@ -290,7 +288,9 @@
                           "type": "divider"
                         },
                         "@trait.FleetBrowseList"
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -309,33 +309,33 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
                       "className": "py-8",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
-                          "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "No notifications"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "You're all caught up."
+                          "type": "typography",
+                          "content": "You're all caught up.",
+                          "color": "muted"
                         },
                         {
-                          "type": "button",
-                          "label": "Back to fleets",
                           "action": "INIT",
+                          "label": "Back to fleets",
+                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
+                      "align": "center",
                       "type": "stack"
                     }
                   ]
@@ -349,28 +349,28 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "FleetSearch",
           "config": {
-            "placeholder": "Search fleets…",
-            "event": "FLEET_SEARCH"
+            "event": "FLEET_SEARCH",
+            "placeholder": "Search fleets…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "FleetFilter",
           "config": {
+            "event": "FLEET_FILTER",
             "filters": [
               {
-                "field": "status",
+                "label": "Status",
                 "options": [
                   "active",
                   "inactive",
                   "merging",
                   "archived"
                 ],
-                "label": "Status",
-                "filterType": "select"
+                "filterType": "select",
+                "field": "status"
               }
-            ],
-            "event": "FLEET_FILTER"
+            ]
           }
         },
         {
@@ -379,16 +379,18 @@
           "config": {
             "metrics": [
               {
-                "aggregation": "count",
                 "label": "Total",
+                "variant": "primary",
                 "format": "number",
-                "icon": "truck",
-                "variant": "primary"
+                "aggregation": "count",
+                "icon": "truck"
               },
               {
-                "aggregation": "count",
                 "label": "Active",
                 "variant": "success",
+                "icon": "check-circle",
+                "aggregation": "count",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -397,17 +399,15 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "icon": "check-circle",
-                "format": "number"
+                ]
               },
               {
                 "aggregation": "sum",
-                "label": "Vehicles",
-                "variant": "info",
                 "format": "number",
+                "icon": "truck",
+                "variant": "info",
                 "field": "vehicleCount",
-                "icon": "truck"
+                "label": "Vehicles"
               },
               {
                 "icon": "users",
@@ -435,13 +435,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "FleetGraphs",
           "config": {
-            "showLegend": false,
             "title": "Fleets by Status",
-            "subtitle": "Operational composition across fleet statuses",
-            "chartType": "bar",
-            "categoryField": "status",
             "aggregation": "count",
-            "height": 240.0
+            "height": 240.0,
+            "showLegend": false,
+            "categoryField": "status",
+            "subtitle": "Operational composition across fleet statuses",
+            "chartType": "bar"
           },
           "listens": [
             {
@@ -459,37 +459,36 @@
           "name": "FleetBrowseList",
           "linkedEntity": "Fleet",
           "config": {
-            "gap": "sm",
             "itemActions": [
               {
                 "label": "View",
-                "event": "VIEW",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
                 "variant": "ghost"
               },
               {
-                "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
-              },
-              {
-                "event": "DELETE",
+                "variant": "danger",
                 "label": "Delete",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ],
             "fields": [
               {
-                "variant": "h3",
                 "name": "name",
-                "icon": "truck"
+                "icon": "truck",
+                "variant": "h3"
               },
               {
                 "variant": "caption",
                 "name": "region"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "variant": "caption",
@@ -500,7 +499,8 @@
                 "name": "driverCount"
               }
             ],
-            "cols": 1.0
+            "cols": 1.0,
+            "gap": "sm"
           },
           "listens": [
             {
@@ -550,8 +550,6 @@
           "name": "FleetCreate",
           "linkedEntity": "Fleet",
           "config": {
-            "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "name",
               "description",
@@ -559,7 +557,9 @@
               "status",
               "managedBy"
             ],
-            "title": "New Fleet"
+            "icon": "plus-circle",
+            "title": "New Fleet",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -580,6 +580,7 @@
           "name": "FleetEdit",
           "linkedEntity": "Fleet",
           "config": {
+            "icon": "edit",
             "fields": [
               "name",
               "description",
@@ -588,7 +589,6 @@
               "managedBy"
             ],
             "title": "Edit Fleet",
-            "icon": "edit",
             "mode": "edit"
           },
           "events": {
@@ -611,6 +611,7 @@
           "linkedEntity": "Fleet",
           "config": {
             "icon": "eye",
+            "mode": "edit",
             "title": "View Fleet",
             "fields": [
               "name",
@@ -620,8 +621,7 @@
               "managedBy",
               "vehicleCount",
               "driverCount"
-            ],
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -642,14 +642,14 @@
           "name": "FleetDelete",
           "linkedEntity": "Fleet",
           "config": {
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
-            "title": "Delete Fleet",
-            "alertMessage": "This action cannot be undone."
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete",
+            "title": "Delete Fleet"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -886,6 +886,655 @@
             },
             {
               "ref": "FleetPersistor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "VehiclePanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-vehicle",
+          "as": "Vehicle"
+        }
+      ],
+      "entity": {
+        "name": "Vehicle",
+        "collection": "vehicles",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "vin",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "licensePlate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "make",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "year",
+            "type": "number",
+            "default": 2020.0
+          },
+          {
+            "name": "vehicleType",
+            "type": "string",
+            "default": "car",
+            "values": [
+              "car",
+              "truck",
+              "van",
+              "trailer",
+              "motorcycle"
+            ]
+          },
+          {
+            "name": "odometer",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "fuelType",
+            "type": "string",
+            "default": "gasoline",
+            "values": [
+              "gasoline",
+              "diesel",
+              "electric",
+              "hybrid"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "maintenance",
+              "retired",
+              "in-transit"
+            ]
+          },
+          {
+            "name": "assignedDriverId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "VehicleAppLayout",
+          "config": {
+            "contentTrait": "@trait.VehiclePanel",
+            "navItems": [
+              {
+                "label": "Fleets",
+                "href": "/fleets",
+                "icon": "truck"
+              },
+              {
+                "href": "/vehicles",
+                "icon": "truck",
+                "label": "Vehicles"
+              },
+              {
+                "label": "Drivers",
+                "href": "/drivers",
+                "icon": "user"
+              },
+              {
+                "href": "/telematics",
+                "label": "Telematics",
+                "icon": "activity"
+              }
+            ],
+            "searchEvent": "VEHICLE_SEARCH",
+            "notificationClickEvent": "VEHICLE_NOTIFICATIONS_OPEN",
+            "appName": "Fleet Management",
+            "notifications": []
+          },
+          "events": {
+            "NOTIFY_CLICK": "VEHICLE_NOTIFICATIONS_OPEN",
+            "SEARCH": "VEHICLE_SEARCH"
+          }
+        },
+        {
+          "name": "VehiclePanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "truck"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Vehicles"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.VehicleView"
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Vehicle.traits.VehicleFleet",
+          "name": "VehicleView",
+          "config": {
+            "title": "Fleet Vehicles"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "VehiclesPage",
+          "path": "/vehicles",
+          "traits": [
+            {
+              "ref": "VehicleAppLayout"
+            },
+            {
+              "ref": "VehiclePanel"
+            },
+            {
+              "ref": "VehicleView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DriverPanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-driver",
+          "as": "Driver"
+        }
+      ],
+      "entity": {
+        "name": "Driver",
+        "collection": "drivers",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "licenseNumber",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "licenseClass",
+            "type": "string",
+            "default": "C",
+            "values": [
+              "A",
+              "B",
+              "C",
+              "CDL-A",
+              "CDL-B",
+              "CDL-C"
+            ]
+          },
+          {
+            "name": "licenseExpiresAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "hiredAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "on-leave",
+              "terminated",
+              "suspended"
+            ]
+          },
+          {
+            "name": "assignedVehicleId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "DriverAppLayout",
+          "config": {
+            "navItems": [
+              {
+                "label": "Fleets",
+                "icon": "truck",
+                "href": "/fleets"
+              },
+              {
+                "label": "Vehicles",
+                "href": "/vehicles",
+                "icon": "truck"
+              },
+              {
+                "label": "Drivers",
+                "href": "/drivers",
+                "icon": "user"
+              },
+              {
+                "label": "Telematics",
+                "icon": "activity",
+                "href": "/telematics"
+              }
+            ],
+            "notifications": [],
+            "notificationClickEvent": "DRIVER_NOTIFICATIONS_OPEN",
+            "searchEvent": "DRIVER_SEARCH",
+            "contentTrait": "@trait.DriverPanel",
+            "appName": "Fleet Management"
+          },
+          "events": {
+            "NOTIFY_CLICK": "DRIVER_NOTIFICATIONS_OPEN",
+            "SEARCH": "DRIVER_SEARCH"
+          }
+        },
+        {
+          "name": "DriverPanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Drivers",
+                              "variant": "h2"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.DriverView"
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Driver.traits.DriverRoster",
+          "name": "DriverView",
+          "config": {
+            "title": "Driver Roster"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DriversPage",
+          "path": "/drivers",
+          "traits": [
+            {
+              "ref": "DriverAppLayout"
+            },
+            {
+              "ref": "DriverPanel"
+            },
+            {
+              "ref": "DriverView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TelematicsEventPanelOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-telematics-event",
+          "as": "TelematicsEvent"
+        }
+      ],
+      "entity": {
+        "name": "TelematicsEvent",
+        "collection": "telematicsevents",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "vehicleId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "eventType",
+            "type": "string",
+            "default": "speeding",
+            "values": [
+              "hard-brake",
+              "speeding",
+              "idle",
+              "harsh-acceleration",
+              "geofence-violation",
+              "engine-fault",
+              "low-fuel"
+            ]
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "default": "info",
+            "values": [
+              "info",
+              "warning",
+              "critical"
+            ]
+          },
+          {
+            "name": "speed",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "locationLat",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "locationLng",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "occurredAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "acknowledged",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "acknowledgedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "acknowledgedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "TelematicsEventAppLayout",
+          "config": {
+            "contentTrait": "@trait.TelematicsEventPanel",
+            "appName": "Fleet Management",
+            "navItems": [
+              {
+                "href": "/fleets",
+                "icon": "truck",
+                "label": "Fleets"
+              },
+              {
+                "label": "Vehicles",
+                "href": "/vehicles",
+                "icon": "truck"
+              },
+              {
+                "label": "Drivers",
+                "href": "/drivers",
+                "icon": "user"
+              },
+              {
+                "label": "Telematics",
+                "href": "/telematics",
+                "icon": "activity"
+              }
+            ],
+            "searchEvent": "TELEMATICS_EVENT_SEARCH",
+            "notificationClickEvent": "TELEMATICS_EVENT_NOTIFICATIONS_OPEN",
+            "notifications": []
+          },
+          "events": {
+            "SEARCH": "TELEMATICS_EVENT_SEARCH",
+            "NOTIFY_CLICK": "TELEMATICS_EVENT_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "name": "TelematicsEventPanel",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "activity",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Telematics Events",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.TelematicsEventView"
+                      ],
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "TelematicsEvent.traits.TelematicsEventStream",
+          "name": "TelematicsEventView",
+          "config": {
+            "title": "Event Stream"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "TelematicsPage",
+          "path": "/telematics",
+          "traits": [
+            {
+              "ref": "TelematicsEventAppLayout"
+            },
+            {
+              "ref": "TelematicsEventPanel"
+            },
+            {
+              "ref": "TelematicsEventView"
             }
           ]
         }

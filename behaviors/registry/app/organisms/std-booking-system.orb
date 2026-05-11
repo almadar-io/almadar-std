@@ -86,6 +86,11 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "BookingProviderAppLayout",
           "config": {
+            "contentTrait": "@trait.ProviderCatalog",
+            "notificationClickEvent": "BOOKING_NOTIFICATIONS_OPEN",
+            "notifications": [],
+            "searchEvent": "BOOKING_SEARCH",
+            "appName": "BookingSystemApp",
             "navItems": [
               {
                 "label": "Providers",
@@ -94,8 +99,8 @@
               },
               {
                 "href": "/book",
-                "icon": "calendar-plus",
-                "label": "Book"
+                "label": "Book",
+                "icon": "calendar-plus"
               },
               {
                 "label": "Appointments",
@@ -103,16 +108,11 @@
                 "icon": "calendar"
               },
               {
-                "label": "Schedule",
                 "href": "/schedule",
-                "icon": "clock"
+                "icon": "clock",
+                "label": "Schedule"
               }
-            ],
-            "searchEvent": "BOOKING_SEARCH",
-            "contentTrait": "@trait.ProviderCatalog",
-            "notifications": [],
-            "appName": "BookingSystemApp",
-            "notificationClickEvent": "BOOKING_NOTIFICATIONS_OPEN"
+            ]
           },
           "events": {
             "SEARCH": "BOOKING_SEARCH",
@@ -199,57 +199,55 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "justify": "between",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "align": "center",
-                              "type": "stack",
                               "children": [
                                 {
                                   "name": "user",
                                   "type": "icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Providers",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
+                              "type": "stack",
+                              "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "button",
-                                  "label": "Add Provider",
                                   "variant": "primary",
+                                  "icon": "plus",
                                   "action": "CREATE",
-                                  "icon": "plus"
+                                  "label": "Add Provider"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
-                          "justify": "between"
+                          "type": "stack"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
                           "children": [
                             "@trait.ProviderSearch",
                             "@trait.ProviderFilter"
                           ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
@@ -262,6 +260,8 @@
                         },
                         "@trait.ProviderBrowseList"
                       ],
+                      "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -281,7 +281,6 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "className": "py-8",
                       "children": [
                         {
@@ -289,26 +288,27 @@
                           "type": "icon"
                         },
                         {
+                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography",
-                          "variant": "h3"
-                        },
-                        {
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "You're all caught up.",
                           "type": "typography"
                         },
                         {
-                          "label": "Back to providers",
-                          "variant": "ghost",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "You're all caught up.",
+                          "color": "muted"
+                        },
+                        {
+                          "action": "INIT",
                           "type": "button",
-                          "action": "INIT"
+                          "label": "Back to providers",
+                          "variant": "ghost"
                         }
                       ],
+                      "gap": "md",
+                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -321,78 +321,78 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "ProviderSearch",
           "config": {
-            "event": "SEARCH",
-            "placeholder": "Search providers…"
+            "placeholder": "Search providers…",
+            "event": "SEARCH"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "ProviderFilter",
           "config": {
+            "event": "FILTER",
             "filters": [
               {
                 "field": "specialty",
                 "label": "Specialty",
+                "filterType": "select",
                 "options": [
                   "general",
                   "dental",
                   "dermatology",
                   "cardiology",
                   "psychiatry"
-                ],
-                "filterType": "select"
+                ]
               },
               {
-                "filterType": "range",
-                "max": 5.0,
                 "min": 0.0,
                 "label": "Rating",
-                "field": "rating"
+                "field": "rating",
+                "max": 5.0,
+                "filterType": "range"
               }
-            ],
-            "event": "FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "ProviderStats",
           "config": {
-            "title": "Provider Overview",
             "metrics": [
               {
-                "variant": "primary",
                 "aggregation": "count",
-                "label": "Total Providers",
                 "icon": "users",
-                "format": "number"
+                "format": "number",
+                "label": "Total Providers",
+                "variant": "primary"
               },
               {
-                "aggregation": "count",
-                "icon": "check-circle",
-                "variant": "success",
                 "filter": {
                   "available": true
                 },
+                "label": "Active",
                 "format": "number",
-                "label": "Active"
+                "aggregation": "count",
+                "icon": "check-circle",
+                "variant": "success"
               },
               {
-                "aggregation": "avg",
-                "icon": "star",
                 "field": "rating",
                 "label": "Avg Rating",
-                "format": "number",
-                "variant": "info"
+                "aggregation": "avg",
+                "variant": "info",
+                "icon": "star",
+                "format": "number"
               },
               {
-                "format": "currency",
-                "field": "hourlyRate",
-                "aggregation": "avg",
                 "label": "Avg Hourly Rate",
                 "icon": "dollar-sign",
-                "variant": "info"
+                "field": "hourlyRate",
+                "variant": "info",
+                "aggregation": "avg",
+                "format": "currency"
               }
-            ]
+            ],
+            "title": "Provider Overview"
           },
           "listens": [
             {
@@ -412,8 +412,8 @@
             "chartType": "pie",
             "categoryField": "specialty",
             "subtitle": "Distribution across specialties",
-            "title": "Providers by Specialty",
-            "aggregation": "count"
+            "aggregation": "count",
+            "title": "Providers by Specialty"
           },
           "listens": [
             {
@@ -433,8 +433,8 @@
           "config": {
             "fields": [
               {
-                "name": "name",
                 "icon": "user",
+                "name": "name",
                 "variant": "h3"
               },
               {
@@ -442,21 +442,21 @@
                 "variant": "badge"
               },
               {
-                "name": "rating",
                 "variant": "body",
-                "format": "number"
+                "format": "number",
+                "name": "rating"
               },
               {
-                "format": "currency",
-                "label": "Hourly Rate",
                 "name": "hourlyRate",
-                "variant": "h4"
+                "label": "Hourly Rate",
+                "variant": "h4",
+                "format": "currency"
               },
               {
-                "format": "boolean",
-                "name": "available",
+                "label": "Availability",
                 "variant": "body",
-                "label": "Availability"
+                "name": "available",
+                "format": "boolean"
               }
             ],
             "itemActions": [
@@ -466,8 +466,8 @@
                 "variant": "ghost"
               },
               {
-                "label": "Edit",
                 "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost"
               },
               {
@@ -476,8 +476,8 @@
                 "event": "DELETE"
               }
             ],
-            "cols": 2.0,
-            "gap": "md"
+            "gap": "md",
+            "cols": 2.0
           },
           "listens": [
             {
@@ -696,8 +696,8 @@
                     "Provider",
                     {
                       "emit": {
-                        "success": "ProviderLoaded",
-                        "failure": "ProviderLoadFailed"
+                        "failure": "ProviderLoadFailed",
+                        "success": "ProviderLoaded"
                       }
                     }
                   ]
@@ -722,14 +722,10 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "plus-circle",
@@ -737,17 +733,17 @@
                             },
                             {
                               "content": "Add Provider",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "mode": "create",
                           "fields": [
                             "name",
                             "specialty",
@@ -758,9 +754,13 @@
                             "available"
                           ],
                           "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE"
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE",
+                          "mode": "create"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1037,11 +1037,11 @@
                     "fetch",
                     "Provider",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "ProviderLoaded",
                         "failure": "ProviderLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
@@ -1050,12 +1050,12 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "edit"
+                              "name": "edit",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -1069,10 +1069,9 @@
                           "type": "divider"
                         },
                         {
-                          "submitEvent": "SAVE",
-                          "entity": "@payload.row",
-                          "type": "form-section",
                           "mode": "edit",
+                          "type": "form-section",
+                          "entity": "@payload.row",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "name",
@@ -1082,11 +1081,12 @@
                             "rating",
                             "hourlyRate",
                             "available"
-                          ]
+                          ],
+                          "submitEvent": "SAVE"
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -1322,8 +1322,8 @@
                     "Provider",
                     {
                       "emit": {
-                        "failure": "ProviderLoadFailed",
-                        "success": "ProviderLoaded"
+                        "success": "ProviderLoaded",
+                        "failure": "ProviderLoadFailed"
                       }
                     }
                   ]
@@ -1340,8 +1340,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "failure": "ProviderLoadFailed",
-                        "success": "ProviderLoaded"
+                        "success": "ProviderLoaded",
+                        "failure": "ProviderLoadFailed"
                       }
                     }
                   ],
@@ -1349,31 +1349,31 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.name",
-                              "variant": "h3"
+                              "content": "@entity.name"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "type": "typography",
@@ -1381,19 +1381,15 @@
                               "content": "Name"
                             },
                             {
-                              "content": "@entity.name",
                               "variant": "body",
+                              "content": "@entity.name",
                               "type": "typography"
                             }
                           ],
-                          "gap": "md",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
@@ -1401,122 +1397,126 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "body",
                               "content": "@entity.specialty",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Location"
-                            },
-                            {
-                              "content": "@entity.location",
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "variant": "caption",
-                              "content": "Phone",
-                              "type": "typography"
-                            },
-                            {
-                              "content": "@entity.phone",
-                              "variant": "body",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Rating"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.rating"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Hourly Rate"
-                            },
-                            {
-                              "content": "@entity.hourlyRate",
                               "type": "typography",
                               "variant": "body"
                             }
                           ],
+                          "gap": "md",
                           "direction": "horizontal",
                           "type": "stack"
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "content": "Location",
+                              "variant": "caption",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.location"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Phone",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.phone",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "content": "Rating",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.rating",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "content": "Hourly Rate",
                               "variant": "caption",
-                              "content": "Available",
                               "type": "typography"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.available"
+                              "content": "@entity.hourlyRate",
+                              "type": "typography"
                             }
                           ],
                           "type": "stack"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Available",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.available"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "justify": "end",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "icon": "edit",
+                              "variant": "primary",
+                              "label": "Edit",
                               "action": "EDIT",
                               "type": "button",
-                              "label": "Edit",
-                              "variant": "primary"
+                              "icon": "edit"
                             },
                             {
+                              "label": "Close",
                               "type": "button",
                               "variant": "ghost",
-                              "label": "Close",
                               "action": "CLOSE"
                             }
-                          ]
+                          ],
+                          "justify": "end",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1778,16 +1778,14 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
                               "content": "Delete Provider",
@@ -1795,40 +1793,42 @@
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "message": "This action cannot be undone.",
                           "type": "alert",
-                          "variant": "error",
-                          "message": "This action cannot be undone."
+                          "variant": "error"
                         },
                         {
-                          "type": "stack",
-                          "justify": "end",
-                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Cancel",
-                              "type": "button",
                               "action": "CANCEL",
-                              "variant": "ghost"
+                              "label": "Cancel",
+                              "variant": "ghost",
+                              "type": "button"
                             },
                             {
-                              "action": "CONFIRM_DELETE",
-                              "variant": "danger",
                               "icon": "check",
-                              "label": "Delete",
-                              "type": "button"
+                              "variant": "danger",
+                              "type": "button",
+                              "action": "CONFIRM_DELETE",
+                              "label": "Delete"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1867,8 +1867,8 @@
                     "Provider",
                     {
                       "emit": {
-                        "success": "ProviderLoaded",
-                        "failure": "ProviderLoadFailed"
+                        "failure": "ProviderLoadFailed",
+                        "success": "ProviderLoaded"
                       }
                     }
                   ],
@@ -1900,8 +1900,8 @@
                     "Provider",
                     {
                       "emit": {
-                        "success": "ProviderLoaded",
-                        "failure": "ProviderLoadFailed"
+                        "failure": "ProviderLoadFailed",
+                        "success": "ProviderLoaded"
                       }
                     }
                   ]
@@ -2051,48 +2051,48 @@
           "name": "BookingAppLayout",
           "linkedEntity": "Booking",
           "config": {
+            "contentTrait": "@trait.BookingWizard",
+            "appName": "BookingSystemApp",
             "searchEvent": "BOOKING_SEARCH",
             "topBarActions": [],
+            "notifications": [],
+            "notificationClickEvent": "BOOKING_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "label": "Providers",
                 "href": "/providers",
-                "icon": "user-check"
+                "icon": "user-check",
+                "label": "Providers"
               },
               {
-                "label": "Book",
+                "icon": "calendar-plus",
                 "href": "/book",
-                "icon": "calendar-plus"
+                "label": "Book"
               },
               {
-                "label": "Appointments",
                 "href": "/appointments",
-                "icon": "calendar"
+                "icon": "calendar",
+                "label": "Appointments"
               },
               {
                 "href": "/schedule",
-                "icon": "clock",
-                "label": "Schedule"
+                "label": "Schedule",
+                "icon": "clock"
               }
-            ],
-            "notifications": [],
-            "notificationClickEvent": "BOOKING_NOTIFICATIONS_OPEN",
-            "appName": "BookingSystemApp",
-            "contentTrait": "@trait.BookingWizard"
+            ]
           },
           "events": {
-            "NOTIFY_CLICK": "BOOKING_NOTIFICATIONS_OPEN",
-            "SEARCH": "BOOKING_SEARCH"
+            "SEARCH": "BOOKING_SEARCH",
+            "NOTIFY_CLICK": "BOOKING_NOTIFICATIONS_OPEN"
           }
         },
         {
           "ref": "Stripe.traits.ServiceStripeStripe",
           "name": "BookingPayment",
           "config": {
+            "currency": "usd",
             "amount": 0.0,
-            "metadata": {},
             "uiTrait": "@trait.BookingPaymentForm",
-            "currency": "usd"
+            "metadata": {}
           },
           "listens": [
             {
@@ -2147,19 +2147,23 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "alert",
-                          "variant": "info",
-                          "message": "Enter card details to pay your booking deposit."
+                          "message": "Enter card details to pay your booking deposit.",
+                          "variant": "info"
                         },
                         {
-                          "placeholder": "Card number",
                           "inputType": "text",
-                          "type": "input"
+                          "type": "input",
+                          "placeholder": "Card number"
                         },
                         {
-                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "input",
@@ -2167,25 +2171,21 @@
                               "placeholder": "MM/YY"
                             },
                             {
-                              "placeholder": "CVC",
+                              "inputType": "text",
                               "type": "input",
-                              "inputType": "text"
+                              "placeholder": "CVC"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
-                          "icon": "credit-card",
-                          "action": "CREATE_PAYMENT",
-                          "variant": "primary",
+                          "type": "button",
                           "label": "Pay deposit",
-                          "type": "button"
+                          "variant": "primary",
+                          "action": "CREATE_PAYMENT",
+                          "icon": "credit-card"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2540,49 +2540,49 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
-                          "variant": "h2",
+                          "type": "typography",
                           "content": "Book Appointment",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
+                          "type": "wizard-progress",
+                          "currentStep": 0.0,
                           "steps": [
                             "Select Provider",
                             "Select Time",
                             "Your Details",
                             "Payment",
                             "Confirmation"
-                          ],
-                          "currentStep": 0.0,
-                          "type": "wizard-progress"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Select Provider"
                         },
                         {
+                          "mode": "create",
+                          "showCancel": false,
+                          "submitEvent": "NEXT",
+                          "type": "form-section",
+                          "submitLabel": "Continue",
                           "fields": [
                             {
                               "required": true,
-                              "name": "providerName",
-                              "min": 2.0
+                              "min": 2.0,
+                              "name": "providerName"
                             }
-                          ],
-                          "submitLabel": "Continue",
-                          "submitEvent": "NEXT",
-                          "showCancel": false,
-                          "type": "form-section",
-                          "mode": "create"
+                          ]
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -2603,10 +2603,13 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "variant": "h2",
                           "type": "typography",
+                          "variant": "h2",
                           "content": "Book Appointment"
                         },
                         {
@@ -2624,30 +2627,27 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Select Time",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "submitLabel": "Continue",
-                          "cancelLabel": "Back",
-                          "type": "form-section",
-                          "cancelEvent": "PREV",
+                          "submitEvent": "NEXT",
                           "mode": "edit",
+                          "entity": "@entity",
                           "fields": [
                             {
-                              "required": true,
-                              "name": "scheduledAt"
+                              "name": "scheduledAt",
+                              "required": true
                             }
                           ],
-                          "entity": "@entity",
-                          "submitEvent": "NEXT"
+                          "cancelEvent": "PREV",
+                          "cancelLabel": "Back",
+                          "type": "form-section"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2671,14 +2671,17 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "variant": "h2",
+                          "type": "typography",
                           "content": "Book Appointment",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
-                          "type": "wizard-progress",
+                          "currentStep": 2.0,
                           "steps": [
                             "Select Provider",
                             "Select Time",
@@ -2686,49 +2689,46 @@
                             "Payment",
                             "Confirmation"
                           ],
-                          "currentStep": 2.0
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
+                          "content": "Your Details",
                           "type": "typography",
-                          "content": "Your Details"
+                          "variant": "h3"
                         },
                         {
-                          "entity": "@entity",
-                          "mode": "edit",
-                          "cancelLabel": "Back",
-                          "cancelEvent": "PREV",
                           "type": "form-section",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
                           "fields": [
                             {
-                              "min": 2.0,
                               "name": "customerName",
+                              "required": true,
+                              "min": 2.0
+                            },
+                            {
+                              "name": "email",
+                              "type": "email",
                               "required": true
                             },
                             {
-                              "required": true,
-                              "name": "email",
-                              "type": "email"
-                            },
-                            {
-                              "required": true,
-                              "name": "phone"
+                              "name": "phone",
+                              "required": true
                             },
                             {
                               "name": "notes"
                             }
                           ],
-                          "submitEvent": "NEXT",
-                          "submitLabel": "Continue"
+                          "submitLabel": "Continue",
+                          "cancelLabel": "Back",
+                          "entity": "@entity",
+                          "mode": "edit"
                         }
                       ],
-                      "className": "max-w-xl mx-auto w-full",
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -2744,15 +2744,14 @@
                     {
                       "gap": "lg",
                       "className": "max-w-xl mx-auto w-full",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "typography",
                           "variant": "h2",
-                          "content": "Book Appointment",
-                          "type": "typography"
+                          "content": "Book Appointment"
                         },
                         {
+                          "currentStep": 0.0,
                           "type": "wizard-progress",
                           "steps": [
                             "Select Provider",
@@ -2760,8 +2759,7 @@
                             "Your Details",
                             "Payment",
                             "Confirmation"
-                          ],
-                          "currentStep": 0.0
+                          ]
                         },
                         {
                           "type": "divider"
@@ -2772,21 +2770,23 @@
                           "type": "typography"
                         },
                         {
-                          "type": "form-section",
-                          "entity": "@entity",
-                          "mode": "edit",
                           "submitLabel": "Continue",
-                          "showCancel": false,
+                          "type": "form-section",
                           "fields": [
                             {
-                              "min": 2.0,
+                              "name": "providerName",
                               "required": true,
-                              "name": "providerName"
+                              "min": 2.0
                             }
                           ],
-                          "submitEvent": "NEXT"
+                          "submitEvent": "NEXT",
+                          "entity": "@entity",
+                          "showCancel": false,
+                          "mode": "edit"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2826,15 +2826,15 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
+                          "variant": "h2",
                           "content": "Book Appointment",
-                          "type": "typography",
-                          "variant": "h2"
+                          "type": "typography"
                         },
                         {
                           "steps": [
@@ -2851,25 +2851,25 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Pay Deposit",
                           "type": "typography",
+                          "content": "Pay Deposit",
                           "variant": "h3"
                         },
                         "@trait.BookingPayment",
                         {
-                          "gap": "sm",
                           "type": "stack",
-                          "justify": "start",
                           "direction": "horizontal",
                           "children": [
                             {
                               "label": "Back",
+                              "type": "button",
                               "variant": "ghost",
                               "icon": "arrow-left",
-                              "type": "button",
                               "action": "PREV"
                             }
-                          ]
+                          ],
+                          "justify": "start",
+                          "gap": "sm"
                         }
                       ]
                     }
@@ -2885,51 +2885,51 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
-                          "variant": "h2",
+                          "type": "typography",
                           "content": "Book Appointment",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
-                          "currentStep": 1.0,
-                          "type": "wizard-progress",
                           "steps": [
                             "Select Provider",
                             "Select Time",
                             "Your Details",
                             "Payment",
                             "Confirmation"
-                          ]
+                          ],
+                          "currentStep": 1.0,
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Select Time",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
-                          "entity": "@entity",
+                          "type": "form-section",
+                          "submitLabel": "Continue",
                           "mode": "edit",
+                          "cancelLabel": "Back",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
                           "fields": [
                             {
-                              "required": true,
-                              "name": "scheduledAt"
+                              "name": "scheduledAt",
+                              "required": true
                             }
                           ],
-                          "cancelEvent": "PREV",
-                          "submitLabel": "Continue",
-                          "cancelLabel": "Back",
-                          "type": "form-section",
-                          "submitEvent": "NEXT"
+                          "entity": "@entity"
                         }
-                      ],
-                      "className": "max-w-xl mx-auto w-full",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -2951,105 +2951,103 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "className": "max-w-xl mx-auto w-full",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Review your booking"
+                          "content": "Review your booking",
+                          "type": "typography"
                         },
                         {
                           "type": "wizard-progress",
+                          "currentStep": 4.0,
                           "steps": [
                             "Select Provider",
                             "Select Time",
                             "Your Details",
                             "Payment",
                             "Confirmation"
-                          ],
-                          "currentStep": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
                           "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
                               "children": [
                                 {
+                                  "type": "typography",
                                   "variant": "caption",
-                                  "content": "Provider",
-                                  "type": "typography"
+                                  "content": "Provider"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.providerName",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.providerName"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "between",
+                              "gap": "md"
+                            },
+                            {
+                              "justify": "between",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "When",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.scheduledAt"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Customer",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.customerName"
+                                }
+                              ],
                               "justify": "between"
                             },
                             {
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "When"
+                                  "content": "Email",
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.scheduledAt",
+                                  "content": "@entity.email",
                                   "variant": "body"
                                 }
-                              ],
-                              "gap": "md",
-                              "justify": "between",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "content": "Customer",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.customerName",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Email"
-                                },
-                                {
-                                  "content": "@entity.email",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "direction": "horizontal",
@@ -3061,61 +3059,63 @@
                                 },
                                 {
                                   "content": "@entity.phone",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md",
-                              "justify": "between"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Deposit Paid"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.depositAmount"
+                                  "variant": "body"
                                 }
                               ],
                               "justify": "between",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Deposit Paid"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.depositAmount"
+                                }
+                              ],
+                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "md"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
-                              "icon": "arrow-left",
+                              "action": "PREV",
                               "label": "Back",
                               "type": "button",
-                              "action": "PREV",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "icon": "arrow-left"
                             },
                             {
-                              "label": "Confirm booking",
                               "action": "COMPLETE",
+                              "label": "Confirm booking",
                               "variant": "primary",
-                              "type": "button",
-                              "icon": "check"
+                              "icon": "check",
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm",
-                          "justify": "between"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3129,9 +3129,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "typography",
@@ -3154,39 +3153,40 @@
                         },
                         {
                           "content": "Your Details",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "cancelEvent": "PREV",
-                          "cancelLabel": "Back",
+                          "type": "form-section",
                           "entity": "@entity",
-                          "mode": "edit",
-                          "submitEvent": "NEXT",
-                          "submitLabel": "Continue",
                           "fields": [
                             {
+                              "min": 2.0,
                               "name": "customerName",
-                              "required": true,
-                              "min": 2.0
+                              "required": true
                             },
                             {
-                              "required": true,
                               "name": "email",
-                              "type": "email"
+                              "type": "email",
+                              "required": true
                             },
                             {
-                              "required": true,
-                              "name": "phone"
+                              "name": "phone",
+                              "required": true
                             },
                             {
                               "name": "notes"
                             }
                           ],
-                          "type": "form-section"
+                          "cancelLabel": "Back",
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
+                          "submitLabel": "Continue"
                         }
                       ],
-                      "className": "max-w-xl mx-auto w-full"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3216,8 +3216,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "BookingSaveFailed",
-                        "success": "BookingSaved"
+                        "success": "BookingSaved",
+                        "failure": "BookingSaveFailed"
                       }
                     }
                   ],
@@ -3226,10 +3226,10 @@
                     "email",
                     "send",
                     {
-                      "body": "Your booking is confirmed.",
-                      "recipient": "@entity.email",
+                      "sender": "noreply@bookings.example",
                       "subject": "Booking Confirmed",
-                      "sender": "noreply@bookings.example"
+                      "body": "Your booking is confirmed.",
+                      "recipient": "@entity.email"
                     },
                     {
                       "emit": {
@@ -3244,13 +3244,13 @@
                     "sendSMS",
                     {
                       "recipient": "@entity.phone",
-                      "body": "Booking confirmed for @entity.scheduledAt",
-                      "sender": "+15551234567"
+                      "sender": "+15551234567",
+                      "body": "Booking confirmed for @entity.scheduledAt"
                     },
                     {
                       "emit": {
-                        "success": "BookingSmsSent",
-                        "failure": "BookingSmsFailed"
+                        "failure": "BookingSmsFailed",
+                        "success": "BookingSmsSent"
                       }
                     }
                   ],
@@ -3270,35 +3270,35 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full py-12",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
+                          "content": "Booking confirmed",
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Booking confirmed"
+                          "variant": "h2"
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
+                          "content": "We have emailed and SMS-confirmed your appointment.",
                           "color": "muted",
-                          "content": "We have emailed and SMS-confirmed your appointment."
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "label": "Book another",
-                          "type": "button",
                           "variant": "ghost",
+                          "label": "Book another",
                           "icon": "rotate-ccw",
-                          "action": "RESTART"
+                          "action": "RESTART",
+                          "type": "button"
                         }
                       ],
                       "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "align": "center",
-                      "direction": "vertical"
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -3312,15 +3312,14 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "variant": "h2",
                           "content": "Book Appointment",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h2"
                         },
                         {
                           "steps": [
@@ -3338,26 +3337,27 @@
                         },
                         {
                           "content": "Pay Deposit",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         "@trait.BookingPayment",
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "PREV",
-                              "variant": "ghost",
-                              "icon": "arrow-left",
                               "type": "button",
-                              "label": "Back"
+                              "icon": "arrow-left",
+                              "action": "PREV",
+                              "label": "Back",
+                              "variant": "ghost"
                             }
                           ],
-                          "gap": "sm",
-                          "justify": "start"
+                          "type": "stack",
+                          "justify": "start",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -3411,14 +3411,14 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full",
                       "gap": "lg",
                       "children": [
                         {
+                          "type": "typography",
                           "variant": "h2",
-                          "content": "Book Appointment",
-                          "type": "typography"
+                          "content": "Book Appointment"
                         },
                         {
                           "steps": [
@@ -3436,20 +3436,20 @@
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Select Provider"
+                          "content": "Select Provider",
+                          "type": "typography"
                         },
                         {
-                          "mode": "create",
                           "type": "form-section",
-                          "submitEvent": "NEXT",
                           "showCancel": false,
                           "submitLabel": "Continue",
+                          "submitEvent": "NEXT",
+                          "mode": "create",
                           "fields": [
                             {
                               "name": "providerName",
-                              "min": 2.0,
-                              "required": true
+                              "required": true,
+                              "min": 2.0
                             }
                           ]
                         }
@@ -3558,8 +3558,10 @@
           "name": "AppointmentAppLayout",
           "linkedEntity": "Appointment",
           "config": {
-            "topBarActions": [],
-            "contentTrait": "@trait.AppointmentDashboard",
+            "appName": "BookingSystemApp",
+            "notifications": [],
+            "notificationClickEvent": "APPOINTMENT_NOTIFICATIONS_OPEN",
+            "searchEvent": "APPOINTMENT_SEARCH",
             "navItems": [
               {
                 "href": "/providers",
@@ -3572,24 +3574,22 @@
                 "icon": "calendar-plus"
               },
               {
-                "icon": "calendar",
+                "href": "/appointments",
                 "label": "Appointments",
-                "href": "/appointments"
+                "icon": "calendar"
               },
               {
-                "href": "/schedule",
+                "label": "Schedule",
                 "icon": "clock",
-                "label": "Schedule"
+                "href": "/schedule"
               }
             ],
-            "appName": "BookingSystemApp",
-            "notifications": [],
-            "searchEvent": "APPOINTMENT_SEARCH",
-            "notificationClickEvent": "APPOINTMENT_NOTIFICATIONS_OPEN"
+            "topBarActions": [],
+            "contentTrait": "@trait.AppointmentDashboard"
           },
           "events": {
-            "NOTIFY_CLICK": "APPOINTMENT_NOTIFICATIONS_OPEN",
-            "SEARCH": "APPOINTMENT_SEARCH"
+            "SEARCH": "APPOINTMENT_SEARCH",
+            "NOTIFY_CLICK": "APPOINTMENT_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -3634,15 +3634,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
                               "direction": "horizontal",
                               "align": "center",
-                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -3654,27 +3656,27 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "sm"
                             },
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "icon": "plus",
-                                  "action": "CREATE",
-                                  "label": "Create Appointment",
+                                  "variant": "primary",
                                   "type": "button",
-                                  "variant": "primary"
+                                  "action": "CREATE",
+                                  "icon": "plus",
+                                  "label": "Create Appointment"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
+                              "gap": "sm"
                             }
                           ],
-                          "justify": "between",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
@@ -3684,9 +3686,7 @@
                           "type": "divider"
                         },
                         "@trait.AppointmentBrowseList"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -3701,8 +3701,8 @@
           "linkedEntity": "Appointment",
           "config": {
             "dateField": "scheduledAt",
-            "titleField": "summary",
-            "colorField": "status"
+            "colorField": "status",
+            "titleField": "summary"
           },
           "listens": [
             {
@@ -3746,43 +3746,11 @@
           "linkedEntity": "Appointment",
           "config": {
             "gap": "sm",
-            "fields": [
-              {
-                "variant": "h3",
-                "name": "summary",
-                "icon": "calendar",
-                "label": "Summary"
-              },
-              {
-                "label": "Provider",
-                "name": "providerName",
-                "variant": "body"
-              },
-              {
-                "variant": "body",
-                "label": "Customer",
-                "name": "customerName"
-              },
-              {
-                "name": "scheduledAt",
-                "label": "When",
-                "format": "date",
-                "variant": "body"
-              },
-              {
-                "name": "time",
-                "variant": "caption"
-              },
-              {
-                "variant": "badge",
-                "name": "status"
-              }
-            ],
             "itemActions": [
               {
                 "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "VIEW"
               },
               {
                 "label": "Edit",
@@ -3790,12 +3758,44 @@
                 "event": "EDIT"
               },
               {
-                "event": "DELETE",
+                "variant": "danger",
                 "label": "Delete",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ],
-            "cols": 1.0
+            "cols": 1.0,
+            "fields": [
+              {
+                "name": "summary",
+                "label": "Summary",
+                "variant": "h3",
+                "icon": "calendar"
+              },
+              {
+                "name": "providerName",
+                "variant": "body",
+                "label": "Provider"
+              },
+              {
+                "label": "Customer",
+                "variant": "body",
+                "name": "customerName"
+              },
+              {
+                "label": "When",
+                "variant": "body",
+                "name": "scheduledAt",
+                "format": "date"
+              },
+              {
+                "variant": "caption",
+                "name": "time"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ]
           },
           "listens": [
             {
@@ -4026,10 +4026,10 @@
                     "modal",
                     {
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -4041,14 +4041,15 @@
                               "variant": "h3"
                             }
                           ],
+                          "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "CLOSE",
-                          "type": "form-section",
+                          "mode": "create",
                           "fields": [
                             "providerName",
                             "customerName",
@@ -4058,12 +4059,11 @@
                             "status",
                             "notes"
                           ],
-                          "mode": "create",
-                          "submitEvent": "SAVE"
+                          "submitEvent": "SAVE",
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -4104,8 +4104,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "AppointmentSaved",
-                        "failure": "AppointmentSaveFailed"
+                        "failure": "AppointmentSaveFailed",
+                        "success": "AppointmentSaved"
                       }
                     }
                   ],
@@ -4315,8 +4315,8 @@
                     "Appointment",
                     {
                       "emit": {
-                        "failure": "AppointmentLoadFailed",
-                        "success": "AppointmentLoaded"
+                        "success": "AppointmentLoaded",
+                        "failure": "AppointmentLoadFailed"
                       }
                     }
                   ]
@@ -4331,23 +4331,25 @@
                     "fetch",
                     "Appointment",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "success": "AppointmentLoaded",
-                        "failure": "AppointmentLoadFailed"
-                      },
-                      "id": "@payload.id"
+                        "failure": "AppointmentLoadFailed",
+                        "success": "AppointmentLoaded"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
                               "content": "Edit Appointment",
@@ -4355,16 +4357,18 @@
                               "variant": "h3"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "submitEvent": "SAVE",
                           "type": "form-section",
+                          "entity": "@payload.row",
+                          "mode": "edit",
+                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "providerName",
@@ -4374,13 +4378,9 @@
                             "time",
                             "status",
                             "notes"
-                          ],
-                          "entity": "@payload.row",
-                          "mode": "edit"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -4422,8 +4422,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "AppointmentUpdateFailed",
-                        "success": "AppointmentUpdated"
+                        "success": "AppointmentUpdated",
+                        "failure": "AppointmentUpdateFailed"
                       }
                     }
                   ],
@@ -4624,11 +4624,11 @@
                     "fetch",
                     "Appointment",
                     {
+                      "id": "@payload.id",
                       "emit": {
-                        "success": "AppointmentLoaded",
-                        "failure": "AppointmentLoadFailed"
-                      },
-                      "id": "@payload.id"
+                        "failure": "AppointmentLoadFailed",
+                        "success": "AppointmentLoaded"
+                      }
                     }
                   ],
                   [
@@ -4637,70 +4637,53 @@
                     {
                       "children": [
                         {
-                          "align": "center",
                           "children": [
                             {
-                              "name": "eye",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "eye"
                             },
                             {
-                              "content": "@entity.summary",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@entity.summary"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "content": "Provider",
+                              "type": "typography",
                               "variant": "caption"
                             },
                             {
-                              "variant": "body",
                               "content": "@entity.providerName",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "variant": "caption",
                               "type": "typography",
-                              "content": "Customer"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.customerName",
                               "variant": "body"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         {
                           "children": [
                             {
+                              "content": "Customer",
                               "variant": "caption",
-                              "content": "When",
                               "type": "typography"
                             },
                             {
-                              "variant": "body",
                               "type": "typography",
-                              "content": "@entity.scheduledAt"
+                              "variant": "body",
+                              "content": "@entity.customerName"
                             }
                           ],
                           "type": "stack",
@@ -4708,14 +4691,31 @@
                           "direction": "horizontal"
                         },
                         {
-                          "type": "stack",
-                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
                               "type": "typography",
                               "variant": "caption",
-                              "content": "Time"
+                              "content": "When"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.scheduledAt",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Time",
+                              "type": "typography"
                             },
                             {
                               "type": "typography",
@@ -4725,25 +4725,23 @@
                           ]
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "content": "Status"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
+                              "type": "typography",
                               "content": "@entity.status"
                             }
                           ]
                         },
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
@@ -4752,40 +4750,42 @@
                               "content": "Notes"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
+                              "type": "typography",
                               "content": "@entity.notes"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "justify": "end",
+                          "type": "stack",
                           "children": [
                             {
-                              "icon": "edit",
-                              "label": "Edit",
-                              "variant": "primary",
+                              "action": "EDIT",
                               "type": "button",
-                              "action": "EDIT"
+                              "variant": "primary",
+                              "icon": "edit",
+                              "label": "Edit"
                             },
                             {
-                              "action": "CLOSE",
                               "variant": "ghost",
+                              "action": "CLOSE",
                               "type": "button",
                               "label": "Close"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
-                          "justify": "end",
                           "gap": "sm"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -5028,17 +5028,20 @@
                     "fetch",
                     "Appointment",
                     {
-                      "id": "@payload.id",
                       "emit": {
                         "success": "AppointmentLoaded",
                         "failure": "AppointmentLoadFailed"
-                      }
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "children": [
@@ -5047,49 +5050,46 @@
                               "name": "alert-triangle"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "Delete Appointment",
-                              "variant": "h3"
+                              "content": "Delete Appointment"
                             }
                           ],
-                          "gap": "sm",
                           "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "This action cannot be undone.",
                           "type": "alert",
+                          "message": "This action cannot be undone.",
                           "variant": "error"
                         },
                         {
+                          "justify": "end",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "action": "CANCEL",
-                              "variant": "ghost",
+                              "label": "Cancel",
                               "type": "button",
-                              "label": "Cancel"
+                              "variant": "ghost"
                             },
                             {
-                              "variant": "danger",
                               "action": "CONFIRM_DELETE",
+                              "label": "Delete",
+                              "variant": "danger",
                               "type": "button",
-                              "icon": "check",
-                              "label": "Delete"
+                              "icon": "check"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "end"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -5280,32 +5280,32 @@
           "name": "ScheduleAppLayout",
           "linkedEntity": "Schedule",
           "config": {
-            "searchEvent": "SCHEDULE_SEARCH",
+            "notificationClickEvent": "SCHEDULE_NOTIFICATIONS_OPEN",
+            "notifications": [],
             "appName": "BookingSystemApp",
+            "searchEvent": "SCHEDULE_SEARCH",
             "contentTrait": "@trait.ScheduleDisplay",
             "topBarActions": [],
-            "notifications": [],
-            "notificationClickEvent": "SCHEDULE_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "href": "/providers",
-                "icon": "user-check",
-                "label": "Providers"
+                "label": "Providers",
+                "icon": "user-check"
               },
               {
-                "label": "Book",
+                "href": "/book",
                 "icon": "calendar-plus",
-                "href": "/book"
+                "label": "Book"
               },
               {
-                "icon": "calendar",
                 "href": "/appointments",
+                "icon": "calendar",
                 "label": "Appointments"
               },
               {
                 "label": "Schedule",
-                "href": "/schedule",
-                "icon": "clock"
+                "icon": "clock",
+                "href": "/schedule"
               }
             ]
           },
@@ -5435,8 +5435,8 @@
                     "Schedule",
                     {
                       "emit": {
-                        "success": "ScheduleLoaded",
-                        "failure": "ScheduleLoadFailed"
+                        "failure": "ScheduleLoadFailed",
+                        "success": "ScheduleLoaded"
                       }
                     }
                   ],
@@ -5445,72 +5445,74 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "type": "stack",
                               "align": "center",
                               "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "clock",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "clock"
                                 },
                                 {
                                   "variant": "h2",
                                   "type": "typography",
                                   "content": "Schedule Overview"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "action": "REFRESH",
-                              "type": "button",
                               "label": "Refresh",
+                              "variant": "secondary",
                               "icon": "refresh-cw",
-                              "variant": "secondary"
+                              "type": "button",
+                              "action": "REFRESH"
                             }
-                          ],
-                          "type": "stack",
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "icon": "calendar",
+                              "type": "stat-display",
                               "label": "Total Bookings",
-                              "value": "@entity.totalBookings",
-                              "type": "stat-display"
+                              "icon": "calendar",
+                              "value": "@entity.totalBookings"
                             },
                             {
                               "value": "@entity.confirmedToday",
-                              "icon": "check-circle",
+                              "type": "stat-display",
                               "label": "Confirmed Today",
-                              "type": "stat-display"
+                              "icon": "check-circle"
                             },
                             {
+                              "icon": "clock",
                               "label": "Pending",
                               "value": "@entity.pendingBookings",
-                              "icon": "clock",
                               "type": "stat-display"
                             },
                             {
-                              "value": "@entity.availableSlots",
+                              "type": "stat-display",
                               "label": "Available Slots",
-                              "icon": "calendar-plus",
-                              "type": "stat-display"
+                              "value": "@entity.availableSlots",
+                              "icon": "calendar-plus"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -5518,9 +5520,7 @@
                         {
                           "type": "calendar-grid"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -5535,8 +5535,8 @@
                     "Schedule",
                     {
                       "emit": {
-                        "failure": "ScheduleLoadFailed",
-                        "success": "ScheduleLoaded"
+                        "success": "ScheduleLoaded",
+                        "failure": "ScheduleLoadFailed"
                       }
                     }
                   ],
@@ -5544,20 +5544,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Refreshing…",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Refreshing…",
+                          "color": "muted"
                         }
                       ]
                     }
@@ -5575,13 +5575,16 @@
                     {
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
                           "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "gap": "sm",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
@@ -5589,56 +5592,53 @@
                                   "name": "clock"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "h2",
-                                  "content": "Schedule Overview",
-                                  "type": "typography"
+                                  "content": "Schedule Overview"
                                 }
                               ]
                             },
                             {
-                              "icon": "refresh-cw",
-                              "type": "button",
                               "label": "Refresh",
+                              "variant": "secondary",
+                              "icon": "refresh-cw",
                               "action": "REFRESH",
-                              "variant": "secondary"
+                              "type": "button"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "value": "@entity.totalBookings",
-                              "icon": "calendar",
                               "label": "Total Bookings",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "calendar"
                             },
                             {
-                              "value": "@entity.confirmedToday",
                               "icon": "check-circle",
                               "label": "Confirmed Today",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "@entity.confirmedToday"
                             },
                             {
-                              "label": "Pending",
+                              "value": "@entity.pendingBookings",
                               "icon": "clock",
                               "type": "stat-display",
-                              "value": "@entity.pendingBookings"
+                              "label": "Pending"
                             },
                             {
-                              "icon": "calendar-plus",
-                              "type": "stat-display",
                               "value": "@entity.availableSlots",
+                              "type": "stat-display",
+                              "icon": "calendar-plus",
                               "label": "Available Slots"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -5647,9 +5647,9 @@
                           "type": "calendar-grid"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -5663,73 +5663,72 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
-                          "justify": "between",
                           "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
                           "children": [
                             {
                               "align": "center",
+                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "clock",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "clock"
                                 },
                                 {
-                                  "content": "Schedule Overview",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Schedule Overview"
                                 }
                               ]
                             },
                             {
-                              "label": "Refresh",
-                              "type": "button",
-                              "action": "REFRESH",
+                              "variant": "secondary",
                               "icon": "refresh-cw",
-                              "variant": "secondary"
+                              "action": "REFRESH",
+                              "type": "button",
+                              "label": "Refresh"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
                               "value": "@entity.totalBookings",
-                              "type": "stat-display",
                               "label": "Total Bookings",
-                              "icon": "calendar"
+                              "icon": "calendar",
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Confirmed Today",
+                              "icon": "check-circle",
                               "value": "@entity.confirmedToday",
-                              "icon": "check-circle"
+                              "label": "Confirmed Today"
                             },
                             {
                               "icon": "clock",
-                              "label": "Pending",
                               "type": "stat-display",
-                              "value": "@entity.pendingBookings"
+                              "value": "@entity.pendingBookings",
+                              "label": "Pending"
                             },
                             {
-                              "icon": "calendar-plus",
-                              "value": "@entity.availableSlots",
+                              "type": "stat-display",
                               "label": "Available Slots",
-                              "type": "stat-display"
+                              "icon": "calendar-plus",
+                              "value": "@entity.availableSlots"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 4.0
                         },
                         {
@@ -5739,6 +5738,7 @@
                           "type": "calendar-grid"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -5753,36 +5753,36 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
                       "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
+                          "color": "destructive"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Failed to refresh schedule"
                         },
                         {
-                          "color": "muted",
-                          "variant": "body",
                           "type": "typography",
-                          "content": "@payload.error"
+                          "color": "muted",
+                          "content": "@payload.error",
+                          "variant": "body"
                         },
                         {
+                          "icon": "rotate-ccw",
                           "label": "Retry",
                           "variant": "primary",
                           "action": "REFRESH",
-                          "type": "button",
-                          "icon": "rotate-ccw"
+                          "type": "button"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]

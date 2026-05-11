@@ -30,7 +30,7 @@ orbital HelpCenterOrbital {
     config: {
       contentTrait: "@trait.HelpCenterCatalog",
       appName: "Help Center",
-      navItems: [{ label: "Help Centers", href: "/help-centers", icon: "life-buoy" }, { label: "Articles", href: "/help-articles", icon: "book-open" }, { label: "Categories", href: "/help-categories", icon: "folder" }],
+      navItems: [{ label: "Help Centers", href: "/help-centers", icon: "life-buoy" }, { label: "Articles", href: "/articles", icon: "book" }, { label: "Categories", href: "/categories", icon: "folder" }],
       searchEvent: "HELP_CENTER_SEARCH",
       notifications: [],
       notificationClickEvent: "HELP_CENTER_NOTIFICATIONS_OPEN"
@@ -258,4 +258,121 @@ orbital HelpCenterOrbital {
   }
 
   page "/help-centers" as HelpCentersPage -> HelpCenterAppLayout, HelpCenterCatalog, HelpCenterSearch, HelpCenterFilter, HelpCenterStats, HelpCenterGraphs, HelpCenterBrowseList, HelpCenterCreate, HelpCenterEdit, HelpCenterView, HelpCenterDelete, HelpCenterPersistor
+}
+
+orbital HelpArticlePanelOrbital {
+  uses AppShell    from "std/behaviors/std-app-layout"
+  uses HelpArticle from "std/behaviors/std-help-article"
+
+  entity HelpArticle [persistent: helparticles] {
+    id              : string!
+    title           : string!
+    slug            : string!
+    body            : string = ""
+    summary         : string = ""
+    categoryId      : string = ""
+    categoryName    : string = ""
+    author          : string = ""
+    status          : "draft" | "published" | "archived" | "needs-update" = "draft"
+    viewCount       : number = 0
+    helpfulCount    : number = 0
+    notHelpfulCount : number = 0
+    publishedAt     : string = ""
+    updatedAt       : string = ""
+    pendingId       : string = ""
+  }
+
+  trait HelpArticleAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.HelpArticlePanel",
+      appName: "Help Center",
+      navItems: [{ label: "Articles", href: "/articles", icon: "book" }, { label: "Help Centers", href: "/help-centers", icon: "life-buoy" }, { label: "Categories", href: "/categories", icon: "folder" }],
+      searchEvent: "HELP_ARTICLE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "HELP_ARTICLE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: HELP_ARTICLE_SEARCH
+      NOTIFY_CLICK: HELP_ARTICLE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait HelpArticlePanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "book" },
+            { type: "typography", variant: "h2", content: "Help Articles" }
+          ]},
+          { type: "divider" },
+          "@trait.HelpArticleView"
+        ]})
+    }
+  }
+
+  trait HelpArticleView = HelpArticle.traits.HelpArticleManage {
+    config: {
+      title: "Help Articles"
+    }
+  }
+
+  page "/articles" as ArticlesPage -> HelpArticleAppLayout, HelpArticlePanel, HelpArticleView
+}
+
+orbital HelpCategoryPanelOrbital {
+  uses AppShell     from "std/behaviors/std-app-layout"
+  uses HelpCategory from "std/behaviors/std-help-category"
+
+  entity HelpCategory [persistent: helpcategories] {
+    id           : string!
+    name         : string!
+    slug         : string!
+    description  : string = ""
+    icon         : string = "folder"
+    sortOrder    : number = 0
+    articleCount : number = 0
+    status       : "published" | "draft" | "archived" = "draft"
+    updatedAt    : string = ""
+    pendingId    : string = ""
+  }
+
+  trait HelpCategoryAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.HelpCategoryPanel",
+      appName: "Help Center",
+      navItems: [{ label: "Categories", href: "/categories", icon: "folder" }, { label: "Help Centers", href: "/help-centers", icon: "life-buoy" }, { label: "Articles", href: "/articles", icon: "book" }],
+      searchEvent: "HELP_CATEGORY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "HELP_CATEGORY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: HELP_CATEGORY_SEARCH
+      NOTIFY_CLICK: HELP_CATEGORY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait HelpCategoryPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "folder" },
+            { type: "typography", variant: "h2", content: "Help Categories" }
+          ]},
+          { type: "divider" },
+          "@trait.HelpCategoryView"
+        ]})
+    }
+  }
+
+  trait HelpCategoryView = HelpCategory.traits.HelpCategoryDirectory {
+    config: {
+      title: "Help Categories"
+    }
+  }
+
+  page "/categories" as CategoriesPage -> HelpCategoryAppLayout, HelpCategoryPanel, HelpCategoryView
 }

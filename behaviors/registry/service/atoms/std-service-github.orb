@@ -116,34 +116,30 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "type": "stack",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "github"
+                              "name": "github",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "GitHub",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "select",
@@ -153,42 +149,46 @@
                                   "value": "getFile"
                                 },
                                 {
-                                  "label": "List Commits",
-                                  "value": "listCommits"
+                                  "value": "listCommits",
+                                  "label": "List Commits"
                                 },
                                 {
-                                  "value": "createIssue",
-                                  "label": "Create Issue"
+                                  "label": "Create Issue",
+                                  "value": "createIssue"
                                 }
                               ]
                             },
                             {
-                              "placeholder": "owner",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "owner"
                             },
                             {
                               "placeholder": "repo",
                               "type": "input"
                             },
                             {
-                              "placeholder": "path",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "path"
                             },
                             {
-                              "placeholder": "ref (default: main)",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "ref (default: main)"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md"
                         },
                         {
-                          "label": "Run",
                           "variant": "primary",
-                          "type": "button",
                           "icon": "play",
-                          "action": "RUN"
+                          "label": "Run",
+                          "action": "RUN",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -423,8 +423,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Calling the GitHub service.",
                       "title": "Running GitHub operation...",
+                      "message": "Calling the GitHub service.",
                       "type": "loading-state"
                     }
                   ],
@@ -440,8 +440,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "GithubDone"
+                        "success": "GithubDone",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -484,10 +484,7 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "name": "check-circle",
@@ -500,18 +497,21 @@
                         },
                         {
                           "color": "muted",
-                          "content": "@entity.id",
+                          "type": "typography",
                           "variant": "body",
-                          "type": "typography"
+                          "content": "@entity.id"
                         },
                         {
-                          "variant": "ghost",
                           "icon": "rotate-ccw",
-                          "label": "Run Again",
+                          "type": "button",
+                          "variant": "ghost",
                           "action": "RESET",
-                          "type": "button"
+                          "label": "Run Again"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -538,10 +538,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "message": "@entity.error",
+                      "title": "GitHub Operation Failed",
                       "onRetry": "RETRY",
-                      "title": "GitHub Operation Failed"
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -555,12 +555,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -584,12 +584,12 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -604,11 +604,11 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -616,13 +616,9 @@
             ]
           },
           "config": {
-            "path": {
-              "type": "string",
-              "default": ""
-            },
-            "ref": {
-              "type": "string",
-              "default": "main"
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceGithubDefaultForm"
             },
             "op": {
               "type": "string",
@@ -633,10 +629,6 @@
                 "createIssue"
               ]
             },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceGithubDefaultForm"
-            },
             "owner": {
               "type": "string",
               "default": ""
@@ -644,6 +636,14 @@
             "repo": {
               "type": "string",
               "default": ""
+            },
+            "path": {
+              "type": "string",
+              "default": ""
+            },
+            "ref": {
+              "type": "string",
+              "default": "main"
             }
           },
           "scope": "instance"

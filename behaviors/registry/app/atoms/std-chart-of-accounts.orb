@@ -188,22 +188,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Loading accounts…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -218,43 +218,118 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "book-open"
+                              "name": "book-open",
+                              "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          "type": "stack"
+                        },
+                        {
+                          "type": "chart-legend",
+                          "items": [
+                            {
+                              "label": "Assets",
+                              "color": "primary"
+                            },
+                            {
+                              "label": "Liabilities",
+                              "color": "warning"
+                            },
+                            {
+                              "color": "secondary",
+                              "label": "Equity"
+                            },
+                            {
+                              "color": "success",
+                              "label": "Revenue"
+                            },
+                            {
+                              "color": "destructive",
+                              "label": "Expense"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "items": [
+                            {
+                              "title": "Assets",
+                              "id": "assets",
+                              "content": "Current assets, fixed assets, and other resources owned."
+                            },
+                            {
+                              "id": "liabilities",
+                              "title": "Liabilities",
+                              "content": "Accounts payable, loans, and other obligations."
+                            },
+                            {
+                              "content": "Owner capital, retained earnings, and contributions.",
+                              "id": "equity",
+                              "title": "Equity"
+                            },
+                            {
+                              "content": "Operating income from sales and services.",
+                              "id": "revenue",
+                              "title": "Revenue"
+                            },
+                            {
+                              "title": "Expense",
+                              "content": "Operating costs, depreciation, and write-offs.",
+                              "id": "expense"
+                            }
+                          ],
+                          "multiple": true,
+                          "type": "accordion"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "icon": "check-circle",
+                              "variant": "primary",
+                              "label": "Activate",
+                              "event": "ACTIVATE_ACCOUNT"
+                            },
+                            {
+                              "label": "Deactivate",
+                              "variant": "danger",
+                              "icon": "x-circle",
+                              "event": "DEACTIVATE_ACCOUNT"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "label": "Code",
                               "variant": "caption",
+                              "label": "Code",
                               "name": "code"
                             },
                             {
-                              "label": "Name",
+                              "variant": "caption",
                               "name": "name",
-                              "variant": "caption"
+                              "label": "Name"
                             },
                             {
-                              "variant": "caption",
                               "label": "Type",
-                              "name": "type"
+                              "name": "type",
+                              "variant": "caption"
                             },
                             {
                               "label": "Parent",
@@ -262,37 +337,19 @@
                               "variant": "caption"
                             },
                             {
+                              "label": "Balance",
                               "variant": "caption",
-                              "name": "balance",
-                              "label": "Balance"
+                              "name": "balance"
                             },
                             {
                               "label": "Active",
                               "name": "isActive",
                               "variant": "caption"
                             }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "ACTIVATE_ACCOUNT",
-                              "variant": "primary",
-                              "icon": "check-circle",
-                              "label": "Activate"
-                            },
-                            {
-                              "label": "Deactivate",
-                              "event": "DEACTIVATE_ACCOUNT",
-                              "icon": "x-circle",
-                              "variant": "danger"
-                            }
                           ]
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -306,9 +363,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -327,9 +384,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
                       "message": "Account activated",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -348,8 +405,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
                       "type": "alert",
+                      "variant": "info",
                       "message": "Account deactivated"
                     }
                   ]
@@ -365,8 +422,8 @@
                     "Account",
                     {
                       "emit": {
-                        "success": "AccountLoaded",
-                        "failure": "AccountLoadFailed"
+                        "failure": "AccountLoadFailed",
+                        "success": "AccountLoaded"
                       }
                     }
                   ],

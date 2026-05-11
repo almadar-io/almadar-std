@@ -487,6 +487,8 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
                       "children": [
@@ -500,8 +502,6 @@
                           "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -516,117 +516,256 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
+                      "type": "section",
+                      "title": "Submittal Review",
                       "children": [
                         {
-                          "gap": "sm",
-                          "justify": "between",
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "justify": "between",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "file-text",
-                                  "type": "icon"
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "file-text"
+                                    },
+                                    {
+                                      "content": "@config.title",
+                                      "variant": "h3",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "content": "@config.title",
-                                  "variant": "h3",
-                                  "type": "typography"
+                                  "action": "CREATE",
+                                  "actionPayload": {
+                                    "source": "header"
+                                  },
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "label": "New Submittal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "right": {
+                                "direction": "vertical",
+                                "gap": "md",
+                                "children": [
+                                  {
+                                    "ratio": "1:1",
+                                    "type": "split",
+                                    "gap": "md",
+                                    "children": [
+                                      {
+                                        "padding": "md",
+                                        "children": [
+                                          {
+                                            "content": "WBS hierarchy",
+                                            "variant": "caption",
+                                            "type": "typography"
+                                          }
+                                        ],
+                                        "type": "box"
+                                      },
+                                      {
+                                        "children": [
+                                          {
+                                            "type": "typography",
+                                            "variant": "caption",
+                                            "content": "Review status"
+                                          }
+                                        ],
+                                        "type": "box",
+                                        "padding": "md"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "spacer",
+                                    "size": "sm"
+                                  },
+                                  {
+                                    "accept": "application/pdf,image/*",
+                                    "maxFiles": 8.0,
+                                    "maxSize": 20971520.0,
+                                    "icon": "paperclip",
+                                    "label": "Drop submittal attachments here",
+                                    "type": "upload-drop-zone",
+                                    "description": "Shop drawings, product data, samples"
+                                  }
+                                ],
+                                "type": "stack"
+                              },
+                              "left": {
+                                "type": "file-tree",
+                                "tree": [
+                                  {
+                                    "name": "01 - General",
+                                    "children": [
+                                      {
+                                        "name": "Cover Sheet.pdf"
+                                      },
+                                      {
+                                        "name": "Schedule.pdf"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "name": "03 - Concrete",
+                                    "children": [
+                                      {
+                                        "name": "Mix Design.pdf"
+                                      },
+                                      {
+                                        "name": "Rebar Shop Drawings.pdf"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "name": "05 - Metals",
+                                    "children": [
+                                      {
+                                        "name": "Structural Steel.pdf"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "type": "split-pane"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "content": "Engineering Diagram",
+                              "variant": "h4",
+                              "type": "typography"
+                            },
+                            {
+                              "children": {
+                                "type": "stack",
+                                "direction": "horizontal",
+                                "gap": "md",
+                                "children": [
+                                  {
+                                    "connectionDensity": 0.5,
+                                    "type": "svg-mesh",
+                                    "cx": 80.0,
+                                    "nodes": 5.0,
+                                    "radius": 30.0,
+                                    "color": "primary",
+                                    "cy": 60.0
+                                  },
+                                  {
+                                    "color": "secondary",
+                                    "y": 60.0,
+                                    "type": "svg-branch",
+                                    "x": 200.0,
+                                    "branches": 4.0
+                                  },
+                                  {
+                                    "y2": 60.0,
+                                    "y1": 60.0,
+                                    "type": "svg-connection",
+                                    "color": "muted",
+                                    "x2": 200.0,
+                                    "x1": 40.0
+                                  }
+                                ],
+                                "align": "center"
+                              },
+                              "type": "scaled-diagram"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "entity": "@payload.data",
+                              "cols": 1.0,
+                              "fields": [
+                                {
+                                  "label": "Number",
+                                  "variant": "caption",
+                                  "name": "submittalNumber"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "name": "specSection",
+                                  "label": "Spec Section"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "label": "Title",
+                                  "name": "title"
+                                },
+                                {
+                                  "name": "contractor",
+                                  "variant": "caption",
+                                  "label": "Contractor"
+                                },
+                                {
+                                  "label": "Status",
+                                  "variant": "badge",
+                                  "name": "status"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "label": "Rev",
+                                  "name": "revisionNumber"
                                 }
                               ],
+                              "type": "data-grid",
                               "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "button",
-                              "label": "New Submittal",
-                              "action": "CREATE",
-                              "actionPayload": {
-                                "source": "header"
-                              },
-                              "variant": "primary"
+                              "itemActions": [
+                                {
+                                  "variant": "ghost",
+                                  "label": "View",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "label": "Edit",
+                                  "event": "EDIT",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "variant": "primary",
+                                  "event": "APPROVE",
+                                  "label": "Approve"
+                                },
+                                {
+                                  "label": "Reject",
+                                  "event": "REJECT",
+                                  "variant": "danger"
+                                },
+                                {
+                                  "label": "Revise",
+                                  "event": "REQUEST_REVISION",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "label": "Delete",
+                                  "event": "REQUEST_DELETE"
+                                }
+                              ]
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "entity": "@payload.data",
-                          "type": "data-grid",
-                          "fields": [
-                            {
-                              "name": "submittalNumber",
-                              "label": "Number",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Spec Section",
-                              "variant": "caption",
-                              "name": "specSection"
-                            },
-                            {
-                              "name": "title",
-                              "label": "Title",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Contractor",
-                              "variant": "caption",
-                              "name": "contractor"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "revisionNumber",
-                              "label": "Rev",
-                              "variant": "caption"
-                            }
-                          ],
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "variant": "ghost",
-                              "label": "View"
-                            },
-                            {
-                              "event": "EDIT",
-                              "label": "Edit",
-                              "variant": "secondary"
-                            },
-                            {
-                              "variant": "primary",
-                              "event": "APPROVE",
-                              "label": "Approve"
-                            },
-                            {
-                              "label": "Reject",
-                              "event": "REJECT",
-                              "variant": "danger"
-                            },
-                            {
-                              "variant": "secondary",
-                              "event": "REQUEST_REVISION",
-                              "label": "Revise"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "REQUEST_DELETE",
-                              "variant": "ghost"
-                            }
-                          ]
+                          "gap": "md"
                         }
                       ]
                     }
@@ -642,9 +781,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -663,8 +802,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
                       "type": "alert",
+                      "variant": "info",
                       "message": "Submittal submitted for review"
                     }
                   ]
@@ -705,9 +844,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "Submittal rejected",
-                      "type": "alert"
+                      "message": "Submittal rejected"
                     }
                   ]
                 ]
@@ -742,9 +881,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
                       "type": "alert",
-                      "message": "Creating new submittal"
+                      "message": "Creating new submittal",
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -783,9 +922,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Searching submittals",
                       "type": "alert",
-                      "variant": "info"
+                      "variant": "info",
+                      "message": "Searching submittals"
                     }
                   ]
                 ]
@@ -800,8 +939,8 @@
                     "main",
                     {
                       "message": "Filtering by status",
-                      "variant": "info",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -821,8 +960,8 @@
                     "main",
                     {
                       "variant": "info",
-                      "message": "Viewing submittal",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "Viewing submittal"
                     }
                   ]
                 ]
@@ -842,8 +981,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "info",
-                      "message": "Editing submittal"
+                      "message": "Editing submittal",
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -862,9 +1001,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "Delete requested",
                       "variant": "warning",
-                      "message": "Delete requested"
+                      "type": "alert"
                     }
                   ]
                 ]

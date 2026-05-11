@@ -195,8 +195,8 @@
                     "ESignRequest",
                     {
                       "emit": {
-                        "failure": "ESignRequestLoadFailed",
-                        "success": "ESignRequestLoaded"
+                        "success": "ESignRequestLoaded",
+                        "failure": "ESignRequestLoadFailed"
                       }
                     }
                   ],
@@ -204,8 +204,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "md",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "md"
                     }
                   ]
                 ]
@@ -219,47 +219,66 @@
                     "render-ui",
                     "main",
                     {
-                      "fields": [
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
                         {
-                          "name": "documentName",
-                          "variant": "h4",
-                          "label": "Document"
+                          "content": "@config.title",
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "name": "recipientName",
-                          "label": "Recipient",
-                          "variant": "body"
+                          "type": "signature-pad",
+                          "label": "Recipient signature preview",
+                          "helperText": "Read-only preview of the captured signature",
+                          "height": 160.0,
+                          "readOnly": true
                         },
                         {
-                          "name": "recipientEmail",
-                          "label": "Email",
-                          "variant": "caption"
-                        },
-                        {
-                          "name": "status",
-                          "label": "Status",
-                          "variant": "badge"
-                        },
-                        {
-                          "variant": "caption",
-                          "label": "Sent",
-                          "name": "sentAt"
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Send",
+                              "event": "SEND_REQUEST"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "REVOKE_REQUEST",
+                              "label": "Revoke"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "name": "documentName",
+                              "variant": "h4",
+                              "label": "Document"
+                            },
+                            {
+                              "name": "recipientName",
+                              "label": "Recipient",
+                              "variant": "body"
+                            },
+                            {
+                              "label": "Email",
+                              "name": "recipientEmail",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Status",
+                              "name": "status"
+                            },
+                            {
+                              "name": "sentAt",
+                              "label": "Sent",
+                              "variant": "caption"
+                            }
+                          ]
                         }
-                      ],
-                      "itemActions": [
-                        {
-                          "event": "SEND_REQUEST",
-                          "variant": "primary",
-                          "label": "Send"
-                        },
-                        {
-                          "variant": "danger",
-                          "event": "REVOKE_REQUEST",
-                          "label": "Revoke"
-                        }
-                      ],
-                      "type": "data-grid",
-                      "entity": "@payload.data"
+                      ]
                     }
                   ]
                 ]
@@ -274,9 +293,9 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "title": "Failed to load signature requests",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "title": "Failed to load signature requests"
                     }
                   ]
                 ]
@@ -334,8 +353,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "md"
+                      "size": "md",
+                      "type": "spinner"
                     }
                   ]
                 ]

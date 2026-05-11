@@ -122,42 +122,42 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical",
                           "children": [
                             {
                               "type": "icon",
                               "name": "video"
                             },
                             {
+                              "variant": "h2",
                               "content": "YouTube Video",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             },
                             {
-                              "content": "@config.videoId",
-                              "color": "muted",
                               "type": "typography",
-                              "variant": "body"
+                              "variant": "body",
+                              "color": "muted",
+                              "content": "@config.videoId"
                             },
                             {
                               "gap": "sm",
-                              "justify": "center",
                               "children": [
                                 {
-                                  "variant": "primary",
-                                  "action": "PLAY",
-                                  "icon": "play",
                                   "label": "Play",
-                                  "type": "button"
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "action": "PLAY",
+                                  "icon": "play"
                                 }
                               ],
                               "type": "stack",
+                              "justify": "center",
                               "direction": "horizontal"
                             }
                           ],
-                          "align": "center"
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "vertical"
                         }
                       ],
                       "type": "card"
@@ -366,8 +366,8 @@
                     "ServiceYoutube",
                     {
                       "emit": {
-                        "success": "ServiceYoutubeLoaded",
-                        "failure": "ServiceYoutubeLoadFailed"
+                        "failure": "ServiceYoutubeLoadFailed",
+                        "success": "ServiceYoutubeLoaded"
                       }
                     }
                   ],
@@ -375,12 +375,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -401,12 +401,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -425,18 +425,18 @@
                     "emit",
                     "ServiceYoutubeYoutubeFailed",
                     {
-                      "error": "@entity.error",
-                      "code": "youtube_embed_failed"
+                      "code": "youtube_embed_failed",
+                      "error": "@entity.error"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
+                      "title": "Video Failed",
                       "type": "error-state",
-                      "onRetry": "RETRY",
-                      "title": "Video Failed"
+                      "message": "@entity.error",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -470,17 +470,17 @@
                     "emit",
                     "ServiceYoutubeYoutubeFailed",
                     {
-                      "code": "youtube_playback_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "youtube_playback_failed"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "title": "Video Failed",
                       "message": "@entity.error",
                       "type": "error-state",
-                      "title": "Video Failed",
                       "onRetry": "RETRY"
                     }
                   ]
@@ -512,12 +512,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -525,6 +525,14 @@
             ]
           },
           "config": {
+            "autoplay": {
+              "type": "boolean",
+              "default": false
+            },
+            "controls": {
+              "type": "boolean",
+              "default": true
+            },
             "videoId": {
               "type": "string",
               "default": ""
@@ -533,17 +541,9 @@
               "type": "trait",
               "default": "@trait.ServiceYoutubeDefaultPlayer"
             },
-            "controls": {
-              "type": "boolean",
-              "default": true
-            },
             "start": {
               "type": "number",
               "default": 0.0
-            },
-            "autoplay": {
-              "type": "boolean",
-              "default": false
             }
           },
           "scope": "instance"

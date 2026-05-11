@@ -270,3 +270,65 @@ orbital NoteOrbital {
   page "/notes/editor"    as NotesEditorPage    -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
   page "/notes/favorites" as NotesFavoritesPage -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
 }
+
+orbital RichEditorPanelOrbital {
+  uses AppShell   from "std/behaviors/std-app-layout"
+  uses RichEditor from "std/behaviors/std-rich-editor"
+
+  entity Document [persistent: documents] {
+    id         : string!
+    title      : string!
+    blocksJson : [object]
+    authorId   : string = ""
+    parentId   : string = ""
+    kind       : "page" | "doc" | "post" = "page"
+    status     : "draft" | "published" | "archived" = "draft"
+    version    : number = 1
+    createdAt  : string = ""
+    updatedAt  : string = ""
+  }
+
+  trait RichEditorAppLayout = AppShell.traits.AppLayout {
+    config: {
+      contentTrait: "@trait.RichEditorPanel",
+      appName: "Notes",
+      navItems: [
+        { label: "Notes",     href: "/notes",           icon: "file-text" },
+        { label: "Tree",      href: "/notes/tree",      icon: "list-tree" },
+        { label: "Editor",    href: "/notes/editor",    icon: "edit" },
+        { label: "Favorites", href: "/notes/favorites", icon: "star" },
+        { label: "Editor",    href: "/editor",          icon: "edit" }
+      ],
+      searchEvent: "RICH_EDITOR_SEARCH",
+      notifications: [],
+      notificationClickEvent: "RICH_EDITOR_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: RICH_EDITOR_SEARCH
+      NOTIFY_CLICK: RICH_EDITOR_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait RichEditorPanel [interaction, instance] {
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-6xl mx-auto w-full p-4", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+            { type: "icon", name: "edit" },
+            { type: "typography", variant: "h2", content: "Rich Editor" }
+          ]},
+          { type: "divider" },
+          "@trait.RichEditorDocumentEdit"
+        ]})
+    }
+  }
+
+  trait RichEditorDocumentEdit = RichEditor.traits.DocumentEdit {
+    config: {
+      title: "Documents"
+    }
+  }
+
+  page "/editor" as EditorPage -> RichEditorAppLayout, RichEditorPanel, RichEditorDocumentEdit
+}

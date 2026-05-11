@@ -183,8 +183,8 @@
                     "RosterEntry",
                     {
                       "emit": {
-                        "success": "RosterEntryLoaded",
-                        "failure": "RosterEntryLoadFailed"
+                        "failure": "RosterEntryLoadFailed",
+                        "success": "RosterEntryLoaded"
                       }
                     }
                   ],
@@ -192,22 +192,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
                           "content": "Loading roster…",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -222,45 +222,56 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "users",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "users"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography"
+                            },
+                            {
+                              "size": "sm",
+                              "src": "https://picsum.photos/seed/instructor/64/64",
+                              "type": "avatar",
+                              "alt": "Instructor"
                             }
                           ],
+                          "align": "center",
                           "direction": "horizontal"
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": 65.0,
+                          "variant": "primary",
+                          "label": "Attendance",
+                          "showLabel": true,
+                          "max": 100.0
+                        },
+                        {
+                          "refreshEvent": "INIT",
+                          "type": "pull-to-refresh",
+                          "children": {
+                            "color": "muted",
+                            "content": "Pull to refresh roster",
+                            "variant": "caption",
+                            "type": "typography"
+                          }
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "CHECK_IN",
-                              "variant": "primary",
-                              "label": "Check In"
-                            },
-                            {
-                              "label": "No Show",
-                              "variant": "ghost",
-                              "event": "MARK_NO_SHOW"
-                            }
-                          ],
                           "fields": [
                             {
-                              "variant": "caption",
                               "label": "Member",
+                              "variant": "caption",
                               "name": "memberName"
                             },
                             {
@@ -279,11 +290,25 @@
                               "label": "Checked In"
                             }
                           ],
+                          "cols": 1.0,
                           "gap": "sm",
-                          "entity": "@payload.data",
-                          "cols": 1.0
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "event": "CHECK_IN",
+                              "variant": "primary",
+                              "label": "Check In"
+                            },
+                            {
+                              "event": "MARK_NO_SHOW",
+                              "label": "No Show",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "entity": "@payload.data"
                         }
                       ],
+                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -298,9 +323,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -319,9 +344,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "success",
-                      "message": "Checked in",
-                      "type": "alert"
+                      "message": "Checked in"
                     }
                   ]
                 ]
@@ -341,8 +366,8 @@
                     "main",
                     {
                       "message": "Marked no-show",
-                      "variant": "info",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "info"
                     }
                   ]
                 ]
