@@ -1,0 +1,400 @@
+{
+  "name": "std-stock-level",
+  "version": "1.0.0",
+  "description": "std-stock-level — on-hand quantity primitive for a SKU at a location. Owns a StockLevel entity and a single ledger trait that loads current levels, renders them in a data-grid, and surfaces Adjust / Recount actions per row.",
+  "orbitals": [
+    {
+      "name": "StockLevelOrbital",
+      "entity": {
+        "name": "StockLevel",
+        "collection": "stocklevels",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "productName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "locationId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "onHand",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reserved",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reorderPoint",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lastCounted",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StockLevelLedger",
+          "category": "interaction",
+          "linkedEntity": "StockLevel",
+          "emits": [
+            {
+              "event": "ADJUST_STOCK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "RECOUNT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "StockLevelLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[StockLevel]"
+                }
+              ]
+            },
+            {
+              "event": "StockLevelLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "StockLevelLoaded",
+                "name": "StockLevel loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[StockLevel]"
+                  }
+                ]
+              },
+              {
+                "key": "StockLevelLoadFailed",
+                "name": "StockLevel load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ADJUST_STOCK",
+                "name": "Adjust Stock",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RECOUNT",
+                "name": "Recount",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StockLevel",
+                    {
+                      "emit": {
+                        "failure": "StockLevelLoadFailed",
+                        "success": "StockLevelLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading stock levels…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "StockLevelLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "package"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 1.0,
+                          "fields": [
+                            {
+                              "label": "SKU",
+                              "variant": "caption",
+                              "name": "sku"
+                            },
+                            {
+                              "label": "Product",
+                              "name": "productName",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "locationId",
+                              "label": "Location",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "onHand",
+                              "label": "On Hand"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "reorderPoint",
+                              "label": "Reorder At"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "icon": "sliders",
+                              "label": "Adjust",
+                              "event": "ADJUST_STOCK"
+                            },
+                            {
+                              "event": "RECOUNT",
+                              "label": "Recount",
+                              "icon": "clipboard-check",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "StockLevelLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ADJUST_STOCK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "message": "Stock adjustment requested",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "RECOUNT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "type": "alert",
+                      "message": "Recount scheduled"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StockLevel",
+                    {
+                      "emit": {
+                        "success": "StockLevelLoaded",
+                        "failure": "StockLevelLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Stock Levels"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StockLevelPage",
+          "path": "/stock",
+          "traits": [
+            {
+              "ref": "StockLevelLedger"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

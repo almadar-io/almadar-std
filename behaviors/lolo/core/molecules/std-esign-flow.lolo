@@ -1,0 +1,126 @@
+app std-esign-flow "1.0.0"
+"Generic e-signature flow: pick a stored file, pick a recipient, send for signature, track status."
+
+orbital SignatureSessionOrbital {
+  uses StoredFile     from "std/behaviors/std-file-store"
+  uses ESignRequest   from "std/behaviors/std-esign-request"
+  uses Modal          from "std/behaviors/std-modal"
+  uses Confirmation   from "std/behaviors/std-confirmation"
+
+  entity SignatureSession [persistent: signaturesessions] {
+    id             : string!
+    documentId     : string!
+    documentName   : string = ""
+    recipientName  : string!
+    recipientEmail : string!
+    requesterName  : string = ""
+    status         : "draft" | "sent" | "viewed" | "signed" | "declined" = "draft"
+    sentAt         : string = ""
+    signedAt       : string = ""
+    pendingId      : string = ""
+  }
+
+  type SignatureSessionLoaded     = Event { data : [SignatureSession] }            "Fired when the SignatureSession collection finishes loading"
+  type SignatureSessionLoadFailed = Event { error : string, code : string }        "Fired when the SignatureSession collection fails to load"
+
+  trait SignatureSessionBrowse -> SignatureSession [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch SignatureSession { emit: { success: "SignatureSessionLoaded", failure: "SignatureSessionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading signature requests…" }] })
+      SignatureSessionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "file-signature" }, { type: "typography", content: "Signature Requests", variant: "h2" }] }, { type: "button", label: "New Signature Request", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Resend", event: "RESEND_REQUEST", variant: "primary" }, { label: "Cancel", event: "REQUEST_DELETE", variant: "danger" }], fields: [{ name: "documentName", label: "Document", variant: "h4", icon: "file-text" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }] }] })
+      SignatureSessionLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load signature requests" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state browsing {
+      INIT -> loading
+        (fetch SignatureSession { emit: { success: "SignatureSessionLoaded", failure: "SignatureSessionLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch SignatureSession { emit: { success: "SignatureSessionLoaded", failure: "SignatureSessionLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    emits {
+      CREATE
+      RESEND_REQUEST { id : string!, row : SignatureSession }
+      REQUEST_DELETE { id : string!, row : SignatureSession }
+      SignatureSessionLoaded
+      SignatureSessionLoadFailed
+    }
+    listens {
+      SignatureSessionLoadFailed { error : string, code : string }
+      SignatureSessionPersistor.SESSION_CREATED -> INIT
+      SignatureSessionPersistor.SESSION_RESENT  -> INIT
+      SignatureSessionPersistor.SESSION_DELETED -> INIT
+    }
+  }
+
+  trait SignatureSessionCreate = Modal.traits.ModalRecordModal -> SignatureSession {
+    config: {
+      icon: "file-signature",
+      title: "New Signature Request",
+      openButtonLabel: "New Signature Request",
+      fields: ["documentId", "recipientName", "recipientEmail", "requesterName"],
+      mode: "create"
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      SignatureSessionBrowse.CREATE -> CREATE
+      CREATE { id : string, row : SignatureSession }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SignatureSessionDelete = Confirmation.traits.ConfirmActionConfirmation -> SignatureSession {
+    config: {
+      icon: "alert-triangle",
+      title: "Cancel Signature Request",
+      alertMessage: "Are you sure you want to cancel this signature request?",
+      confirmLabel: "Cancel Request"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      SignatureSessionBrowse.REQUEST_DELETE -> DELETE
+      DELETE { id : string, row : SignatureSession }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait SignatureSessionPersistor -> SignatureSession [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create SignatureSession @payload.data { emit: { success: "SESSION_CREATED" } })
+      DO_RESEND -> idle
+        (persist update SignatureSession @payload.id { emit: { success: "SESSION_RESENT" } })
+      DO_DELETE -> idle
+        (persist delete SignatureSession @payload.id { emit: { success: "SESSION_DELETED" } })
+    }
+    emits {
+      SESSION_CREATED -> external { id : string }
+      SESSION_RESENT  -> external { id : string }
+      SESSION_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_RESEND { id : string }
+      DO_DELETE { id : string }
+      SignatureSessionCreate.SAVE                  -> DO_CREATE
+      SignatureSessionBrowse.RESEND_REQUEST        -> DO_RESEND
+      SignatureSessionDelete.CONFIRM_DELETE        -> DO_DELETE
+    }
+  }
+
+  page "/esign-flow" as SignatureSessionPage -> SignatureSessionBrowse, SignatureSessionCreate, SignatureSessionDelete, SignatureSessionPersistor
+}

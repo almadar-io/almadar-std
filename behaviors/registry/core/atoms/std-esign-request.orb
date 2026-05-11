@@ -1,0 +1,362 @@
+{
+  "name": "std-esign-request",
+  "version": "1.0.0",
+  "description": "Generic e-signature request primitive: send a document for signing and track status.",
+  "orbitals": [
+    {
+      "name": "ESignRequestOrbital",
+      "entity": {
+        "name": "ESignRequest",
+        "collection": "esignrequests",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "documentId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "documentName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "recipientName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "recipientEmail",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "sent",
+              "viewed",
+              "signed",
+              "declined",
+              "expired"
+            ]
+          },
+          {
+            "name": "sentAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "signedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "expiresAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ESignRequestSigning",
+          "category": "interaction",
+          "linkedEntity": "ESignRequest",
+          "emits": [
+            {
+              "event": "SEND_REQUEST",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "REVOKE_REQUEST",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "ESignRequestLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ESignRequest]"
+                }
+              ]
+            },
+            {
+              "event": "ESignRequestLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ESignRequestLoaded",
+                "name": "ESignRequest loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ESignRequest]"
+                  }
+                ]
+              },
+              {
+                "key": "ESignRequestLoadFailed",
+                "name": "ESignRequest load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SEND_REQUEST",
+                "name": "Send Request",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REVOKE_REQUEST",
+                "name": "Revoke Request",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ESignRequest",
+                    {
+                      "emit": {
+                        "success": "ESignRequestLoaded",
+                        "failure": "ESignRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ESignRequestLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "data-grid",
+                      "columns": [
+                        {
+                          "field": "documentName",
+                          "label": "Document"
+                        },
+                        {
+                          "field": "recipientName",
+                          "label": "Recipient"
+                        },
+                        {
+                          "label": "Email",
+                          "field": "recipientEmail"
+                        },
+                        {
+                          "label": "Status",
+                          "field": "status"
+                        },
+                        {
+                          "label": "Sent",
+                          "field": "sentAt"
+                        }
+                      ],
+                      "entity": "ESignRequest",
+                      "itemActions": [
+                        {
+                          "label": "Send",
+                          "event": "SEND_REQUEST",
+                          "variant": "primary"
+                        },
+                        {
+                          "variant": "danger",
+                          "label": "Revoke",
+                          "event": "REVOKE_REQUEST"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ESignRequestLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "title": "Failed to load signature requests",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "SEND_REQUEST",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "notify",
+                    "Signature request sent",
+                    "success"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "REVOKE_REQUEST",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "notify",
+                    "Signature request revoked",
+                    "info"
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ESignRequest",
+                    {
+                      "emit": {
+                        "failure": "ESignRequestLoadFailed",
+                        "success": "ESignRequestLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "md",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Signature Requests"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ESignRequestPage",
+          "path": "/esign",
+          "traits": [
+            {
+              "ref": "ESignRequestSigning"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

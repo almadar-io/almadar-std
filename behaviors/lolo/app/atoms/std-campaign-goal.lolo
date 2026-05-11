@@ -1,0 +1,61 @@
+app std-campaign-goal "1.0.0"
+"std-campaign-goal — nonprofit fundraising campaign primitive with a target dollar amount, running raised total, donor count, deadline, and status. Browses campaigns in a data-grid with Launch / End row actions."
+
+orbital CampaignGoalOrbital {
+  entity CampaignGoal [persistent: campaigngoals] {
+    id            : string!
+    name          : string!
+    description   : string = ""
+    targetAmount  : number = 0
+    raisedAmount  : number = 0
+    donorCount    : number = 0
+    startDate     : string = ""
+    endDate       : string = ""
+    status        : "draft" | "active" | "achieved" | "ended" = "draft"
+  }
+
+  type CampaignGoalLoaded     = Event { data : [CampaignGoal] }            "Fired when the campaign collection finishes loading"
+  type CampaignGoalLoadFailed = Event { error : string, code : string }    "Fired when the campaign collection fails to load"
+
+  trait CampaignGoalTracker -> CampaignGoal [interaction, collection] {
+    config {
+      title : string = "Campaigns"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch CampaignGoal { emit: { success: "CampaignGoalLoaded", failure: "CampaignGoalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading campaigns…" }] })
+      CampaignGoalLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "target" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "targetAmount", label: "Target", variant: "caption" }, { name: "raisedAmount", label: "Raised", variant: "caption" }, { name: "donorCount", label: "Donors", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Launch", event: "LAUNCH_CAMPAIGN", variant: "primary" }, { label: "End", event: "END_CAMPAIGN", variant: "danger" }] }] })
+      CampaignGoalLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      LAUNCH_CAMPAIGN -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Campaign launched" })
+      END_CAMPAIGN -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Campaign ended" })
+    }
+    state error {
+      INIT -> loading
+        (fetch CampaignGoal { emit: { success: "CampaignGoalLoaded", failure: "CampaignGoalLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      LAUNCH_CAMPAIGN         { id : string! }
+      END_CAMPAIGN            { id : string! }
+      CampaignGoalLoaded      { data : [CampaignGoal] }
+      CampaignGoalLoadFailed  { error : string, code : string }
+    }
+    listens {
+      LAUNCH_CAMPAIGN         { id : string! }
+      END_CAMPAIGN            { id : string! }
+      CampaignGoalLoaded      { data : [CampaignGoal] }
+      CampaignGoalLoadFailed  { error : string, code : string }
+    }
+  }
+  page "/campaigns" as CampaignGoalPage -> CampaignGoalTracker
+}

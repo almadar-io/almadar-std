@@ -1,0 +1,61 @@
+app std-esign-request "1.0.0"
+"Generic e-signature request primitive: send a document for signing and track status."
+
+orbital ESignRequestOrbital {
+  entity ESignRequest [persistent: esignrequests] {
+    id : string!
+    documentId : string!
+    documentName : string = ""
+    recipientName : string!
+    recipientEmail : string!
+    status : "draft" | "sent" | "viewed" | "signed" | "declined" | "expired" = "draft"
+    sentAt : string = ""
+    signedAt : string = ""
+    expiresAt : string = ""
+    notes : string = ""
+  }
+  type ESignRequestLoaded = Event { data : [ESignRequest] }
+  type ESignRequestLoadFailed = Event { error : string, code : string }
+
+  trait ESignRequestSigning -> ESignRequest [interaction, collection] {
+    config {
+      title : string = "Signature Requests"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ESignRequest { emit: { success: "ESignRequestLoaded", failure: "ESignRequestLoadFailed" } })
+        (render-ui main { type: "spinner", size: "md" })
+      ESignRequestLoaded -> browsing
+        (render-ui main { type: "data-grid", entity: "ESignRequest", columns: [{ field: "documentName", label: "Document" }, { field: "recipientName", label: "Recipient" }, { field: "recipientEmail", label: "Email" }, { field: "status", label: "Status" }, { field: "sentAt", label: "Sent" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] })
+      ESignRequestLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", title: "Failed to load signature requests", message: "@payload.error" })
+    }
+    state browsing {
+      SEND_REQUEST -> browsing
+        (set @entity.id @payload.id)
+        (notify "Signature request sent" success)
+      REVOKE_REQUEST -> browsing
+        (set @entity.id @payload.id)
+        (notify "Signature request revoked" info)
+    }
+    state error {
+      INIT -> loading
+        (fetch ESignRequest { emit: { success: "ESignRequestLoaded", failure: "ESignRequestLoadFailed" } })
+        (render-ui main { type: "spinner", size: "md" })
+    }
+    emits {
+      SEND_REQUEST { id : string! }
+      REVOKE_REQUEST { id : string! }
+      ESignRequestLoaded { data : [ESignRequest] }
+      ESignRequestLoadFailed { error : string, code : string }
+    }
+    listens {
+      SEND_REQUEST { id : string! }
+      REVOKE_REQUEST { id : string! }
+      ESignRequestLoaded { data : [ESignRequest] }
+      ESignRequestLoadFailed { error : string, code : string }
+    }
+  }
+  page "/esign" as ESignRequestPage -> ESignRequestSigning
+}

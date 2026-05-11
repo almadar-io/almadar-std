@@ -1,0 +1,119 @@
+app std-stock-adjustment "1.0.0"
+"Tracks stock-level adjustments as deltas to onHand per sku/warehouse"
+
+orbital StockAdjustmentOrbital {
+  uses StockLevel    from "std/behaviors/std-stock-level"
+  uses Warehouse     from "std/behaviors/std-warehouse"
+  uses Modal         from "std/behaviors/std-modal"
+  uses Confirmation  from "std/behaviors/std-confirmation"
+
+  entity StockAdjustment [persistent: stockadjustments] {
+    id            : string!
+    stockLevelId  : string!
+    sku           : string = ""
+    warehouseId   : string = ""
+    warehouseName : string = ""
+    quantityDelta : number = 0
+    reason        : "manual" | "damaged" | "transfer_in" | "transfer_out" | "shrinkage" | "recount" = "manual"
+    adjustedBy    : string = ""
+    adjustedAt    : string = ""
+    notes         : string = ""
+    pendingId     : string = ""
+  }
+
+  type StockAdjustmentLoaded     = Event { data : [StockAdjustment] }            "Fired when the stock-adjustment collection finishes loading"
+  type StockAdjustmentLoadFailed = Event { error : string, code : string }       "Fired when the stock-adjustment collection fails to load"
+
+  trait StockAdjustmentBrowse -> StockAdjustment [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading adjustments…" }] })
+      StockAdjustmentLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sliders" }, { type: "typography", content: "Stock Adjustments", variant: "h2" }] }, { type: "button", label: "New Adjustment", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Delete", event: "REQUEST_DELETE", variant: "danger" }], fields: [{ name: "sku", label: "SKU", variant: "h4", icon: "tag" }, { name: "warehouseName", label: "Warehouse", variant: "body" }, { name: "quantityDelta", label: "Delta", variant: "badge" }, { name: "reason", label: "Reason", variant: "badge" }, { name: "adjustedAt", label: "Adjusted At", variant: "caption" }, { name: "adjustedBy", label: "Adjusted By", variant: "caption" }] }] })
+      StockAdjustmentLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load adjustments" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state browsing {
+      INIT -> loading
+        (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    emits {
+      CREATE
+      REQUEST_DELETE { id : string!, row : StockAdjustment }
+      StockAdjustmentLoaded
+      StockAdjustmentLoadFailed
+    }
+    listens {
+      StockAdjustmentLoadFailed { error : string, code : string }
+      StockAdjustmentPersistor.ADJUSTMENT_CREATED -> INIT
+      StockAdjustmentPersistor.ADJUSTMENT_DELETED -> INIT
+    }
+  }
+
+  trait StockAdjustmentCreate = Modal.traits.ModalRecordModal -> StockAdjustment {
+    config: {
+      icon: "plus-circle",
+      title: "New Adjustment",
+      mode: "create",
+      fields: ["sku", "warehouseId", "quantityDelta", "reason", "notes"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      StockAdjustmentBrowse.CREATE -> CREATE
+      CREATE { id : string, row : StockAdjustment }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StockAdjustmentDelete = Confirmation.traits.ConfirmActionConfirmation -> StockAdjustment {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Adjustment",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      StockAdjustmentBrowse.REQUEST_DELETE -> DELETE
+      DELETE { id : string, row : StockAdjustment }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait StockAdjustmentPersistor -> StockAdjustment [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create StockAdjustment @payload.data { emit: { success: "ADJUSTMENT_CREATED" } })
+      DO_DELETE -> idle
+        (persist delete StockAdjustment @payload.id { emit: { success: "ADJUSTMENT_DELETED" } })
+    }
+    emits {
+      ADJUSTMENT_CREATED -> external { id : string }
+      ADJUSTMENT_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_DELETE { id : string }
+      StockAdjustmentCreate.SAVE           -> DO_CREATE
+      StockAdjustmentDelete.CONFIRM_DELETE -> DO_DELETE
+    }
+  }
+
+  page "/stock-adjustments" as StockAdjustmentPage -> StockAdjustmentBrowse, StockAdjustmentCreate, StockAdjustmentDelete, StockAdjustmentPersistor
+}

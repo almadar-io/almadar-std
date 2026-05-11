@@ -1,0 +1,67 @@
+app std-membership "1.0.0"
+"std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and member-self-managed cancel. Distinct from std-recurring-charge (Stripe SaaS) — memberships support tier upgrades, freezes, and self-managed cancellation."
+
+orbital MembershipOrbital {
+  entity Membership [persistent: memberships] {
+    id           : string!
+    memberId     : string!
+    memberName   : string = ""
+    tier         : "basic" | "standard" | "premium" | "vip" = "basic"
+    monthlyDues  : number = 0
+    startDate    : string!
+    renewalDate  : string = ""
+    status       : "active" | "frozen" | "cancelled" | "expired" = "active"
+    accessLevel  : string = ""
+    notes        : string = ""
+  }
+
+  type MembershipLoaded     = Event { data : [Membership] }            "Fired when the membership collection finishes loading"
+  type MembershipLoadFailed = Event { error : string, code : string }  "Fired when the membership collection fails to load"
+
+  trait MembershipDirectory -> Membership [interaction, collection] {
+    config {
+      title : string = "Memberships"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Membership { emit: { success: "MembershipLoaded", failure: "MembershipLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading memberships…" }] })
+      MembershipLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "id-card" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "memberName", label: "Member", variant: "caption" }, { name: "tier", label: "Tier", variant: "badge" }, { name: "monthlyDues", label: "Monthly Dues", variant: "caption" }, { name: "renewalDate", label: "Renews", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Upgrade", event: "UPGRADE_TIER", variant: "primary" }, { label: "Freeze", event: "FREEZE_MEMBERSHIP", variant: "ghost" }, { label: "Cancel", event: "CANCEL_MEMBERSHIP", variant: "danger" }] }] })
+      MembershipLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      UPGRADE_TIER -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Tier upgraded" })
+      FREEZE_MEMBERSHIP -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Membership frozen" })
+      CANCEL_MEMBERSHIP -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Membership cancelled" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Membership { emit: { success: "MembershipLoaded", failure: "MembershipLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      UPGRADE_TIER      { id : string! }
+      FREEZE_MEMBERSHIP { id : string! }
+      CANCEL_MEMBERSHIP { id : string! }
+      MembershipLoaded     { data : [Membership] }
+      MembershipLoadFailed { error : string, code : string }
+    }
+    listens {
+      UPGRADE_TIER      { id : string! }
+      FREEZE_MEMBERSHIP { id : string! }
+      CANCEL_MEMBERSHIP { id : string! }
+      MembershipLoaded     { data : [Membership] }
+      MembershipLoadFailed { error : string, code : string }
+    }
+  }
+  page "/memberships" as MembershipPage -> MembershipDirectory
+}

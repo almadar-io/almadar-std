@@ -1,0 +1,62 @@
+app std-ledger-entry "1.0.0"
+"std-ledger-entry — general-ledger journal entry atom. Owns a LedgerEntry entity (double-entry debit/credit) and a single trait that loads journal entries into a data-grid with reconcile and reverse row actions."
+
+orbital LedgerEntryOrbital {
+  entity LedgerEntry [persistent: ledgerentries] {
+    id            : string!
+    accountId     : string!
+    accountName   : string = ""
+    entryDate     : string!
+    description   : string = ""
+    debit         : number = 0
+    credit        : number = 0
+    referenceType : "manual" | "invoice" | "bill" | "payment" | "adjustment" = "manual"
+    referenceId   : string = ""
+    isReconciled  : boolean = false
+  }
+
+  type LedgerEntryLoaded     = Event { data : [LedgerEntry] }            "Fired when the ledger entry collection finishes loading"
+  type LedgerEntryLoadFailed = Event { error : string, code : string }   "Fired when the ledger entry collection fails to load"
+
+  trait LedgerEntryJournal -> LedgerEntry [interaction, collection] {
+    config {
+      title : string = "Journal Entries"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading journal entries…" }] })
+      LedgerEntryLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "entryDate", label: "Date", variant: "caption" }, { name: "accountName", label: "Account", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "debit", label: "Debit", variant: "caption" }, { name: "credit", label: "Credit", variant: "caption" }, { name: "isReconciled", label: "Reconciled", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Reconcile", event: "RECONCILE_ENTRY", variant: "primary" }, { label: "Reverse", event: "REVERSE_ENTRY", variant: "danger" }] }] })
+      LedgerEntryLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      RECONCILE_ENTRY -> browsing
+        (set @entity.id @payload.id)
+        (notify "Entry reconciled" success)
+      REVERSE_ENTRY -> browsing
+        (set @entity.id @payload.id)
+        (notify "Entry reversed" info)
+    }
+    state error {
+      INIT -> loading
+        (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      RECONCILE_ENTRY        { id : string! }
+      REVERSE_ENTRY          { id : string! }
+      LedgerEntryLoaded      { data : [LedgerEntry] }
+      LedgerEntryLoadFailed  { error : string, code : string }
+    }
+    listens {
+      RECONCILE_ENTRY        { id : string! }
+      REVERSE_ENTRY          { id : string! }
+      LedgerEntryLoaded      { data : [LedgerEntry] }
+      LedgerEntryLoadFailed  { error : string, code : string }
+    }
+  }
+  page "/journal" as LedgerEntryPage -> LedgerEntryJournal
+}

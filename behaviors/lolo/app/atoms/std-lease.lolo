@@ -1,0 +1,62 @@
+app std-lease "1.0.0"
+"std-lease — owner-side lease records that tie tenants to property units with dates, monthly rent, and lifecycle status (pending/active/expired/terminated)."
+
+orbital LeaseOrbital {
+  entity Lease [persistent: leases] {
+    id           : string!
+    tenantId     : string!
+    tenantName   : string = ""
+    unitId       : string = ""
+    unitLabel    : string = ""
+    startDate    : string!
+    endDate      : string = ""
+    monthlyRent  : number = 0
+    status       : "active" | "expired" | "terminated" | "pending" = "pending"
+    notes        : string = ""
+  }
+
+  type LeaseLoaded     = Event { data : [Lease] }              "Fired when the lease collection finishes loading"
+  type LeaseLoadFailed = Event { error : string, code : string } "Fired when the lease collection fails to load"
+
+  trait LeaseManager -> Lease [interaction, collection] {
+    config {
+      title : string = "Leases"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Lease { emit: { success: "LeaseLoaded", failure: "LeaseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading leases…" }] })
+      LeaseLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "tenantName", label: "Tenant", variant: "caption" }, { name: "unitLabel", label: "Unit", variant: "caption" }, { name: "startDate", label: "Start", variant: "caption" }, { name: "endDate", label: "End", variant: "caption" }, { name: "monthlyRent", label: "Monthly Rent", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Renew", event: "RENEW_LEASE", variant: "primary" }, { label: "Terminate", event: "TERMINATE_LEASE", variant: "danger" }] }] })
+      LeaseLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      RENEW_LEASE -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Lease renewal requested" })
+      TERMINATE_LEASE -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Lease termination requested" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Lease { emit: { success: "LeaseLoaded", failure: "LeaseLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      RENEW_LEASE     { id : string! }
+      TERMINATE_LEASE { id : string! }
+      LeaseLoaded     { data : [Lease] }
+      LeaseLoadFailed { error : string, code : string }
+    }
+    listens {
+      RENEW_LEASE     { id : string! }
+      TERMINATE_LEASE { id : string! }
+      LeaseLoaded     { data : [Lease] }
+      LeaseLoadFailed { error : string, code : string }
+    }
+  }
+  page "/leases" as LeasePage -> LeaseManager
+}

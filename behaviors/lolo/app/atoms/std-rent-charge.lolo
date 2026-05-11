@@ -1,0 +1,66 @@
+app std-rent-charge "1.0.0"
+"Rent charge ledger: monthly rent owed by a tenant (tenant-pays semantics)."
+
+orbital RentChargeOrbital {
+  entity RentCharge [persistent: rentcharges] {
+    id : string!
+    tenantId : string!
+    leaseId : string = ""
+    amount : number = 0
+    dueDate : string!
+    paidAt : string = ""
+    status : "unpaid" | "paid" | "overdue" | "waived" = "unpaid"
+    lateFee : number = 0
+    notes : string = ""
+  }
+  type RentChargeLoaded = Event { data : [RentCharge] }
+  type RentChargeLoadFailed = Event { error : string, code : string }
+
+  trait RentChargeLedger -> RentCharge [interaction, collection] {
+    config {
+      title : string = "Rent Charges"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "spinner" })
+      RentChargeLoaded -> browsing
+        (render-ui main { type: "data-grid", entity: "RentCharge", columns: [{ field: "tenantId", label: "Tenant" }, { field: "amount", label: "Amount" }, { field: "dueDate", label: "Due Date" }, { field: "status", label: "Status" }, { field: "paidAt", label: "Paid At" }, { field: "lateFee", label: "Late Fee" }], itemActions: [{ label: "Mark Paid", event: "MARK_PAID", variant: "primary" }, { label: "Late Fee", event: "ASSESS_LATE_FEE", variant: "ghost" }, { label: "Waive", event: "WAIVE_CHARGE", variant: "danger" }] })
+      RentChargeLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "Failed to load rent charges" })
+    }
+    state browsing {
+      MARK_PAID -> browsing
+        (set @entity.id @payload.id)
+        (notify "Rent recorded as paid" success)
+      ASSESS_LATE_FEE -> browsing
+        (set @entity.id @payload.id)
+        (notify "Late fee assessed" info)
+      WAIVE_CHARGE -> browsing
+        (set @entity.id @payload.id)
+        (notify "Charge waived" info)
+    }
+    state error {
+      INIT -> loading
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+
+    emits {
+      MARK_PAID { id : string! }
+      ASSESS_LATE_FEE { id : string! }
+      WAIVE_CHARGE { id : string! }
+      RentChargeLoaded { data : [RentCharge] }
+      RentChargeLoadFailed { error : string, code : string }
+    }
+    listens {
+      MARK_PAID { id : string! }
+      ASSESS_LATE_FEE { id : string! }
+      WAIVE_CHARGE { id : string! }
+      RentChargeLoaded { data : [RentCharge] }
+      RentChargeLoadFailed { error : string, code : string }
+    }
+  }
+  page "/rent-charges" as RentChargePage -> RentChargeLedger
+}

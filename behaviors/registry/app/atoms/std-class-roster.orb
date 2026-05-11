@@ -1,0 +1,399 @@
+{
+  "name": "std-class-roster",
+  "version": "1.0.0",
+  "description": "std-class-roster — list of members enrolled in a specific class session, with attendance tracking. Owns a RosterEntry entity and a single roster trait that loads entries, renders them in a data-grid, and surfaces Check In / No Show per row.",
+  "orbitals": [
+    {
+      "name": "ClassRosterOrbital",
+      "entity": {
+        "name": "RosterEntry",
+        "collection": "rosterentries",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sessionId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "memberId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "memberName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "enrolledAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "checkedInAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "enrolled",
+            "values": [
+              "enrolled",
+              "checked_in",
+              "no_show",
+              "waitlist"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "RosterEntryRoster",
+          "category": "interaction",
+          "linkedEntity": "RosterEntry",
+          "emits": [
+            {
+              "event": "CHECK_IN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "MARK_NO_SHOW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "RosterEntryLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[RosterEntry]"
+                }
+              ]
+            },
+            {
+              "event": "RosterEntryLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RosterEntryLoaded",
+                "name": "RosterEntry loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[RosterEntry]"
+                  }
+                ]
+              },
+              {
+                "key": "RosterEntryLoadFailed",
+                "name": "RosterEntry load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CHECK_IN",
+                "name": "Check In",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MARK_NO_SHOW",
+                "name": "Mark No Show",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RosterEntry",
+                    {
+                      "emit": {
+                        "success": "RosterEntryLoaded",
+                        "failure": "RosterEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading roster…",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "RosterEntryLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "users",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "event": "CHECK_IN",
+                              "variant": "primary",
+                              "label": "Check In"
+                            },
+                            {
+                              "label": "No Show",
+                              "variant": "ghost",
+                              "event": "MARK_NO_SHOW"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "label": "Member",
+                              "name": "memberName"
+                            },
+                            {
+                              "label": "Session",
+                              "name": "sessionId",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "checkedInAt",
+                              "label": "Checked In"
+                            }
+                          ],
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "RosterEntryLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CHECK_IN",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "message": "Checked in",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MARK_NO_SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Marked no-show",
+                      "variant": "info",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RosterEntry",
+                    {
+                      "emit": {
+                        "failure": "RosterEntryLoadFailed",
+                        "success": "RosterEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Class Roster"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "RosterEntryPage",
+          "path": "/roster",
+          "traits": [
+            {
+              "ref": "RosterEntryRoster"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

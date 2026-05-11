@@ -1,0 +1,61 @@
+app std-ap-bill "1.0.0"
+"std-ap-bill — accounts-payable bill atom. Owns an ApBill entity (vendor bills we owe) and a single trait that loads bills into a data-grid with Pay and Void row actions. Counterpart to std-invoice on the payables side."
+
+orbital ApBillOrbital {
+  entity ApBill [persistent: apbills] {
+    id           : string!
+    vendor       : string!
+    billNumber   : string = ""
+    billDate     : string!
+    dueDate      : string = ""
+    amountTotal  : number = 0
+    amountPaid   : number = 0
+    status       : "open" | "partial" | "paid" | "overdue" | "void" = "open"
+    notes        : string = ""
+  }
+
+  type ApBillLoaded     = Event { data : [ApBill] }                "Fired when the bill collection finishes loading"
+  type ApBillLoadFailed = Event { error : string, code : string }  "Fired when the bill collection fails to load"
+
+  trait ApBillLedger -> ApBill [interaction, collection] {
+    config {
+      title : string = "Bills Payable"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading bills…" }] })
+      ApBillLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vendor", label: "Vendor", variant: "caption" }, { name: "billNumber", label: "Bill #", variant: "caption" }, { name: "billDate", label: "Bill Date", variant: "caption" }, { name: "dueDate", label: "Due", variant: "caption" }, { name: "amountTotal", label: "Total", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Pay", event: "PAY_BILL", variant: "primary" }, { label: "Void", event: "VOID_BILL", variant: "danger" }] }] })
+      ApBillLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      PAY_BILL -> browsing
+        (set @entity.id @payload.id)
+        (notify "Bill paid" success)
+      VOID_BILL -> browsing
+        (set @entity.id @payload.id)
+        (notify "Bill voided" info)
+    }
+    state error {
+      INIT -> loading
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      PAY_BILL         { id : string! }
+      VOID_BILL        { id : string! }
+      ApBillLoaded     { data : [ApBill] }
+      ApBillLoadFailed { error : string, code : string }
+    }
+    listens {
+      PAY_BILL         { id : string! }
+      VOID_BILL        { id : string! }
+      ApBillLoaded     { data : [ApBill] }
+      ApBillLoadFailed { error : string, code : string }
+    }
+  }
+  page "/bills" as ApBillPage -> ApBillLedger
+}

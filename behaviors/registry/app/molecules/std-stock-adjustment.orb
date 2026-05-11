@@ -1,0 +1,698 @@
+{
+  "name": "std-stock-adjustment",
+  "version": "1.0.0",
+  "description": "Tracks stock-level adjustments as deltas to onHand per sku/warehouse",
+  "orbitals": [
+    {
+      "name": "StockAdjustmentOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-stock-level",
+          "as": "StockLevel"
+        },
+        {
+          "from": "std/behaviors/std-warehouse",
+          "as": "Warehouse"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        }
+      ],
+      "entity": {
+        "name": "StockAdjustment",
+        "collection": "stockadjustments",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "stockLevelId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "warehouseId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "warehouseName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "quantityDelta",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "default": "manual",
+            "values": [
+              "manual",
+              "damaged",
+              "transfer_in",
+              "transfer_out",
+              "shrinkage",
+              "recount"
+            ]
+          },
+          {
+            "name": "adjustedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "adjustedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StockAdjustmentBrowse",
+          "category": "interaction",
+          "linkedEntity": "StockAdjustment",
+          "emits": [
+            {
+              "event": "CREATE"
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.stockLevelId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.sku",
+                  "type": "string"
+                },
+                {
+                  "name": "row.warehouseId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.warehouseName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.quantityDelta",
+                  "type": "number"
+                },
+                {
+                  "name": "row.reason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.adjustedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.adjustedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "StockAdjustmentLoaded",
+              "description": "Fired when the stock-adjustment collection finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[StockAdjustment]"
+                }
+              ]
+            },
+            {
+              "event": "StockAdjustmentLoadFailed",
+              "description": "Fired when the stock-adjustment collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "ADJUSTMENT_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "StockAdjustmentPersistor"
+              }
+            },
+            {
+              "event": "ADJUSTMENT_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "StockAdjustmentPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "StockAdjustmentLoaded",
+                "name": "StockAdjustment loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[StockAdjustment]"
+                  }
+                ]
+              },
+              {
+                "key": "StockAdjustmentLoadFailed",
+                "name": "StockAdjustment load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StockAdjustment",
+                    {
+                      "emit": {
+                        "failure": "StockAdjustmentLoadFailed",
+                        "success": "StockAdjustmentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading adjustments…"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "StockAdjustmentLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "name": "sliders",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Stock Adjustments",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "icon": "plus",
+                              "variant": "primary",
+                              "label": "New Adjustment",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "variant": "h4",
+                              "name": "sku",
+                              "icon": "tag",
+                              "label": "SKU"
+                            },
+                            {
+                              "label": "Warehouse",
+                              "variant": "body",
+                              "name": "warehouseName"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "quantityDelta",
+                              "label": "Delta"
+                            },
+                            {
+                              "name": "reason",
+                              "label": "Reason",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Adjusted At",
+                              "variant": "caption",
+                              "name": "adjustedAt"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "adjustedBy",
+                              "label": "Adjusted By"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "label": "Delete",
+                              "variant": "danger",
+                              "event": "REQUEST_DELETE"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "StockAdjustmentLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "type": "icon",
+                          "color": "destructive"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "Failed to load adjustments",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "@payload.error",
+                          "variant": "body",
+                          "type": "typography",
+                          "color": "muted"
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary",
+                          "action": "INIT"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StockAdjustment",
+                    {
+                      "emit": {
+                        "success": "StockAdjustmentLoaded",
+                        "failure": "StockAdjustmentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StockAdjustment",
+                    {
+                      "emit": {
+                        "success": "StockAdjustmentLoaded",
+                        "failure": "StockAdjustmentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "StockAdjustmentCreate",
+          "linkedEntity": "StockAdjustment",
+          "config": {
+            "title": "New Adjustment",
+            "mode": "create",
+            "icon": "plus-circle",
+            "fields": [
+              "sku",
+              "warehouseId",
+              "quantityDelta",
+              "reason",
+              "notes"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "StockAdjustmentBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "StockAdjustmentDelete",
+          "linkedEntity": "StockAdjustment",
+          "config": {
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Adjustment",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "REQUEST_DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "StockAdjustmentBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "name": "StockAdjustmentPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "StockAdjustment",
+          "emits": [
+            {
+              "event": "ADJUSTMENT_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ADJUSTMENT_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "StockAdjustmentCreate"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "StockAdjustmentDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ADJUSTMENT_CREATED",
+                "name": "Adjustment Created"
+              },
+              {
+                "key": "ADJUSTMENT_DELETED",
+                "name": "Adjustment Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "StockAdjustment",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ADJUSTMENT_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "StockAdjustment",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "ADJUSTMENT_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StockAdjustmentPage",
+          "path": "/stock-adjustments",
+          "traits": [
+            {
+              "ref": "StockAdjustmentBrowse"
+            },
+            {
+              "ref": "StockAdjustmentCreate"
+            },
+            {
+              "ref": "StockAdjustmentDelete"
+            },
+            {
+              "ref": "StockAdjustmentPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+app std-customer-account "1.0.0"
+"Retail customer profile primitive with purchase history reference, store credit, and loyalty points."
+
+orbital CustomerAccountOrbital {
+  entity CustomerAccount [persistent: customeraccounts] {
+    id : string!
+    name : string!
+    email : string = ""
+    phone : string = ""
+    loyaltyPoints : number = 0
+    storeCreditAmount : number = 0
+    totalSpent : number = 0
+    joinedAt : string = ""
+    lastVisitAt : string = ""
+    status : "active" | "inactive" | "banned" = "active"
+  }
+  type CustomerAccountLoaded = Event { data : [CustomerAccount] }
+  type CustomerAccountLoadFailed = Event { error : string, code : string }
+
+  trait CustomerAccountDirectory -> CustomerAccount [interaction, collection] {
+    config {
+      title : string = "Customers"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "spinner" })
+      CustomerAccountLoaded -> browsing
+        (render-ui main { type: "data-grid", entity: "CustomerAccount", columns: ["name", "email", "phone", "loyaltyPoints", "totalSpent", "status"], itemActions: [{ label: "Add Points", event: "GRANT_POINTS", variant: "primary" }, { label: "Issue Credit", event: "GRANT_CREDIT", variant: "ghost" }] })
+      CustomerAccountLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      GRANT_POINTS -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Points granted" })
+      GRANT_CREDIT -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Store credit issued" })
+    }
+    state error {
+      INIT -> loading
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+
+    emits {
+      GRANT_POINTS { id : string! }
+      GRANT_CREDIT { id : string! }
+      CustomerAccountLoaded { data : [CustomerAccount] }
+      CustomerAccountLoadFailed { error : string, code : string }
+    }
+    listens {
+      GRANT_POINTS { id : string! }
+      GRANT_CREDIT { id : string! }
+      CustomerAccountLoaded { data : [CustomerAccount] }
+      CustomerAccountLoadFailed { error : string, code : string }
+    }
+  }
+  page "/customers" as CustomerAccountPage -> CustomerAccountDirectory
+}

@@ -1,0 +1,61 @@
+app std-interview-slot "1.0.0"
+"std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status."
+
+orbital InterviewSlotOrbital {
+  entity InterviewSlot [persistent: interviewslots] {
+    id              : string!
+    applicantId     : string!
+    applicantName   : string = ""
+    interviewerName : string = ""
+    scheduledAt     : string!
+    durationMinutes : number = 60
+    format          : "phone" | "video" | "onsite" = "video"
+    status          : "scheduled" | "completed" | "cancelled" | "no_show" = "scheduled"
+    notes           : string = ""
+  }
+
+  type InterviewSlotLoaded     = Event { data : [InterviewSlot] }         "Fired when the interview-slot collection finishes loading"
+  type InterviewSlotLoadFailed = Event { error : string, code : string }  "Fired when the interview-slot collection fails to load"
+
+  trait InterviewSlotSchedule -> InterviewSlot [interaction, collection] {
+    config {
+      title : string = "Interviews"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch InterviewSlot { emit: { success: "InterviewSlotLoaded", failure: "InterviewSlotLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading interviews…" }] })
+      InterviewSlotLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "applicantName", label: "Applicant", variant: "caption" }, { name: "interviewerName", label: "Interviewer", variant: "caption" }, { name: "scheduledAt", label: "Scheduled", variant: "caption" }, { name: "format", label: "Format", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Complete", event: "COMPLETE_INTERVIEW", variant: "primary" }, { label: "Cancel", event: "CANCEL_INTERVIEW", variant: "danger" }] }] })
+      InterviewSlotLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      COMPLETE_INTERVIEW -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Interview marked complete" })
+      CANCEL_INTERVIEW -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Interview cancelled" })
+    }
+    state error {
+      INIT -> loading
+        (fetch InterviewSlot { emit: { success: "InterviewSlotLoaded", failure: "InterviewSlotLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      COMPLETE_INTERVIEW       { id : string! }
+      CANCEL_INTERVIEW         { id : string! }
+      InterviewSlotLoaded      { data : [InterviewSlot] }
+      InterviewSlotLoadFailed  { error : string, code : string }
+    }
+    listens {
+      COMPLETE_INTERVIEW       { id : string! }
+      CANCEL_INTERVIEW         { id : string! }
+      InterviewSlotLoaded      { data : [InterviewSlot] }
+      InterviewSlotLoadFailed  { error : string, code : string }
+    }
+  }
+  page "/interviews" as InterviewSlotPage -> InterviewSlotSchedule
+}

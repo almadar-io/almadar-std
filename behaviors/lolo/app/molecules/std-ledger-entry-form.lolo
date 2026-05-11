@@ -1,0 +1,127 @@
+app std-ledger-entry-form "1.0.0"
+"Tracks balanced journal-entry pairs (debit + credit) before persisting LedgerEntry rows"
+
+orbital JournalTransactionOrbital {
+  uses LedgerEntry   from "std/behaviors/std-ledger-entry"
+  uses Account       from "std/behaviors/std-chart-of-accounts"
+  uses Modal         from "std/behaviors/std-modal"
+  uses Confirmation  from "std/behaviors/std-confirmation"
+
+  entity JournalTransaction [persistent: journaltransactions] {
+    id                : string!
+    transactionDate   : string!
+    description       : string = ""
+    debitAccountId    : string = ""
+    debitAccountName  : string = ""
+    creditAccountId   : string = ""
+    creditAccountName : string = ""
+    amount            : number = 0
+    referenceType     : "manual" | "invoice" | "bill" | "payment" = "manual"
+    referenceId       : string = ""
+    isPosted          : boolean = false
+    pendingId         : string = ""
+  }
+
+  type JournalTransactionLoaded     = Event { data : [JournalTransaction] }       "Fired when the journal-transaction collection finishes loading"
+  type JournalTransactionLoadFailed = Event { error : string, code : string }     "Fired when the journal-transaction collection fails to load"
+
+  trait JournalTransactionBrowse -> JournalTransaction [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading transactions…" }] })
+      JournalTransactionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "Journal Transactions", variant: "h2" }] }, { type: "button", label: "New Transaction", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Post", event: "POST_TRANSACTION", variant: "primary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }], fields: [{ name: "transactionDate", label: "Date", variant: "caption" }, { name: "description", label: "Description", variant: "body" }, { name: "debitAccountName", label: "Debit", variant: "caption" }, { name: "creditAccountName", label: "Credit", variant: "caption" }, { name: "amount", label: "Amount", variant: "badge" }, { name: "isPosted", label: "Posted", variant: "badge" }] }] })
+      JournalTransactionLoadFailed -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load transactions" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state browsing {
+      INIT -> loading
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    state error {
+      INIT -> loading
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "spinner" })
+    }
+    emits {
+      CREATE
+      POST_TRANSACTION { id : string!, row : JournalTransaction }
+      REQUEST_DELETE   { id : string!, row : JournalTransaction }
+      JournalTransactionLoaded
+      JournalTransactionLoadFailed
+    }
+    listens {
+      JournalTransactionLoadFailed { error : string, code : string }
+      JournalTransactionPersistor.TRANSACTION_CREATED -> INIT
+      JournalTransactionPersistor.TRANSACTION_POSTED  -> INIT
+      JournalTransactionPersistor.TRANSACTION_DELETED -> INIT
+    }
+  }
+
+  trait JournalTransactionCreate = Modal.traits.ModalRecordModal -> JournalTransaction {
+    config: {
+      icon: "plus-circle",
+      title: "New Transaction",
+      mode: "create",
+      fields: ["transactionDate", "description", "debitAccountId", "creditAccountId", "amount", "referenceType", "referenceId"]
+    }
+    events {
+      OPEN: CREATE
+    }
+    listens {
+      JournalTransactionBrowse.CREATE -> CREATE
+      CREATE { id : string, row : JournalTransaction }
+      SAVE { data : object! }
+      ModalRecordLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait JournalTransactionDelete = Confirmation.traits.ConfirmActionConfirmation -> JournalTransaction {
+    config: {
+      icon: "alert-triangle",
+      title: "Delete Transaction",
+      alertMessage: "This action cannot be undone.",
+      confirmLabel: "Delete"
+    }
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    listens {
+      JournalTransactionBrowse.REQUEST_DELETE -> DELETE
+      DELETE { id : string, row : JournalTransaction }
+      ConfirmActionLoadFailed { error : string, code : string }
+    }
+  }
+
+  trait JournalTransactionPersistor -> JournalTransaction [lifecycle, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+      DO_CREATE -> idle
+        (persist create JournalTransaction @payload.data { emit: { success: "TRANSACTION_CREATED" } })
+      DO_POST -> idle
+        (persist update JournalTransaction @payload.id { emit: { success: "TRANSACTION_POSTED" } })
+      DO_DELETE -> idle
+        (persist delete JournalTransaction @payload.id { emit: { success: "TRANSACTION_DELETED" } })
+    }
+    emits {
+      TRANSACTION_CREATED -> external { id : string }
+      TRANSACTION_POSTED  -> external { id : string }
+      TRANSACTION_DELETED -> external { id : string }
+    }
+    listens {
+      DO_CREATE { data : object! }
+      DO_POST   { id : string }
+      DO_DELETE { id : string }
+      JournalTransactionCreate.SAVE                  -> DO_CREATE
+      JournalTransactionBrowse.POST_TRANSACTION      -> DO_POST
+      JournalTransactionDelete.CONFIRM_DELETE        -> DO_DELETE
+    }
+  }
+
+  page "/journal-transactions" as JournalTransactionPage -> JournalTransactionBrowse, JournalTransactionCreate, JournalTransactionDelete, JournalTransactionPersistor
+}

@@ -1,0 +1,62 @@
+app std-class-session "1.0.0"
+"std-class-session — scheduled fitness/yoga/dance class session primitive. Tracks instructor, time, capacity, and attendance; START_CLASS / CANCEL_CLASS drive lifecycle transitions for studio operators."
+
+orbital ClassSessionOrbital {
+  entity ClassSession [persistent: classsessions] {
+    id              : string!
+    className       : string!
+    instructorName  : string = ""
+    startTime       : string!
+    durationMinutes : number = 60
+    capacity        : number = 0
+    bookedCount     : number = 0
+    location        : string = ""
+    status          : "scheduled" | "in_progress" | "completed" | "cancelled" = "scheduled"
+    notes           : string = ""
+  }
+
+  type ClassSessionLoaded     = Event { data : [ClassSession] }            "Fired when the class-session collection finishes loading"
+  type ClassSessionLoadFailed = Event { error : string, code : string }    "Fired when the class-session collection fails to load"
+
+  trait ClassSessionSchedule -> ClassSession [interaction, collection] {
+    config {
+      title : string = "Class Sessions"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ClassSession { emit: { success: "ClassSessionLoaded", failure: "ClassSessionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading class sessions…" }] })
+      ClassSessionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "className", label: "Class", variant: "caption" }, { name: "instructorName", label: "Instructor", variant: "caption" }, { name: "startTime", label: "Start", variant: "caption" }, { name: "capacity", label: "Capacity", variant: "badge" }, { name: "bookedCount", label: "Booked", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Start", event: "START_CLASS", variant: "primary" }, { label: "Cancel", event: "CANCEL_CLASS", variant: "danger" }] }] })
+      ClassSessionLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      START_CLASS -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Class started" })
+      CANCEL_CLASS -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Class cancelled" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ClassSession { emit: { success: "ClassSessionLoaded", failure: "ClassSessionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading class sessions…" }] })
+    }
+    emits {
+      START_CLASS             { id : string! }
+      CANCEL_CLASS            { id : string! }
+      ClassSessionLoaded      { data : [ClassSession] }
+      ClassSessionLoadFailed  { error : string, code : string }
+    }
+    listens {
+      START_CLASS             { id : string! }
+      CANCEL_CLASS            { id : string! }
+      ClassSessionLoaded      { data : [ClassSession] }
+      ClassSessionLoadFailed  { error : string, code : string }
+    }
+  }
+  page "/class-sessions" as ClassSessionPage -> ClassSessionSchedule
+}

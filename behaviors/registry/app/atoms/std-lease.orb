@@ -1,0 +1,419 @@
+{
+  "name": "std-lease",
+  "version": "1.0.0",
+  "description": "std-lease — owner-side lease records that tie tenants to property units with dates, monthly rent, and lifecycle status (pending/active/expired/terminated).",
+  "orbitals": [
+    {
+      "name": "LeaseOrbital",
+      "entity": {
+        "name": "Lease",
+        "collection": "leases",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "tenantId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "tenantName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "unitId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "unitLabel",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "startDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "endDate",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "monthlyRent",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "active",
+              "expired",
+              "terminated",
+              "pending"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LeaseManager",
+          "category": "interaction",
+          "linkedEntity": "Lease",
+          "emits": [
+            {
+              "event": "RENEW_LEASE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TERMINATE_LEASE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "LeaseLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Lease]"
+                }
+              ]
+            },
+            {
+              "event": "LeaseLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LeaseLoaded",
+                "name": "Lease loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Lease]"
+                  }
+                ]
+              },
+              {
+                "key": "LeaseLoadFailed",
+                "name": "Lease load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RENEW_LEASE",
+                "name": "Renew Lease",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TERMINATE_LEASE",
+                "name": "Terminate Lease",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Lease",
+                    {
+                      "emit": {
+                        "success": "LeaseLoaded",
+                        "failure": "LeaseLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading leases…",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "LeaseLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "file-text"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "label": "Renew",
+                              "event": "RENEW_LEASE",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "TERMINATE_LEASE",
+                              "variant": "danger",
+                              "label": "Terminate"
+                            }
+                          ],
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "label": "Tenant",
+                              "name": "tenantName"
+                            },
+                            {
+                              "name": "unitLabel",
+                              "label": "Unit",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "startDate",
+                              "label": "Start",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "endDate",
+                              "label": "End",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Monthly Rent",
+                              "variant": "caption",
+                              "name": "monthlyRent"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "LeaseLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "RENEW_LEASE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Lease renewal requested",
+                      "variant": "success",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "TERMINATE_LEASE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Lease termination requested",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Lease",
+                    {
+                      "emit": {
+                        "failure": "LeaseLoadFailed",
+                        "success": "LeaseLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Leases"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "LeasePage",
+          "path": "/leases",
+          "traits": [
+            {
+              "ref": "LeaseManager"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

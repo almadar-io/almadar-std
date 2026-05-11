@@ -1,0 +1,806 @@
+{
+  "name": "std-esign-flow",
+  "version": "1.0.0",
+  "description": "Generic e-signature flow: pick a stored file, pick a recipient, send for signature, track status.",
+  "orbitals": [
+    {
+      "name": "SignatureSessionOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-file-store",
+          "as": "StoredFile"
+        },
+        {
+          "from": "std/behaviors/std-esign-request",
+          "as": "ESignRequest"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        }
+      ],
+      "entity": {
+        "name": "SignatureSession",
+        "collection": "signaturesessions",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "documentId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "documentName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "recipientName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "recipientEmail",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "requesterName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "sent",
+              "viewed",
+              "signed",
+              "declined"
+            ]
+          },
+          {
+            "name": "sentAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "signedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SignatureSessionBrowse",
+          "category": "interaction",
+          "linkedEntity": "SignatureSession",
+          "emits": [
+            {
+              "event": "CREATE"
+            },
+            {
+              "event": "RESEND_REQUEST",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.documentName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.recipientName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.recipientEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requesterName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.sentAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.signedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.documentId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.documentName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.recipientName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.recipientEmail",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.requesterName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.sentAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.signedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SignatureSessionLoaded",
+              "description": "Fired when the SignatureSession collection finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[SignatureSession]"
+                }
+              ]
+            },
+            {
+              "event": "SignatureSessionLoadFailed",
+              "description": "Fired when the SignatureSession collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SESSION_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionPersistor"
+              }
+            },
+            {
+              "event": "SESSION_RESENT",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionPersistor"
+              }
+            },
+            {
+              "event": "SESSION_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SignatureSessionLoaded",
+                "name": "SignatureSession loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[SignatureSession]"
+                  }
+                ]
+              },
+              {
+                "key": "SignatureSessionLoadFailed",
+                "name": "SignatureSession load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              },
+              {
+                "key": "RESEND_REQUEST",
+                "name": "Resend Request"
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SignatureSession",
+                    {
+                      "emit": {
+                        "success": "SignatureSessionLoaded",
+                        "failure": "SignatureSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading signature requests…"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "SignatureSessionLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file-signature"
+                                },
+                                {
+                                  "content": "Signature Requests",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "button",
+                              "action": "CREATE",
+                              "icon": "plus",
+                              "variant": "primary",
+                              "label": "New Signature Request"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "label": "Resend",
+                              "event": "RESEND_REQUEST",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Cancel",
+                              "event": "REQUEST_DELETE"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "name": "documentName",
+                              "icon": "file-text",
+                              "label": "Document",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Recipient",
+                              "variant": "body",
+                              "name": "recipientName"
+                            },
+                            {
+                              "label": "Email",
+                              "variant": "caption",
+                              "name": "recipientEmail"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "sentAt",
+                              "label": "Sent"
+                            }
+                          ],
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "SignatureSessionLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "color": "destructive",
+                          "type": "icon",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "content": "Failed to load signature requests",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.error"
+                        },
+                        {
+                          "label": "Retry",
+                          "action": "INIT",
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "rotate-ccw"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SignatureSession",
+                    {
+                      "emit": {
+                        "success": "SignatureSessionLoaded",
+                        "failure": "SignatureSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SignatureSession",
+                    {
+                      "emit": {
+                        "success": "SignatureSessionLoaded",
+                        "failure": "SignatureSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "SignatureSessionCreate",
+          "linkedEntity": "SignatureSession",
+          "config": {
+            "mode": "create",
+            "title": "New Signature Request",
+            "fields": [
+              "documentId",
+              "recipientName",
+              "recipientEmail",
+              "requesterName"
+            ],
+            "icon": "file-signature",
+            "openButtonLabel": "New Signature Request"
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "SignatureSessionDelete",
+          "linkedEntity": "SignatureSession",
+          "config": {
+            "alertMessage": "Are you sure you want to cancel this signature request?",
+            "confirmLabel": "Cancel Request",
+            "title": "Cancel Signature Request",
+            "icon": "alert-triangle"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "listens": [
+            {
+              "event": "REQUEST_DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "name": "SignatureSessionPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "SignatureSession",
+          "emits": [
+            {
+              "event": "SESSION_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SESSION_RESENT",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SESSION_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionCreate"
+              }
+            },
+            {
+              "event": "RESEND_REQUEST",
+              "triggers": "DO_RESEND",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionBrowse"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "SignatureSessionDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_RESEND",
+                "name": "Do Resend",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SESSION_CREATED",
+                "name": "Session Created"
+              },
+              {
+                "key": "SESSION_RESENT",
+                "name": "Session Resent"
+              },
+              {
+                "key": "SESSION_DELETED",
+                "name": "Session Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "SignatureSession",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "SESSION_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_RESEND",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "SignatureSession",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "SESSION_RESENT"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "SignatureSession",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "SESSION_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SignatureSessionPage",
+          "path": "/esign-flow",
+          "traits": [
+            {
+              "ref": "SignatureSessionBrowse"
+            },
+            {
+              "ref": "SignatureSessionCreate"
+            },
+            {
+              "ref": "SignatureSessionDelete"
+            },
+            {
+              "ref": "SignatureSessionPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

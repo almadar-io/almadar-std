@@ -1,0 +1,60 @@
+app std-drip-sequence "1.0.0"
+"std-drip-sequence — ordered email drip campaign primitive. Owns a DripSequence collection; ACTIVATE flips a sequence live, PAUSE halts it, and load failures surface as alerts. Pure topology atom; downstream coordinators persist status flips."
+
+orbital DripSequenceOrbital {
+  entity DripSequence [persistent: dripsequences] {
+    id             : string!
+    name           : string!
+    description    : string = ""
+    triggerEvent   : string = ""
+    stepsJson      : string = ""
+    status         : "draft" | "active" | "paused" | "archived" = "draft"
+    totalEnrolled  : number = 0
+    totalCompleted : number = 0
+  }
+
+  type DripSequenceLoaded     = Event { data : [DripSequence] }         "Fired when the drip-sequence collection finishes loading"
+  type DripSequenceLoadFailed = Event { error : string, code : string } "Fired when the drip-sequence collection fails to load"
+
+  trait DripSequenceSequence -> DripSequence [interaction, collection] {
+    config {
+      title : string = "Drip Sequences"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch DripSequence { emit: { success: "DripSequenceLoaded", failure: "DripSequenceLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading drip sequences…" }] })
+      DripSequenceLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "triggerEvent", label: "Trigger", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "totalEnrolled", label: "Enrolled", variant: "caption" }, { name: "totalCompleted", label: "Completed", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Activate", event: "ACTIVATE", variant: "primary" }, { label: "Pause", event: "PAUSE", variant: "ghost" }] }] })
+      DripSequenceLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      ACTIVATE -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Drip sequence activated" })
+      PAUSE -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Drip sequence paused" })
+    }
+    state error {
+      INIT -> loading
+        (fetch DripSequence { emit: { success: "DripSequenceLoaded", failure: "DripSequenceLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      ACTIVATE { id : string! }
+      PAUSE    { id : string! }
+      DripSequenceLoaded     { data : [DripSequence] }
+      DripSequenceLoadFailed { error : string, code : string }
+    }
+    listens {
+      ACTIVATE { id : string! }
+      PAUSE    { id : string! }
+      DripSequenceLoaded     { data : [DripSequence] }
+      DripSequenceLoadFailed { error : string, code : string }
+    }
+  }
+  page "/sequences" as DripSequencePage -> DripSequenceSequence
+}

@@ -1,0 +1,60 @@
+app std-stock-level "1.0.0"
+"std-stock-level — on-hand quantity primitive for a SKU at a location. Owns a StockLevel entity and a single ledger trait that loads current levels, renders them in a data-grid, and surfaces Adjust / Recount actions per row."
+
+orbital StockLevelOrbital {
+  entity StockLevel [persistent: stocklevels] {
+    id           : string!
+    sku          : string!
+    productName  : string = ""
+    locationId   : string = ""
+    onHand       : number = 0
+    reserved     : number = 0
+    reorderPoint : number = 0
+    lastCounted  : string = ""
+  }
+
+  type StockLevelLoaded     = Event { data : [StockLevel] }            "Fired when the stock level collection finishes loading"
+  type StockLevelLoadFailed = Event { error : string, code : string }  "Fired when the stock level collection fails to load"
+
+  trait StockLevelLedger -> StockLevel [interaction, collection] {
+    config {
+      title : string = "Stock Levels"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch StockLevel { emit: { success: "StockLevelLoaded", failure: "StockLevelLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading stock levels…" }] })
+      StockLevelLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "package" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "sku", label: "SKU", variant: "caption" }, { name: "productName", label: "Product", variant: "caption" }, { name: "locationId", label: "Location", variant: "caption" }, { name: "onHand", label: "On Hand", variant: "caption" }, { name: "reorderPoint", label: "Reorder At", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Adjust", event: "ADJUST_STOCK", variant: "primary", icon: "sliders" }, { label: "Recount", event: "RECOUNT", variant: "ghost", icon: "clipboard-check" }] }] })
+      StockLevelLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      ADJUST_STOCK -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Stock adjustment requested" })
+      RECOUNT -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Recount scheduled" })
+    }
+    state error {
+      INIT -> loading
+        (fetch StockLevel { emit: { success: "StockLevelLoaded", failure: "StockLevelLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      ADJUST_STOCK         { id : string! }
+      RECOUNT              { id : string! }
+      StockLevelLoaded     { data : [StockLevel] }
+      StockLevelLoadFailed { error : string, code : string }
+    }
+    listens {
+      ADJUST_STOCK         { id : string! }
+      RECOUNT              { id : string! }
+      StockLevelLoaded     { data : [StockLevel] }
+      StockLevelLoadFailed { error : string, code : string }
+    }
+  }
+  page "/stock" as StockLevelPage -> StockLevelLedger
+}

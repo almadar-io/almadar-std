@@ -1,0 +1,467 @@
+{
+  "name": "std-membership",
+  "version": "1.0.0",
+  "description": "std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and member-self-managed cancel. Distinct from std-recurring-charge (Stripe SaaS) — memberships support tier upgrades, freezes, and self-managed cancellation.",
+  "orbitals": [
+    {
+      "name": "MembershipOrbital",
+      "entity": {
+        "name": "Membership",
+        "collection": "memberships",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "memberId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "memberName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "tier",
+            "type": "string",
+            "default": "basic",
+            "values": [
+              "basic",
+              "standard",
+              "premium",
+              "vip"
+            ]
+          },
+          {
+            "name": "monthlyDues",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "startDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "renewalDate",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "frozen",
+              "cancelled",
+              "expired"
+            ]
+          },
+          {
+            "name": "accessLevel",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MembershipDirectory",
+          "category": "interaction",
+          "linkedEntity": "Membership",
+          "emits": [
+            {
+              "event": "UPGRADE_TIER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "FREEZE_MEMBERSHIP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CANCEL_MEMBERSHIP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "MembershipLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Membership]"
+                }
+              ]
+            },
+            {
+              "event": "MembershipLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MembershipLoaded",
+                "name": "Membership loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Membership]"
+                  }
+                ]
+              },
+              {
+                "key": "MembershipLoadFailed",
+                "name": "Membership load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "UPGRADE_TIER",
+                "name": "Upgrade Tier",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FREEZE_MEMBERSHIP",
+                "name": "Freeze Membership",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_MEMBERSHIP",
+                "name": "Cancel Membership",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Membership",
+                    {
+                      "emit": {
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading memberships…"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "MembershipLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "id-card"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [
+                            {
+                              "label": "Member",
+                              "name": "memberName",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "tier",
+                              "variant": "badge",
+                              "label": "Tier"
+                            },
+                            {
+                              "label": "Monthly Dues",
+                              "variant": "caption",
+                              "name": "monthlyDues"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "renewalDate",
+                              "label": "Renews"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Upgrade",
+                              "event": "UPGRADE_TIER"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Freeze",
+                              "event": "FREEZE_MEMBERSHIP"
+                            },
+                            {
+                              "label": "Cancel",
+                              "variant": "danger",
+                              "event": "CANCEL_MEMBERSHIP"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "MembershipLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "UPGRADE_TIER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Tier upgraded",
+                      "variant": "success",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "FREEZE_MEMBERSHIP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Membership frozen"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CANCEL_MEMBERSHIP",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "Membership cancelled",
+                      "type": "alert",
+                      "variant": "info"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Membership",
+                    {
+                      "emit": {
+                        "failure": "MembershipLoadFailed",
+                        "success": "MembershipLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Memberships"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MembershipPage",
+          "path": "/memberships",
+          "traits": [
+            {
+              "ref": "MembershipDirectory"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

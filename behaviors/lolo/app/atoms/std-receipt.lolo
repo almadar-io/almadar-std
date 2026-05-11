@@ -1,0 +1,64 @@
+app std-receipt "1.0.0"
+"std-receipt — receipt primitive. Proof of completed transaction (retail purchase or charitable donation). Browses receipts in a data-grid with Email / Reprint actions."
+
+orbital ReceiptOrbital {
+  entity Receipt [persistent: receipts] {
+    id              : string!
+    receiptNumber   : string!
+    recipientName   : string = ""
+    recipientEmail  : string = ""
+    transactionId   : string = ""
+    transactionType : "purchase" | "refund" | "donation" | "service" = "purchase"
+    subtotal        : number = 0
+    tax             : number = 0
+    total           : number = 0
+    lineItemsJson   : string = ""
+    issuedAt        : string = ""
+    isEmailed       : boolean = false
+  }
+
+  type ReceiptLoaded     = Event { data : [Receipt] }                 "Fired when the receipt collection finishes loading"
+  type ReceiptLoadFailed = Event { error : string, code : string }    "Fired when the receipt collection fails to load"
+
+  trait ReceiptIssuer -> Receipt [interaction, collection] {
+    config {
+      title : string = "Receipts"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Receipt { emit: { success: "ReceiptLoaded", failure: "ReceiptLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading receipts…" }] })
+      ReceiptLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "receiptNumber", label: "Receipt #", variant: "caption" }, { name: "recipientName", label: "Recipient", variant: "caption" }, { name: "transactionType", label: "Type", variant: "badge" }, { name: "total", label: "Total", variant: "caption" }, { name: "issuedAt", label: "Issued", variant: "caption" }, { name: "isEmailed", label: "Emailed", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Email", event: "EMAIL_RECEIPT", variant: "primary" }, { label: "Reprint", event: "REPRINT_RECEIPT", variant: "ghost" }] }] })
+      ReceiptLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      EMAIL_RECEIPT -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Receipt emailed" })
+      REPRINT_RECEIPT -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Receipt reprinted" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Receipt { emit: { success: "ReceiptLoaded", failure: "ReceiptLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      EMAIL_RECEIPT     { id : string! }
+      REPRINT_RECEIPT   { id : string! }
+      ReceiptLoaded     { data : [Receipt] }
+      ReceiptLoadFailed { error : string, code : string }
+    }
+    listens {
+      EMAIL_RECEIPT     { id : string! }
+      REPRINT_RECEIPT   { id : string! }
+      ReceiptLoaded     { data : [Receipt] }
+      ReceiptLoadFailed { error : string, code : string }
+    }
+  }
+  page "/receipts" as ReceiptPage -> ReceiptIssuer
+}

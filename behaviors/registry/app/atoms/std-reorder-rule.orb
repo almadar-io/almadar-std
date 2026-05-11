@@ -1,0 +1,405 @@
+{
+  "name": "std-reorder-rule",
+  "version": "1.0.0",
+  "description": "std-reorder-rule — automatic stock-replenishment rule for a SKU at a location. Owns a ReorderRule entity and a single manager trait that loads rules, renders them in a data-grid, and surfaces Enable / Disable actions per row.",
+  "orbitals": [
+    {
+      "name": "ReorderRuleOrbital",
+      "entity": {
+        "name": "ReorderRule",
+        "collection": "reorderrules",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sku",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "locationId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "thresholdQty",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "reorderQty",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "vendor",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "leadTimeDays",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "isActive",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ReorderRuleManager",
+          "category": "interaction",
+          "linkedEntity": "ReorderRule",
+          "emits": [
+            {
+              "event": "ENABLE_RULE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "DISABLE_RULE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "ReorderRuleLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ReorderRule]"
+                }
+              ]
+            },
+            {
+              "event": "ReorderRuleLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ReorderRuleLoaded",
+                "name": "ReorderRule loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ReorderRule]"
+                  }
+                ]
+              },
+              {
+                "key": "ReorderRuleLoadFailed",
+                "name": "ReorderRule load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ENABLE_RULE",
+                "name": "Enable Rule",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DISABLE_RULE",
+                "name": "Disable Rule",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "success": "ReorderRuleLoaded",
+                        "failure": "ReorderRuleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading reorder rules…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ReorderRuleLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "repeat",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@config.title"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "label": "SKU",
+                              "name": "sku"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "locationId",
+                              "label": "Location"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Threshold",
+                              "name": "thresholdQty"
+                            },
+                            {
+                              "label": "Reorder Qty",
+                              "variant": "caption",
+                              "name": "reorderQty"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "vendor",
+                              "label": "Vendor"
+                            },
+                            {
+                              "name": "isActive",
+                              "label": "Active",
+                              "variant": "caption"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "icon": "check",
+                              "event": "ENABLE_RULE",
+                              "variant": "primary",
+                              "label": "Enable"
+                            },
+                            {
+                              "variant": "danger",
+                              "icon": "x",
+                              "label": "Disable",
+                              "event": "DISABLE_RULE"
+                            }
+                          ],
+                          "gap": "sm",
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ReorderRuleLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "ENABLE_RULE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "success",
+                      "message": "Reorder rule enabled"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DISABLE_RULE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "info",
+                      "message": "Reorder rule disabled"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "failure": "ReorderRuleLoadFailed",
+                        "success": "ReorderRuleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Reorder Rules"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ReorderRulePage",
+          "path": "/reorder-rules",
+          "traits": [
+            {
+              "ref": "ReorderRuleManager"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

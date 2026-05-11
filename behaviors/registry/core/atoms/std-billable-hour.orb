@@ -1,0 +1,424 @@
+{
+  "name": "std-billable-hour",
+  "version": "1.0.0",
+  "description": "std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Owns a BillableHour entity (one row per time entry against a matter/project) and a single trait that loads entries, renders them in a data-grid with Invoice / Write Off actions.",
+  "orbitals": [
+    {
+      "name": "BillableHourOrbital",
+      "entity": {
+        "name": "BillableHour",
+        "collection": "billablehours",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "workerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "workerName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "matterId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "projectId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "workDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "hours",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "rate",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "isBillable",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "invoiceStatus",
+            "type": "string",
+            "default": "unbilled",
+            "values": [
+              "unbilled",
+              "invoiced",
+              "paid",
+              "written_off"
+            ]
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BillableHourTimesheet",
+          "category": "interaction",
+          "linkedEntity": "BillableHour",
+          "emits": [
+            {
+              "event": "INVOICE_HOURS",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "WRITE_OFF_HOURS",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "BillableHourLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[BillableHour]"
+                }
+              ]
+            },
+            {
+              "event": "BillableHourLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "BillableHourLoaded",
+                "name": "BillableHour loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[BillableHour]"
+                  }
+                ]
+              },
+              {
+                "key": "BillableHourLoadFailed",
+                "name": "BillableHour load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "INVOICE_HOURS",
+                "name": "Invoice Hours",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "WRITE_OFF_HOURS",
+                "name": "Write Off Hours",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BillableHour",
+                    {
+                      "emit": {
+                        "success": "BillableHourLoaded",
+                        "failure": "BillableHourLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading time entries…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "BillableHourLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "clock"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "INVOICE_HOURS",
+                              "variant": "primary",
+                              "label": "Invoice"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Write Off",
+                              "event": "WRITE_OFF_HOURS"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "name": "workerName",
+                              "label": "Worker",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Matter",
+                              "name": "matterId"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Date",
+                              "name": "workDate"
+                            },
+                            {
+                              "name": "hours",
+                              "label": "Hours",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Rate",
+                              "variant": "caption",
+                              "name": "rate"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "invoiceStatus",
+                              "label": "Status"
+                            }
+                          ],
+                          "cols": 1.0
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "BillableHourLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INVOICE_HOURS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "success",
+                      "message": "Hours invoiced",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "WRITE_OFF_HOURS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Hours written off",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BillableHour",
+                    {
+                      "emit": {
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Time Entries"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "BillableHourPage",
+          "path": "/timesheet",
+          "traits": [
+            {
+              "ref": "BillableHourTimesheet"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

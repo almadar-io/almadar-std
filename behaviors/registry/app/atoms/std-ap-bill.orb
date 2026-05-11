@@ -1,0 +1,407 @@
+{
+  "name": "std-ap-bill",
+  "version": "1.0.0",
+  "description": "std-ap-bill — accounts-payable bill atom. Owns an ApBill entity (vendor bills we owe) and a single trait that loads bills into a data-grid with Pay and Void row actions. Counterpart to std-invoice on the payables side.",
+  "orbitals": [
+    {
+      "name": "ApBillOrbital",
+      "entity": {
+        "name": "ApBill",
+        "collection": "apbills",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "vendor",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "billNumber",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "billDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "dueDate",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "amountTotal",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "amountPaid",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "partial",
+              "paid",
+              "overdue",
+              "void"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ApBillLedger",
+          "category": "interaction",
+          "linkedEntity": "ApBill",
+          "emits": [
+            {
+              "event": "PAY_BILL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "VOID_BILL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "ApBillLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ApBill]"
+                }
+              ]
+            },
+            {
+              "event": "ApBillLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ApBillLoaded",
+                "name": "ApBill loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ApBill]"
+                  }
+                ]
+              },
+              {
+                "key": "ApBillLoadFailed",
+                "name": "ApBill load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PAY_BILL",
+                "name": "Pay Bill",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "VOID_BILL",
+                "name": "Void Bill",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApBill",
+                    {
+                      "emit": {
+                        "failure": "ApBillLoadFailed",
+                        "success": "ApBillLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading bills…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ApBillLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "file-text"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "event": "PAY_BILL",
+                              "label": "Pay"
+                            },
+                            {
+                              "event": "VOID_BILL",
+                              "variant": "danger",
+                              "label": "Void"
+                            }
+                          ],
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "label": "Vendor",
+                              "name": "vendor",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Bill #",
+                              "name": "billNumber"
+                            },
+                            {
+                              "name": "billDate",
+                              "variant": "caption",
+                              "label": "Bill Date"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "dueDate",
+                              "label": "Due"
+                            },
+                            {
+                              "label": "Total",
+                              "variant": "caption",
+                              "name": "amountTotal"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Status",
+                              "name": "status"
+                            }
+                          ]
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ApBillLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PAY_BILL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "notify",
+                    "Bill paid",
+                    "success"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "VOID_BILL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "notify",
+                    "Bill voided",
+                    "info"
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApBill",
+                    {
+                      "emit": {
+                        "success": "ApBillLoaded",
+                        "failure": "ApBillLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Bills Payable"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ApBillPage",
+          "path": "/bills",
+          "traits": [
+            {
+              "ref": "ApBillLedger"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

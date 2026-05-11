@@ -1,0 +1,414 @@
+{
+  "name": "std-interview-slot",
+  "version": "1.0.0",
+  "description": "std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status.",
+  "orbitals": [
+    {
+      "name": "InterviewSlotOrbital",
+      "entity": {
+        "name": "InterviewSlot",
+        "collection": "interviewslots",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "applicantName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "interviewerName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scheduledAt",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "durationMinutes",
+            "type": "number",
+            "default": 60.0
+          },
+          {
+            "name": "format",
+            "type": "string",
+            "default": "video",
+            "values": [
+              "phone",
+              "video",
+              "onsite"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "scheduled",
+            "values": [
+              "scheduled",
+              "completed",
+              "cancelled",
+              "no_show"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InterviewSlotSchedule",
+          "category": "interaction",
+          "linkedEntity": "InterviewSlot",
+          "emits": [
+            {
+              "event": "COMPLETE_INTERVIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CANCEL_INTERVIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "InterviewSlotLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[InterviewSlot]"
+                }
+              ]
+            },
+            {
+              "event": "InterviewSlotLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "InterviewSlotLoaded",
+                "name": "InterviewSlot loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[InterviewSlot]"
+                  }
+                ]
+              },
+              {
+                "key": "InterviewSlotLoadFailed",
+                "name": "InterviewSlot load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "COMPLETE_INTERVIEW",
+                "name": "Complete Interview",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_INTERVIEW",
+                "name": "Cancel Interview",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InterviewSlot",
+                    {
+                      "emit": {
+                        "success": "InterviewSlotLoaded",
+                        "failure": "InterviewSlotLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading interviews…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "InterviewSlotLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "fields": [
+                            {
+                              "name": "applicantName",
+                              "label": "Applicant",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Interviewer",
+                              "variant": "caption",
+                              "name": "interviewerName"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Scheduled",
+                              "name": "scheduledAt"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "format",
+                              "label": "Format"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "label": "Complete",
+                              "variant": "primary",
+                              "event": "COMPLETE_INTERVIEW"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Cancel",
+                              "event": "CANCEL_INTERVIEW"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "InterviewSlotLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "COMPLETE_INTERVIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "success",
+                      "message": "Interview marked complete"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CANCEL_INTERVIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "info",
+                      "message": "Interview cancelled",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InterviewSlot",
+                    {
+                      "emit": {
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Interviews"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InterviewSlotPage",
+          "path": "/interviews",
+          "traits": [
+            {
+              "ref": "InterviewSlotSchedule"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

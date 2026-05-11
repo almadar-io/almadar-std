@@ -1,0 +1,60 @@
+app std-segment "1.0.0"
+"std-segment — contact segment primitive. Defines a filter criteria for grouping contacts (e.g. 'new signups in last 30 days'). Used by marketing campaigns for targeting."
+
+orbital SegmentOrbital {
+  entity Segment [persistent: segments] {
+    id           : string!
+    name         : string!
+    description  : string = ""
+    criteria     : string = ""
+    memberCount  : number = 0
+    lastUpdated  : string = ""
+  }
+
+  type SegmentLoaded       = Event { data : [Segment] }                "Fired when the segments collection finishes loading"
+  type SegmentLoadFailed   = Event { error : string, code : string }   "Fired when the segments collection fails to load"
+  type SegmentRecalculated = Event { id : string, memberCount : number } "Fired after a segment's member count is recalculated"
+
+  trait SegmentSegment -> Segment [interaction, collection] {
+    config {
+      title : string = "Segments"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Segment { emit: { success: "SegmentLoaded", failure: "SegmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading segments…" }] })
+      SegmentLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "memberCount", label: "Members", variant: "badge" }, { name: "lastUpdated", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Recalculate", event: "RECALCULATE", variant: "ghost" }] }] })
+      SegmentLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      RECALCULATE -> calculating
+        (set @entity.id @payload.id)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recalculating segment…" }] })
+    }
+    state calculating {
+      SegmentRecalculated -> browsing
+        (render-ui main { type: "alert", variant: "success", message: "Segment recalculated" })
+    }
+    state error {
+      INIT -> loading
+        (fetch Segment { emit: { success: "SegmentLoaded", failure: "SegmentLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      RECALCULATE        { id : string! }
+      SegmentLoaded      { data : [Segment] }
+      SegmentLoadFailed  { error : string, code : string }
+      SegmentRecalculated { id : string, memberCount : number }
+    }
+    listens {
+      RECALCULATE        { id : string! }
+      SegmentLoaded      { data : [Segment] }
+      SegmentLoadFailed  { error : string, code : string }
+      SegmentRecalculated { id : string, memberCount : number }
+    }
+  }
+  page "/segments" as SegmentPage -> SegmentSegment
+}

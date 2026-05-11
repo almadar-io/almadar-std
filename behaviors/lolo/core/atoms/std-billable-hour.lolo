@@ -1,0 +1,63 @@
+app std-billable-hour "1.0.0"
+"std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Owns a BillableHour entity (one row per time entry against a matter/project) and a single trait that loads entries, renders them in a data-grid with Invoice / Write Off actions."
+
+orbital BillableHourOrbital {
+  entity BillableHour [persistent: billablehours] {
+    id            : string!
+    workerId      : string!
+    workerName    : string = ""
+    matterId      : string = ""
+    projectId     : string = ""
+    workDate      : string!
+    hours         : number = 0
+    rate          : number = 0
+    description   : string = ""
+    isBillable    : boolean = true
+    invoiceStatus : "unbilled" | "invoiced" | "paid" | "written_off" = "unbilled"
+  }
+
+  type BillableHourLoaded     = Event { data : [BillableHour] }           "Fired when the billable-hour collection finishes loading"
+  type BillableHourLoadFailed = Event { error : string, code : string }   "Fired when the billable-hour collection fails to load"
+
+  trait BillableHourTimesheet -> BillableHour [interaction, collection] {
+    config {
+      title : string = "Time Entries"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
+      BillableHourLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "workerName", label: "Worker", variant: "caption" }, { name: "matterId", label: "Matter", variant: "caption" }, { name: "workDate", label: "Date", variant: "caption" }, { name: "hours", label: "Hours", variant: "caption" }, { name: "rate", label: "Rate", variant: "caption" }, { name: "invoiceStatus", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Invoice", event: "INVOICE_HOURS", variant: "primary" }, { label: "Write Off", event: "WRITE_OFF_HOURS", variant: "ghost" }] }] })
+      BillableHourLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      INVOICE_HOURS -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "success", message: "Hours invoiced" })
+      WRITE_OFF_HOURS -> browsing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "alert", variant: "info", message: "Hours written off" })
+    }
+    state error {
+      INIT -> loading
+        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      INVOICE_HOURS   { id : string! }
+      WRITE_OFF_HOURS { id : string! }
+      BillableHourLoaded     { data : [BillableHour] }
+      BillableHourLoadFailed { error : string, code : string }
+    }
+    listens {
+      INVOICE_HOURS   { id : string! }
+      WRITE_OFF_HOURS { id : string! }
+      BillableHourLoaded     { data : [BillableHour] }
+      BillableHourLoadFailed { error : string, code : string }
+    }
+  }
+  page "/timesheet" as BillableHourPage -> BillableHourTimesheet
+}

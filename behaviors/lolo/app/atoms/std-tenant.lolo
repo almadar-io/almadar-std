@@ -1,0 +1,60 @@
+app std-tenant "1.0.0"
+"Tenant primitive: person/company occupying a leased unit."
+
+orbital TenantOrbital {
+  entity Tenant [persistent: tenants] {
+    id : string!
+    name : string!
+    email : string = ""
+    phone : string = ""
+    leaseId : string = ""
+    moveInDate : string = ""
+    moveOutDate : string = ""
+    status : "current" | "former" | "prospective" = "prospective"
+    notes : string = ""
+  }
+  type TenantLoaded = Event { data : [Tenant] }
+  type TenantLoadFailed = Event { error : string, code : string }
+
+  trait TenantDirectory -> Tenant [interaction, collection] {
+    config {
+      title : string = "Tenants"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+        (render-ui main { type: "spinner" })
+      TenantLoaded -> browsing
+        (render-ui main { type: "data-grid", entity: "Tenant", columns: ["name", "email", "phone", "status", "moveInDate"], itemActions: [{ label: "Activate", event: "ACTIVATE_TENANT", variant: "primary" }, { label: "Move Out", event: "MOVE_OUT", variant: "danger" }] })
+      TenantLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", title: "Failed to load tenants", message: "@payload.error" })
+    }
+    state browsing {
+      ACTIVATE_TENANT -> browsing
+        (set @entity.id @payload.id)
+        (notify "Tenant activated" success)
+      MOVE_OUT -> browsing
+        (set @entity.id @payload.id)
+        (notify "Tenant move-out recorded" info)
+    }
+    state error {
+      INIT -> loading
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+    }
+
+    emits {
+      ACTIVATE_TENANT { id : string! }
+      MOVE_OUT { id : string! }
+      TenantLoaded
+      TenantLoadFailed
+    }
+    listens {
+      ACTIVATE_TENANT { id : string! }
+      MOVE_OUT { id : string! }
+      TenantLoaded { data : [Tenant] }
+      TenantLoadFailed { error : string, code : string }
+    }
+  }
+  page "/tenants" as TenantPage -> TenantDirectory
+}

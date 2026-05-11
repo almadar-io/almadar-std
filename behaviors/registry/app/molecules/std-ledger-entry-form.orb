@@ -1,0 +1,833 @@
+{
+  "name": "std-ledger-entry-form",
+  "version": "1.0.0",
+  "description": "Tracks balanced journal-entry pairs (debit + credit) before persisting LedgerEntry rows",
+  "orbitals": [
+    {
+      "name": "JournalTransactionOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-ledger-entry",
+          "as": "LedgerEntry"
+        },
+        {
+          "from": "std/behaviors/std-chart-of-accounts",
+          "as": "Account"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        }
+      ],
+      "entity": {
+        "name": "JournalTransaction",
+        "collection": "journaltransactions",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "transactionDate",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "debitAccountId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "debitAccountName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "creditAccountId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "creditAccountName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "referenceType",
+            "type": "string",
+            "default": "manual",
+            "values": [
+              "manual",
+              "invoice",
+              "bill",
+              "payment"
+            ]
+          },
+          {
+            "name": "referenceId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "isPosted",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "pendingId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "JournalTransactionBrowse",
+          "category": "interaction",
+          "linkedEntity": "JournalTransaction",
+          "emits": [
+            {
+              "event": "CREATE"
+            },
+            {
+              "event": "POST_TRANSACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.transactionDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.debitAccountId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.debitAccountName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.creditAccountId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.creditAccountName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.amount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.referenceType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.referenceId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.isPosted",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.transactionDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.debitAccountId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.debitAccountName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.creditAccountId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.creditAccountName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.amount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.referenceType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.referenceId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.isPosted",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "JournalTransactionLoaded",
+              "description": "Fired when the journal-transaction collection finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[JournalTransaction]"
+                }
+              ]
+            },
+            {
+              "event": "JournalTransactionLoadFailed",
+              "description": "Fired when the journal-transaction collection fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "TRANSACTION_CREATED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionPersistor"
+              }
+            },
+            {
+              "event": "TRANSACTION_POSTED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionPersistor"
+              }
+            },
+            {
+              "event": "TRANSACTION_DELETED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionPersistor"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "JournalTransactionLoaded",
+                "name": "JournalTransaction loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[JournalTransaction]"
+                  }
+                ]
+              },
+              {
+                "key": "JournalTransactionLoadFailed",
+                "name": "JournalTransaction load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create"
+              },
+              {
+                "key": "POST_TRANSACTION",
+                "name": "Post Transaction"
+              },
+              {
+                "key": "REQUEST_DELETE",
+                "name": "Request Delete"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "JournalTransaction",
+                    {
+                      "emit": {
+                        "success": "JournalTransactionLoaded",
+                        "failure": "JournalTransactionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading transactions…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "JournalTransactionLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "book-open"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "Journal Transactions"
+                                }
+                              ]
+                            },
+                            {
+                              "icon": "plus",
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "New Transaction",
+                              "action": "CREATE"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Post",
+                              "event": "POST_TRANSACTION"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "REQUEST_DELETE",
+                              "label": "Delete"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "name": "transactionDate",
+                              "label": "Date",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "name": "description",
+                              "label": "Description"
+                            },
+                            {
+                              "name": "debitAccountName",
+                              "variant": "caption",
+                              "label": "Debit"
+                            },
+                            {
+                              "name": "creditAccountName",
+                              "variant": "caption",
+                              "label": "Credit"
+                            },
+                            {
+                              "label": "Amount",
+                              "name": "amount",
+                              "variant": "badge"
+                            },
+                            {
+                              "label": "Posted",
+                              "variant": "badge",
+                              "name": "isPosted"
+                            }
+                          ],
+                          "type": "data-grid"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "JournalTransactionLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "color": "destructive",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Failed to load transactions",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "@payload.error"
+                        },
+                        {
+                          "variant": "primary",
+                          "label": "Retry",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "action": "INIT"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "JournalTransaction",
+                    {
+                      "emit": {
+                        "success": "JournalTransactionLoaded",
+                        "failure": "JournalTransactionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "JournalTransaction",
+                    {
+                      "emit": {
+                        "success": "JournalTransactionLoaded",
+                        "failure": "JournalTransactionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "JournalTransactionCreate",
+          "linkedEntity": "JournalTransaction",
+          "config": {
+            "title": "New Transaction",
+            "mode": "create",
+            "icon": "plus-circle",
+            "fields": [
+              "transactionDate",
+              "description",
+              "debitAccountId",
+              "creditAccountId",
+              "amount",
+              "referenceType",
+              "referenceId"
+            ]
+          },
+          "events": {
+            "OPEN": "CREATE"
+          },
+          "listens": [
+            {
+              "event": "CREATE",
+              "triggers": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "JournalTransactionDelete",
+          "linkedEntity": "JournalTransaction",
+          "config": {
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Transaction"
+          },
+          "events": {
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
+          },
+          "listens": [
+            {
+              "event": "REQUEST_DELETE",
+              "triggers": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionBrowse"
+              }
+            }
+          ]
+        },
+        {
+          "name": "JournalTransactionPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "JournalTransaction",
+          "emits": [
+            {
+              "event": "TRANSACTION_CREATED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TRANSACTION_POSTED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TRANSACTION_DELETED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionCreate"
+              }
+            },
+            {
+              "event": "POST_TRANSACTION",
+              "triggers": "DO_POST",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionBrowse"
+              }
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "JournalTransactionDelete"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_POST",
+                "name": "Do Post",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TRANSACTION_CREATED",
+                "name": "Transaction Created"
+              },
+              {
+                "key": "TRANSACTION_POSTED",
+                "name": "Transaction Posted"
+              },
+              {
+                "key": "TRANSACTION_DELETED",
+                "name": "Transaction Deleted"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "JournalTransaction",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "TRANSACTION_CREATED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_POST",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "JournalTransaction",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "TRANSACTION_POSTED"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "JournalTransaction",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "TRANSACTION_DELETED"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "JournalTransactionPage",
+          "path": "/journal-transactions",
+          "traits": [
+            {
+              "ref": "JournalTransactionBrowse"
+            },
+            {
+              "ref": "JournalTransactionCreate"
+            },
+            {
+              "ref": "JournalTransactionDelete"
+            },
+            {
+              "ref": "JournalTransactionPersistor"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
