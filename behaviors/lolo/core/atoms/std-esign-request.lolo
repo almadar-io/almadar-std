@@ -27,7 +27,7 @@ orbital ESignRequestOrbital {
         (fetch ESignRequest { emit: { success: "ESignRequestLoaded", failure: "ESignRequestLoadFailed" } })
         (render-ui main { type: "spinner", size: "md" })
       ESignRequestLoaded -> browsing
-        (render-ui main { type: "data-grid", entity: "ESignRequest", columns: [{ field: "documentName", label: "Document" }, { field: "recipientName", label: "Recipient" }, { field: "recipientEmail", label: "Email" }, { field: "status", label: "Status" }, { field: "sentAt", label: "Sent" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] })
+        (render-ui main { type: "data-grid", entity: @payload.data, fields: [{ name: "documentName", label: "Document", variant: "h4" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] })
       ESignRequestLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", title: "Failed to load signature requests", message: "@payload.error" })
     }
