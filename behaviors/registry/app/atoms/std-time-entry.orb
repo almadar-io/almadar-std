@@ -303,8 +303,8 @@
                     "TimeEntry",
                     {
                       "emit": {
-                        "failure": "TimeEntryLoadFailed",
-                        "success": "TimeEntryLoaded"
+                        "success": "TimeEntryLoaded",
+                        "failure": "TimeEntryLoadFailed"
                       }
                     }
                   ],
@@ -312,22 +312,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading time entries…",
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading time entries…",
                           "color": "muted"
                         }
                       ],
-                      "className": "py-12",
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -343,6 +343,9 @@
                     {
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
@@ -350,141 +353,138 @@
                               "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "type": "typography"
                             },
                             {
                               "variant": "primary",
-                              "action": "CREATE",
+                              "type": "button",
                               "label": "Log Time",
-                              "type": "button"
+                              "action": "CREATE"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
-                          "variant": "underline",
                           "tabs": [
                             {
-                              "label": "Active",
-                              "id": "active"
+                              "id": "active",
+                              "label": "Active"
                             },
                             {
-                              "id": "logged",
-                              "label": "Logged"
+                              "label": "Logged",
+                              "id": "logged"
                             },
                             {
-                              "id": "approved",
-                              "label": "Approved"
+                              "label": "Approved",
+                              "id": "approved"
                             }
                           ],
                           "defaultActiveTab": "active",
-                          "type": "tabs"
+                          "type": "tabs",
+                          "variant": "underline"
                         },
                         {
                           "gap": "md",
                           "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "running": true,
                               "type": "timer-display",
+                              "seconds": 1845.0,
+                              "running": true,
                               "format": "mm:ss",
-                              "size": "lg",
-                              "seconds": 1845.0
+                              "size": "lg"
                             },
                             {
-                              "label": "Weekly Utilization",
-                              "variant": "linear",
-                              "type": "meter",
-                              "min": 0.0,
-                              "unit": "h",
-                              "max": 40.0,
                               "thresholds": [
                                 {
-                                  "value": 20.0,
-                                  "color": "warning"
+                                  "color": "warning",
+                                  "value": 20.0
                                 },
                                 {
-                                  "color": "success",
-                                  "value": 35.0
+                                  "value": 35.0,
+                                  "color": "success"
                                 }
                               ],
+                              "variant": "linear",
+                              "label": "Weekly Utilization",
+                              "min": 0.0,
+                              "type": "meter",
+                              "max": 40.0,
+                              "unit": "h",
                               "value": 32.0
                             }
                           ],
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "type": "data-grid",
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "variant": "secondary",
-                              "event": "VIEW"
-                            },
-                            {
-                              "event": "EDIT",
-                              "variant": "secondary",
-                              "label": "Edit"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "REQUEST_DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "cols": 1.0,
                           "fields": [
                             {
                               "variant": "caption",
-                              "label": "Project",
-                              "name": "projectName"
+                              "name": "projectName",
+                              "label": "Project"
                             },
                             {
                               "label": "Task",
-                              "name": "taskDescription",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "workDate",
                               "variant": "caption",
-                              "label": "Date"
+                              "name": "taskDescription"
                             },
                             {
+                              "label": "Date",
                               "variant": "caption",
-                              "name": "hours",
-                              "label": "Hours"
+                              "name": "workDate"
                             },
                             {
-                              "name": "billable",
+                              "label": "Hours",
+                              "variant": "caption",
+                              "name": "hours"
+                            },
+                            {
                               "variant": "badge",
+                              "name": "billable",
                               "label": "Billable"
                             },
                             {
-                              "label": "Rate",
+                              "name": "hourlyRate",
                               "variant": "caption",
-                              "name": "hourlyRate"
+                              "label": "Rate"
                             },
                             {
                               "label": "Status",
                               "name": "status",
                               "variant": "badge"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "variant": "secondary",
+                              "label": "View"
+                            },
+                            {
+                              "label": "Edit",
+                              "event": "EDIT",
+                              "variant": "secondary"
+                            },
+                            {
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger",
+                              "label": "Delete"
+                            }
+                          ],
+                          "entity": "@payload.data"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -498,9 +498,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -524,22 +524,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Refreshing time entries…",
+                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "Refreshing time entries…",
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -563,22 +563,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Searching time entries…",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12"
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -603,21 +603,21 @@
                     "main",
                     {
                       "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Filtering time entries…",
-                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Filtering time entries…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -641,22 +641,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "content": "Filtering time entries…",
+                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -670,9 +670,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "info",
                       "message": "Logging new time entry",
-                      "type": "alert",
-                      "variant": "info"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -691,8 +691,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
                       "type": "alert",
+                      "variant": "info",
                       "message": "Viewing time entry"
                     }
                   ]
@@ -712,9 +712,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
+                      "message": "Editing time entry",
                       "type": "alert",
-                      "message": "Editing time entry"
+                      "variant": "info"
                     }
                   ]
                 ]
@@ -733,9 +733,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "warning",
-                      "message": "Delete requested",
-                      "type": "alert"
+                      "message": "Delete requested"
                     }
                   ]
                 ]
@@ -750,8 +750,8 @@
                     "TimeEntry",
                     {
                       "emit": {
-                        "failure": "TimeEntryLoadFailed",
-                        "success": "TimeEntryLoaded"
+                        "success": "TimeEntryLoaded",
+                        "failure": "TimeEntryLoadFailed"
                       }
                     }
                   ],
@@ -759,8 +759,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

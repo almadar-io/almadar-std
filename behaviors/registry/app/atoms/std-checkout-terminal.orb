@@ -1,7 +1,7 @@
 {
   "name": "std-checkout-terminal",
   "version": "1.0.0",
-  "description": "std-checkout-terminal — retail POS checkout terminal. Owns a CheckoutSession entity (one row per active register session) and a single terminal trait that loads open sessions, renders cart + total + status in a data-grid, and supports tender / void session actions.",
+  "description": "std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list.",
   "orbitals": [
     {
       "name": "CheckoutSessionOrbital",
@@ -91,6 +91,69 @@
           "linkedEntity": "CheckoutSession",
           "emits": [
             {
+              "event": "OPEN_TERMINAL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.terminalId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.cashierId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.cashierName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.cartItemsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.subtotal",
+                  "type": "number"
+                },
+                {
+                  "name": "row.tax",
+                  "type": "number"
+                },
+                {
+                  "name": "row.total",
+                  "type": "number"
+                },
+                {
+                  "name": "row.paymentMethod",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.openedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.completedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_TERMINAL"
+            },
+            {
               "event": "TENDER_PAYMENT",
               "payloadSchema": [
                 {
@@ -143,6 +206,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -176,8 +242,23 @@
                 ]
               },
               {
-                "key": "TENDER_PAYMENT",
-                "name": "Tender Payment",
+                "key": "OPEN_TERMINAL",
+                "name": "Open Terminal",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "CheckoutSession"
+                  }
+                ]
+              },
+              {
+                "key": "VOID_SESSION",
+                "name": "Void Session",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -187,8 +268,12 @@
                 ]
               },
               {
-                "key": "VOID_SESSION",
-                "name": "Void Session",
+                "key": "CLOSE_TERMINAL",
+                "name": "Close Terminal"
+              },
+              {
+                "key": "TENDER_PAYMENT",
+                "name": "Tender Payment",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -218,23 +303,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "children": [
+                        {
+                          "size": "md",
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading terminals…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
                       "className": "py-12",
                       "type": "stack",
                       "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner",
-                          "size": "md"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading terminals…"
-                        }
-                      ]
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -248,279 +333,56 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "credit-card"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
-                        },
-                        {
-                          "items": [
-                            {
-                              "src": "https://picsum.photos/seed/feat1/800/300",
-                              "alt": "Featured promo",
-                              "caption": "Buy 2 get 1 free"
-                            },
-                            {
-                              "alt": "Seasonal sale",
-                              "caption": "Holiday bundle 20% off",
-                              "src": "https://picsum.photos/seed/feat2/800/300"
-                            },
-                            {
-                              "caption": "Just landed in store",
-                              "alt": "New arrival",
-                              "src": "https://picsum.photos/seed/feat3/800/300"
-                            }
-                          ],
-                          "autoPlayInterval": 5000.0,
-                          "type": "carousel",
-                          "showDots": true,
-                          "autoPlay": true,
-                          "showArrows": true,
-                          "loop": true
-                        },
-                        {
-                          "plans": [
-                            {
-                              "action": {
-                                "href": "#tender",
-                                "label": "Add"
-                              },
-                              "price": "$4.99",
-                              "features": [
-                                "Standard pricing"
-                              ],
-                              "description": "One item",
-                              "name": "Single"
-                            },
-                            {
-                              "action": {
-                                "href": "#tender",
-                                "label": "Add"
-                              },
-                              "features": [
-                                "10% off",
-                                "Free wrap"
-                              ],
-                              "highlighted": true,
-                              "price": "$12.99",
-                              "description": "Three items",
-                              "name": "Bundle"
-                            },
-                            {
-                              "name": "Family",
-                              "action": {
-                                "label": "Add",
-                                "href": "#tender"
-                              },
-                              "price": "$24.99",
-                              "description": "Six items",
-                              "features": [
-                                "20% off",
-                                "Free wrap",
-                                "Priority pickup"
-                              ]
-                            }
-                          ],
-                          "type": "pricing-grid"
-                        },
-                        {
-                          "align": "center",
-                          "children": [
-                            {
-                              "color": "muted",
-                              "variant": "caption",
-                              "type": "typography",
-                              "content": "Qty"
-                            },
-                            {
-                              "value": 1.0,
-                              "size": "md",
-                              "min": 1.0,
-                              "max": 99.0,
-                              "step": 1.0,
-                              "type": "number-stepper",
-                              "action": "TENDER_PAYMENT"
-                            },
-                            {
-                              "size": "md",
-                              "multiplier": 2.0,
-                              "combo": 3.0,
-                              "streak": 5.0,
-                              "type": "combo-counter"
-                            },
-                            {
-                              "size": "md",
-                              "type": "resource-bar",
-                              "resources": [
-                                {
-                                  "value": 42.5,
-                                  "id": "subtotal",
-                                  "icon": "wallet",
-                                  "label": "Subtotal"
-                                },
-                                {
-                                  "value": 3.4,
-                                  "id": "tax",
-                                  "icon": "percent",
-                                  "label": "Tax"
-                                },
-                                {
-                                  "id": "total",
-                                  "label": "Total",
-                                  "icon": "credit-card",
-                                  "value": 45.9
-                                }
-                              ]
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "label": "Tender",
-                              "variant": "primary",
-                              "icon": "credit-card",
-                              "type": "action-button",
-                              "size": "md",
-                              "hotkey": "T"
-                            },
-                            {
-                              "index": 1.0,
-                              "text": "Cash",
-                              "type": "choice-button"
-                            },
-                            {
-                              "selected": true,
-                              "type": "choice-button",
-                              "index": 2.0,
-                              "text": "Card"
-                            },
-                            {
-                              "text": "Gift",
-                              "type": "choice-button",
-                              "index": 3.0
-                            },
-                            {
-                              "variant": "secondary",
-                              "type": "control-button",
-                              "shape": "round",
-                              "label": "Hold",
-                              "icon": "pause",
-                              "size": "md"
-                            },
-                            {
-                              "includeDiagonals": false,
-                              "size": "md",
-                              "type": "d-pad"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "sm"
-                        },
-                        {
-                          "label": "Cashier actions",
-                          "type": "action-palette",
-                          "allowDuplicates": true,
-                          "size": "md",
-                          "actions": [
-                            {
-                              "category": "promo",
-                              "id": "discount",
-                              "label": "Discount"
-                            },
-                            {
-                              "label": "Refund",
-                              "category": "ops",
-                              "id": "refund"
-                            },
-                            {
-                              "id": "void",
-                              "label": "Void",
-                              "category": "ops"
-                            },
-                            {
-                              "id": "split",
-                              "category": "tender",
-                              "label": "Split"
-                            }
                           ]
-                        },
-                        {
-                          "isOpen": true,
-                          "position": "right",
-                          "width": "w-96",
-                          "onClose": "VOID_SESSION",
-                          "closeEvent": "VOID_SESSION",
-                          "children": [
-                            {
-                              "gap": "sm",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "h4",
-                                  "content": "Items in cart"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Cart side panel preview",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "direction": "vertical"
-                            }
-                          ],
-                          "title": "Cart",
-                          "type": "side-panel"
-                        },
-                        {
-                          "variant": "success",
-                          "title": "Payment ready",
-                          "type": "toast-slot",
-                          "duration": 4000.0
-                        },
-                        {
-                          "variant": "primary",
-                          "position": "bottom-right",
-                          "type": "floating-action-button",
-                          "label": "Quick sale",
-                          "action": "TENDER_PAYMENT",
-                          "icon": "zap"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "OPEN_TERMINAL",
+                              "variant": "primary",
+                              "label": "Open"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Void",
+                              "event": "VOID_SESSION"
+                            }
+                          ],
                           "type": "data-grid",
                           "fields": [
                             {
-                              "name": "terminalId",
                               "label": "Terminal",
+                              "name": "terminalId",
                               "variant": "caption"
                             },
                             {
                               "variant": "caption",
-                              "name": "cashierName",
-                              "label": "Cashier"
+                              "label": "Cashier",
+                              "name": "cashierName"
                             },
                             {
                               "label": "Status",
@@ -528,8 +390,8 @@
                               "variant": "badge"
                             },
                             {
-                              "variant": "caption",
                               "label": "Total",
+                              "variant": "caption",
                               "name": "total"
                             },
                             {
@@ -538,25 +400,9 @@
                               "name": "openedAt"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "TENDER_PAYMENT",
-                              "label": "Tender",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Void",
-                              "event": "VOID_SESSION",
-                              "variant": "danger"
-                            }
-                          ]
+                          "cols": 1.0
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -571,36 +417,234 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "TENDER_PAYMENT",
+                "to": "viewing_single",
+                "event": "OPEN_TERMINAL",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.terminalId",
+                    "@payload.row.terminalId"
+                  ],
+                  [
+                    "set",
+                    "@entity.cashierName",
+                    "@payload.row.cashierName"
+                  ],
+                  [
+                    "set",
+                    "@entity.subtotal",
+                    "@payload.row.subtotal"
+                  ],
+                  [
+                    "set",
+                    "@entity.tax",
+                    "@payload.row.tax"
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    "@payload.row.total"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.paymentMethod",
+                    "@payload.row.paymentMethod"
+                  ],
+                  [
+                    "set",
+                    "@entity.openedAt",
+                    "@payload.row.openedAt"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "Payment tendered",
-                      "variant": "success"
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "CLOSE_TERMINAL"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "Session detail"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Terminal",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.terminalId"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Cashier",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.cashierName",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Opened"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.openedAt"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Payment method"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.paymentMethod",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "resource-bar",
+                          "size": "md",
+                          "resources": [
+                            {
+                              "icon": "wallet",
+                              "value": "@entity.subtotal",
+                              "label": "Subtotal"
+                            },
+                            {
+                              "value": "@entity.tax",
+                              "icon": "percent",
+                              "label": "Tax"
+                            },
+                            {
+                              "value": "@entity.total",
+                              "icon": "credit-card",
+                              "label": "Total"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Tender Payment",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "TENDER_PAYMENT",
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "VOID_SESSION",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Void Session"
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "VOID_SESSION",
                 "effects": [
                   [
@@ -609,12 +653,166 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "CheckoutSession",
+                    {
+                      "emit": {
+                        "success": "CheckoutSessionLoaded",
+                        "failure": "CheckoutSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "message": "Session voided",
-                      "variant": "info",
-                      "type": "alert"
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "md",
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Voiding session…",
+                          "color": "muted"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_TERMINAL",
+                "effects": [
+                  [
+                    "fetch",
+                    "CheckoutSession",
+                    {
+                      "emit": {
+                        "success": "CheckoutSessionLoaded",
+                        "failure": "CheckoutSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "size": "md",
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading terminals…"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "TENDER_PAYMENT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CheckoutSession",
+                    {
+                      "emit": {
+                        "success": "CheckoutSessionLoaded",
+                        "failure": "CheckoutSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner",
+                          "size": "md"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Tendering payment…"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "VOID_SESSION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CheckoutSession",
+                    {
+                      "emit": {
+                        "failure": "CheckoutSessionLoadFailed",
+                        "success": "CheckoutSessionLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner",
+                          "size": "md"
+                        },
+                        {
+                          "content": "Voiding session…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]

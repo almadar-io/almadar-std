@@ -167,8 +167,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -176,13 +174,15 @@
                         {
                           "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading…"
+                          "content": "Loading…",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
                       "className": "py-12",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -197,15 +197,16 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "name": "check-square",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "check-square"
                             },
                             {
                               "content": "SelectableItems",
@@ -213,23 +214,34 @@
                               "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "color": "muted",
                           "content": "Choose a selectableitem to continue.",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
+                          "type": "data-grid",
+                          "fields": [],
+                          "itemActions": [
+                            {
+                              "label": "Select",
+                              "event": "SELECT",
+                              "icon": "check"
+                            }
+                          ],
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "checkbox",
@@ -237,25 +249,13 @@
                                 }
                               ],
                               "align": "center",
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             }
                           ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "icon": "check",
-                              "event": "SELECT",
-                              "label": "Select"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "fields": []
+                          "entity": "@payload.data"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -269,9 +269,10 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -284,21 +285,20 @@
                           "type": "typography"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.error"
+                          "type": "typography",
+                          "content": "@payload.error",
+                          "color": "muted"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "action": "INIT",
                           "variant": "primary",
                           "type": "button",
-                          "label": "Retry"
+                          "action": "INIT",
+                          "label": "Retry",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -312,24 +312,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
                           "align": "center",
-                          "justify": "between",
-                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "align": "center",
                               "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "check-square"
+                                  "name": "check-square",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "SelectableItems",
@@ -339,54 +337,56 @@
                               ]
                             },
                             {
+                              "type": "stack",
                               "direction": "horizontal",
                               "align": "center",
                               "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
                                   "label": "Selecting",
                                   "type": "badge"
                                 },
                                 {
-                                  "label": "Clear",
-                                  "variant": "ghost",
-                                  "type": "button",
+                                  "icon": "x",
                                   "action": "CLEAR",
-                                  "icon": "x"
+                                  "type": "button",
+                                  "variant": "ghost",
+                                  "label": "Clear"
                                 }
                               ]
                             }
                           ],
                           "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "message": "@payload.id",
                           "type": "alert",
-                          "variant": "info"
+                          "variant": "info",
+                          "message": "@payload.id"
                         },
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "action": "CONFIRM_SELECTION",
                               "icon": "check",
                               "variant": "primary",
-                              "action": "CONFIRM_SELECTION",
                               "label": "Confirm",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@payload.id"
-                              },
-                              "type": "button"
+                              }
                             }
                           ],
-                          "type": "stack"
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -400,15 +400,19 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
                           "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -420,36 +424,33 @@
                                   "content": "Selection Confirmed"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "align": "center"
+                              "align": "center",
+                              "gap": "md"
                             },
                             {
                               "label": "Confirmed",
                               "type": "badge"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "alert",
-                          "variant": "success",
-                          "message": "Selection confirmed successfully."
+                          "message": "Selection confirmed successfully.",
+                          "variant": "success"
                         },
                         {
-                          "align": "center",
                           "type": "stack",
                           "gap": "md",
+                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Selected ID:"
+                              "content": "Selected ID:",
+                              "type": "typography"
                             },
                             {
                               "type": "typography",
@@ -459,14 +460,13 @@
                           ]
                         },
                         {
-                          "action": "CLEAR",
                           "type": "button",
-                          "variant": "ghost",
+                          "action": "CLEAR",
+                          "label": "Clear Selection",
                           "icon": "rotate-ccw",
-                          "label": "Clear Selection"
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -506,8 +506,8 @@
                     "SelectableItem",
                     {
                       "emit": {
-                        "failure": "SelectableItemLoadFailed",
-                        "success": "SelectableItemLoaded"
+                        "success": "SelectableItemLoaded",
+                        "failure": "SelectableItemLoadFailed"
                       }
                     }
                   ],

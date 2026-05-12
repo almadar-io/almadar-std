@@ -342,21 +342,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "content": "Loading telematics events…",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -370,15 +370,14 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "activity"
+                              "name": "activity",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -386,23 +385,25 @@
                               "content": "@config.title"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "max": 100.0,
-                              "label": "Engine Health",
-                              "value": 72.0,
                               "variant": "radial",
-                              "min": 0.0,
+                              "unit": "%",
+                              "type": "meter",
+                              "label": "Engine Health",
                               "thresholds": [
                                 {
                                   "color": "danger",
@@ -413,42 +414,43 @@
                                   "color": "warning"
                                 }
                               ],
-                              "unit": "%",
-                              "type": "meter"
+                              "max": 100.0,
+                              "value": 72.0,
+                              "min": 0.0
                             },
                             {
+                              "type": "range-slider",
+                              "value": 80.0,
                               "showTooltip": true,
                               "action": "FILTER_SEVERITY",
-                              "type": "range-slider",
-                              "min": 0.0,
-                              "value": 80.0,
+                              "max": 200.0,
                               "step": 5.0,
-                              "max": 200.0
+                              "min": 0.0
                             }
                           ]
                         },
                         {
-                          "animated": true,
-                          "cx": 60.0,
-                          "cy": 60.0,
                           "maxRadius": 40.0,
+                          "type": "svg-pulse",
+                          "cx": 60.0,
                           "rings": 3.0,
+                          "cy": 60.0,
                           "color": "warning",
-                          "type": "svg-pulse"
+                          "animated": true
                         },
                         {
+                          "from": {
+                            "x": 40.0,
+                            "y": 80.0
+                          },
+                          "eventLabel": "hard-brake",
+                          "type": "transition-arrow",
                           "guardHint": "severity >= warning",
                           "isActive": true,
-                          "from": {
-                            "y": 80.0,
-                            "x": 40.0
-                          },
-                          "type": "transition-arrow",
                           "to": {
                             "x": 220.0,
                             "y": 80.0
-                          },
-                          "eventLabel": "hard-brake"
+                          }
                         },
                         {
                           "fields": [
@@ -460,27 +462,27 @@
                           "type": "timeline"
                         },
                         {
-                          "label": "Live Event Stream",
+                          "maxHeight": 240.0,
                           "type": "event-log",
-                          "entries": [],
-                          "maxHeight": 240.0
+                          "label": "Live Event Stream",
+                          "entries": []
                         },
                         {
                           "fields": [
                             {
+                              "name": "vehicleId",
                               "label": "Vehicle",
-                              "variant": "caption",
-                              "name": "vehicleId"
+                              "variant": "caption"
                             },
                             {
                               "label": "Type",
-                              "variant": "badge",
-                              "name": "eventType"
+                              "name": "eventType",
+                              "variant": "badge"
                             },
                             {
-                              "name": "severity",
+                              "label": "Severity",
                               "variant": "badge",
-                              "label": "Severity"
+                              "name": "severity"
                             },
                             {
                               "name": "speed",
@@ -493,32 +495,30 @@
                               "label": "Occurred"
                             },
                             {
-                              "variant": "badge",
+                              "label": "Ack",
                               "name": "acknowledged",
-                              "label": "Ack"
+                              "variant": "badge"
                             }
                           ],
                           "entity": "@payload.data",
+                          "gap": "sm",
                           "type": "data-grid",
                           "cols": 1.0,
                           "itemActions": [
                             {
-                              "label": "Acknowledge",
+                              "event": "ACKNOWLEDGE",
                               "variant": "primary",
-                              "event": "ACKNOWLEDGE"
+                              "label": "Acknowledge"
                             },
                             {
                               "event": "VIEW",
                               "variant": "secondary",
                               "label": "View"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -532,9 +532,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -553,9 +553,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
                       "type": "alert",
-                      "message": "Event acknowledged"
+                      "message": "Event acknowledged",
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -591,8 +591,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "failure": "TelematicsEventLoadFailed",
-                        "success": "TelematicsEventLoaded"
+                        "success": "TelematicsEventLoaded",
+                        "failure": "TelematicsEventLoadFailed"
                       }
                     }
                   ],
@@ -616,8 +616,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "success": "TelematicsEventLoaded",
-                        "failure": "TelematicsEventLoadFailed"
+                        "failure": "TelematicsEventLoadFailed",
+                        "success": "TelematicsEventLoaded"
                       }
                     }
                   ],
@@ -625,8 +625,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -641,8 +641,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "success": "TelematicsEventLoaded",
-                        "failure": "TelematicsEventLoadFailed"
+                        "failure": "TelematicsEventLoadFailed",
+                        "success": "TelematicsEventLoaded"
                       }
                     }
                   ],
@@ -666,8 +666,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "success": "TelematicsEventLoaded",
-                        "failure": "TelematicsEventLoadFailed"
+                        "failure": "TelematicsEventLoadFailed",
+                        "success": "TelematicsEventLoaded"
                       }
                     }
                   ],

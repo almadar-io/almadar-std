@@ -131,33 +131,30 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "stretch",
                       "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Email"
+                              "content": "Email",
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "input",
@@ -168,20 +165,23 @@
                               "type": "input"
                             },
                             {
-                              "type": "textarea",
-                              "placeholder": "Write your message..."
+                              "placeholder": "Write your message...",
+                              "type": "textarea"
                             }
                           ],
+                          "type": "stack",
                           "direction": "vertical"
                         },
                         {
+                          "variant": "primary",
                           "type": "button",
-                          "icon": "send",
-                          "label": "Send",
                           "action": "SEND",
-                          "variant": "primary"
+                          "label": "Send",
+                          "icon": "send"
                         }
                       ],
+                      "type": "stack",
+                      "align": "stretch",
                       "direction": "vertical"
                     }
                   ]
@@ -408,9 +408,9 @@
                       "children": [
                         "@config.uiTrait"
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -424,9 +424,9 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Sending email...",
+                      "message": "Delivering your message.",
                       "type": "loading-state",
-                      "message": "Delivering your message."
+                      "title": "Sending email..."
                     }
                   ],
                   [
@@ -434,13 +434,13 @@
                     "email",
                     "send",
                     {
-                      "subject": "@config.subject",
-                      "to": "@config.recipient",
-                      "replyTo": "@config.replyTo",
                       "body": "@config.body",
-                      "from": "@config.sender",
                       "templateId": "@config.templateId",
-                      "htmlBody": "@config.htmlBody"
+                      "replyTo": "@config.replyTo",
+                      "from": "@config.sender",
+                      "htmlBody": "@config.htmlBody",
+                      "to": "@config.recipient",
+                      "subject": "@config.subject"
                     },
                     {
                       "emit": {
@@ -480,34 +480,34 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "success",
                           "type": "alert",
+                          "variant": "success",
                           "message": "Email sent successfully"
                         },
                         {
-                          "variant": "body",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "@entity.messageId"
+                          "color": "muted",
+                          "content": "@entity.messageId",
+                          "variant": "body"
                         },
                         {
-                          "label": "Send Another",
-                          "action": "RESET",
-                          "variant": "ghost",
                           "type": "button",
+                          "action": "RESET",
+                          "label": "Send Another",
+                          "variant": "ghost",
                           "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -531,18 +531,18 @@
                     "emit",
                     "ServiceEmailEmailFailed",
                     {
-                      "code": "send_email_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "send_email_failed"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
-                      "message": "@entity.error",
                       "onRetry": "RETRY",
-                      "title": "Send Failed"
+                      "type": "error-state",
+                      "title": "Send Failed",
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -561,12 +561,12 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -590,9 +590,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ]
@@ -631,6 +631,10 @@
               "type": "string",
               "default": ""
             },
+            "templateId": {
+              "type": "string",
+              "default": ""
+            },
             "htmlBody": {
               "type": "string",
               "default": ""
@@ -639,21 +643,17 @@
               "type": "string",
               "default": ""
             },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceEmailDefaultForm"
+            "recipient": {
+              "type": "string",
+              "default": ""
             },
             "replyTo": {
               "type": "string",
               "default": ""
             },
-            "recipient": {
-              "type": "string",
-              "default": ""
-            },
-            "templateId": {
-              "type": "string",
-              "default": ""
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceEmailDefaultForm"
             },
             "subject": {
               "type": "string",

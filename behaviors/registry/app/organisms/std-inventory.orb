@@ -108,37 +108,37 @@
           "name": "InventoryAppLayout",
           "config": {
             "notificationClickEvent": "INVENTORY_NOTIFICATIONS_OPEN",
-            "searchEvent": "INVENTORY_SEARCH",
+            "appName": "Inventory Management",
             "navItems": [
               {
-                "icon": "package",
                 "label": "Items",
-                "href": "/inventory"
+                "href": "/inventory",
+                "icon": "package"
               },
               {
-                "icon": "package",
                 "label": "Stock Levels",
-                "href": "/stock-levels"
+                "href": "/stock-levels",
+                "icon": "package"
               },
               {
-                "label": "Warehouses",
                 "icon": "warehouse",
+                "label": "Warehouses",
                 "href": "/warehouses"
               },
               {
                 "icon": "refresh-ccw",
-                "label": "Reorder Rules",
-                "href": "/reorder-rules"
+                "href": "/reorder-rules",
+                "label": "Reorder Rules"
               },
               {
-                "icon": "edit",
                 "href": "/adjustments",
-                "label": "Adjustments"
+                "label": "Adjustments",
+                "icon": "edit"
               }
             ],
-            "appName": "Inventory Management",
-            "notifications": [],
-            "contentTrait": "@trait.InventoryCatalog"
+            "contentTrait": "@trait.InventoryCatalog",
+            "searchEvent": "INVENTORY_SEARCH",
+            "notifications": []
           },
           "events": {
             "SEARCH": "INVENTORY_SEARCH",
@@ -225,20 +225,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
@@ -250,36 +247,40 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "align": "center"
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "icon": "plus",
                                   "label": "New Item",
+                                  "type": "button",
+                                  "icon": "plus",
                                   "action": "CREATE",
-                                  "variant": "primary",
-                                  "type": "button"
+                                  "variant": "primary"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
+                          "align": "center",
                           "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             "@trait.InventorySearch",
                             "@trait.InventoryFilter"
                           ],
-                          "align": "center"
+                          "type": "stack"
                         },
                         "@trait.InventoryStats",
                         "@trait.InventoryGraphs",
@@ -287,8 +288,7 @@
                           "type": "divider"
                         },
                         "@trait.InventoryBrowseList"
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -309,6 +309,8 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
+                      "className": "py-8",
+                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
@@ -316,25 +318,23 @@
                           "type": "icon"
                         },
                         {
-                          "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "No notifications"
                         },
                         {
                           "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "You're all caught up."
+                          "content": "You're all caught up.",
+                          "variant": "caption"
                         },
                         {
                           "label": "Back to inventory",
+                          "action": "INIT",
                           "type": "button",
-                          "variant": "ghost",
-                          "action": "INIT"
+                          "variant": "ghost"
                         }
-                      ],
-                      "gap": "md",
-                      "className": "py-8"
+                      ]
                     }
                   ]
                 ]
@@ -357,14 +357,14 @@
           "config": {
             "filters": [
               {
+                "filterType": "select",
                 "field": "status",
+                "label": "Status",
                 "options": [
                   "active",
                   "discontinued",
                   "draft"
-                ],
-                "label": "Status",
-                "filterType": "select"
+                ]
               }
             ],
             "event": "INVENTORY_FILTER"
@@ -378,16 +378,14 @@
             "metrics": [
               {
                 "variant": "primary",
-                "icon": "package",
                 "aggregation": "count",
-                "format": "number",
-                "label": "Total SKUs"
+                "icon": "package",
+                "label": "Total SKUs",
+                "format": "number"
               },
               {
-                "aggregation": "count",
-                "label": "Active",
                 "variant": "success",
-                "icon": "check-circle",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -397,14 +395,16 @@
                     "active"
                   ]
                 ],
-                "format": "number"
+                "label": "Active",
+                "aggregation": "count",
+                "icon": "check-circle"
               },
               {
-                "icon": "circle-off",
-                "aggregation": "count",
                 "variant": "warning",
-                "format": "number",
                 "label": "Discontinued",
+                "format": "number",
+                "aggregation": "count",
+                "icon": "circle-off",
                 "filter": [
                   "fn",
                   "row",
@@ -432,13 +432,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "InventoryGraphs",
           "config": {
-            "title": "Items by Category",
-            "aggregation": "count",
             "subtitle": "SKU distribution across categories",
+            "chartType": "bar",
             "height": 240.0,
             "showLegend": false,
             "categoryField": "category",
-            "chartType": "bar"
+            "aggregation": "count",
+            "title": "Items by Category"
           },
           "listens": [
             {
@@ -458,39 +458,39 @@
           "config": {
             "fields": [
               {
-                "icon": "tag",
+                "name": "sku",
                 "variant": "h4",
-                "name": "sku"
+                "icon": "tag"
               },
               {
-                "name": "name",
-                "variant": "body"
+                "variant": "body",
+                "name": "name"
               },
               {
-                "name": "category",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "category"
               },
               {
                 "name": "status",
                 "variant": "badge"
               },
               {
-                "name": "defaultUnitCost",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "defaultUnitCost"
               }
             ],
-            "cols": 1.0,
             "gap": "sm",
+            "cols": 1.0,
             "itemActions": [
               {
-                "event": "VIEW",
+                "variant": "ghost",
                 "label": "View",
-                "variant": "ghost"
+                "event": "VIEW"
               },
               {
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "EDIT"
               },
               {
                 "event": "DELETE",
@@ -547,8 +547,8 @@
           "name": "InventoryCreate",
           "linkedEntity": "InventoryItem",
           "config": {
+            "icon": "plus-circle",
             "mode": "create",
-            "title": "New Item",
             "fields": [
               "sku",
               "name",
@@ -556,7 +556,7 @@
               "defaultUnitCost",
               "status"
             ],
-            "icon": "plus-circle"
+            "title": "New Item"
           },
           "events": {
             "OPEN": "CREATE"
@@ -584,9 +584,9 @@
               "defaultUnitCost",
               "status"
             ],
-            "mode": "edit",
+            "title": "Edit Item",
             "icon": "edit",
-            "title": "Edit Item"
+            "mode": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -614,8 +614,8 @@
               "defaultUnitCost",
               "status"
             ],
-            "icon": "eye",
             "mode": "edit",
+            "icon": "eye",
             "title": "View Item"
           },
           "events": {
@@ -637,9 +637,9 @@
           "name": "InventoryDelete",
           "linkedEntity": "InventoryItem",
           "config": {
+            "alertMessage": "This action cannot be undone.",
             "icon": "alert-triangle",
             "title": "Delete Item",
-            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete"
           },
           "events": {
@@ -951,6 +951,7 @@
           "name": "StockLevelAppLayout",
           "config": {
             "notifications": [],
+            "searchEvent": "STOCK_LEVEL_SEARCH",
             "navItems": [
               {
                 "label": "Items",
@@ -959,29 +960,28 @@
               },
               {
                 "href": "/stock-levels",
-                "icon": "package",
-                "label": "Stock Levels"
+                "label": "Stock Levels",
+                "icon": "package"
               },
               {
-                "href": "/warehouses",
                 "label": "Warehouses",
+                "href": "/warehouses",
                 "icon": "warehouse"
               },
               {
+                "label": "Reorder Rules",
                 "href": "/reorder-rules",
-                "icon": "refresh-ccw",
-                "label": "Reorder Rules"
+                "icon": "refresh-ccw"
               },
               {
+                "href": "/adjustments",
                 "icon": "edit",
-                "label": "Adjustments",
-                "href": "/adjustments"
+                "label": "Adjustments"
               }
             ],
-            "searchEvent": "STOCK_LEVEL_SEARCH",
             "contentTrait": "@trait.StockLevelPanel",
-            "appName": "Inventory Management",
-            "notificationClickEvent": "STOCK_LEVEL_NOTIFICATIONS_OPEN"
+            "notificationClickEvent": "STOCK_LEVEL_NOTIFICATIONS_OPEN",
+            "appName": "Inventory Management"
           },
           "events": {
             "NOTIFY_CLICK": "STOCK_LEVEL_NOTIFICATIONS_OPEN",
@@ -1015,32 +1015,32 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "sm",
+                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "package"
+                              "name": "package",
+                              "type": "icon"
                             },
                             {
                               "content": "Stock Levels",
                               "variant": "h2",
                               "type": "typography"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.StockLevelView"
-                      ]
+                      ],
+                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1139,38 +1139,38 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "WarehouseAppLayout",
           "config": {
-            "notifications": [],
+            "searchEvent": "WAREHOUSE_SEARCH",
+            "contentTrait": "@trait.WarehousePanel",
             "navItems": [
               {
                 "label": "Items",
-                "icon": "package",
-                "href": "/inventory"
+                "href": "/inventory",
+                "icon": "package"
               },
               {
+                "href": "/stock-levels",
                 "icon": "package",
-                "label": "Stock Levels",
-                "href": "/stock-levels"
+                "label": "Stock Levels"
               },
               {
+                "icon": "warehouse",
                 "label": "Warehouses",
-                "href": "/warehouses",
-                "icon": "warehouse"
+                "href": "/warehouses"
               },
               {
                 "icon": "refresh-ccw",
-                "label": "Reorder Rules",
-                "href": "/reorder-rules"
+                "href": "/reorder-rules",
+                "label": "Reorder Rules"
               },
               {
+                "href": "/adjustments",
                 "label": "Adjustments",
-                "icon": "edit",
-                "href": "/adjustments"
+                "icon": "edit"
               }
             ],
-            "appName": "Inventory Management",
-            "contentTrait": "@trait.WarehousePanel",
-            "searchEvent": "WAREHOUSE_SEARCH",
-            "notificationClickEvent": "WAREHOUSE_NOTIFICATIONS_OPEN"
+            "notificationClickEvent": "WAREHOUSE_NOTIFICATIONS_OPEN",
+            "notifications": [],
+            "appName": "Inventory Management"
           },
           "events": {
             "SEARCH": "WAREHOUSE_SEARCH",
@@ -1203,24 +1203,25 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "className": "max-w-6xl mx-auto w-full p-4",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "warehouse"
                             },
                             {
-                              "variant": "h2",
+                              "content": "Warehouses",
                               "type": "typography",
-                              "content": "Warehouses"
+                              "variant": "h2"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack"
                         },
                         {
@@ -1228,8 +1229,7 @@
                         },
                         "@trait.WarehouseView"
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1329,37 +1329,37 @@
           "name": "ReorderRuleAppLayout",
           "config": {
             "notifications": [],
-            "notificationClickEvent": "REORDER_RULE_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.ReorderRulePanel",
             "searchEvent": "REORDER_RULE_SEARCH",
+            "contentTrait": "@trait.ReorderRulePanel",
+            "appName": "Inventory Management",
+            "notificationClickEvent": "REORDER_RULE_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "icon": "package",
-                "label": "Items",
-                "href": "/inventory"
+                "href": "/inventory",
+                "label": "Items"
               },
               {
-                "label": "Stock Levels",
                 "href": "/stock-levels",
-                "icon": "package"
+                "icon": "package",
+                "label": "Stock Levels"
               },
               {
-                "href": "/warehouses",
                 "icon": "warehouse",
+                "href": "/warehouses",
                 "label": "Warehouses"
               },
               {
                 "icon": "refresh-ccw",
-                "href": "/reorder-rules",
-                "label": "Reorder Rules"
+                "label": "Reorder Rules",
+                "href": "/reorder-rules"
               },
               {
-                "href": "/adjustments",
                 "label": "Adjustments",
+                "href": "/adjustments",
                 "icon": "edit"
               }
-            ],
-            "appName": "Inventory Management"
+            ]
           },
           "events": {
             "NOTIFY_CLICK": "REORDER_RULE_NOTIFICATIONS_OPEN",
@@ -1393,32 +1393,32 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "refresh-ccw"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Reorder Rules"
-                            }
-                          ],
                           "gap": "sm",
+                          "direction": "horizontal",
                           "align": "center",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "children": [
+                            {
+                              "name": "refresh-ccw",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Reorder Rules",
+                              "variant": "h2"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.ReorderRuleView"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1545,22 +1545,25 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "StockAdjustmentAppLayout",
           "config": {
+            "notificationClickEvent": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.StockAdjustmentPanel",
+            "searchEvent": "STOCK_ADJUSTMENT_SEARCH",
+            "appName": "Inventory Management",
             "navItems": [
               {
+                "href": "/inventory",
                 "icon": "package",
-                "label": "Items",
-                "href": "/inventory"
+                "label": "Items"
               },
               {
-                "href": "/stock-levels",
+                "label": "Stock Levels",
                 "icon": "package",
-                "label": "Stock Levels"
+                "href": "/stock-levels"
               },
               {
-                "label": "Warehouses",
                 "href": "/warehouses",
-                "icon": "warehouse"
+                "icon": "warehouse",
+                "label": "Warehouses"
               },
               {
                 "icon": "refresh-ccw",
@@ -1568,19 +1571,16 @@
                 "href": "/reorder-rules"
               },
               {
-                "href": "/adjustments",
                 "label": "Adjustments",
+                "href": "/adjustments",
                 "icon": "edit"
               }
             ],
-            "notificationClickEvent": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN",
-            "appName": "Inventory Management",
-            "notifications": [],
-            "searchEvent": "STOCK_ADJUSTMENT_SEARCH"
+            "notifications": []
           },
           "events": {
-            "SEARCH": "STOCK_ADJUSTMENT_SEARCH",
-            "NOTIFY_CLICK": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN",
+            "SEARCH": "STOCK_ADJUSTMENT_SEARCH"
           }
         },
         {
@@ -1609,15 +1609,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
                               "type": "typography",
@@ -1626,14 +1624,16 @@
                             }
                           ],
                           "align": "center",
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.StockAdjustmentBrowse"
                       ],
-                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "className": "max-w-6xl mx-auto w-full p-4"
                     }

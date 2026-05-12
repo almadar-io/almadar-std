@@ -220,8 +220,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -230,21 +230,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading memberships…",
                           "variant": "caption",
+                          "content": "Loading memberships…",
                           "color": "muted",
                           "type": "typography"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -258,19 +258,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "id-card",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "id-card"
                             },
                             {
                               "content": "@config.title",
@@ -279,20 +273,22 @@
                             },
                             {
                               "type": "status-effect",
-                              "label": "Member tier",
+                              "variant": "buff",
                               "icon": "shield",
-                              "variant": "buff"
+                              "label": "Member tier"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
-                          "type": "typewriter-text",
+                          "speed": 40.0,
                           "text": "Welcome back, member.",
-                          "speed": 40.0
+                          "type": "typewriter-text"
                         },
                         {
-                          "activeTab": "active",
-                          "type": "tabs",
                           "items": [
                             {
                               "id": "active",
@@ -306,64 +302,45 @@
                               "id": "cancelled",
                               "label": "Cancelled"
                             }
-                          ]
+                          ],
+                          "type": "tabs",
+                          "activeTab": "active"
                         },
                         {
                           "children": [
                             {
                               "suffix": " members",
-                              "duration": 1200.0,
+                              "type": "animated-counter",
                               "value": 128.0,
-                              "type": "animated-counter"
+                              "duration": 1200.0
                             },
                             {
                               "current": 720.0,
-                              "showLabel": true,
-                              "type": "xp-bar",
                               "max": 1000.0,
-                              "level": 7.0
+                              "level": 7.0,
+                              "showLabel": true,
+                              "type": "xp-bar"
                             }
                           ],
+                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
-                          "type": "module-card",
-                          "data": {
-                            "description": "Guest passes, towel service, locker reserve",
-                            "icon": "star",
-                            "title": "Premium Perks"
-                          }
+                          "description": "Guest passes, towel service, locker reserve",
+                          "title": "Premium Perks",
+                          "icon": "star",
+                          "type": "feature-card"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "UPGRADE_TIER",
-                              "label": "Upgrade",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "FREEZE_MEMBERSHIP",
-                              "variant": "ghost",
-                              "label": "Freeze"
-                            },
-                            {
-                              "event": "CANCEL_MEMBERSHIP",
-                              "variant": "danger",
-                              "label": "Cancel"
-                            }
-                          ],
-                          "type": "data-grid",
                           "fields": [
                             {
                               "label": "Member",
-                              "variant": "caption",
-                              "name": "memberName"
+                              "name": "memberName",
+                              "variant": "caption"
                             },
                             {
                               "variant": "badge",
@@ -381,15 +358,36 @@
                               "label": "Renews"
                             },
                             {
+                              "name": "status",
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "variant": "badge"
                             }
                           ],
-                          "gap": "sm",
-                          "entity": "@payload.data"
+                          "itemActions": [
+                            {
+                              "event": "UPGRADE_TIER",
+                              "label": "Upgrade",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "FREEZE_MEMBERSHIP",
+                              "label": "Freeze",
+                              "variant": "ghost"
+                            },
+                            {
+                              "label": "Cancel",
+                              "event": "CANCEL_MEMBERSHIP",
+                              "variant": "danger"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -404,8 +402,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -424,9 +422,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "success",
-                      "message": "Tier upgraded"
+                      "message": "Tier upgraded",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -445,9 +443,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Membership frozen",
+                      "variant": "info",
                       "type": "alert",
-                      "variant": "info"
+                      "message": "Membership frozen"
                     }
                   ]
                 ]
@@ -466,9 +464,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "info",
-                      "message": "Membership cancelled",
-                      "type": "alert"
+                      "message": "Membership cancelled"
                     }
                   ]
                 ]
@@ -483,8 +481,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -492,8 +490,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

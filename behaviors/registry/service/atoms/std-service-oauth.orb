@@ -102,28 +102,30 @@
                     "main",
                     {
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "lock",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "lock"
                             },
                             {
+                              "content": "Sign In",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Sign In"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "select",
                           "options": [
                             {
                               "label": "Google",
@@ -134,27 +136,25 @@
                               "label": "GitHub"
                             },
                             {
-                              "value": "microsoft",
-                              "label": "Microsoft"
+                              "label": "Microsoft",
+                              "value": "microsoft"
                             },
                             {
-                              "label": "Okta",
-                              "value": "okta"
+                              "value": "okta",
+                              "label": "Okta"
                             }
-                          ],
-                          "type": "select"
+                          ]
                         },
                         {
-                          "icon": "log-in",
+                          "label": "Sign in with provider",
                           "variant": "primary",
-                          "action": "LOGIN",
                           "type": "button",
-                          "label": "Sign in with provider"
+                          "action": "LOGIN",
+                          "icon": "log-in"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -355,11 +355,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -374,9 +374,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Authenticating with provider.",
+                      "title": "Signing in...",
                       "type": "loading-state",
-                      "title": "Signing in..."
+                      "message": "Authenticating with provider."
                     }
                   ],
                   [
@@ -384,9 +384,9 @@
                     "oauth",
                     "authorize",
                     {
+                      "provider": "@config.provider",
                       "scopes": "@config.scopes",
-                      "redirectUri": "@config.redirectUri",
-                      "provider": "@config.provider"
+                      "redirectUri": "@config.redirectUri"
                     },
                     {
                       "emit": {
@@ -426,9 +426,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
@@ -440,20 +437,23 @@
                           "message": "Signed in successfully"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
                           "color": "muted",
-                          "content": "@entity.accessToken"
+                          "content": "@entity.accessToken",
+                          "type": "typography"
                         },
                         {
                           "variant": "ghost",
+                          "action": "RESET",
                           "icon": "log-out",
                           "label": "Sign Out",
-                          "type": "button",
-                          "action": "RESET"
+                          "type": "button"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -480,10 +480,10 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RETRY",
-                      "type": "error-state",
+                      "message": "@entity.error",
                       "title": "Sign In Failed",
-                      "message": "@entity.error"
+                      "type": "error-state",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -502,12 +502,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -531,9 +531,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ]
@@ -550,12 +550,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -563,6 +563,14 @@
             ]
           },
           "config": {
+            "scopes": {
+              "type": "[string]",
+              "default": []
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceOauthDefaultForm"
+            },
             "provider": {
               "type": "string",
               "default": "google",
@@ -572,14 +580,6 @@
                 "microsoft",
                 "okta"
               ]
-            },
-            "scopes": {
-              "type": "[string]",
-              "default": []
-            },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceOauthDefaultForm"
             },
             "redirectUri": {
               "type": "string",

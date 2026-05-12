@@ -198,8 +198,8 @@
                     "BillableHour",
                     {
                       "emit": {
-                        "failure": "BillableHourLoadFailed",
-                        "success": "BillableHourLoaded"
+                        "success": "BillableHourLoaded",
+                        "failure": "BillableHourLoadFailed"
                       }
                     }
                   ],
@@ -208,21 +208,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "content": "Loading time entries…",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading time entries…"
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -236,17 +236,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "children": [
                             {
-                              "size": "md",
+                              "type": "avatar",
                               "src": "https://i.pravatar.cc/64?img=12",
-                              "name": "Lead Attorney",
-                              "type": "avatar"
+                              "size": "md",
+                              "name": "Lead Attorney"
                             },
                             {
                               "type": "icon",
@@ -254,36 +252,37 @@
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
                           ],
-                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "align": "center",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "animated-counter",
-                              "value": 248.0,
                               "suffix": " hrs",
-                              "duration": 1200.0
+                              "duration": 1200.0,
+                              "value": 248.0
                             },
                             {
                               "type": "range-slider",
+                              "min": 0.0,
                               "max": 500.0,
+                              "value": 250.0,
                               "step": 25.0,
                               "showTooltip": true,
-                              "showTicks": true,
-                              "value": 250.0,
-                              "min": 0.0
+                              "showTicks": true
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "line-chart",
@@ -293,12 +292,12 @@
                               "date": "Jan"
                             },
                             {
-                              "date": "Feb",
-                              "value": 168.0
+                              "value": 168.0,
+                              "date": "Feb"
                             },
                             {
-                              "date": "Mar",
-                              "value": 195.0
+                              "value": 195.0,
+                              "date": "Mar"
                             },
                             {
                               "value": 210.0,
@@ -309,39 +308,23 @@
                               "value": 248.0
                             }
                           ],
-                          "showArea": true,
-                          "showGrid": true
+                          "showGrid": true,
+                          "showArea": true
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "INVOICE_HOURS",
-                              "label": "Invoice",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "WRITE_OFF_HOURS",
-                              "label": "Write Off",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "cols": 1.0,
                           "fields": [
                             {
-                              "name": "workerName",
                               "label": "Worker",
+                              "name": "workerName",
                               "variant": "caption"
                             },
                             {
+                              "label": "Matter",
                               "variant": "caption",
-                              "name": "matterId",
-                              "label": "Matter"
+                              "name": "matterId"
                             },
                             {
                               "variant": "caption",
@@ -349,24 +332,41 @@
                               "label": "Date"
                             },
                             {
+                              "variant": "caption",
                               "name": "hours",
-                              "label": "Hours",
-                              "variant": "caption"
+                              "label": "Hours"
                             },
                             {
                               "name": "rate",
-                              "label": "Rate",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Rate"
                             },
                             {
+                              "name": "invoiceStatus",
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "invoiceStatus"
+                              "variant": "badge"
                             }
-                          ]
+                          ],
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "label": "Invoice",
+                              "event": "INVOICE_HOURS",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "WRITE_OFF_HOURS",
+                              "variant": "ghost",
+                              "label": "Write Off"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -380,9 +380,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -401,8 +401,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
                       "message": "Hours invoiced",
+                      "variant": "success",
                       "type": "alert"
                     }
                   ]
@@ -422,9 +422,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "info",
-                      "message": "Hours written off",
-                      "type": "alert"
+                      "message": "Hours written off"
                     }
                   ]
                 ]

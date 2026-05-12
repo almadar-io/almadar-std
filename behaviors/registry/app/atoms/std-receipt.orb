@@ -215,18 +215,18 @@
                       "direction": "vertical",
                       "align": "center",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
                           "content": "Loading receipts…"
                         }
                       ],
+                      "gap": "md",
                       "className": "py-12"
                     }
                   ]
@@ -241,13 +241,8 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -255,31 +250,45 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "fields": [
+                          "itemActions": [
                             {
-                              "label": "Receipt #",
-                              "name": "receiptNumber",
-                              "variant": "caption"
+                              "label": "Email",
+                              "variant": "primary",
+                              "event": "EMAIL_RECEIPT"
                             },
                             {
-                              "name": "recipientName",
+                              "variant": "ghost",
+                              "label": "Reprint",
+                              "event": "REPRINT_RECEIPT"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "name": "receiptNumber",
+                              "label": "Receipt #"
+                            },
+                            {
                               "label": "Recipient",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "recipientName"
                             },
                             {
                               "label": "Type",
-                              "name": "transactionType",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "transactionType"
                             },
                             {
                               "label": "Total",
@@ -287,34 +296,25 @@
                               "name": "total"
                             },
                             {
+                              "variant": "caption",
                               "name": "issuedAt",
-                              "label": "Issued",
-                              "variant": "caption"
+                              "label": "Issued"
                             },
                             {
+                              "name": "isEmailed",
                               "variant": "badge",
-                              "label": "Emailed",
-                              "name": "isEmailed"
+                              "label": "Emailed"
                             }
                           ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "gap": "sm",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "label": "Email",
-                              "event": "EMAIL_RECEIPT",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "REPRINT_RECEIPT",
-                              "variant": "ghost",
-                              "label": "Reprint"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "cols": 1.0
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -329,8 +329,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -349,9 +349,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "Receipt emailed",
-                      "variant": "success",
-                      "type": "alert"
+                      "variant": "success"
                     }
                   ]
                 ]
@@ -370,9 +370,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "info",
                       "message": "Receipt reprinted",
-                      "type": "alert",
-                      "variant": "info"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -387,8 +387,8 @@
                     "Receipt",
                     {
                       "emit": {
-                        "failure": "ReceiptLoadFailed",
-                        "success": "ReceiptLoaded"
+                        "success": "ReceiptLoaded",
+                        "failure": "ReceiptLoadFailed"
                       }
                     }
                   ],

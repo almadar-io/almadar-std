@@ -560,22 +560,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Loading dunning cases…"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -589,105 +589,109 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "alert-triangle"
                             },
                             {
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "imagePosition": "right",
-                          "description": "Track recovery against open cases and route the right escalation to each customer.",
                           "type": "split-section",
+                          "imagePosition": "right",
+                          "background": "alt",
+                          "title": "Collections health",
                           "bullets": [
                             "Severity ladders from soft to final",
                             "Auto-suspend at the last attempt",
                             "Resolve when payment recovers"
                           ],
-                          "title": "Collections health",
-                          "background": "alt"
+                          "description": "Track recovery against open cases and route the right escalation to each customer."
                         },
                         {
                           "type": "stats-grid",
-                          "columns": 4.0,
                           "stats": [
                             {
-                              "value": 42.0,
+                              "value": "42",
                               "label": "Open cases"
                             },
                             {
-                              "label": "Recovered",
-                              "value": 18.0
+                              "value": "18",
+                              "label": "Recovered"
                             },
                             {
-                              "value": 3.0,
+                              "value": "3",
                               "label": "Suspended"
                             },
                             {
                               "value": "62%",
                               "label": "Recovery rate"
                             }
-                          ]
+                          ],
+                          "columns": 4.0
                         },
                         {
-                          "entity": "DunningCase",
-                          "columns": 4.0,
-                          "type": "stats-organism"
-                        },
-                        {
-                          "type": "showcase-organism",
-                          "subtitle": "High-value cases with elevated severity.",
-                          "entity": "DunningCase",
-                          "heading": "Watchlist accounts"
-                        },
-                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "accentColor": "danger",
-                              "title": "Acme Corp",
+                              "description": "Final notice. Suspension in 2 days.",
                               "image": {
                                 "alt": "Acme",
                                 "src": "https://picsum.photos/seed/dun-acme/600/400"
                               },
+                              "type": "showcase-card",
+                              "title": "Acme Corp",
                               "badge": "Final",
-                              "description": "Final notice. Suspension in 2 days.",
-                              "type": "showcase-card"
+                              "accentColor": "danger"
                             },
                             {
+                              "type": "showcase-card",
+                              "description": "Urgent — second retry failed.",
                               "image": {
                                 "alt": "Globex",
                                 "src": "https://picsum.photos/seed/dun-globex/600/400"
                               },
-                              "description": "Urgent — second retry failed.",
-                              "type": "showcase-card",
-                              "title": "Globex Ltd",
                               "badge": "Urgent",
-                              "accentColor": "warning"
+                              "accentColor": "warning",
+                              "title": "Globex Ltd"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "swipeable-row",
+                          "threshold": 80.0,
+                          "rightActions": [
+                            {
+                              "event": "SUSPEND",
+                              "variant": "danger",
+                              "label": "Suspend"
+                            }
+                          ],
+                          "leftActions": [
+                            {
+                              "label": "Resolve",
+                              "event": "RESOLVE",
+                              "variant": "primary"
+                            }
+                          ],
                           "children": {
                             "children": [
                               {
@@ -695,46 +699,29 @@
                                 "name": "alert-triangle"
                               },
                               {
-                                "type": "typography",
+                                "content": "Swipe a case row for quick actions",
                                 "variant": "body",
-                                "content": "Swipe a case row for quick actions"
+                                "type": "typography"
                               }
                             ],
                             "align": "center",
-                            "type": "stack",
                             "direction": "horizontal",
-                            "gap": "md"
-                          },
-                          "rightActions": [
-                            {
-                              "color": "danger",
-                              "label": "Suspend",
-                              "event": "SUSPEND"
-                            }
-                          ],
-                          "leftActions": [
-                            {
-                              "color": "primary",
-                              "label": "Resolve",
-                              "event": "RESOLVE"
-                            }
-                          ],
-                          "threshold": 80.0
+                            "gap": "md",
+                            "type": "stack"
+                          }
                         },
                         {
-                          "type": "data-grid",
-                          "cols": 1.0,
                           "gap": "sm",
                           "fields": [
                             {
                               "label": "Subscription",
-                              "variant": "caption",
-                              "name": "subscriptionId"
+                              "name": "subscriptionId",
+                              "variant": "caption"
                             },
                             {
                               "label": "Customer",
-                              "name": "customerId",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "customerId"
                             },
                             {
                               "variant": "badge",
@@ -742,14 +729,14 @@
                               "label": "Severity"
                             },
                             {
-                              "name": "attemptNumber",
+                              "label": "Attempt",
                               "variant": "caption",
-                              "label": "Attempt"
+                              "name": "attemptNumber"
                             },
                             {
-                              "label": "Amount Due",
                               "variant": "caption",
-                              "name": "amountDue"
+                              "name": "amountDue",
+                              "label": "Amount Due"
                             },
                             {
                               "name": "status",
@@ -757,11 +744,12 @@
                               "variant": "badge"
                             }
                           ],
-                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "variant": "primary",
                               "event": "ESCALATE",
+                              "variant": "primary",
                               "label": "Escalate",
                               "icon": "arrow-up"
                             },
@@ -772,37 +760,38 @@
                               "event": "RESOLVE"
                             },
                             {
-                              "variant": "danger",
-                              "event": "SUSPEND",
                               "label": "Suspend",
-                              "icon": "ban"
-                            }
-                          ]
-                        },
-                        {
-                          "position": "right",
-                          "isOpen": false,
-                          "width": "md",
-                          "children": [
-                            {
-                              "gap": "sm",
-                              "direction": "vertical",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "content": "Selected case",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "Use the grid actions to escalate, resolve, or suspend."
-                                }
-                              ]
+                              "icon": "ban",
+                              "variant": "danger",
+                              "event": "SUSPEND"
                             }
                           ],
+                          "entity": "@payload.data"
+                        },
+                        {
+                          "width": "md",
+                          "position": "right",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Selected case"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "Use the grid actions to escalate, resolve, or suspend."
+                                }
+                              ],
+                              "gap": "sm"
+                            }
+                          ],
+                          "isOpen": false,
                           "title": "Case detail",
                           "type": "drawer"
                         }
@@ -820,9 +809,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -895,10 +884,10 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
+                      "message": "Attempt @entity.attemptNumber of @entity.attemptsTotal — amount @entity.amountDue @entity.currency. Next retry @entity.nextRetryAt.",
                       "variant": "warning",
                       "title": "Payment failed",
-                      "message": "Attempt @entity.attemptNumber of @entity.attemptsTotal — amount @entity.amountDue @entity.currency. Next retry @entity.nextRetryAt.",
-                      "type": "alert",
                       "dismissible": false
                     }
                   ],
@@ -967,8 +956,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "DunningCaseUpdateFailed",
-                        "success": "ServiceSuspended"
+                        "success": "ServiceSuspended",
+                        "failure": "DunningCaseUpdateFailed"
                       }
                     }
                   ]
@@ -1001,8 +990,8 @@
                     "DunningCase",
                     {
                       "emit": {
-                        "failure": "DunningCaseLoadFailed",
-                        "success": "DunningCaseLoaded"
+                        "success": "DunningCaseLoaded",
+                        "failure": "DunningCaseLoadFailed"
                       }
                     }
                   ]
@@ -1017,9 +1006,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -1043,8 +1032,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

@@ -683,22 +683,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
-                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading ticket tiers…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading ticket tiers…"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -712,51 +712,71 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "ticket",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "ticket"
                             },
                             {
-                              "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "entity": "@payload.data",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "label": "Update",
+                              "variant": "secondary",
+                              "icon": "edit",
+                              "event": "UPDATE"
+                            },
+                            {
+                              "icon": "shopping-cart",
+                              "variant": "primary",
+                              "label": "Sell",
+                              "event": "SELL"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "CLOSE",
+                              "label": "Close",
+                              "icon": "x"
+                            }
+                          ],
                           "fields": [
                             {
                               "variant": "badge",
-                              "label": "Tier",
-                              "name": "name"
+                              "name": "name",
+                              "label": "Tier"
+                            },
+                            {
+                              "name": "price",
+                              "label": "Price",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "currency",
+                              "label": "Currency"
                             },
                             {
                               "variant": "caption",
-                              "name": "price",
-                              "label": "Price"
-                            },
-                            {
-                              "label": "Currency",
-                              "variant": "badge",
-                              "name": "currency"
-                            },
-                            {
                               "label": "Total",
-                              "name": "quantityTotal",
-                              "variant": "caption"
+                              "name": "quantityTotal"
                             },
                             {
                               "name": "quantitySold",
@@ -764,43 +784,23 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "status",
                               "label": "Status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "status"
                             }
                           ],
-                          "cols": 1.0,
-                          "gap": "sm",
                           "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "variant": "secondary",
-                              "label": "Update",
-                              "event": "UPDATE",
-                              "icon": "edit"
-                            },
-                            {
-                              "label": "Sell",
-                              "icon": "shopping-cart",
-                              "event": "SELL",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Close",
-                              "icon": "x",
-                              "event": "CLOSE",
-                              "variant": "danger"
-                            }
-                          ]
+                          "gap": "sm"
                         },
                         {
-                          "type": "button",
                           "label": "New Tier",
-                          "icon": "plus",
                           "action": "CREATE",
+                          "icon": "plus",
+                          "type": "button",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -814,9 +814,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -833,8 +833,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "TicketTierWriteFailed",
-                        "success": "TicketTierCreated"
+                        "success": "TicketTierCreated",
+                        "failure": "TicketTierWriteFailed"
                       }
                     }
                   ]
@@ -902,8 +902,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "TicketTierWriteFailed",
-                        "success": "TicketTierUpdated"
+                        "success": "TicketTierUpdated",
+                        "failure": "TicketTierWriteFailed"
                       }
                     }
                   ]
@@ -1112,8 +1112,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "success": "TicketTierLoaded",
-                        "failure": "TicketTierLoadFailed"
+                        "failure": "TicketTierLoadFailed",
+                        "success": "TicketTierLoaded"
                       }
                     }
                   ]
@@ -1146,8 +1146,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -1162,8 +1162,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "failure": "TicketTierLoadFailed",
-                        "success": "TicketTierLoaded"
+                        "success": "TicketTierLoaded",
+                        "failure": "TicketTierLoadFailed"
                       }
                     }
                   ],

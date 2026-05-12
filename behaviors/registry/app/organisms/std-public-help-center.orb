@@ -114,28 +114,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "HelpCenterAppLayout",
           "config": {
-            "searchEvent": "HELP_CENTER_SEARCH",
             "contentTrait": "@trait.HelpCenterCatalog",
+            "appName": "Help Center",
+            "searchEvent": "HELP_CENTER_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "HELP_CENTER_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "label": "Help Centers",
                 "href": "/help-centers",
-                "icon": "life-buoy"
+                "icon": "life-buoy",
+                "label": "Help Centers"
               },
               {
                 "href": "/articles",
-                "icon": "book",
-                "label": "Articles"
+                "label": "Articles",
+                "icon": "book"
               },
               {
                 "href": "/categories",
-                "icon": "folder",
-                "label": "Categories"
+                "label": "Categories",
+                "icon": "folder"
               }
-            ],
-            "notifications": [],
-            "notificationClickEvent": "HELP_CENTER_NOTIFICATIONS_OPEN",
-            "appName": "Help Center"
+            ]
           },
           "events": {
             "SEARCH": "HELP_CENTER_SEARCH",
@@ -223,59 +223,61 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "name": "life-buoy",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "life-buoy"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Help Centers",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "align": "center",
                               "gap": "sm"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "label": "New Help Center",
-                                  "type": "button",
-                                  "action": "CREATE",
                                   "variant": "primary",
-                                  "icon": "plus"
+                                  "label": "New Help Center",
+                                  "icon": "plus",
+                                  "type": "button",
+                                  "action": "CREATE"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "justify": "between",
                           "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             "@trait.HelpCenterSearch",
                             "@trait.HelpCenterFilter"
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         "@trait.HelpCenterStats",
                         "@trait.HelpCenterGraphs",
@@ -283,9 +285,7 @@
                           "type": "divider"
                         },
                         "@trait.HelpCenterBrowseList"
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -304,20 +304,24 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
-                        },
-                        {
-                          "content": "No notifications",
-                          "variant": "h3",
-                          "type": "typography"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
+                          "variant": "h3",
+                          "content": "No notifications"
+                        },
+                        {
                           "color": "muted",
                           "content": "You're all caught up.",
+                          "type": "typography",
                           "variant": "caption"
                         },
                         {
@@ -327,11 +331,7 @@
                           "action": "INIT"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-8"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -352,7 +352,6 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "HelpCenterFilter",
           "config": {
-            "event": "HELP_CENTER_FILTER",
             "filters": [
               {
                 "filterType": "select",
@@ -364,7 +363,8 @@
                   "private"
                 ]
               }
-            ]
+            ],
+            "event": "HELP_CENTER_FILTER"
           }
         },
         {
@@ -374,16 +374,18 @@
             "title": "Help Centers",
             "metrics": [
               {
-                "label": "Total",
                 "variant": "primary",
-                "aggregation": "count",
+                "icon": "life-buoy",
                 "format": "number",
-                "icon": "life-buoy"
+                "label": "Total",
+                "aggregation": "count"
               },
               {
-                "aggregation": "count",
-                "variant": "success",
                 "format": "number",
+                "aggregation": "count",
+                "label": "Published",
+                "icon": "check-circle",
+                "variant": "success",
                 "filter": [
                   "fn",
                   "row",
@@ -392,16 +394,14 @@
                     "@row.status",
                     "published"
                   ]
-                ],
-                "icon": "check-circle",
-                "label": "Published"
+                ]
               },
               {
+                "label": "Draft",
                 "aggregation": "count",
                 "variant": "warning",
-                "icon": "edit",
                 "format": "number",
-                "label": "Draft",
+                "icon": "edit",
                 "filter": [
                   "fn",
                   "row",
@@ -413,11 +413,11 @@
                 ]
               },
               {
-                "aggregation": "sum",
-                "field": "totalArticles",
-                "variant": "info",
                 "label": "Articles",
                 "icon": "book-open",
+                "field": "totalArticles",
+                "aggregation": "sum",
+                "variant": "info",
                 "format": "number"
               }
             ]
@@ -437,13 +437,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "HelpCenterGraphs",
           "config": {
-            "title": "Help Centers by Status",
-            "aggregation": "count",
             "subtitle": "Publication state across managed help centers",
             "categoryField": "status",
             "chartType": "bar",
+            "aggregation": "count",
+            "height": 240.0,
             "showLegend": false,
-            "height": 240.0
+            "title": "Help Centers by Status"
           },
           "listens": [
             {
@@ -461,16 +461,34 @@
           "name": "HelpCenterBrowseList",
           "linkedEntity": "HelpCenter",
           "config": {
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "cols": 1.0,
             "gap": "sm",
             "fields": [
               {
                 "name": "name",
-                "icon": "life-buoy",
-                "variant": "h3"
+                "variant": "h3",
+                "icon": "life-buoy"
               },
               {
-                "name": "slug",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "slug"
               },
               {
                 "name": "domain",
@@ -482,37 +500,19 @@
               },
               {
                 "variant": "badge",
-                "name": "totalArticles",
-                "format": "number"
-              },
-              {
                 "format": "number",
-                "name": "totalCategories",
-                "variant": "caption"
+                "name": "totalArticles"
               },
               {
-                "name": "lastUpdatedAt",
-                "variant": "caption"
+                "variant": "caption",
+                "format": "number",
+                "name": "totalCategories"
+              },
+              {
+                "variant": "caption",
+                "name": "lastUpdatedAt"
               }
-            ],
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "event": "VIEW",
-                "label": "View"
-              },
-              {
-                "label": "Edit",
-                "variant": "ghost",
-                "event": "EDIT"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
-            "cols": 1.0
+            ]
           },
           "listens": [
             {
@@ -563,13 +563,13 @@
           "linkedEntity": "HelpCenter",
           "config": {
             "icon": "plus-circle",
-            "mode": "create",
             "fields": [
               "name",
               "slug",
               "domain",
               "status"
             ],
+            "mode": "create",
             "title": "New Help Center"
           },
           "events": {
@@ -591,15 +591,15 @@
           "name": "HelpCenterEdit",
           "linkedEntity": "HelpCenter",
           "config": {
+            "title": "Edit Help Center",
+            "mode": "edit",
             "fields": [
               "name",
               "slug",
               "domain",
               "status"
             ],
-            "title": "Edit Help Center",
-            "icon": "edit",
-            "mode": "edit"
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -620,7 +620,6 @@
           "name": "HelpCenterView",
           "linkedEntity": "HelpCenter",
           "config": {
-            "title": "View Help Center",
             "icon": "eye",
             "mode": "edit",
             "fields": [
@@ -628,7 +627,8 @@
               "slug",
               "domain",
               "status"
-            ]
+            ],
+            "title": "View Help Center"
           },
           "events": {
             "OPEN": "VIEW"
@@ -649,10 +649,10 @@
           "name": "HelpCenterDelete",
           "linkedEntity": "HelpCenter",
           "config": {
-            "title": "Delete Help Center",
-            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "title": "Delete Help Center",
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -1003,28 +1003,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "HelpArticleAppLayout",
           "config": {
+            "appName": "Help Center",
+            "notificationClickEvent": "HELP_ARTICLE_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "label": "Articles",
                 "icon": "book",
+                "label": "Articles",
                 "href": "/articles"
               },
               {
-                "href": "/help-centers",
                 "label": "Help Centers",
+                "href": "/help-centers",
                 "icon": "life-buoy"
               },
               {
                 "href": "/categories",
-                "label": "Categories",
-                "icon": "folder"
+                "icon": "folder",
+                "label": "Categories"
               }
             ],
+            "notifications": [],
             "contentTrait": "@trait.HelpArticlePanel",
-            "searchEvent": "HELP_ARTICLE_SEARCH",
-            "notificationClickEvent": "HELP_ARTICLE_NOTIFICATIONS_OPEN",
-            "appName": "Help Center",
-            "notifications": []
+            "searchEvent": "HELP_ARTICLE_SEARCH"
           },
           "events": {
             "NOTIFY_CLICK": "HELP_ARTICLE_NOTIFICATIONS_OPEN",
@@ -1057,14 +1057,11 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
                           "align": "center",
                           "children": [
@@ -1073,17 +1070,20 @@
                               "name": "book"
                             },
                             {
-                              "content": "Help Articles",
                               "variant": "h2",
+                              "content": "Help Articles",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.HelpArticleView"
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1197,28 +1197,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "HelpCategoryAppLayout",
           "config": {
-            "appName": "Help Center",
-            "notifications": [],
+            "notificationClickEvent": "HELP_CATEGORY_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.HelpCategoryPanel",
+            "searchEvent": "HELP_CATEGORY_SEARCH",
             "navItems": [
               {
-                "href": "/categories",
                 "label": "Categories",
-                "icon": "folder"
+                "icon": "folder",
+                "href": "/categories"
               },
               {
-                "icon": "life-buoy",
                 "label": "Help Centers",
-                "href": "/help-centers"
+                "href": "/help-centers",
+                "icon": "life-buoy"
               },
               {
-                "label": "Articles",
                 "href": "/articles",
-                "icon": "book"
+                "icon": "book",
+                "label": "Articles"
               }
             ],
-            "notificationClickEvent": "HELP_CATEGORY_NOTIFICATIONS_OPEN",
-            "searchEvent": "HELP_CATEGORY_SEARCH",
-            "contentTrait": "@trait.HelpCategoryPanel"
+            "notifications": [],
+            "appName": "Help Center"
           },
           "events": {
             "SEARCH": "HELP_CATEGORY_SEARCH",
@@ -1251,13 +1251,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "className": "max-w-6xl mx-auto w-full p-4",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
@@ -1265,19 +1263,21 @@
                               "name": "folder"
                             },
                             {
-                              "content": "Help Categories",
                               "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Help Categories"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.HelpCategoryView"
                       ],
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]

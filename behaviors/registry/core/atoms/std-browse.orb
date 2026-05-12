@@ -283,19 +283,19 @@
                     "BrowseItem",
                     {
                       "offset": 0.0,
-                      "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
+                      "limit": "@config.pageSize"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -309,20 +309,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "itemActions": "@config.itemActions",
-                          "pageSize": "@config.displayPageSize",
-                          "entity": "@payload.data",
-                          "gap": "@config.gap",
-                          "cols": "@config.cols",
-                          "fields": "@config.fields",
                           "imageField": "@config.imageField",
-                          "type": "data-grid"
+                          "itemActions": "@config.itemActions",
+                          "gap": "@config.gap",
+                          "type": "data-grid",
+                          "pageSize": "@config.displayPageSize",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
+                          "cols": "@config.cols"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -336,10 +336,10 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "typography",
                       "content": "@payload.error",
-                      "variant": "caption",
                       "color": "error",
-                      "type": "typography"
+                      "variant": "caption"
                     }
                   ]
                 ]
@@ -353,20 +353,20 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "limit": "@config.pageSize",
                       "emit": {
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
                       },
-                      "offset": 0.0,
-                      "limit": "@config.pageSize"
+                      "offset": 0.0
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -380,6 +380,11 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
+                      "limit": "@config.pageSize",
                       "offset": 0.0,
                       "filter": [
                         "or",
@@ -397,12 +402,7 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ],
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
-                      "limit": "@config.pageSize"
+                      ]
                     }
                   ]
                 ]
@@ -416,8 +416,12 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "offset": 0.0,
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
                       "limit": "@config.pageSize",
+                      "offset": 0.0,
                       "filter": [
                         "or",
                         [
@@ -434,11 +438,7 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -452,10 +452,9 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "limit": "@config.pageSize",
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       },
                       "offset": [
                         "*",
@@ -465,7 +464,8 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ]
+                      ],
+                      "limit": "@config.pageSize"
                     }
                   ]
                 ]
@@ -479,20 +479,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "cols": "@config.cols",
                           "pageSize": "@config.displayPageSize",
-                          "imageField": "@config.imageField",
-                          "fields": "@config.fields",
-                          "gap": "@config.gap",
-                          "type": "data-grid",
+                          "itemActions": "@config.itemActions",
                           "entity": "@payload.data",
-                          "itemActions": "@config.itemActions"
+                          "type": "data-grid",
+                          "fields": "@config.fields",
+                          "imageField": "@config.imageField",
+                          "cols": "@config.cols",
+                          "gap": "@config.gap"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -506,8 +506,8 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "limit": "@config.pageSize",
                       "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "emit": {
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
@@ -535,16 +535,24 @@
               "type": "[object]",
               "default": []
             },
+            "gap": {
+              "type": "string",
+              "default": "md"
+            },
             "imageField": {
               "type": "string",
               "default": ""
+            },
+            "cols": {
+              "type": "number",
+              "default": 1.0
             },
             "fields": {
               "type": "[object]",
               "default": [
                 {
-                  "name": "name",
                   "label": "Name",
+                  "name": "name",
                   "variant": "h4"
                 },
                 {
@@ -553,19 +561,11 @@
                   "name": "description"
                 },
                 {
-                  "name": "status",
                   "label": "Status",
-                  "variant": "badge"
+                  "variant": "badge",
+                  "name": "status"
                 }
               ]
-            },
-            "cols": {
-              "type": "number",
-              "default": 1.0
-            },
-            "gap": {
-              "type": "string",
-              "default": "md"
             },
             "pageSize": {
               "type": "number",

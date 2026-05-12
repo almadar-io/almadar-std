@@ -111,43 +111,43 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "hard-drive"
                             },
                             {
+                              "content": "Upload File",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Upload File"
+                              "type": "typography"
                             }
                           ],
                           "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Choose file...",
                           "type": "input",
+                          "placeholder": "Choose file...",
                           "inputType": "text"
                         },
                         {
+                          "type": "button",
                           "icon": "upload",
                           "action": "UPLOAD",
-                          "type": "button",
-                          "variant": "primary",
-                          "label": "Upload"
+                          "label": "Upload",
+                          "variant": "primary"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -349,8 +349,8 @@
                     "ServiceStorage",
                     {
                       "emit": {
-                        "success": "ServiceStorageLoaded",
-                        "failure": "ServiceStorageLoadFailed"
+                        "failure": "ServiceStorageLoadFailed",
+                        "success": "ServiceStorageLoaded"
                       }
                     }
                   ],
@@ -358,12 +358,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -378,8 +378,8 @@
                     "main",
                     {
                       "title": "Uploading...",
-                      "type": "loading-state",
-                      "message": "Uploading file to storage."
+                      "message": "Uploading file to storage.",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -388,8 +388,8 @@
                     "upload",
                     {
                       "bucket": "@config.bucket",
-                      "acl": "@config.acl",
-                      "file": "@payload.file"
+                      "file": "@payload.file",
+                      "acl": "@config.acl"
                     },
                     {
                       "emit": {
@@ -434,34 +434,34 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "success",
+                          "message": "Upload successful!",
                           "type": "alert",
-                          "message": "Upload successful!"
+                          "variant": "success"
                         },
                         {
-                          "variant": "body",
-                          "content": "@entity.url",
                           "type": "typography",
+                          "content": "@entity.url",
+                          "variant": "body",
                           "color": "muted"
                         },
                         {
-                          "type": "button",
-                          "icon": "rotate-ccw",
-                          "label": "Upload Another",
                           "action": "RESET",
+                          "type": "button",
+                          "label": "Upload Another",
+                          "icon": "rotate-ccw",
                           "variant": "ghost"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -480,16 +480,16 @@
                     "emit",
                     "ServiceStorageStorageFailed",
                     {
-                      "error": "@entity.error",
-                      "code": "upload_failed"
+                      "code": "upload_failed",
+                      "error": "@entity.error"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
                       "title": "Upload Failed",
+                      "message": "@entity.error",
                       "type": "error-state",
                       "onRetry": "RETRY"
                     }
@@ -506,8 +506,8 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ]
@@ -534,11 +534,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -553,12 +553,12 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -566,9 +566,13 @@
             ]
           },
           "config": {
-            "maxSize": {
-              "type": "number",
-              "default": 10485760.0
+            "bucket": {
+              "type": "string",
+              "default": ""
+            },
+            "allowedMimeTypes": {
+              "type": "[string]",
+              "default": []
             },
             "acl": {
               "type": "string",
@@ -578,13 +582,9 @@
                 "private"
               ]
             },
-            "bucket": {
-              "type": "string",
-              "default": ""
-            },
-            "allowedMimeTypes": {
-              "type": "[string]",
-              "default": []
+            "maxSize": {
+              "type": "number",
+              "default": 10485760.0
             },
             "uiTrait": {
               "type": "trait",

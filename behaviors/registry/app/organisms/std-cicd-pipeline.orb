@@ -102,28 +102,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "BuildAppLayout",
           "config": {
+            "searchEvent": "BUILD_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "BUILD_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.BuildCatalog",
+            "appName": "CI/CD Pipeline",
             "navItems": [
               {
+                "href": "/builds",
                 "icon": "hammer",
-                "label": "Builds",
-                "href": "/builds"
+                "label": "Builds"
               },
               {
-                "label": "Stages",
                 "href": "/stages",
+                "label": "Stages",
                 "icon": "layers"
               },
               {
-                "href": "/deploy",
+                "icon": "rocket",
                 "label": "Deploy",
-                "icon": "rocket"
+                "href": "/deploy"
               }
-            ],
-            "searchEvent": "BUILD_SEARCH",
-            "appName": "CI/CD Pipeline",
-            "notifications": [],
-            "notificationClickEvent": "BUILD_NOTIFICATIONS_OPEN"
+            ]
           },
           "events": {
             "NOTIFY_CLICK": "BUILD_NOTIFICATIONS_OPEN",
@@ -210,62 +210,61 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "align": "center",
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "hammer"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Builds",
-                                  "variant": "h2"
+                                  "content": "Builds"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "icon": "plus",
-                                  "action": "CREATE",
                                   "label": "Create Build",
                                   "type": "button",
-                                  "variant": "primary"
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "icon": "plus"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
+                              ]
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "direction": "horizontal",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             "@trait.BuildSearch",
                             "@trait.BuildFilter"
                           ],
-                          "align": "center",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         "@trait.BuildStats",
                         "@trait.BuildGraphs",
@@ -273,7 +272,8 @@
                           "type": "divider"
                         },
                         "@trait.BuildBrowseList"
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -292,11 +292,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "className": "py-8",
-                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -308,18 +306,20 @@
                           "content": "No notifications"
                         },
                         {
-                          "type": "typography",
-                          "content": "You're all caught up.",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
-                          "variant": "ghost",
-                          "type": "button",
                           "action": "INIT",
-                          "label": "Back to builds"
+                          "label": "Back to builds",
+                          "variant": "ghost",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -332,8 +332,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "BuildSearch",
           "config": {
-            "event": "BUILD_SEARCH",
-            "placeholder": "Search builds…"
+            "placeholder": "Search builds…",
+            "event": "BUILD_SEARCH"
           }
         },
         {
@@ -343,18 +343,18 @@
             "filters": [
               {
                 "field": "status",
-                "label": "Status",
+                "filterType": "select",
                 "options": [
                   "running",
                   "success",
                   "failed"
                 ],
-                "filterType": "select"
+                "label": "Status"
               },
               {
-                "label": "Branch",
+                "field": "branch",
                 "filterType": "text",
-                "field": "branch"
+                "label": "Branch"
               }
             ],
             "event": "BUILD_FILTER"
@@ -367,15 +367,14 @@
             "title": "Build Health",
             "metrics": [
               {
-                "icon": "hammer",
-                "label": "Total Today",
                 "variant": "primary",
-                "format": "number",
-                "aggregation": "count"
+                "label": "Total Today",
+                "aggregation": "count",
+                "icon": "hammer",
+                "format": "number"
               },
               {
-                "format": "number",
-                "icon": "check-circle",
+                "variant": "success",
                 "filter": [
                   "fn",
                   "row",
@@ -385,12 +384,15 @@
                     "success"
                   ]
                 ],
+                "icon": "check-circle",
                 "aggregation": "count",
-                "label": "Success",
-                "variant": "success"
+                "format": "number",
+                "label": "Success"
               },
               {
-                "format": "number",
+                "icon": "x-circle",
+                "label": "Failed",
+                "variant": "danger",
                 "filter": [
                   "fn",
                   "row",
@@ -400,18 +402,16 @@
                     "failed"
                   ]
                 ],
-                "aggregation": "count",
-                "icon": "x-circle",
-                "variant": "danger",
-                "label": "Failed"
+                "format": "number",
+                "aggregation": "count"
               },
               {
-                "label": "Avg Duration",
                 "format": "number",
+                "field": "duration",
                 "icon": "clock",
-                "variant": "default",
                 "aggregation": "avg",
-                "field": "duration"
+                "label": "Avg Duration",
+                "variant": "default"
               }
             ]
           },
@@ -430,13 +430,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "BuildGraphs",
           "config": {
-            "height": 240.0,
-            "showLegend": false,
+            "aggregation": "count",
             "title": "Builds per day",
-            "subtitle": "Volume across the past period",
-            "chartType": "bar",
+            "showLegend": false,
             "categoryField": "day",
-            "aggregation": "count"
+            "height": 240.0,
+            "subtitle": "Volume across the past period",
+            "chartType": "bar"
           },
           "listens": [
             {
@@ -454,32 +454,15 @@
           "name": "BuildBrowseList",
           "linkedEntity": "Build",
           "config": {
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "event": "VIEW",
-                "label": "View"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
-              }
-            ],
-            "cols": 1.0,
+            "gap": "sm",
             "fields": [
               {
-                "name": "id",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "id"
               },
               {
-                "variant": "h4",
                 "name": "branch",
+                "variant": "h4",
                 "icon": "git-branch"
               },
               {
@@ -487,21 +470,38 @@
                 "name": "commit"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "duration"
+                "name": "duration",
+                "variant": "caption"
               },
               {
-                "variant": "caption",
-                "format": "date",
                 "name": "startedAt",
-                "label": "Started"
+                "label": "Started",
+                "variant": "caption",
+                "format": "date"
               }
             ],
-            "gap": "sm"
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ]
           },
           "listens": [
             {
@@ -551,9 +551,9 @@
           "name": "BuildCreate",
           "linkedEntity": "Build",
           "config": {
-            "title": "Create Build",
             "icon": "plus-circle",
             "mode": "create",
+            "title": "Create Build",
             "fields": [
               "branch",
               "commit",
@@ -581,8 +581,6 @@
           "name": "BuildEdit",
           "linkedEntity": "Build",
           "config": {
-            "icon": "edit",
-            "title": "Edit Build",
             "fields": [
               "branch",
               "commit",
@@ -590,7 +588,9 @@
               "duration",
               "triggeredBy"
             ],
-            "mode": "edit"
+            "title": "Edit Build",
+            "mode": "edit",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -611,9 +611,9 @@
           "name": "BuildView",
           "linkedEntity": "Build",
           "config": {
+            "title": "View Build",
             "mode": "edit",
             "icon": "eye",
-            "title": "View Build",
             "fields": [
               "branch",
               "commit",
@@ -964,13 +964,11 @@
           "name": "StageAppLayout",
           "linkedEntity": "Stage",
           "config": {
-            "searchEvent": "STAGE_SEARCH",
-            "notifications": [],
             "navItems": [
               {
-                "label": "Builds",
                 "icon": "hammer",
-                "href": "/builds"
+                "href": "/builds",
+                "label": "Builds"
               },
               {
                 "href": "/stages",
@@ -978,14 +976,16 @@
                 "label": "Stages"
               },
               {
+                "icon": "rocket",
                 "label": "Deploy",
-                "href": "/deploy",
-                "icon": "rocket"
+                "href": "/deploy"
               }
             ],
-            "notificationClickEvent": "STAGE_NOTIFICATIONS_OPEN",
+            "appName": "CI/CD Pipeline",
             "contentTrait": "@trait.StageCatalog",
-            "appName": "CI/CD Pipeline"
+            "searchEvent": "STAGE_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "STAGE_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "STAGE_NOTIFICATIONS_OPEN",
@@ -1072,55 +1072,55 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "layers"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Stages",
-                                  "variant": "h2"
+                                  "content": "Stages"
                                 }
                               ],
-                              "align": "center",
-                              "type": "stack",
-                              "gap": "sm"
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "action": "CREATE",
-                                  "icon": "plus",
-                                  "variant": "primary",
                                   "label": "Create Stage",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "action": "CREATE",
                                   "type": "button"
                                 }
                               ],
-                              "gap": "sm"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ],
-                          "align": "center",
-                          "gap": "md"
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.StageBrowseList"
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1145,28 +1145,28 @@
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "No notifications"
                         },
                         {
-                          "content": "You're all caught up.",
-                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "You're all caught up.",
+                          "type": "typography",
+                          "variant": "caption"
                         },
                         {
-                          "label": "Back to stages",
+                          "action": "INIT",
                           "type": "button",
                           "variant": "ghost",
-                          "action": "INIT"
+                          "label": "Back to stages"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "gap": "md",
-                      "className": "py-8"
+                      "type": "stack",
+                      "className": "py-8",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1180,49 +1180,49 @@
           "name": "StageBrowseList",
           "linkedEntity": "Stage",
           "config": {
+            "gap": "sm",
             "fields": [
               {
-                "icon": "layers",
                 "variant": "h4",
+                "icon": "layers",
                 "name": "name"
               },
               {
-                "name": "buildId",
                 "variant": "caption",
-                "label": "Build"
+                "label": "Build",
+                "name": "buildId"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
-                "name": "duration",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "duration"
               },
               {
                 "name": "output",
                 "variant": "body"
               }
             ],
-            "cols": 1.0,
             "itemActions": [
               {
-                "variant": "ghost",
                 "event": "VIEW",
+                "variant": "ghost",
                 "label": "View"
               },
               {
-                "event": "EDIT",
                 "variant": "ghost",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
-                "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE",
-                "variant": "danger"
+                "label": "Delete"
               }
             ],
-            "gap": "sm"
+            "cols": 1.0
           },
           "listens": [
             {
@@ -1256,9 +1256,9 @@
           "name": "StageCreate",
           "linkedEntity": "Stage",
           "config": {
-            "title": "Create Stage",
-            "icon": "plus-circle",
             "mode": "create",
+            "icon": "plus-circle",
+            "title": "Create Stage",
             "fields": [
               "name",
               "buildId",
@@ -1286,16 +1286,16 @@
           "name": "StageEdit",
           "linkedEntity": "Stage",
           "config": {
-            "mode": "edit",
-            "icon": "edit",
-            "title": "Edit Stage",
             "fields": [
               "name",
               "buildId",
               "status",
               "duration",
               "output"
-            ]
+            ],
+            "icon": "edit",
+            "mode": "edit",
+            "title": "Edit Stage"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1316,7 +1316,6 @@
           "name": "StageView",
           "linkedEntity": "Stage",
           "config": {
-            "icon": "eye",
             "fields": [
               "name",
               "buildId",
@@ -1325,7 +1324,8 @@
               "output"
             ],
             "mode": "edit",
-            "title": "View Stage"
+            "title": "View Stage",
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1348,8 +1348,8 @@
           "config": {
             "alertMessage": "This action cannot be undone.",
             "title": "Delete Stage",
-            "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -1643,11 +1643,12 @@
           "name": "DeploymentAppLayout",
           "linkedEntity": "Deployment",
           "config": {
+            "contentTrait": "@trait.DeploymentDisplay",
             "navItems": [
               {
-                "label": "Builds",
+                "href": "/builds",
                 "icon": "hammer",
-                "href": "/builds"
+                "label": "Builds"
               },
               {
                 "label": "Stages",
@@ -1660,15 +1661,14 @@
                 "label": "Deploy"
               }
             ],
-            "contentTrait": "@trait.DeploymentDisplay",
-            "searchEvent": "DEPLOYMENT_SEARCH",
-            "appName": "CI/CD Pipeline",
             "notifications": [],
-            "notificationClickEvent": "DEPLOYMENT_NOTIFICATIONS_OPEN"
+            "appName": "CI/CD Pipeline",
+            "notificationClickEvent": "DEPLOYMENT_NOTIFICATIONS_OPEN",
+            "searchEvent": "DEPLOYMENT_SEARCH"
           },
           "events": {
-            "SEARCH": "DEPLOYMENT_SEARCH",
-            "NOTIFY_CLICK": "DEPLOYMENT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "DEPLOYMENT_NOTIFICATIONS_OPEN",
+            "SEARCH": "DEPLOYMENT_SEARCH"
           }
         },
         {
@@ -1678,23 +1678,23 @@
           "config": {
             "fields": [
               {
+                "icon": "rocket",
                 "name": "environment",
-                "variant": "h4",
-                "icon": "rocket"
+                "variant": "h4"
               },
               {
-                "variant": "badge",
-                "name": "version"
-              },
-              {
-                "name": "status",
+                "name": "version",
                 "variant": "badge"
               },
               {
-                "name": "deployedAt",
-                "format": "date",
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "label": "Deployed",
                 "variant": "caption",
-                "label": "Deployed"
+                "name": "deployedAt",
+                "format": "date"
               }
             ],
             "cols": 1.0,
@@ -1765,26 +1765,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "rocket"
+                              "name": "rocket",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "Deployments",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Deployments"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -1794,12 +1793,13 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Recent Commits"
                         },
                         "@trait.DeploymentGitHub"
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1818,16 +1818,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "type": "typography",
+                          "content": "No notifications",
                           "variant": "h3",
-                          "content": "No notifications"
+                          "type": "typography"
                         },
                         {
                           "variant": "caption",
@@ -1836,16 +1837,15 @@
                           "color": "muted"
                         },
                         {
+                          "type": "button",
                           "action": "INIT",
                           "label": "Back to deploy",
-                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-8",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1880,16 +1880,16 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "message": "Loading recent commits from GitHub…",
                           "variant": "info",
                           "type": "alert"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1902,8 +1902,8 @@
           "ref": "GitHub.traits.ServiceGithubGithub",
           "name": "DeploymentGitHub",
           "config": {
-            "repo": "repo-placeholder",
             "uiTrait": "@trait.DeploymentCommitsPanel",
+            "repo": "repo-placeholder",
             "owner": "owner-placeholder",
             "path": "",
             "ref": "main",
@@ -2082,45 +2082,45 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "upload-cloud",
                               "type": "icon"
                             },
                             {
-                              "content": "Deployment",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "Deployment"
                             }
                           ],
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "color": "muted",
-                          "content": "Ready to start deployment operation.",
+                          "type": "typography",
                           "variant": "body",
-                          "type": "typography"
+                          "content": "Ready to start deployment operation.",
+                          "color": "muted"
                         },
                         {
-                          "action": "START",
                           "type": "button",
                           "variant": "primary",
-                          "label": "Start",
-                          "icon": "play"
+                          "action": "START",
+                          "icon": "play",
+                          "label": "Start"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2134,21 +2134,21 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "title": "Deploying...",
                           "message": "Processing deployment...",
+                          "title": "Deploying...",
                           "type": "loading-state"
                         },
                         {
-                          "type": "skeleton",
-                          "variant": "text"
+                          "variant": "text",
+                          "type": "skeleton"
                         }
                       ],
-                      "align": "center",
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2165,8 +2165,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "DeploymentSaved",
-                        "failure": "DeploymentSaveFailed"
+                        "failure": "DeploymentSaveFailed",
+                        "success": "DeploymentSaved"
                       }
                     }
                   ],
@@ -2174,36 +2174,36 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "name": "check-circle",
                           "type": "icon"
                         },
                         {
-                          "message": "Deployment successful.",
+                          "type": "alert",
                           "variant": "success",
-                          "type": "alert"
+                          "message": "Deployment successful."
                         },
                         {
+                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
                           "justify": "center",
                           "children": [
                             {
                               "variant": "ghost",
-                              "label": "Reset",
                               "icon": "rotate-ccw",
+                              "type": "button",
                               "action": "RESET",
-                              "type": "button"
+                              "label": "Reset"
                             }
                           ]
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2218,39 +2218,39 @@
                     "main",
                     {
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
-                          "onRetry": "RETRY",
+                          "message": "Deployment failed.",
                           "title": "Operation Failed",
                           "type": "error-state",
-                          "message": "Deployment failed."
+                          "onRetry": "RETRY"
                         },
                         {
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "label": "Retry",
+                              "action": "RETRY",
+                              "type": "button",
+                              "icon": "refresh-cw"
+                            },
+                            {
+                              "label": "Reset",
+                              "action": "RESET",
+                              "type": "button",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
                           "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "action": "RETRY",
-                              "icon": "refresh-cw",
-                              "variant": "primary",
-                              "label": "Retry",
-                              "type": "button"
-                            },
-                            {
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "label": "Reset",
-                              "type": "button",
-                              "action": "RESET"
-                            }
-                          ]
+                          "justify": "center"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2264,12 +2264,14 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "gap": "md",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
@@ -2277,32 +2279,30 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Deployment",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
+                          "variant": "body",
                           "content": "Ready to start deployment operation.",
                           "color": "muted",
-                          "variant": "body"
+                          "type": "typography"
                         },
                         {
-                          "icon": "play",
-                          "type": "button",
-                          "label": "Start",
                           "variant": "primary",
+                          "icon": "play",
+                          "label": "Start",
+                          "type": "button",
                           "action": "START"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2318,21 +2318,21 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
                           "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "upload-cloud"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Deployment",
-                              "variant": "h2"
+                              "content": "Deployment"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -2347,13 +2347,13 @@
                           "label": "Start",
                           "type": "button",
                           "action": "START",
-                          "variant": "primary",
-                          "icon": "play"
+                          "icon": "play",
+                          "variant": "primary"
                         }
                       ],
+                      "direction": "vertical",
                       "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -2368,21 +2368,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "title": "Deploying...",
+                          "message": "Processing deployment...",
                           "type": "loading-state",
-                          "message": "Processing deployment..."
+                          "title": "Deploying..."
                         },
                         {
-                          "type": "skeleton",
-                          "variant": "text"
+                          "variant": "text",
+                          "type": "skeleton"
                         }
                       ],
+                      "type": "stack",
                       "align": "center",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]

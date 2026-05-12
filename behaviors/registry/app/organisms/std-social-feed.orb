@@ -87,27 +87,27 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "PostAppLayout",
           "config": {
-            "appName": "SocialFeed",
+            "notifications": [],
+            "notificationClickEvent": "POST_NOTIFICATIONS_OPEN",
+            "searchEvent": "POST_SEARCH",
             "navItems": [
               {
                 "label": "Feed",
-                "href": "/feed",
-                "icon": "rss"
+                "icon": "rss",
+                "href": "/feed"
               },
               {
-                "icon": "message-circle",
                 "href": "/comments",
+                "icon": "message-circle",
                 "label": "Comments"
               }
             ],
-            "searchEvent": "POST_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "POST_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.FeedCatalog"
+            "contentTrait": "@trait.FeedCatalog",
+            "appName": "SocialFeed"
           },
           "events": {
-            "NOTIFY_CLICK": "POST_NOTIFICATIONS_OPEN",
-            "SEARCH": "POST_SEARCH"
+            "SEARCH": "POST_SEARCH",
+            "NOTIFY_CLICK": "POST_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -192,42 +192,42 @@
                     {
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "align": "center",
                               "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "rss"
+                                  "name": "rss",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Feed",
                                   "variant": "h2",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "stack",
+                              "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
-                                  "label": "New Post",
                                   "action": "CREATE",
-                                  "icon": "plus"
+                                  "icon": "plus",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "label": "New Post"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
                           "justify": "between",
                           "align": "center"
                         },
@@ -235,13 +235,13 @@
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             "@trait.PostSearch"
                           ],
-                          "align": "center",
                           "gap": "md",
-                          "type": "stack"
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         "@trait.PostStats",
                         {
@@ -250,8 +250,8 @@
                         "@trait.PostBrowseList"
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -270,34 +270,34 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
+                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
+                          "variant": "h3",
                           "content": "No notifications"
                         },
                         {
-                          "content": "You're all caught up.",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "variant": "caption"
                         },
                         {
                           "type": "button",
-                          "variant": "ghost",
+                          "label": "Back to feed",
                           "action": "INIT",
-                          "label": "Back to feed"
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical"
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -310,24 +310,27 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "PostSearch",
           "config": {
-            "placeholder": "Search posts…",
-            "event": "POST_SEARCH"
+            "event": "POST_SEARCH",
+            "placeholder": "Search posts…"
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "PostStats",
           "config": {
-            "title": "Feed",
             "metrics": [
               {
                 "format": "number",
+                "icon": "rss",
                 "aggregation": "count",
-                "variant": "primary",
                 "label": "Total Posts",
-                "icon": "rss"
+                "variant": "primary"
               },
               {
+                "format": "number",
+                "label": "Today",
+                "aggregation": "count",
+                "variant": "info",
                 "filter": [
                   "fn",
                   "row",
@@ -337,29 +340,26 @@
                     "today"
                   ]
                 ],
-                "icon": "calendar",
-                "variant": "info",
-                "label": "Today",
-                "format": "number",
-                "aggregation": "count"
+                "icon": "calendar"
               },
               {
-                "field": "author",
-                "aggregation": "mode",
-                "icon": "user",
-                "label": "Top Author",
                 "variant": "default",
-                "format": "text"
+                "format": "text",
+                "aggregation": "mode",
+                "label": "Top Author",
+                "field": "author",
+                "icon": "user"
               },
               {
                 "icon": "hash",
+                "field": "tag",
+                "aggregation": "mode",
                 "format": "text",
                 "label": "Top Tag",
-                "field": "tag",
-                "variant": "warning",
-                "aggregation": "mode"
+                "variant": "warning"
               }
-            ]
+            ],
+            "title": "Feed"
           },
           "listens": [
             {
@@ -379,18 +379,18 @@
           "config": {
             "fields": [
               {
-                "variant": "h4",
+                "name": "author",
                 "icon": "user",
-                "name": "author"
+                "variant": "h4"
               },
               {
-                "name": "content",
-                "variant": "body"
+                "variant": "body",
+                "name": "content"
               },
               {
-                "name": "timestamp",
                 "variant": "caption",
-                "format": "date"
+                "format": "date",
+                "name": "timestamp"
               },
               {
                 "format": "number",
@@ -398,8 +398,10 @@
                 "variant": "badge"
               }
             ],
-            "variant": "card",
             "cols": 1.0,
+            "imageField": "image",
+            "gap": "md",
+            "variant": "card",
             "itemActions": [
               {
                 "variant": "ghost",
@@ -407,18 +409,16 @@
                 "label": "View"
               },
               {
+                "label": "Edit",
                 "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
+                "variant": "ghost"
               },
               {
-                "label": "Delete",
                 "variant": "danger",
+                "label": "Delete",
                 "event": "DELETE"
               }
-            ],
-            "imageField": "image",
-            "gap": "md"
+            ]
           },
           "listens": [
             {
@@ -461,14 +461,14 @@
           "linkedEntity": "Post",
           "config": {
             "title": "New Post",
+            "mode": "create",
             "fields": [
               "author",
               "content",
               "image",
               "tag"
             ],
-            "icon": "plus-circle",
-            "mode": "create"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -489,15 +489,15 @@
           "name": "PostEdit",
           "linkedEntity": "Post",
           "config": {
+            "icon": "edit",
             "mode": "edit",
+            "title": "Edit Post",
             "fields": [
               "author",
               "content",
               "image",
               "tag"
-            ],
-            "title": "Edit Post",
-            "icon": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -518,8 +518,8 @@
           "name": "PostView",
           "linkedEntity": "Post",
           "config": {
-            "icon": "eye",
             "title": "View Post",
+            "icon": "eye",
             "mode": "edit",
             "fields": [
               "author",
@@ -548,8 +548,8 @@
           "name": "PostDeleteConfirm",
           "linkedEntity": "Post",
           "config": {
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
+            "confirmLabel": "Delete",
             "title": "Delete Post",
             "alertMessage": "This action cannot be undone."
           },
@@ -572,15 +572,15 @@
           "ref": "Storage.traits.ServiceStorageStorage",
           "name": "PostImageUpload",
           "config": {
-            "acl": "public",
-            "maxSize": 10485760.0,
             "allowedMimeTypes": [
               "image/png",
               "image/jpeg",
               "image/gif",
               "image/webp"
             ],
+            "maxSize": 10485760.0,
             "uiTrait": "@trait.PostImageUploadForm",
+            "acl": "public",
             "bucket": "social-feed-images"
           }
         },
@@ -630,13 +630,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
                           "variant": "caption",
-                          "content": "Attach an image",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Attach an image"
                         },
                         {
                           "type": "input",
@@ -644,14 +644,14 @@
                           "inputType": "text"
                         },
                         {
-                          "variant": "ghost",
-                          "action": "UPLOAD",
-                          "type": "button",
                           "icon": "upload",
-                          "label": "Upload"
+                          "type": "button",
+                          "action": "UPLOAD",
+                          "label": "Upload",
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -919,22 +919,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
                       "direction": "horizontal",
                       "gap": "sm",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "button",
-                          "variant": "ghost",
-                          "action": "LIKE",
+                          "icon": "heart",
                           "label": "Like",
-                          "icon": "heart"
+                          "type": "button",
+                          "action": "LIKE",
+                          "variant": "ghost"
                         },
                         {
-                          "content": "@entity.likes",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "@entity.likes"
                         }
                       ]
                     }
@@ -1076,23 +1076,23 @@
           "name": "CommentAppLayout",
           "linkedEntity": "Comment",
           "config": {
-            "notificationClickEvent": "COMMENT_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.CommentDisplay",
+            "notifications": [],
             "appName": "SocialFeed",
+            "contentTrait": "@trait.CommentDisplay",
+            "searchEvent": "COMMENT_SEARCH",
             "navItems": [
               {
-                "label": "Feed",
+                "icon": "rss",
                 "href": "/feed",
-                "icon": "rss"
+                "label": "Feed"
               },
               {
-                "icon": "message-circle",
                 "href": "/comments",
-                "label": "Comments"
+                "label": "Comments",
+                "icon": "message-circle"
               }
             ],
-            "searchEvent": "COMMENT_SEARCH",
-            "notifications": []
+            "notificationClickEvent": "COMMENT_NOTIFICATIONS_OPEN"
           },
           "events": {
             "SEARCH": "COMMENT_SEARCH",
@@ -1181,44 +1181,44 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
                           "justify": "between",
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "name": "message-circle",
                                   "type": "icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Comments",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
+                              "type": "stack",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "icon": "edit",
-                                  "label": "New Comment",
                                   "action": "CREATE",
-                                  "type": "button",
-                                  "variant": "primary"
+                                  "label": "New Comment",
+                                  "variant": "primary",
+                                  "icon": "edit",
+                                  "type": "button"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1227,8 +1227,8 @@
                       ],
                       "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full"
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1247,34 +1247,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
+                      "direction": "vertical",
                       "className": "py-8",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "type": "typography"
                         },
                         {
                           "type": "typography",
+                          "content": "You're all caught up.",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "You're all caught up."
+                          "color": "muted"
                         },
                         {
                           "label": "Back to comments",
                           "type": "button",
-                          "action": "INIT",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1290,40 +1290,40 @@
           "config": {
             "fields": [
               {
+                "icon": "user",
                 "variant": "h4",
-                "name": "author",
-                "icon": "user"
+                "name": "author"
               },
               {
-                "variant": "body",
-                "name": "body"
+                "name": "body",
+                "variant": "body"
               },
               {
                 "format": "date",
-                "name": "createdAt",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "createdAt"
+              }
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
               }
             ],
             "cols": 1.0,
             "gap": "sm",
-            "variant": "card",
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "label": "View",
-                "variant": "ghost"
-              },
-              {
-                "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
-              },
-              {
-                "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
-              }
-            ]
+            "variant": "card"
           },
           "listens": [
             {
@@ -1362,8 +1362,8 @@
               "author",
               "body"
             ],
-            "mode": "create",
             "title": "New Comment",
+            "mode": "create",
             "icon": "plus-circle"
           },
           "events": {
@@ -1385,14 +1385,14 @@
           "name": "CommentEdit",
           "linkedEntity": "Comment",
           "config": {
-            "title": "Edit Comment",
-            "icon": "edit",
-            "mode": "edit",
             "fields": [
               "postId",
               "author",
               "body"
-            ]
+            ],
+            "mode": "edit",
+            "icon": "edit",
+            "title": "Edit Comment"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1413,15 +1413,15 @@
           "name": "CommentView",
           "linkedEntity": "Comment",
           "config": {
-            "icon": "eye",
             "fields": [
               "postId",
               "author",
               "body",
               "createdAt"
             ],
-            "title": "View Comment",
-            "mode": "edit"
+            "icon": "eye",
+            "mode": "edit",
+            "title": "View Comment"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1444,8 +1444,8 @@
           "config": {
             "icon": "alert-triangle",
             "title": "Delete Comment",
-            "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone."
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",

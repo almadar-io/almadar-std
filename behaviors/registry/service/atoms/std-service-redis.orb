@@ -121,76 +121,76 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "database",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "database"
                             },
                             {
-                              "content": "Redis Cache",
                               "variant": "h2",
+                              "content": "Redis Cache",
                               "type": "typography"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
+                              "type": "select",
                               "options": [
                                 {
-                                  "label": "Get",
-                                  "value": "get"
+                                  "value": "get",
+                                  "label": "Get"
                                 },
                                 {
-                                  "label": "Set",
-                                  "value": "set"
+                                  "value": "set",
+                                  "label": "Set"
                                 },
                                 {
                                   "value": "del",
                                   "label": "Delete"
                                 }
-                              ],
-                              "type": "select"
+                              ]
                             },
                             {
                               "type": "input",
                               "placeholder": "cache-key"
                             },
                             {
-                              "placeholder": "cache-value",
-                              "type": "input"
+                              "type": "input",
+                              "placeholder": "cache-value"
                             },
                             {
                               "type": "input",
                               "inputType": "number",
                               "placeholder": "ttl seconds"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical"
+                          ]
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
-                          "label": "Execute",
                           "action": "EXEC",
-                          "icon": "play"
+                          "variant": "primary",
+                          "icon": "play",
+                          "label": "Execute",
+                          "type": "button"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -385,8 +385,8 @@
                     "ServiceRedis",
                     {
                       "emit": {
-                        "failure": "ServiceRedisLoadFailed",
-                        "success": "ServiceRedisLoaded"
+                        "success": "ServiceRedisLoaded",
+                        "failure": "ServiceRedisLoadFailed"
                       }
                     }
                   ],
@@ -394,12 +394,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -414,8 +414,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "title": "Executing...",
-                      "message": "Running redis operation..."
+                      "message": "Running redis operation...",
+                      "title": "Executing..."
                     }
                   ],
                   [
@@ -424,8 +424,8 @@
                     "@config.op",
                     {
                       "key": "@config.key",
-                      "ttl": "@config.ttl",
-                      "value": "@config.value"
+                      "value": "@config.value",
+                      "ttl": "@config.ttl"
                     },
                     {
                       "emit": {
@@ -465,34 +465,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
-                          "variant": "success",
                           "message": "Operation complete",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "success"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "content": "@entity.result",
+                          "type": "typography",
                           "variant": "body"
                         },
                         {
-                          "label": "Reset",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
+                          "action": "RESET",
                           "type": "button",
-                          "action": "RESET"
+                          "variant": "ghost",
+                          "label": "Reset",
+                          "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -519,10 +519,10 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RESET",
-                      "message": "@entity.error",
                       "title": "Redis Error",
-                      "type": "error-state"
+                      "type": "error-state",
+                      "message": "@entity.error",
+                      "onRetry": "RESET"
                     }
                   ]
                 ]
@@ -536,11 +536,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -565,12 +565,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -578,7 +578,11 @@
             ]
           },
           "config": {
-            "key": {
+            "ttl": {
+              "type": "number",
+              "default": 0.0
+            },
+            "value": {
               "type": "string",
               "default": ""
             },
@@ -591,17 +595,13 @@
                 "del"
               ]
             },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceRedisDefaultForm"
-            },
-            "value": {
+            "key": {
               "type": "string",
               "default": ""
             },
-            "ttl": {
-              "type": "number",
-              "default": 0.0
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceRedisDefaultForm"
             }
           },
           "scope": "instance"

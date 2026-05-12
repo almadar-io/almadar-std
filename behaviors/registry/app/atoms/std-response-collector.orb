@@ -264,22 +264,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading responses…",
                           "variant": "caption",
+                          "content": "Loading responses…",
                           "type": "typography",
                           "color": "muted"
                         }
-                      ],
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -294,10 +294,12 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "@config.title",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
@@ -308,30 +310,28 @@
                               "name": "questionId"
                             },
                             {
-                              "name": "respondentId",
-                              "label": "Respondent"
+                              "label": "Respondent",
+                              "name": "respondentId"
                             },
                             {
-                              "name": "answerJson",
-                              "label": "Answer"
+                              "label": "Answer",
+                              "name": "answerJson"
                             },
                             {
-                              "name": "submittedAt",
-                              "label": "Submitted"
+                              "label": "Submitted",
+                              "name": "submittedAt"
                             }
                           ],
                           "itemActions": [
                             {
-                              "icon": "eye",
+                              "event": "SUBMIT",
                               "label": "View",
-                              "event": "SUBMIT"
+                              "icon": "eye"
                             }
                           ],
                           "entity": "@payload.data"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -345,9 +345,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -384,8 +384,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ResponseSubmitFailed",
-                        "success": "ResponseSubmitted"
+                        "success": "ResponseSubmitted",
+                        "failure": "ResponseSubmitFailed"
                       }
                     }
                   ],
@@ -393,22 +393,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Submitting response…",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -417,61 +417,6 @@
                 "from": "submitting",
                 "to": "loading",
                 "event": "ResponseSubmitted",
-                "effects": [
-                  [
-                    "fetch",
-                    "Response",
-                    {
-                      "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Refreshing responses…",
-                          "type": "typography"
-                        }
-                      ],
-                      "gap": "md",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "submitting",
-                "to": "error",
-                "event": "ResponseSubmitFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -487,6 +432,63 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Refreshing responses…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "submitting",
+                "to": "error",
+                "event": "ResponseSubmitFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Response",
+                    {
+                      "emit": {
+                        "success": "ResponseLoaded",
+                        "failure": "ResponseLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
                       "className": "py-12",
@@ -495,14 +497,12 @@
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Loading responses…",
                           "variant": "caption",
-                          "color": "muted",
                           "type": "typography"
                         }
-                      ],
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]

@@ -201,8 +201,8 @@
                     "CourtDeadline",
                     {
                       "emit": {
-                        "failure": "CourtDeadlineLoadFailed",
-                        "success": "CourtDeadlineLoaded"
+                        "success": "CourtDeadlineLoaded",
+                        "failure": "CourtDeadlineLoadFailed"
                       }
                     }
                   ],
@@ -224,98 +224,105 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "date-range-selector",
                           "options": [
                             {
-                              "label": "This Week",
-                              "value": "this-week"
+                              "value": "this-week",
+                              "label": "This Week"
                             },
                             {
-                              "value": "this-month",
-                              "label": "This Month"
+                              "label": "This Month",
+                              "value": "this-month"
                             },
                             {
                               "value": "this-quarter",
                               "label": "This Quarter"
                             },
                             {
-                              "label": "This Year",
-                              "value": "this-year"
+                              "value": "this-year",
+                              "label": "This Year"
                             }
                           ],
-                          "selected": "this-month"
+                          "selected": "this-month",
+                          "type": "date-range-selector"
                         },
                         {
-                          "title": "Deadline Chronology",
                           "fields": [
                             "title",
                             "date",
                             "status",
                             "description"
                           ],
-                          "type": "timeline",
                           "items": [
                             {
+                              "status": "complete",
                               "id": "filing",
-                              "status": "completed",
-                              "date": "2026-01-15",
+                              "title": "Filing",
                               "description": "Initial filing submitted",
-                              "title": "Filing"
+                              "date": "2026-01-15"
                             },
                             {
-                              "date": "2026-02-20",
                               "description": "Defendant response due",
-                              "status": "current",
                               "id": "response",
+                              "date": "2026-02-20",
+                              "status": "active",
                               "title": "Response"
                             },
                             {
-                              "status": "upcoming",
+                              "title": "Discovery",
                               "date": "2026-04-10",
-                              "description": "Discovery cutoff",
                               "id": "discovery",
-                              "title": "Discovery"
+                              "status": "pending",
+                              "description": "Discovery cutoff"
                             },
                             {
-                              "date": "2026-06-15",
-                              "id": "hearing",
-                              "status": "upcoming",
+                              "title": "Hearing",
+                              "status": "pending",
                               "description": "Pretrial hearing",
-                              "title": "Hearing"
+                              "id": "hearing",
+                              "date": "2026-06-15"
                             },
                             {
+                              "id": "trial",
                               "title": "Trial",
-                              "status": "upcoming",
                               "date": "2026-09-01",
-                              "description": "Trial date",
-                              "id": "trial"
+                              "status": "pending",
+                              "description": "Trial date"
                             }
-                          ]
+                          ],
+                          "type": "timeline",
+                          "title": "Deadline Chronology"
                         },
                         {
-                          "entity": "@payload.data",
-                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Complete",
+                              "event": "MARK_COMPLETED"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Extend",
+                              "event": "EXTEND_DEADLINE"
+                            }
+                          ],
                           "gap": "sm",
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "name": "title",
                               "variant": "caption",
-                              "label": "Title"
+                              "label": "Title",
+                              "name": "title"
                             },
                             {
+                              "label": "Type",
                               "variant": "badge",
-                              "name": "deadlineType",
-                              "label": "Type"
+                              "name": "deadlineType"
                             },
                             {
+                              "variant": "caption",
                               "name": "dueAt",
-                              "label": "Due",
-                              "variant": "caption"
+                              "label": "Due"
                             },
                             {
                               "name": "jurisdiction",
@@ -323,31 +330,24 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "assignedTo",
                               "label": "Assigned",
+                              "name": "assignedTo",
                               "variant": "caption"
                             },
                             {
-                              "variant": "badge",
                               "label": "Status",
+                              "variant": "badge",
                               "name": "status"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "label": "Complete",
-                              "event": "MARK_COMPLETED",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Extend",
-                              "event": "EXTEND_DEADLINE",
-                              "variant": "ghost"
-                            }
-                          ]
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "entity": "@payload.data"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -361,9 +361,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -382,8 +382,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "Deadline completed",
+                      "type": "alert",
                       "variant": "success"
                     }
                   ]
@@ -403,9 +403,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "info",
                       "type": "alert",
-                      "message": "Deadline extended",
-                      "variant": "info"
+                      "message": "Deadline extended"
                     }
                   ]
                 ]
