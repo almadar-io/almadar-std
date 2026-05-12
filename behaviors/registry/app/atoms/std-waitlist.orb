@@ -1,7 +1,7 @@
 {
   "name": "std-waitlist",
   "version": "1.0.0",
-  "description": "std-waitlist — sorted queue with auto-promote-on-cancel. Owns a WaitlistEntry entity (one row per (targetId, userId)); JOIN appends a waiting entry, PROMOTE flips status to promoted, CANCEL flips status to cancelled and emits WaitlistEntryCancelled so a parent molecule can promote the next waiting entry.",
+  "description": "std-waitlist — sorted queue with auto-promote-on-cancel. Lists waitlist entries in `browsing`; opens detail in `viewing_single` with Promote / Cancel actions.",
   "orbitals": [
     {
       "name": "WaitlistOrbital",
@@ -67,19 +67,58 @@
           "linkedEntity": "WaitlistEntry",
           "emits": [
             {
-              "event": "JOIN",
+              "event": "OPEN_ENTRY",
               "payloadSchema": [
                 {
-                  "name": "targetId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
                 {
-                  "name": "userId",
+                  "name": "row.id",
                   "type": "string",
                   "required": true
+                },
+                {
+                  "name": "row.targetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.userId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.position",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.joinedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.promotedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notifiedAt",
+                  "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "PROMOTE",
@@ -204,157 +243,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "WaitlistEntryJoined",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.userId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.position",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.joinedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.promotedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.notifiedAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "WaitlistEntryPromoted",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.userId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.position",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.joinedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.promotedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.notifiedAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "WaitlistEntryCancelled",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.targetType",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.userId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.position",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.joinedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.promotedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.notifiedAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "WaitlistEntryFailed",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -365,6 +253,9 @@
               },
               {
                 "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -400,27 +291,11 @@
                 ]
               },
               {
-                "key": "JOIN",
-                "name": "Join",
+                "key": "OPEN_ENTRY",
+                "name": "Open Entry",
                 "payloadSchema": [
                   {
-                    "name": "targetId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "userId",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PROMOTE",
-                "name": "Promote",
-                "payloadSchema": [
-                  {
-                    "name": "entryId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -446,46 +321,21 @@
                 ]
               },
               {
-                "key": "WaitlistEntryJoined",
-                "name": "WaitlistEntry joined",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "WaitlistEntry"
-                  }
-                ]
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               },
               {
-                "key": "WaitlistEntryPromoted",
-                "name": "WaitlistEntry promoted",
+                "key": "PROMOTE",
+                "name": "Promote",
                 "payloadSchema": [
                   {
-                    "name": "row",
-                    "type": "WaitlistEntry"
-                  }
-                ]
-              },
-              {
-                "key": "WaitlistEntryCancelled",
-                "name": "WaitlistEntry cancelled",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "WaitlistEntry"
-                  }
-                ]
-              },
-              {
-                "key": "WaitlistEntryFailed",
-                "name": "WaitlistEntry failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
+                    "name": "entryId",
+                    "type": "string",
+                    "required": true
                   },
                   {
-                    "name": "code",
-                    "type": "string"
+                    "name": "row",
+                    "type": "WaitlistEntry"
                   }
                 ]
               }
@@ -513,6 +363,7 @@
                       "direction": "vertical",
                       "gap": "md",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -520,11 +371,10 @@
                         {
                           "color": "muted",
                           "type": "typography",
-                          "content": "Loading waitlist…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading waitlist…"
                         }
                       ],
-                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -539,14 +389,13 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -554,8 +403,40 @@
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Total entries",
+                              "value": "@payload.data.length",
+                              "icon": "users"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "126",
+                              "icon": "hourglass",
+                              "label": "Waiting"
+                            },
+                            {
+                              "label": "Promoted 7d",
+                              "icon": "arrow-up",
+                              "type": "stat-display",
+                              "value": "24"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Avg wait time",
+                              "icon": "clock",
+                              "value": "3d"
                             }
                           ]
                         },
@@ -564,11 +445,28 @@
                         },
                         {
                           "gap": "sm",
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "event": "OPEN_ENTRY",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "icon": "x",
+                              "event": "CANCEL",
+                              "label": "Cancel",
+                              "variant": "danger"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "variant": "badge",
+                              "label": "#",
                               "name": "position",
-                              "label": "#"
+                              "variant": "badge"
                             },
                             {
                               "label": "User",
@@ -577,44 +475,20 @@
                             },
                             {
                               "label": "Type",
-                              "name": "targetType",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "targetType"
                             },
                             {
-                              "label": "Status",
+                              "variant": "badge",
                               "name": "status",
-                              "variant": "badge"
+                              "label": "Status"
                             },
                             {
-                              "variant": "caption",
                               "name": "joinedAt",
-                              "label": "Joined"
+                              "label": "Joined",
+                              "variant": "caption"
                             }
-                          ],
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "label": "Promote",
-                              "event": "PROMOTE",
-                              "icon": "arrow-up"
-                            },
-                            {
-                              "event": "CANCEL",
-                              "icon": "x",
-                              "variant": "danger",
-                              "label": "Cancel"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "type": "data-grid"
-                        },
-                        {
-                          "icon": "user-plus",
-                          "type": "button",
-                          "variant": "secondary",
-                          "label": "Join Waitlist",
-                          "action": "JOIN"
+                          ]
                         }
                       ]
                     }
@@ -639,58 +513,198 @@
               },
               {
                 "from": "browsing",
-                "to": "loading",
-                "event": "JOIN",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.targetId",
-                    "@payload.targetId"
-                  ],
-                  [
-                    "set",
-                    "@entity.userId",
-                    "@payload.userId"
-                  ],
-                  [
-                    "persist",
-                    "create",
-                    "WaitlistEntry",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "WaitlistEntryJoined",
-                        "failure": "WaitlistEntryFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "PROMOTE",
+                "to": "viewing_single",
+                "event": "OPEN_ENTRY",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.entryId"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetId",
+                    "@payload.row.targetId"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetType",
+                    "@payload.row.targetType"
+                  ],
+                  [
+                    "set",
+                    "@entity.userId",
+                    "@payload.row.userId"
+                  ],
+                  [
+                    "set",
+                    "@entity.position",
+                    "@payload.row.position"
                   ],
                   [
                     "set",
                     "@entity.status",
-                    "promoted"
+                    "@payload.row.status"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "WaitlistEntry",
-                    "@entity",
+                    "set",
+                    "@entity.joinedAt",
+                    "@payload.row.joinedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.promotedAt",
+                    "@payload.row.promotedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.notifiedAt",
+                    "@payload.row.notifiedAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "WaitlistEntryFailed",
-                        "success": "WaitlistEntryPromoted"
-                      }
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "users"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.userId"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "type": "badge",
+                              "variant": "primary"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Target",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.targetId",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Target type",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.targetType"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.position",
+                              "label": "Position",
+                              "icon": "hash"
+                            },
+                            {
+                              "value": "@entity.joinedAt",
+                              "type": "stat-display",
+                              "label": "Joined",
+                              "icon": "calendar"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Promoted",
+                              "icon": "arrow-up",
+                              "value": "@entity.promotedAt"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Notified",
+                              "icon": "bell",
+                              "value": "@entity.notifiedAt"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "action": "PROMOTE",
+                              "actionPayload": {
+                                "row": "@entity",
+                                "entryId": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Promote"
+                            },
+                            {
+                              "label": "Cancel",
+                              "type": "button",
+                              "actionPayload": {
+                                "entryId": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "action": "CANCEL",
+                              "variant": "danger"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -706,62 +720,43 @@
                     "@payload.entryId"
                   ],
                   [
-                    "set",
-                    "@entity.status",
-                    "cancelled"
+                    "fetch",
+                    "WaitlistEntry",
+                    {
+                      "emit": {
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
+                      }
+                    }
                   ],
                   [
-                    "persist",
-                    "update",
-                    "WaitlistEntry",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "WaitlistEntryFailed",
-                        "success": "WaitlistEntryCancelled"
-                      }
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Cancelling entry…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "WaitlistEntryJoined",
-                "effects": [
-                  [
-                    "fetch",
-                    "WaitlistEntry",
-                    {
-                      "emit": {
-                        "success": "WaitlistEntryLoaded",
-                        "failure": "WaitlistEntryLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "WaitlistEntryPromoted",
-                "effects": [
-                  [
-                    "fetch",
-                    "WaitlistEntry",
-                    {
-                      "emit": {
-                        "success": "WaitlistEntryLoaded",
-                        "failure": "WaitlistEntryLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "WaitlistEntryCancelled",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -772,21 +767,115 @@
                         "success": "WaitlistEntryLoaded"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "WaitlistEntryFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading waitlist…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "PROMOTE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entryId"
+                  ],
+                  [
+                    "fetch",
+                    "WaitlistEntry",
+                    {
+                      "emit": {
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Promoting entry…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entryId"
+                  ],
+                  [
+                    "fetch",
+                    "WaitlistEntry",
+                    {
+                      "emit": {
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Cancelling entry…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]

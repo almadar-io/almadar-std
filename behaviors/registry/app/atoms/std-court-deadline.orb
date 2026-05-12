@@ -1,7 +1,7 @@
 {
   "name": "std-court-deadline",
   "version": "1.0.0",
-  "description": "std-court-deadline — statutory filing deadline tied to a legal matter. Browses deadlines in a data-grid with Complete / Extend row actions.",
+  "description": "std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions.",
   "orbitals": [
     {
       "name": "CourtDeadlineOrbital",
@@ -83,6 +83,63 @@
           "linkedEntity": "CourtDeadline",
           "emits": [
             {
+              "event": "OPEN_DEADLINE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.matterId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.deadlineType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.dueAt",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.jurisdiction",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reminderSent",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "MARK_COMPLETED",
               "payloadSchema": [
                 {
@@ -135,6 +192,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -168,6 +228,21 @@
                 ]
               },
               {
+                "key": "OPEN_DEADLINE",
+                "name": "Open Deadline",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "CourtDeadline"
+                  }
+                ]
+              },
+              {
                 "key": "MARK_COMPLETED",
                 "name": "Mark Completed",
                 "payloadSchema": [
@@ -177,6 +252,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               },
               {
                 "key": "EXTEND_DEADLINE",
@@ -210,7 +289,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading deadlines…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -226,128 +320,110 @@
                     {
                       "children": [
                         {
-                          "options": [
+                          "children": [
                             {
-                              "value": "this-week",
-                              "label": "This Week"
+                              "type": "icon",
+                              "name": "calendar-clock"
                             },
                             {
-                              "label": "This Month",
-                              "value": "this-month"
-                            },
-                            {
-                              "value": "this-quarter",
-                              "label": "This Quarter"
-                            },
-                            {
-                              "value": "this-year",
-                              "label": "This Year"
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "selected": "this-month",
-                          "type": "date-range-selector"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
-                          "fields": [
-                            "title",
-                            "date",
-                            "status",
-                            "description"
-                          ],
-                          "items": [
+                          "type": "simple-grid",
+                          "children": [
                             {
-                              "status": "complete",
-                              "id": "filing",
-                              "title": "Filing",
-                              "description": "Initial filing submitted",
-                              "date": "2026-01-15"
+                              "type": "stat-display",
+                              "label": "Total deadlines",
+                              "value": "@payload.data.length",
+                              "icon": "calendar-clock"
                             },
                             {
-                              "description": "Defendant response due",
-                              "id": "response",
-                              "date": "2026-02-20",
-                              "status": "active",
-                              "title": "Response"
+                              "type": "stat-display",
+                              "value": "7",
+                              "icon": "alert-triangle",
+                              "label": "Due this week"
                             },
                             {
-                              "title": "Discovery",
-                              "date": "2026-04-10",
-                              "id": "discovery",
-                              "status": "pending",
-                              "description": "Discovery cutoff"
+                              "label": "Completed",
+                              "icon": "check-circle",
+                              "value": "84%",
+                              "type": "stat-display"
                             },
                             {
-                              "title": "Hearing",
-                              "status": "pending",
-                              "description": "Pretrial hearing",
-                              "id": "hearing",
-                              "date": "2026-06-15"
-                            },
-                            {
-                              "id": "trial",
-                              "title": "Trial",
-                              "date": "2026-09-01",
-                              "status": "pending",
-                              "description": "Trial date"
+                              "value": "2",
+                              "type": "stat-display",
+                              "label": "Missed YTD",
+                              "icon": "x-circle"
                             }
                           ],
-                          "type": "timeline",
-                          "title": "Deadline Chronology"
+                          "cols": 4.0
+                        },
+                        {
+                          "type": "divider"
                         },
                         {
                           "itemActions": [
                             {
                               "variant": "primary",
-                              "label": "Complete",
-                              "event": "MARK_COMPLETED"
+                              "icon": "arrow-right",
+                              "label": "Open",
+                              "event": "OPEN_DEADLINE"
                             },
                             {
-                              "variant": "ghost",
-                              "label": "Extend",
-                              "event": "EXTEND_DEADLINE"
+                              "event": "MARK_COMPLETED",
+                              "label": "Complete",
+                              "variant": "danger"
                             }
                           ],
                           "gap": "sm",
+                          "type": "data-grid",
                           "fields": [
                             {
                               "variant": "caption",
-                              "label": "Title",
-                              "name": "title"
+                              "name": "title",
+                              "label": "Title"
                             },
                             {
-                              "label": "Type",
                               "variant": "badge",
-                              "name": "deadlineType"
+                              "name": "deadlineType",
+                              "label": "Type"
                             },
                             {
+                              "label": "Due",
                               "variant": "caption",
-                              "name": "dueAt",
-                              "label": "Due"
+                              "name": "dueAt"
                             },
                             {
                               "name": "jurisdiction",
-                              "label": "Jurisdiction",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Jurisdiction"
                             },
                             {
-                              "label": "Assigned",
+                              "variant": "caption",
                               "name": "assignedTo",
-                              "variant": "caption"
+                              "label": "Assigned"
                             },
                             {
+                              "name": "status",
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "variant": "badge"
                             }
                           ],
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "cols": 1.0
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -362,15 +438,240 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_DEADLINE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.matterId",
+                    "@payload.row.matterId"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@payload.row.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.deadlineType",
+                    "@payload.row.deadlineType"
+                  ],
+                  [
+                    "set",
+                    "@entity.dueAt",
+                    "@payload.row.dueAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.jurisdiction",
+                    "@payload.row.jurisdiction"
+                  ],
+                  [
+                    "set",
+                    "@entity.assignedTo",
+                    "@payload.row.assignedTo"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "calendar-clock"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.title"
+                            },
+                            {
+                              "label": "@entity.deadlineType",
+                              "variant": "primary",
+                              "type": "badge"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "variant": "default",
+                              "type": "badge"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Matter"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.matterId",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Jurisdiction",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.jurisdiction"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Assigned to",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.assignedTo"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Notes",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.notes",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Due",
+                              "icon": "calendar",
+                              "value": "@entity.dueAt"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "tag",
+                              "label": "Status",
+                              "value": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "action": "MARK_COMPLETED",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Mark Complete"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "EXTEND_DEADLINE",
+                              "label": "Extend",
+                              "variant": "secondary",
+                              "type": "button"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
                 "event": "MARK_COMPLETED",
                 "effects": [
                   [
@@ -378,43 +679,6 @@
                     "@entity.id",
                     "@payload.id"
                   ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "Deadline completed",
-                      "type": "alert",
-                      "variant": "success"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "EXTEND_DEADLINE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "info",
-                      "type": "alert",
-                      "message": "Deadline extended"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
                   [
                     "fetch",
                     "CourtDeadline",
@@ -429,6 +693,173 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Completing deadline…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "CourtDeadline",
+                    {
+                      "emit": {
+                        "failure": "CourtDeadlineLoadFailed",
+                        "success": "CourtDeadlineLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading deadlines…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MARK_COMPLETED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CourtDeadline",
+                    {
+                      "emit": {
+                        "success": "CourtDeadlineLoaded",
+                        "failure": "CourtDeadlineLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Completing deadline…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "EXTEND_DEADLINE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CourtDeadline",
+                    {
+                      "emit": {
+                        "failure": "CourtDeadlineLoadFailed",
+                        "success": "CourtDeadlineLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Extending deadline…",
+                          "color": "muted"
+                        }
+                      ],
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CourtDeadline",
+                    {
+                      "emit": {
+                        "failure": "CourtDeadlineLoadFailed",
+                        "success": "CourtDeadlineLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
                       "type": "spinner"
                     }
                   ]

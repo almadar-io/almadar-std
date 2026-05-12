@@ -430,16 +430,6 @@
               "event": "CANCEL_EDIT"
             },
             {
-              "event": "UPLOAD",
-              "payloadSchema": [
-                {
-                  "name": "files",
-                  "type": "object",
-                  "required": true
-                }
-              ]
-            },
-            {
               "event": "ApplicationLoaded",
               "description": "Fired when the Application collection finishes loading; payload.data holds the list",
               "scope": "internal",
@@ -679,17 +669,6 @@
                 ]
               },
               {
-                "key": "UPLOAD",
-                "name": "Upload",
-                "payloadSchema": [
-                  {
-                    "name": "files",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
                 "key": "CANCEL_EDIT",
                 "name": "Cancel Edit"
               },
@@ -764,21 +743,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading applications…"
+                          "content": "Loading applications…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12"
                     }
                   ]
@@ -793,51 +772,111 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "file-text"
                                 },
                                 {
-                                  "content": "Applications",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "content": "Applications"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
-                              "action": "CREATE",
                               "variant": "primary",
-                              "icon": "plus",
                               "label": "New Application",
-                              "type": "button"
+                              "action": "CREATE",
+                              "type": "button",
+                              "icon": "plus"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "gap": "md"
+                          "type": "stack"
+                        },
+                        {
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "icon": "file-text",
+                              "label": "Total applications"
+                            },
+                            {
+                              "value": "21",
+                              "type": "stat-display",
+                              "label": "Submitted",
+                              "icon": "send"
+                            },
+                            {
+                              "label": "Under review",
+                              "value": "8",
+                              "type": "stat-display",
+                              "icon": "search"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "12",
+                              "icon": "check-circle",
+                              "label": "Accepted"
+                            }
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "fields": [
+                            {
+                              "label": "Applicant",
+                              "variant": "caption",
+                              "name": "applicantName",
+                              "icon": "user"
+                            },
+                            {
+                              "name": "applicantEmail",
+                              "label": "Email",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Target",
+                              "name": "targetType",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "status",
+                              "variant": "badge",
+                              "label": "Status"
+                            },
+                            {
+                              "label": "Submitted",
+                              "variant": "caption",
+                              "name": "submittedAt"
+                            }
+                          ],
                           "itemActions": [
                             {
-                              "event": "EDIT",
+                              "label": "Edit",
                               "variant": "ghost",
-                              "label": "Edit"
+                              "event": "EDIT"
                             },
                             {
                               "variant": "primary",
@@ -845,48 +884,20 @@
                               "event": "SUBMIT"
                             },
                             {
-                              "event": "ACCEPT",
-                              "variant": "success",
-                              "label": "Accept"
+                              "label": "Accept",
+                              "variant": "primary",
+                              "event": "ACCEPT"
                             },
                             {
                               "event": "REJECT",
-                              "label": "Reject",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Reject"
                             }
-                          ],
-                          "fields": [
-                            {
-                              "name": "applicantName",
-                              "icon": "user",
-                              "variant": "h4",
-                              "label": "Applicant"
-                            },
-                            {
-                              "label": "Email",
-                              "name": "applicantEmail",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "targetType",
-                              "label": "Target",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            },
-                            {
-                              "name": "submittedAt",
-                              "variant": "caption",
-                              "label": "Submitted"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -900,36 +911,9 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "color": "destructive"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load applications"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "@payload.error",
-                          "type": "typography",
-                          "variant": "body"
-                        },
-                        {
-                          "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "type": "button",
-                          "label": "Retry",
-                          "variant": "primary"
-                        }
-                      ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical"
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -983,19 +967,33 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "className": "max-w-3xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
-                          "content": "New Application",
-                          "type": "typography",
-                          "variant": "h2"
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "file-text"
+                            },
+                            {
+                              "content": "New Application",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
                         },
                         {
                           "type": "form-section",
                           "entity": "@entity",
-                          "mode": "create",
                           "cancelEvent": "CANCEL_EDIT",
+                          "mode": "create",
                           "fields": [
                             "applicantName",
                             "applicantEmail",
@@ -1004,27 +1002,9 @@
                             "coverLetter"
                           ],
                           "submitEvent": "CREATE_SUBMIT"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Attachments",
-                          "variant": "h3"
-                        },
-                        {
-                          "maxFiles": 10.0,
-                          "label": "Drop attachments here",
-                          "type": "upload-drop-zone",
-                          "action": "UPLOAD",
-                          "maxSize": 10485760.0,
-                          "accept": "*/*",
-                          "description": "Resume, portfolio, references",
-                          "icon": "paperclip"
                         }
                       ],
-                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -1079,19 +1059,29 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
-                          "type": "typography",
-                          "variant": "h2",
-                          "content": "Edit Application"
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "pencil"
+                            },
+                            {
+                              "content": "Edit Application",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
-                          "mode": "edit",
-                          "type": "form-section",
-                          "entity": "@entity",
-                          "submitEvent": "UPDATE_SUBMIT",
+                          "type": "divider"
+                        },
+                        {
                           "cancelEvent": "CANCEL_EDIT",
                           "fields": [
                             "applicantName",
@@ -1099,28 +1089,14 @@
                             "targetId",
                             "targetType",
                             "coverLetter"
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Attachments",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "upload-drop-zone",
-                          "action": "UPLOAD",
-                          "icon": "paperclip",
-                          "maxSize": 10485760.0,
-                          "label": "Drop attachments here",
-                          "description": "Resume, portfolio, references",
-                          "accept": "*/*",
-                          "maxFiles": 10.0
+                          ],
+                          "type": "form-section",
+                          "submitEvent": "UPDATE_SUBMIT",
+                          "mode": "edit",
+                          "entity": "@entity"
                         }
                       ],
-                      "className": "max-w-3xl mx-auto w-full",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -1151,14 +1127,14 @@
                     "update",
                     "Application",
                     {
+                      "status": "submitted",
                       "submittedAt": "@entity.submittedAt",
-                      "id": "@entity.id",
-                      "status": "submitted"
+                      "id": "@entity.id"
                     },
                     {
                       "emit": {
-                        "success": "ApplicationSubmitted",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationSubmitted"
                       }
                     }
                   ],
@@ -1166,22 +1142,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Submitting…",
-                          "type": "typography"
+                          "content": "Submitting…"
                         }
                       ],
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1211,14 +1187,14 @@
                     "update",
                     "Application",
                     {
-                      "status": "accepted",
                       "id": "@entity.id",
-                      "reviewedAt": "@entity.reviewedAt"
+                      "reviewedAt": "@entity.reviewedAt",
+                      "status": "accepted"
                     },
                     {
                       "emit": {
-                        "success": "ApplicationAccepted",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationAccepted"
                       }
                     }
                   ],
@@ -1226,22 +1202,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Accepting…",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Accepting…"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
                       "type": "stack",
-                      "align": "center",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1292,6 +1268,10 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -1299,15 +1279,11 @@
                         {
                           "content": "Rejecting…",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1357,22 +1333,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Saving…"
+                          "content": "Saving…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
+                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1389,8 +1365,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ApplicationLoadFailed",
-                        "success": "ApplicationUpdated"
+                        "success": "ApplicationUpdated",
+                        "failure": "ApplicationLoadFailed"
                       }
                     }
                   ],
@@ -1401,80 +1377,19 @@
                       "align": "center",
                       "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
+                          "type": "typography",
                           "content": "Updating…",
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "UPLOAD",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "max-w-3xl mx-auto w-full",
-                      "children": [
-                        {
-                          "content": "Application",
-                          "variant": "h2",
-                          "type": "typography"
-                        },
-                        {
-                          "cancelEvent": "CANCEL_EDIT",
-                          "type": "form-section",
-                          "mode": "edit",
-                          "submitEvent": "UPDATE_SUBMIT",
-                          "entity": "@entity",
-                          "fields": [
-                            "applicantName",
-                            "applicantEmail",
-                            "targetId",
-                            "targetType",
-                            "coverLetter"
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "Attachments"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "info",
-                          "message": "Attachment uploaded."
-                        },
-                        {
-                          "accept": "*/*",
-                          "type": "upload-drop-zone",
-                          "description": "Resume, portfolio, references",
-                          "label": "Drop more attachments",
-                          "maxFiles": 10.0,
-                          "icon": "paperclip",
-                          "action": "UPLOAD",
-                          "maxSize": 10485760.0
-                        }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1513,8 +1428,8 @@
                     "Application",
                     {
                       "emit": {
-                        "success": "ApplicationLoaded",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
                       }
                     }
                   ],
@@ -1632,9 +1547,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]

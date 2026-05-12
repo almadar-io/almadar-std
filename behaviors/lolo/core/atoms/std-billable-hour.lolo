@@ -1,5 +1,5 @@
 app std-billable-hour "1.0.0"
-"std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Owns a BillableHour entity (one row per time entry against a matter/project) and a single trait that loads entries, renders them in a data-grid with Invoice / Write Off actions."
+"std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Lists entries in `browsing`; opens entry detail in `viewing_single` with Invoice / Write Off actions."
 
 orbital BillableHourOrbital {
   entity BillableHour [persistent: billablehours] {
@@ -29,17 +29,41 @@ orbital BillableHourOrbital {
         (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
       BillableHourLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "avatar", name: "Lead Attorney", size: "md", src: "https://i.pravatar.cc/64?img=12" }, { type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "animated-counter", value: 248, suffix: " hrs", duration: 1200 }, { type: "range-slider", min: 0, max: 500, value: 250, step: 25, showTooltip: true, showTicks: true }] }, { type: "line-chart", data: [{ date: "Jan", value: 142 }, { date: "Feb", value: 168 }, { date: "Mar", value: 195 }, { date: "Apr", value: 210 }, { date: "May", value: 248 }], showGrid: true, showArea: true }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "workerName", label: "Worker", variant: "caption" }, { name: "matterId", label: "Matter", variant: "caption" }, { name: "workDate", label: "Date", variant: "caption" }, { name: "hours", label: "Hours", variant: "caption" }, { name: "rate", label: "Rate", variant: "caption" }, { name: "invoiceStatus", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Invoice", event: "INVOICE_HOURS", variant: "primary" }, { label: "Write Off", event: "WRITE_OFF_HOURS", variant: "ghost" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total entries", value: "@payload.data.length", icon: "clock" }, { type: "stat-display", label: "Unbilled hours", value: "248", icon: "hourglass" }, { type: "stat-display", label: "Invoiced this month", value: "32", icon: "file-text" }, { type: "stat-display", label: "Written off", value: "4", icon: "x-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "workerName", label: "Worker", variant: "caption" }, { name: "matterId", label: "Matter", variant: "caption" }, { name: "workDate", label: "Date", variant: "caption" }, { name: "hours", label: "Hours", variant: "caption" }, { name: "rate", label: "Rate", variant: "caption" }, { name: "invoiceStatus", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_HOURS", variant: "primary", icon: "arrow-right" }, { label: "Write Off", event: "WRITE_OFF_HOURS", variant: "danger" }] }] })
       BillableHourLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      INVOICE_HOURS -> browsing
+      OPEN_HOURS -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.workerId @payload.row.workerId)
+        (set @entity.workerName @payload.row.workerName)
+        (set @entity.matterId @payload.row.matterId)
+        (set @entity.projectId @payload.row.projectId)
+        (set @entity.workDate @payload.row.workDate)
+        (set @entity.hours @payload.row.hours)
+        (set @entity.rate @payload.row.rate)
+        (set @entity.description @payload.row.description)
+        (set @entity.isBillable @payload.row.isBillable)
+        (set @entity.invoiceStatus @payload.row.invoiceStatus)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "clock" }, { type: "typography", content: "@entity.workerName", variant: "h3" }, { type: "badge", label: "@entity.invoiceStatus", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Matter" }, { type: "typography", variant: "body", content: "@entity.matterId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Project" }, { type: "typography", variant: "body", content: "@entity.projectId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Hours", value: "@entity.hours", icon: "clock" }, { type: "stat-display", label: "Rate", value: "@entity.rate", icon: "dollar-sign" }, { type: "stat-display", label: "Date", value: "@entity.workDate", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Invoice", variant: "primary", action: "INVOICE_HOURS", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Write Off", variant: "danger", action: "WRITE_OFF_HOURS", actionPayload: { id: "@entity.id" } }] }] })
+      WRITE_OFF_HOURS -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Hours invoiced" })
-      WRITE_OFF_HOURS -> browsing
+        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Writing off hours…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
+      INVOICE_HOURS -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Hours written off" })
+        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Invoicing hours…" }] })
+      WRITE_OFF_HOURS -> loading
+        (set @entity.id @payload.id)
+        (fetch BillableHour { emit: { success: "BillableHourLoaded", failure: "BillableHourLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Writing off hours…" }] })
     }
     state error {
       INIT -> loading
@@ -47,12 +71,16 @@ orbital BillableHourOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_HOURS      { id : string!, row : BillableHour }
+      CLOSE_VIEW      { }
       INVOICE_HOURS   { id : string! }
       WRITE_OFF_HOURS { id : string! }
       BillableHourLoaded     { data : [BillableHour] }
       BillableHourLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_HOURS      { id : string!, row : BillableHour }
+      CLOSE_VIEW      { }
       INVOICE_HOURS   { id : string! }
       WRITE_OFF_HOURS { id : string! }
       BillableHourLoaded     { data : [BillableHour] }

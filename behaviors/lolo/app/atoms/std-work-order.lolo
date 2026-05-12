@@ -1,5 +1,5 @@
 app std-work-order "1.0.0"
-"std-work-order — field-service work order lifecycle (created → assigned → en-route → on-site → completed). Owns a WorkOrder entity and a single dispatch trait that loads the queue, renders it in a data-grid, and persists status transitions back to the row."
+"std-work-order — field-service work order lifecycle (created → assigned → en-route → on-site → completed). Lists work orders in `browsing`; opens detail in `viewing_single` with Assign / Travel / Arrive / Complete / Cancel actions."
 
 orbital WorkOrderOrbital {
   entity WorkOrder [persistent: workorders] {
@@ -18,8 +18,6 @@ orbital WorkOrderOrbital {
 
   type WorkOrderLoaded        = Event { data : [WorkOrder] }              "Fired when the work order collection finishes loading"
   type WorkOrderLoadFailed    = Event { error : string, code : string }   "Fired when the work order collection fails to load"
-  type WorkOrderUpdated       = Event { row : WorkOrder }                 "Fired after a work order's status persists (assign / travel / arrive / complete / cancel)"
-  type WorkOrderUpdateFailed  = Event { error : string, code : string }   "Fired when a work order's status update fails to persist"
 
   trait WorkOrderManage -> WorkOrder [interaction, collection] {
     config {
@@ -31,39 +29,53 @@ orbital WorkOrderOrbital {
         (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading work orders…" }] })
       WorkOrderLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "customerName", label: "Customer", variant: "caption" }, { name: "serviceType", label: "Service", variant: "caption" }, { name: "address", label: "Address", variant: "caption" }, { name: "priority", label: "Priority", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "etaMinutes", label: "ETA (min)", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Assign", event: "ASSIGN", variant: "primary", icon: "user-plus" }, { label: "Start Travel", event: "START_TRAVEL", variant: "secondary", icon: "navigation" }, { label: "Arrive", event: "ARRIVE", variant: "secondary", icon: "map-pin" }, { label: "Complete", event: "COMPLETE", variant: "primary", icon: "check" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total orders", value: "@payload.data.length", icon: "clipboard-list" }, { type: "stat-display", label: "Urgent open", value: "9", icon: "alert-triangle" }, { type: "stat-display", label: "En route", value: "14", icon: "navigation" }, { type: "stat-display", label: "Completed today", value: "47", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "customerName", label: "Customer", variant: "caption" }, { name: "serviceType", label: "Service", variant: "caption" }, { name: "address", label: "Address", variant: "caption" }, { name: "priority", label: "Priority", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "etaMinutes", label: "ETA (min)", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ORDER", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }] }] })
       WorkOrderLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      ASSIGN -> browsing
+      OPEN_ORDER -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.customerName @payload.row.customerName)
+        (set @entity.serviceType @payload.row.serviceType)
+        (set @entity.address @payload.row.address)
+        (set @entity.priority @payload.row.priority)
+        (set @entity.status @payload.row.status)
+        (set @entity.assignedTo @payload.row.assignedTo)
+        (set @entity.scheduledAt @payload.row.scheduledAt)
+        (set @entity.etaMinutes @payload.row.etaMinutes)
+        (set @entity.notes @payload.row.notes)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "clipboard-list" }, { type: "typography", content: "@entity.customerName", variant: "h3" }, { type: "badge", label: "@entity.priority", variant: "primary" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Service" }, { type: "typography", variant: "body", content: "@entity.serviceType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Address" }, { type: "typography", variant: "body", content: "@entity.address" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Assigned to" }, { type: "typography", variant: "body", content: "@entity.assignedTo" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "ETA (min)", value: "@entity.etaMinutes", icon: "clock" }, { type: "stat-display", label: "Scheduled", value: "@entity.scheduledAt", icon: "calendar" }, { type: "stat-display", label: "Created", value: "@entity.createdAt", icon: "calendar-plus" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Assign", variant: "primary", action: "ASSIGN", actionPayload: { id: "@entity.id", assignedTo: "@entity.assignedTo", row: "@entity" } }, { type: "button", label: "Start Travel", variant: "secondary", action: "START_TRAVEL", actionPayload: { id: "@entity.id", etaMinutes: 0, row: "@entity" } }, { type: "button", label: "Arrive", variant: "secondary", action: "ARRIVE", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Complete", variant: "primary", action: "COMPLETE", actionPayload: { id: "@entity.id", notes: "@entity.notes", row: "@entity" } }, { type: "button", label: "Cancel", variant: "danger", action: "CANCEL", actionPayload: { id: "@entity.id", notes: "@entity.notes", row: "@entity" } }] }] })
+      CANCEL -> loading
         (set @entity.id @payload.id)
-        (set @entity.assignedTo @payload.assignedTo)
-        (set @entity.status "assigned")
-        (persist update WorkOrder @entity { emit: { success: "WorkOrderUpdated", failure: "WorkOrderUpdateFailed" } })
-      START_TRAVEL -> browsing
-        (set @entity.id @payload.id)
-        (set @entity.etaMinutes @payload.etaMinutes)
-        (set @entity.status "en-route")
-        (persist update WorkOrder @entity { emit: { success: "WorkOrderUpdated", failure: "WorkOrderUpdateFailed" } })
-      ARRIVE -> browsing
-        (set @entity.id @payload.id)
-        (set @entity.status "on-site")
-        (persist update WorkOrder @entity { emit: { success: "WorkOrderUpdated", failure: "WorkOrderUpdateFailed" } })
-      COMPLETE -> browsing
-        (set @entity.id @payload.id)
-        (set @entity.notes @payload.notes)
-        (set @entity.status "completed")
-        (persist update WorkOrder @entity { emit: { success: "WorkOrderUpdated", failure: "WorkOrderUpdateFailed" } })
-      CANCEL -> browsing
-        (set @entity.id @payload.id)
-        (set @entity.notes @payload.notes)
-        (set @entity.status "cancelled")
-        (persist update WorkOrder @entity { emit: { success: "WorkOrderUpdated", failure: "WorkOrderUpdateFailed" } })
-      WorkOrderUpdated -> loading
         (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
-      WorkOrderUpdateFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling order…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading work orders…" }] })
+      ASSIGN -> loading
+        (set @entity.id @payload.id)
+        (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Assigning order…" }] })
+      START_TRAVEL -> loading
+        (set @entity.id @payload.id)
+        (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Starting travel…" }] })
+      ARRIVE -> loading
+        (set @entity.id @payload.id)
+        (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Arriving on site…" }] })
+      COMPLETE -> loading
+        (set @entity.id @payload.id)
+        (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Completing order…" }] })
+      CANCEL -> loading
+        (set @entity.id @payload.id)
+        (fetch WorkOrder { emit: { success: "WorkOrderLoaded", failure: "WorkOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling order…" }] })
     }
     state error {
       INIT -> loading
@@ -71,6 +83,8 @@ orbital WorkOrderOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_ORDER   { id : string!, row : WorkOrder }
+      CLOSE_VIEW   { }
       ASSIGN       { id : string!, assignedTo : string!, row : WorkOrder }
       START_TRAVEL { id : string!, etaMinutes : number!, row : WorkOrder }
       ARRIVE       { id : string!, row : WorkOrder }
@@ -78,10 +92,10 @@ orbital WorkOrderOrbital {
       CANCEL       { id : string!, notes : string, row : WorkOrder }
       WorkOrderLoaded       { data : [WorkOrder] }
       WorkOrderLoadFailed   { error : string, code : string }
-      WorkOrderUpdated      { row : WorkOrder }
-      WorkOrderUpdateFailed { error : string, code : string }
     }
     listens {
+      OPEN_ORDER   { id : string!, row : WorkOrder }
+      CLOSE_VIEW   { }
       ASSIGN       { id : string!, assignedTo : string!, row : WorkOrder }
       START_TRAVEL { id : string!, etaMinutes : number!, row : WorkOrder }
       ARRIVE       { id : string!, row : WorkOrder }
@@ -89,8 +103,6 @@ orbital WorkOrderOrbital {
       CANCEL       { id : string!, notes : string, row : WorkOrder }
       WorkOrderLoaded       { data : [WorkOrder] }
       WorkOrderLoadFailed   { error : string, code : string }
-      WorkOrderUpdated      { row : WorkOrder }
-      WorkOrderUpdateFailed { error : string, code : string }
     }
   }
   page "/workorders/manage" as WorkOrderManagePage -> WorkOrderManage

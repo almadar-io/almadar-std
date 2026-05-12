@@ -1,7 +1,7 @@
 {
   "name": "std-drip-sequence",
   "version": "1.0.0",
-  "description": "std-drip-sequence — ordered email drip campaign primitive. Owns a DripSequence collection; ACTIVATE flips a sequence live, PAUSE halts it, and load failures surface as alerts. Pure topology atom; downstream coordinators persist status flips.",
+  "description": "std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions.",
   "orbitals": [
     {
       "name": "DripSequenceOrbital",
@@ -65,6 +65,53 @@
           "linkedEntity": "DripSequence",
           "emits": [
             {
+              "event": "OPEN_SEQUENCE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.triggerEvent",
+                  "type": "string"
+                },
+                {
+                  "name": "row.stepsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.totalEnrolled",
+                  "type": "number"
+                },
+                {
+                  "name": "row.totalCompleted",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "ACTIVATE",
               "payloadSchema": [
                 {
@@ -117,6 +164,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -150,8 +200,23 @@
                 ]
               },
               {
-                "key": "ACTIVATE",
-                "name": "Activate",
+                "key": "OPEN_SEQUENCE",
+                "name": "Open Sequence",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "DripSequence"
+                  }
+                ]
+              },
+              {
+                "key": "PAUSE",
+                "name": "Pause",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -161,8 +226,12 @@
                 ]
               },
               {
-                "key": "PAUSE",
-                "name": "Pause",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "ACTIVATE",
+                "name": "Activate",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -192,22 +261,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading drip sequences…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading drip sequences…"
                         }
                       ],
-                      "className": "py-12"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -221,57 +290,76 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "mail",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "mail"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "date-range-selector",
-                          "selected": "last-30-days",
-                          "options": [
-                            {
-                              "value": "last-7-days",
-                              "label": "Last 7 days"
-                            },
-                            {
-                              "label": "Last 30 days",
-                              "value": "last-30-days"
-                            },
-                            {
-                              "value": "last-90-days",
-                              "label": "Last 90 days"
-                            },
-                            {
-                              "label": "Year to date",
-                              "value": "year-to-date"
-                            },
-                            {
-                              "value": "all-time",
-                              "label": "All time"
+                              "content": "@config.title"
                             }
                           ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "label": "Total sequences",
+                              "value": "@payload.data.length",
+                              "icon": "mail",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Active",
+                              "icon": "play-circle",
+                              "type": "stat-display",
+                              "value": "14"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "users",
+                              "value": "8,420",
+                              "label": "Enrolled"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Completion rate",
+                              "value": "67%"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm",
                           "entity": "@payload.data",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Open",
+                              "event": "OPEN_SEQUENCE",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "PAUSE",
+                              "label": "Pause"
+                            }
+                          ],
+                          "gap": "sm",
                           "fields": [
                             {
                               "label": "Name",
@@ -279,19 +367,19 @@
                               "name": "name"
                             },
                             {
-                              "label": "Description",
                               "variant": "caption",
+                              "label": "Description",
                               "name": "description"
                             },
                             {
                               "name": "triggerEvent",
-                              "variant": "caption",
-                              "label": "Trigger"
+                              "label": "Trigger",
+                              "variant": "caption"
                             },
                             {
                               "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "label": "Status"
                             },
                             {
                               "variant": "caption",
@@ -299,28 +387,15 @@
                               "name": "totalEnrolled"
                             },
                             {
-                              "label": "Completed",
                               "name": "totalCompleted",
+                              "label": "Completed",
                               "variant": "caption"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "event": "ACTIVATE",
-                              "label": "Activate"
-                            },
-                            {
-                              "variant": "ghost",
-                              "label": "Pause",
-                              "event": "PAUSE"
-                            }
-                          ]
+                          "type": "data-grid"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -334,37 +409,195 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "ACTIVATE",
+                "to": "viewing_single",
+                "event": "OPEN_SEQUENCE",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.triggerEvent",
+                    "@payload.row.triggerEvent"
+                  ],
+                  [
+                    "set",
+                    "@entity.stepsJson",
+                    "@payload.row.stepsJson"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalEnrolled",
+                    "@payload.row.totalEnrolled"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalCompleted",
+                    "@payload.row.totalCompleted"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "success",
-                      "message": "Drip sequence activated"
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "label": "Back",
+                              "type": "button",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "mail"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "variant": "primary",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Description",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.description"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Trigger"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.triggerEvent"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "users",
+                              "value": "@entity.totalEnrolled",
+                              "label": "Enrolled"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "value": "@entity.totalCompleted",
+                              "type": "stat-display",
+                              "label": "Completed"
+                            }
+                          ],
+                          "cols": 2.0
+                        },
+                        {
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "ACTIVATE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Activate"
+                            },
+                            {
+                              "type": "button",
+                              "action": "PAUSE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Pause",
+                              "variant": "danger"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "PAUSE",
                 "effects": [
                   [
@@ -373,12 +606,162 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "DripSequence",
+                    {
+                      "emit": {
+                        "failure": "DripSequenceLoadFailed",
+                        "success": "DripSequenceLoaded"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "message": "Drip sequence paused",
-                      "variant": "info",
-                      "type": "alert"
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Pausing sequence…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "DripSequence",
+                    {
+                      "emit": {
+                        "success": "DripSequenceLoaded",
+                        "failure": "DripSequenceLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading drip sequences…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ACTIVATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "DripSequence",
+                    {
+                      "emit": {
+                        "success": "DripSequenceLoaded",
+                        "failure": "DripSequenceLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Activating sequence…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "PAUSE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "DripSequence",
+                    {
+                      "emit": {
+                        "failure": "DripSequenceLoadFailed",
+                        "success": "DripSequenceLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Pausing sequence…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]

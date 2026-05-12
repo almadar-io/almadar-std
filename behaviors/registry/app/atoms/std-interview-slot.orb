@@ -75,6 +75,58 @@
           "linkedEntity": "InterviewSlot",
           "emits": [
             {
+              "event": "OPEN_INTERVIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.interviewerName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.durationMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.format",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "COMPLETE_INTERVIEW",
               "payloadSchema": [
                 {
@@ -127,6 +179,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -160,8 +215,23 @@
                 ]
               },
               {
-                "key": "COMPLETE_INTERVIEW",
-                "name": "Complete Interview",
+                "key": "OPEN_INTERVIEW",
+                "name": "Open Interview",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "InterviewSlot"
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_INTERVIEW",
+                "name": "Cancel Interview",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -171,8 +241,12 @@
                 ]
               },
               {
-                "key": "CANCEL_INTERVIEW",
-                "name": "Cancel Interview",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "COMPLETE_INTERVIEW",
+                "name": "Complete Interview",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -193,8 +267,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "success": "InterviewSlotLoaded",
-                        "failure": "InterviewSlotLoadFailed"
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
                       }
                     }
                   ],
@@ -202,22 +276,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
                       "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Loading interviews…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -233,8 +307,6 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -246,38 +318,58 @@
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "label": "Scheduled",
+                              "icon": "calendar",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "9",
+                              "icon": "clock",
+                              "label": "Today"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "37",
+                              "label": "Completed this week",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "label": "No-show rate",
+                              "icon": "alert-triangle",
+                              "type": "stat-display",
+                              "value": "6%"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "cols": 1.0,
                           "type": "data-grid",
                           "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "label": "Complete",
-                              "event": "COMPLETE_INTERVIEW"
-                            },
-                            {
-                              "event": "CANCEL_INTERVIEW",
-                              "variant": "danger",
-                              "label": "Cancel"
-                            }
-                          ],
+                          "cols": 1.0,
                           "fields": [
                             {
+                              "name": "applicantName",
                               "label": "Applicant",
-                              "variant": "caption",
-                              "name": "applicantName"
+                              "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "interviewerName",
-                              "label": "Interviewer",
-                              "variant": "caption"
+                              "label": "Interviewer"
                             },
                             {
                               "label": "Scheduled",
@@ -285,21 +377,35 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "format",
                               "label": "Format",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "format"
                             },
                             {
-                              "name": "status",
                               "variant": "badge",
+                              "name": "status",
                               "label": "Status"
+                            }
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "OPEN_INTERVIEW",
+                              "icon": "arrow-right",
+                              "variant": "primary",
+                              "label": "Open"
+                            },
+                            {
+                              "label": "Cancel",
+                              "event": "CANCEL_INTERVIEW",
+                              "variant": "danger"
                             }
                           ]
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -313,8 +419,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -322,28 +428,214 @@
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "COMPLETE_INTERVIEW",
+                "to": "viewing_single",
+                "event": "OPEN_INTERVIEW",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantId",
+                    "@payload.row.applicantId"
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantName",
+                    "@payload.row.applicantName"
+                  ],
+                  [
+                    "set",
+                    "@entity.interviewerName",
+                    "@payload.row.interviewerName"
+                  ],
+                  [
+                    "set",
+                    "@entity.scheduledAt",
+                    "@payload.row.scheduledAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.durationMinutes",
+                    "@payload.row.durationMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.format",
+                    "@payload.row.format"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "success",
-                      "message": "Interview marked complete"
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "label": "Back",
+                              "type": "button",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "calendar"
+                            },
+                            {
+                              "content": "@entity.applicantName",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "@entity.format",
+                              "variant": "primary",
+                              "type": "badge"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "default"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Interviewer"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.interviewerName",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Applicant ID",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.applicantId",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "Notes",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.notes",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "label": "Scheduled",
+                              "icon": "calendar",
+                              "value": "@entity.scheduledAt",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Duration (min)",
+                              "icon": "clock",
+                              "value": "@entity.durationMinutes",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "action": "COMPLETE_INTERVIEW",
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Complete",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "label": "Cancel",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "CANCEL_INTERVIEW",
+                              "variant": "danger",
+                              "type": "button"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "CANCEL_INTERVIEW",
                 "effects": [
                   [
@@ -352,12 +644,162 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "InterviewSlot",
+                    {
+                      "emit": {
+                        "success": "InterviewSlotLoaded",
+                        "failure": "InterviewSlotLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "variant": "info",
-                      "type": "alert",
-                      "message": "Interview cancelled"
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Cancelling interview…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "InterviewSlot",
+                    {
+                      "emit": {
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading interviews…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "COMPLETE_INTERVIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "InterviewSlot",
+                    {
+                      "emit": {
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Completing interview…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CANCEL_INTERVIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "InterviewSlot",
+                    {
+                      "emit": {
+                        "success": "InterviewSlotLoaded",
+                        "failure": "InterviewSlotLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Cancelling interview…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -372,8 +814,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "success": "InterviewSlotLoaded",
-                        "failure": "InterviewSlotLoadFailed"
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
                       }
                     }
                   ],

@@ -1,7 +1,7 @@
 {
   "name": "std-template-editor",
   "version": "1.0.0",
-  "description": "std-template-editor — message template authoring primitive. Edits email/SMS templates with variables like {{firstName}}. Templates are reused across broadcasts and drip sequences.",
+  "description": "std-template-editor — message template authoring primitive. Lists templates in `browsing`; opens detail in `viewing_single` with Edit / Save / Delete actions.",
   "orbitals": [
     {
       "name": "MessageTemplateOrbital",
@@ -58,6 +58,49 @@
           "linkedEntity": "MessageTemplate",
           "emits": [
             {
+              "event": "OPEN_TEMPLATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.channel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.subject",
+                  "type": "string"
+                },
+                {
+                  "name": "row.body",
+                  "type": "string"
+                },
+                {
+                  "name": "row.variables",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastEditedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "EDIT_TEMPLATE",
               "payloadSchema": [
                 {
@@ -69,6 +112,16 @@
             },
             {
               "event": "SAVE_TEMPLATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "DELETE_TEMPLATE",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -110,7 +163,7 @@
                 "name": "browsing"
               },
               {
-                "name": "editing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -144,6 +197,36 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "OPEN_TEMPLATE",
+                "name": "Open Template",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MessageTemplate"
+                  }
+                ]
+              },
+              {
+                "key": "DELETE_TEMPLATE",
+                "name": "Delete Template",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               },
               {
                 "key": "EDIT_TEMPLATE",
@@ -188,22 +271,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading templates…",
                           "variant": "caption",
+                          "content": "Loading templates…",
                           "type": "typography",
                           "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -217,72 +300,60 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         },
                         {
-                          "back": {
-                            "type": "card",
-                            "children": [
-                              {
-                                "type": "typography",
-                                "variant": "body",
-                                "content": "<p>Hi {{firstName}}, welcome aboard.</p>"
-                              }
-                            ]
-                          },
-                          "type": "flip-card",
-                          "height": "180px",
-                          "front": {
-                            "type": "card",
-                            "children": [
-                              {
-                                "gap": "sm",
-                                "type": "stack",
-                                "direction": "vertical",
-                                "children": [
-                                  {
-                                    "type": "typography",
-                                    "content": "Welcome Email",
-                                    "variant": "h4"
-                                  },
-                                  {
-                                    "variant": "caption",
-                                    "content": "Click to preview HTML",
-                                    "type": "typography",
-                                    "color": "muted"
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        },
-                        {
-                          "code": "Welcome email template preview placeholder",
-                          "type": "code-block",
-                          "language": "html",
-                          "showCopyButton": true,
-                          "showLanguageBadge": true
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "icon": "file-text",
+                              "type": "stat-display",
+                              "label": "Total templates",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "label": "Email",
+                              "value": "32",
+                              "type": "stat-display",
+                              "icon": "mail"
+                            },
+                            {
+                              "icon": "message-square",
+                              "value": "14",
+                              "type": "stat-display",
+                              "label": "SMS"
+                            },
+                            {
+                              "value": "9",
+                              "icon": "edit",
+                              "type": "stat-display",
+                              "label": "Edited 7d"
+                            }
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "fields": [
                             {
                               "name": "name",
@@ -290,36 +361,41 @@
                               "variant": "caption"
                             },
                             {
-                              "label": "Channel",
+                              "name": "channel",
                               "variant": "badge",
-                              "name": "channel"
+                              "label": "Channel"
                             },
                             {
                               "label": "Subject",
-                              "name": "subject",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "subject"
                             },
                             {
-                              "name": "lastEditedAt",
                               "label": "Updated",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "lastEditedAt"
                             }
                           ],
-                          "cols": 1.0,
-                          "gap": "sm",
                           "itemActions": [
                             {
-                              "event": "EDIT_TEMPLATE",
-                              "variant": "ghost",
-                              "label": "Edit"
+                              "icon": "arrow-right",
+                              "label": "Open",
+                              "variant": "primary",
+                              "event": "OPEN_TEMPLATE"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "DELETE_TEMPLATE",
+                              "variant": "danger"
                             }
                           ],
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "type": "data-grid"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -334,15 +410,299 @@
                     "main",
                     {
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "editing",
+                "to": "viewing_single",
+                "event": "OPEN_TEMPLATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.channel",
+                    "@payload.row.channel"
+                  ],
+                  [
+                    "set",
+                    "@entity.subject",
+                    "@payload.row.subject"
+                  ],
+                  [
+                    "set",
+                    "@entity.body",
+                    "@payload.row.body"
+                  ],
+                  [
+                    "set",
+                    "@entity.variables",
+                    "@payload.row.variables"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastEditedAt",
+                    "@payload.row.lastEditedAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "file-text"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "variant": "primary",
+                              "label": "@entity.channel"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Subject"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.subject"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Body",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Variables",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.variables",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "label": "Channel",
+                              "type": "stat-display",
+                              "icon": "send",
+                              "value": "@entity.channel"
+                            },
+                            {
+                              "label": "Last edited",
+                              "type": "stat-display",
+                              "value": "@entity.lastEditedAt",
+                              "icon": "calendar"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "label": "Edit",
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "EDIT_TEMPLATE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Save",
+                              "type": "button",
+                              "variant": "secondary",
+                              "action": "SAVE_TEMPLATE"
+                            },
+                            {
+                              "label": "Delete",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "danger",
+                              "action": "DELETE_TEMPLATE",
+                              "type": "button"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DELETE_TEMPLATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "MessageTemplate",
+                    {
+                      "emit": {
+                        "success": "MessageTemplateLoaded",
+                        "failure": "MessageTemplateLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Deleting template…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "MessageTemplate",
+                    {
+                      "emit": {
+                        "success": "MessageTemplateLoaded",
+                        "failure": "MessageTemplateLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading templates…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "EDIT_TEMPLATE",
                 "effects": [
                   [
@@ -351,60 +711,123 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "MessageTemplate",
+                    {
+                      "emit": {
+                        "success": "MessageTemplateLoaded",
+                        "failure": "MessageTemplateLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "edit"
-                                },
-                                {
-                                  "content": "Edit template",
-                                  "type": "typography",
-                                  "variant": "h3"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "label": "Save",
-                              "type": "button",
-                              "variant": "primary",
-                              "action": "SAVE_TEMPLATE"
-                            }
-                          ],
-                          "direction": "vertical"
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading editor…"
                         }
                       ],
-                      "type": "card"
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "editing",
-                "to": "browsing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "SAVE_TEMPLATE",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "MessageTemplate",
+                    {
+                      "emit": {
+                        "failure": "MessageTemplateLoadFailed",
+                        "success": "MessageTemplateLoaded"
+                      }
+                    }
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
-                      "message": "Template saved",
-                      "type": "alert"
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Saving template…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "DELETE_TEMPLATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "MessageTemplate",
+                    {
+                      "emit": {
+                        "failure": "MessageTemplateLoadFailed",
+                        "success": "MessageTemplateLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Deleting template…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -428,8 +851,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

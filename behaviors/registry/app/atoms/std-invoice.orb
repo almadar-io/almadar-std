@@ -90,10 +90,10 @@
           "linkedEntity": "InvoiceRecord",
           "emits": [
             {
-              "event": "VIEW",
+              "event": "OPEN_INVOICE",
               "payloadSchema": [
                 {
-                  "name": "invoiceId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -157,6 +157,9 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "SEND",
@@ -390,7 +393,7 @@
                 "name": "browsing"
               },
               {
-                "name": "viewing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -426,11 +429,11 @@
                 ]
               },
               {
-                "key": "VIEW",
-                "name": "View",
+                "key": "OPEN_INVOICE",
+                "name": "Open Invoice",
                 "payloadSchema": [
                   {
-                    "name": "invoiceId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -441,50 +444,12 @@
                 ]
               },
               {
-                "key": "SEND",
-                "name": "Send",
-                "payloadSchema": [
-                  {
-                    "name": "invoiceId",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "MARK_PAID",
-                "name": "Mark Paid",
-                "payloadSchema": [
-                  {
-                    "name": "invoiceId",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
                 "key": "VOID",
                 "name": "Void",
                 "payloadSchema": [
                   {
                     "name": "invoiceId",
                     "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REFUND",
-                "name": "Refund",
-                "payloadSchema": [
-                  {
-                    "name": "invoiceId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "amount",
-                    "type": "number",
                     "required": true
                   }
                 ]
@@ -536,6 +501,48 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "SEND",
+                "name": "Send",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MARK_PAID",
+                "name": "Mark Paid",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REFUND",
+                "name": "Refund",
+                "payloadSchema": [
+                  {
+                    "name": "invoiceId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -558,10 +565,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
@@ -573,7 +576,11 @@
                           "type": "typography",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -588,9 +595,9 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
@@ -599,88 +606,101 @@
                             },
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
                           "gap": "sm",
-                          "type": "stack"
+                          "align": "center"
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total invoices",
+                              "icon": "receipt"
+                            },
+                            {
+                              "label": "Outstanding",
+                              "value": "$28,400",
+                              "icon": "alert-triangle",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "$112,800",
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "label": "Paid this month"
+                            },
+                            {
+                              "icon": "clock",
+                              "label": "Overdue",
+                              "value": "9",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "itemActions": [
                             {
-                              "variant": "caption",
-                              "name": "invoiceNumber",
-                              "label": "Invoice #"
+                              "variant": "primary",
+                              "label": "Open",
+                              "icon": "arrow-right",
+                              "event": "OPEN_INVOICE"
                             },
                             {
-                              "label": "Customer",
-                              "name": "customerId",
+                              "variant": "danger",
+                              "event": "VOID",
+                              "icon": "x",
+                              "label": "Void"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "label": "Invoice #",
+                              "name": "invoiceNumber",
                               "variant": "caption"
                             },
                             {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "label": "Customer",
+                              "variant": "caption",
+                              "name": "customerId"
                             },
                             {
-                              "variant": "caption",
+                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status"
+                            },
+                            {
+                              "label": "Total",
                               "name": "total",
-                              "label": "Total"
+                              "variant": "caption"
                             },
                             {
                               "label": "Currency",
-                              "name": "currency",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "currency"
                             },
                             {
-                              "variant": "caption",
                               "name": "dueAt",
-                              "label": "Due"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "event": "VIEW",
-                              "icon": "eye",
-                              "variant": "secondary"
-                            },
-                            {
-                              "label": "Send",
-                              "icon": "send",
-                              "event": "SEND",
-                              "variant": "primary"
-                            },
-                            {
-                              "variant": "primary",
-                              "icon": "check",
-                              "event": "MARK_PAID",
-                              "label": "Mark Paid"
-                            },
-                            {
-                              "event": "VOID",
-                              "icon": "x",
-                              "variant": "danger",
-                              "label": "Void"
-                            },
-                            {
-                              "label": "Refund",
-                              "icon": "rotate-ccw",
-                              "event": "REFUND",
-                              "variant": "danger"
+                              "label": "Due",
+                              "variant": "caption"
                             }
                           ],
                           "entity": "@payload.data",
-                          "gap": "sm",
-                          "cols": 1.0,
-                          "type": "data-grid"
+                          "gap": "sm"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -695,21 +715,21 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "viewing",
-                "event": "VIEW",
+                "to": "viewing_single",
+                "event": "OPEN_INVOICE",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.invoiceId"
+                    "@payload.row.id"
                   ],
                   [
                     "set",
@@ -718,8 +738,33 @@
                   ],
                   [
                     "set",
+                    "@entity.customerId",
+                    "@payload.row.customerId"
+                  ],
+                  [
+                    "set",
                     "@entity.status",
                     "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.currency",
+                    "@payload.row.currency"
+                  ],
+                  [
+                    "set",
+                    "@entity.subtotal",
+                    "@payload.row.subtotal"
+                  ],
+                  [
+                    "set",
+                    "@entity.tax",
+                    "@payload.row.tax"
+                  ],
+                  [
+                    "set",
+                    "@entity.total",
+                    "@payload.row.total"
                   ],
                   [
                     "set",
@@ -733,13 +778,8 @@
                   ],
                   [
                     "set",
-                    "@entity.customerId",
-                    "@payload.row.customerId"
-                  ],
-                  [
-                    "set",
-                    "@entity.currency",
-                    "@payload.row.currency"
+                    "@entity.paidAt",
+                    "@payload.row.paidAt"
                   ],
                   [
                     "set",
@@ -750,148 +790,249 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "receipt",
-                              "type": "icon"
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "receipt"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.invoiceNumber"
+                              "content": "@entity.invoiceNumber",
+                              "variant": "h3"
                             },
                             {
                               "label": "@entity.status",
                               "type": "badge",
-                              "variant": "secondary"
+                              "variant": "default"
                             }
                           ],
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "lg",
-                          "type": "stack",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Issued",
                                   "variant": "caption",
+                                  "content": "Customer",
+                                  "type": "typography",
                                   "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.issuedAt",
                                   "type": "typography",
-                                  "variant": "body2"
+                                  "variant": "body",
+                                  "content": "@entity.customerId"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs"
+                              "type": "stack"
                             },
                             {
-                              "gap": "xs",
                               "type": "stack",
-                              "direction": "vertical",
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
+                                  "content": "Currency",
                                   "variant": "caption",
-                                  "content": "Due"
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.dueAt",
-                                  "variant": "body2"
+                                  "content": "@entity.currency",
+                                  "variant": "body"
                                 }
                               ]
                             },
                             {
-                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "Currency"
+                                  "type": "typography",
+                                  "content": "Notes"
                                 },
                                 {
-                                  "variant": "body2",
+                                  "content": "@entity.notes",
                                   "type": "typography",
-                                  "content": "@entity.currency"
+                                  "variant": "body"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "xs"
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
-                          "content": "@entity.notes",
-                          "variant": "body2"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "end",
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
+                              "label": "Subtotal",
+                              "value": "@entity.subtotal",
+                              "type": "stat-display",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "icon": "percent",
+                              "type": "stat-display",
+                              "value": "@entity.tax",
+                              "label": "Tax"
+                            },
+                            {
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "value": "@entity.total",
+                              "label": "Total"
+                            },
+                            {
+                              "label": "Due",
+                              "value": "@entity.dueAt",
+                              "icon": "calendar",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "primary",
                               "type": "button",
-                              "icon": "send",
-                              "label": "Send",
                               "action": "SEND",
-                              "variant": "primary"
+                              "label": "Send",
+                              "actionPayload": {
+                                "invoiceId": "@entity.id"
+                              }
                             },
                             {
-                              "icon": "check",
                               "label": "Mark Paid",
+                              "actionPayload": {
+                                "invoiceId": "@entity.id"
+                              },
                               "type": "button",
-                              "action": "MARK_PAID",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "action": "MARK_PAID"
                             },
                             {
-                              "label": "Void",
-                              "variant": "danger",
-                              "icon": "x",
+                              "type": "button",
+                              "actionPayload": {
+                                "invoiceId": "@entity.id"
+                              },
                               "action": "VOID",
-                              "type": "button"
-                            },
-                            {
-                              "label": "Refund",
-                              "type": "button",
-                              "icon": "rotate-ccw",
                               "variant": "danger",
-                              "action": "REFUND"
+                              "label": "Void"
                             },
                             {
-                              "variant": "secondary",
-                              "icon": "arrow-left",
-                              "label": "Back",
-                              "action": "INIT",
+                              "action": "REFUND",
+                              "actionPayload": {
+                                "amount": 0.0,
+                                "invoiceId": "@entity.id"
+                              },
+                              "label": "Refund",
+                              "variant": "danger",
                               "type": "button"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "VOID",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.invoiceId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "void"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InvoiceRecord",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "InvoiceUpdated",
+                        "failure": "InvoiceUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Voiding invoice…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "InvoiceUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "failure": "InvoiceLoadFailed",
+                        "success": "InvoiceLoaded"
+                      }
                     }
                   ]
                 ]
@@ -899,6 +1040,94 @@
               {
                 "from": "browsing",
                 "to": "browsing",
+                "event": "InvoiceUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "InvoiceRefunded",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "success": "InvoiceLoaded",
+                        "failure": "InvoiceLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "InvoiceRefundFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "InvoiceRecord",
+                    {
+                      "emit": {
+                        "failure": "InvoiceLoadFailed",
+                        "success": "InvoiceLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading invoices…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "SEND",
                 "effects": [
                   [
@@ -929,24 +1158,32 @@
                     }
                   ],
                   [
-                    "call-service",
-                    "email",
-                    "send",
+                    "render-ui",
+                    "main",
                     {
-                      "invoiceId": "@payload.invoiceId"
-                    },
-                    {
-                      "emit": {
-                        "failure": "InvoiceUpdateFailed",
-                        "success": "InvoiceUpdated"
-                      }
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Sending invoice…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "MARK_PAID",
                 "effects": [
                   [
@@ -971,16 +1208,38 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "InvoiceUpdateFailed",
-                        "success": "InvoiceUpdated"
+                        "success": "InvoiceUpdated",
+                        "failure": "InvoiceUpdateFailed"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Marking invoice paid…"
+                        }
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "VOID",
                 "effects": [
                   [
@@ -1000,16 +1259,38 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "InvoiceUpdated",
-                        "failure": "InvoiceUpdateFailed"
+                        "failure": "InvoiceUpdateFailed",
+                        "success": "InvoiceUpdated"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Voiding invoice…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "REFUND",
                 "effects": [
                   [
@@ -1022,8 +1303,8 @@
                     "stripe",
                     "refund",
                     {
-                      "invoiceId": "@payload.invoiceId",
-                      "amount": "@payload.amount"
+                      "amount": "@payload.amount",
+                      "invoiceId": "@payload.invoiceId"
                     },
                     {
                       "emit": {
@@ -1031,105 +1312,27 @@
                         "failure": "InvoiceRefundFailed"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "InvoiceUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "InvoiceRecord",
-                    {
-                      "emit": {
-                        "success": "InvoiceLoaded",
-                        "failure": "InvoiceLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "InvoiceUpdateFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "InvoiceRefunded",
-                "effects": [
-                  [
-                    "fetch",
-                    "InvoiceRecord",
-                    {
-                      "emit": {
-                        "failure": "InvoiceLoadFailed",
-                        "success": "InvoiceLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "InvoiceRefundFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "InvoiceRecord",
-                    {
-                      "emit": {
-                        "success": "InvoiceLoaded",
-                        "failure": "InvoiceLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "InvoiceUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "InvoiceRecord",
-                    {
-                      "emit": {
-                        "success": "InvoiceLoaded",
-                        "failure": "InvoiceLoadFailed"
-                      }
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Refunding invoice…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1153,8 +1356,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -1162,13 +1365,13 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Invoices"
-            },
             "refundTiersJson": {
               "type": "string",
               "default": "[]"
+            },
+            "title": {
+              "type": "string",
+              "default": "Invoices"
             }
           },
           "scope": "collection"

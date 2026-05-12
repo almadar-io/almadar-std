@@ -1,5 +1,5 @@
 app std-timesheet "1.0.0"
-"std-timesheet — weekly timesheet primitive holding total/billable hours for one employee and tracking approval status."
+"std-timesheet — weekly timesheet primitive holding total/billable hours for one employee. Lists timesheets in `browsing`; opens detail in `viewing_single` with Submit / Approve / Reject / Revise / Delete actions."
 
 orbital TimesheetOrbital {
   entity Timesheet [persistent: timesheets] {
@@ -30,44 +30,55 @@ orbital TimesheetOrbital {
       INIT -> loading
         (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading timesheets…" }] })
-      TimesheetLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "New Timesheet", variant: "primary", action: "CREATE" }] }, { type: "progress-dots", count: 7, currentIndex: 3, size: "md" }, { type: "calendar-grid", timeSlots: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "employeeName", label: "Employee", variant: "caption" }, { name: "periodStart", label: "Period Start", variant: "caption" }, { name: "periodEnd", label: "Period End", variant: "caption" }, { name: "totalHours", label: "Total Hours", variant: "caption" }, { name: "billableHours", label: "Billable", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "approvedBy", label: "Approved By", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Submit", event: "SUBMIT", variant: "primary" }, { label: "Approve", event: "APPROVE", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }, { label: "Revise", event: "REQUEST_REVISION", variant: "secondary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      TimesheetLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total timesheets", value: "@payload.data.length", icon: "clock" }, { type: "stat-display", label: "Pending approval", value: "14", icon: "hourglass" }, { type: "stat-display", label: "Billable hours wk", value: "1,240", icon: "dollar-sign" }, { type: "stat-display", label: "Approved this wk", value: "38", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "employeeName", label: "Employee", variant: "caption" }, { name: "periodStart", label: "Period Start", variant: "caption" }, { name: "periodEnd", label: "Period End", variant: "caption" }, { name: "totalHours", label: "Total Hours", variant: "caption" }, { name: "billableHours", label: "Billable", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "approvedBy", label: "Approved By", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TIMESHEET", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
       TimesheetLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      REFRESH -> loading
+    state browsing {
+      OPEN_TIMESHEET -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.employeeId @payload.row.employeeId)
+        (set @entity.employeeName @payload.row.employeeName)
+        (set @entity.periodStart @payload.row.periodStart)
+        (set @entity.periodEnd @payload.row.periodEnd)
+        (set @entity.totalHours @payload.row.totalHours)
+        (set @entity.billableHours @payload.row.billableHours)
+        (set @entity.status @payload.row.status)
+        (set @entity.submittedAt @payload.row.submittedAt)
+        (set @entity.approvedBy @payload.row.approvedBy)
+        (set @entity.approvedAt @payload.row.approvedAt)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "clock" }, { type: "typography", content: "@entity.employeeName", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Employee ID" }, { type: "typography", variant: "body", content: "@entity.employeeId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Approved by" }, { type: "typography", variant: "body", content: "@entity.approvedBy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total hours", value: "@entity.totalHours", icon: "clock" }, { type: "stat-display", label: "Billable", value: "@entity.billableHours", icon: "dollar-sign" }, { type: "stat-display", label: "Period start", value: "@entity.periodStart", icon: "calendar" }, { type: "stat-display", label: "Period end", value: "@entity.periodEnd", icon: "calendar-check" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Submit", variant: "primary", action: "SUBMIT", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Approve", variant: "primary", action: "APPROVE", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Revise", variant: "secondary", action: "REQUEST_REVISION", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Delete", variant: "danger", action: "REQUEST_DELETE", actionPayload: { id: "@entity.id" } }] }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
         (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing timesheets…" }] })
-      SEARCH -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting timesheet…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching timesheets…" }] })
-      FILTER_STATUS -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading timesheets…" }] })
+      SUBMIT -> loading
+        (set @entity.id @payload.id)
         (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering timesheets…" }] })
-      SUBMIT -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting timesheet…" }] })
+      APPROVE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Timesheet submitted" })
-      APPROVE -> viewing
+        (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Approving timesheet…" }] })
+      REJECT -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Timesheet approved" })
-      REJECT -> viewing
+        (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rejecting timesheet…" }] })
+      REQUEST_REVISION -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Timesheet rejected" })
-      REQUEST_REVISION -> viewing
+        (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Requesting revision…" }] })
+      REQUEST_DELETE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Revision requested" })
-      CREATE -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Creating new timesheet" })
-      VIEW -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing timesheet" })
-      EDIT -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Editing timesheet" })
-      REQUEST_DELETE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+        (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting timesheet…" }] })
     }
     state error {
       INIT -> loading
@@ -75,29 +86,24 @@ orbital TimesheetOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW                { id : string!, source : string }
-      EDIT                { id : string!, source : string }
-      CREATE              { source : string }
-      REQUEST_DELETE      { id : string!, source : string }
+      OPEN_TIMESHEET      { id : string!, row : Timesheet }
+      CLOSE_VIEW          { }
       SUBMIT              { id : string!, row : Timesheet }
       APPROVE             { id : string!, row : Timesheet }
       REJECT              { id : string!, row : Timesheet }
       REQUEST_REVISION    { id : string!, row : Timesheet }
+      REQUEST_DELETE      { id : string! }
       TimesheetLoaded     { data : [Timesheet], totalCount : number }
       TimesheetLoadFailed { error : string, code : string }
     }
     listens {
-      VIEW                { id : string! }
-      EDIT                { id : string! }
-      CREATE              { source : string }
+      OPEN_TIMESHEET      { id : string!, row : Timesheet }
+      CLOSE_VIEW          { }
+      SUBMIT              { id : string!, row : Timesheet }
+      APPROVE             { id : string!, row : Timesheet }
+      REJECT              { id : string!, row : Timesheet }
+      REQUEST_REVISION    { id : string!, row : Timesheet }
       REQUEST_DELETE      { id : string! }
-      SUBMIT              { id : string! }
-      APPROVE             { id : string! }
-      REJECT              { id : string! }
-      REQUEST_REVISION    { id : string! }
-      REFRESH             { source : string }
-      SEARCH              { query : string }
-      FILTER_STATUS       { status : string }
       TimesheetLoaded     { data : [Timesheet], totalCount : number }
       TimesheetLoadFailed { error : string, code : string }
     }

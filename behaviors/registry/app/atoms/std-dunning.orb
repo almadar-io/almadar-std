@@ -1,7 +1,7 @@
 {
   "name": "std-dunning",
   "version": "1.0.0",
-  "description": "std-dunning — failed-payment escalation ladder for subscriptions. Owns a DunningCase entity and a single trait that loads open cases, renders them in a data-grid alongside a per-case dunning-banner, and advances severity (soft -> urgent -> final -> suspend) or marks resolved.",
+  "description": "std-dunning — failed-payment escalation ladder for subscriptions. Lists open dunning cases in `browsing`; opens detail in `viewing_single` with Escalate / Resolve / Suspend actions.",
   "orbitals": [
     {
       "name": "DunningCaseOrbital",
@@ -85,7 +85,7 @@
           "linkedEntity": "DunningCase",
           "emits": [
             {
-              "event": "ESCALATE",
+              "event": "OPEN_CASE",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -142,6 +142,19 @@
                 {
                   "name": "row.status",
                   "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "ESCALATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 }
               ]
             },
@@ -152,57 +165,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subscriptionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.severity",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptNumber",
-                  "type": "number"
-                },
-                {
-                  "name": "row.attemptsTotal",
-                  "type": "number"
-                },
-                {
-                  "name": "row.failedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextRetryAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amountDue",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.resolvedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
                 }
               ]
             },
@@ -213,57 +175,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subscriptionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.severity",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptNumber",
-                  "type": "number"
-                },
-                {
-                  "name": "row.attemptsTotal",
-                  "type": "number"
-                },
-                {
-                  "name": "row.failedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextRetryAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amountDue",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.resolvedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
                 }
               ]
             },
@@ -288,131 +199,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "DunningCaseUpdated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subscriptionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.severity",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptNumber",
-                  "type": "number"
-                },
-                {
-                  "name": "row.attemptsTotal",
-                  "type": "number"
-                },
-                {
-                  "name": "row.failedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextRetryAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amountDue",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.resolvedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "DunningCaseUpdateFailed",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ServiceSuspended",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subscriptionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.severity",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptNumber",
-                  "type": "number"
-                },
-                {
-                  "name": "row.attemptsTotal",
-                  "type": "number"
-                },
-                {
-                  "name": "row.failedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextRetryAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amountDue",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.resolvedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -425,7 +211,7 @@
                 "name": "browsing"
               },
               {
-                "name": "escalating"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -461,23 +247,8 @@
                 ]
               },
               {
-                "key": "ESCALATE",
-                "name": "Escalate",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "DunningCase"
-                  }
-                ]
-              },
-              {
-                "key": "RESOLVE",
-                "name": "Resolve",
+                "key": "OPEN_CASE",
+                "name": "Open Case",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -498,44 +269,32 @@
                     "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "DunningCase"
                   }
                 ]
               },
               {
-                "key": "DunningCaseUpdated",
-                "name": "DunningCase updated",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "ESCALATE",
+                "name": "Escalate",
                 "payloadSchema": [
                   {
-                    "name": "row",
-                    "type": "DunningCase"
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "ServiceSuspended",
-                "name": "Service suspended",
+                "key": "RESOLVE",
+                "name": "Resolve",
                 "payloadSchema": [
                   {
-                    "name": "row",
-                    "type": "DunningCase"
-                  }
-                ]
-              },
-              {
-                "key": "DunningCaseUpdateFailed",
-                "name": "DunningCase update failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   }
                 ]
               }
@@ -551,8 +310,8 @@
                     "DunningCase",
                     {
                       "emit": {
-                        "failure": "DunningCaseLoadFailed",
-                        "success": "DunningCaseLoaded"
+                        "success": "DunningCaseLoaded",
+                        "failure": "DunningCaseLoadFailed"
                       }
                     }
                   ],
@@ -560,22 +319,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
+                          "content": "Loading dunning cases…",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading dunning cases…"
+                          "variant": "caption"
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "gap": "md",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -591,11 +350,9 @@
                     {
                       "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -603,199 +360,101 @@
                             },
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "icon": "alert-triangle",
+                              "label": "Open cases"
+                            },
+                            {
+                              "label": "Recovered",
+                              "type": "stat-display",
+                              "value": "18",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "label": "Suspended",
+                              "value": "3",
+                              "icon": "ban",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "trending-up",
+                              "value": "62%",
+                              "label": "Recovery rate"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "split-section",
-                          "imagePosition": "right",
-                          "background": "alt",
-                          "title": "Collections health",
-                          "bullets": [
-                            "Severity ladders from soft to final",
-                            "Auto-suspend at the last attempt",
-                            "Resolve when payment recovers"
-                          ],
-                          "description": "Track recovery against open cases and route the right escalation to each customer."
-                        },
-                        {
-                          "type": "stats-grid",
-                          "stats": [
-                            {
-                              "value": "42",
-                              "label": "Open cases"
-                            },
-                            {
-                              "value": "18",
-                              "label": "Recovered"
-                            },
-                            {
-                              "value": "3",
-                              "label": "Suspended"
-                            },
-                            {
-                              "value": "62%",
-                              "label": "Recovery rate"
-                            }
-                          ],
-                          "columns": 4.0
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "description": "Final notice. Suspension in 2 days.",
-                              "image": {
-                                "alt": "Acme",
-                                "src": "https://picsum.photos/seed/dun-acme/600/400"
-                              },
-                              "type": "showcase-card",
-                              "title": "Acme Corp",
-                              "badge": "Final",
-                              "accentColor": "danger"
-                            },
-                            {
-                              "type": "showcase-card",
-                              "description": "Urgent — second retry failed.",
-                              "image": {
-                                "alt": "Globex",
-                                "src": "https://picsum.photos/seed/dun-globex/600/400"
-                              },
-                              "badge": "Urgent",
-                              "accentColor": "warning",
-                              "title": "Globex Ltd"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "swipeable-row",
-                          "threshold": 80.0,
-                          "rightActions": [
-                            {
-                              "event": "SUSPEND",
-                              "variant": "danger",
-                              "label": "Suspend"
-                            }
-                          ],
-                          "leftActions": [
-                            {
-                              "label": "Resolve",
-                              "event": "RESOLVE",
-                              "variant": "primary"
-                            }
-                          ],
-                          "children": {
-                            "children": [
-                              {
-                                "type": "icon",
-                                "name": "alert-triangle"
-                              },
-                              {
-                                "content": "Swipe a case row for quick actions",
-                                "variant": "body",
-                                "type": "typography"
-                              }
-                            ],
-                            "align": "center",
-                            "direction": "horizontal",
-                            "gap": "md",
-                            "type": "stack"
-                          }
-                        },
-                        {
-                          "gap": "sm",
-                          "fields": [
-                            {
-                              "label": "Subscription",
-                              "name": "subscriptionId",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Customer",
-                              "variant": "caption",
-                              "name": "customerId"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "severity",
-                              "label": "Severity"
-                            },
-                            {
-                              "label": "Attempt",
-                              "variant": "caption",
-                              "name": "attemptNumber"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "amountDue",
-                              "label": "Amount Due"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ],
-                          "cols": 1.0,
-                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "event": "ESCALATE",
                               "variant": "primary",
-                              "label": "Escalate",
-                              "icon": "arrow-up"
-                            },
-                            {
-                              "icon": "check",
-                              "variant": "secondary",
-                              "label": "Resolve",
-                              "event": "RESOLVE"
+                              "label": "Open",
+                              "event": "OPEN_CASE",
+                              "icon": "arrow-right"
                             },
                             {
                               "label": "Suspend",
-                              "icon": "ban",
+                              "event": "SUSPEND",
                               "variant": "danger",
-                              "event": "SUSPEND"
+                              "icon": "ban"
                             }
                           ],
-                          "entity": "@payload.data"
-                        },
-                        {
-                          "width": "md",
-                          "position": "right",
-                          "children": [
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "fields": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Selected case"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "Use the grid actions to escalate, resolve, or suspend."
-                                }
-                              ],
-                              "gap": "sm"
+                              "variant": "caption",
+                              "name": "subscriptionId",
+                              "label": "Subscription"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "customerId",
+                              "label": "Customer"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Severity",
+                              "name": "severity"
+                            },
+                            {
+                              "name": "attemptNumber",
+                              "label": "Attempt",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "amountDue",
+                              "variant": "caption",
+                              "label": "Amount Due"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
                             }
                           ],
-                          "isOpen": false,
-                          "title": "Case detail",
-                          "type": "drawer"
+                          "entity": "@payload.data",
+                          "cols": 1.0
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -809,51 +468,42 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "escalating",
-                "event": "ESCALATE",
+                "to": "viewing_single",
+                "event": "OPEN_CASE",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.subscriptionId",
+                    "@payload.row.subscriptionId"
+                  ],
+                  [
+                    "set",
+                    "@entity.customerId",
+                    "@payload.row.customerId"
                   ],
                   [
                     "set",
                     "@entity.severity",
-                    [
-                      "cond",
-                      [
-                        "=",
-                        "@payload.row.severity",
-                        "soft"
-                      ],
-                      "urgent",
-                      [
-                        "=",
-                        "@payload.row.severity",
-                        "urgent"
-                      ],
-                      "final",
-                      "final"
-                    ]
+                    "@payload.row.severity"
                   ],
                   [
                     "set",
                     "@entity.attemptNumber",
-                    [
-                      "+",
-                      "@payload.row.attemptNumber",
-                      1.0
-                    ]
+                    "@payload.row.attemptNumber"
                   ],
                   [
                     "set",
@@ -881,62 +531,214 @@
                     "@payload.row.currency"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "message": "Attempt @entity.attemptNumber of @entity.attemptsTotal — amount @entity.amountDue @entity.currency. Next retry @entity.nextRetryAt.",
-                      "variant": "warning",
-                      "title": "Payment failed",
-                      "dismissible": false
-                    }
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "DunningCase",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "DunningCaseUpdated",
-                        "failure": "DunningCaseUpdateFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "escalating",
-                "event": "RESOLVE",
-                "effects": [
-                  [
                     "set",
-                    "@entity.id",
-                    "@payload.id"
+                    "@entity.resolvedAt",
+                    "@payload.row.resolvedAt"
                   ],
                   [
                     "set",
                     "@entity.status",
-                    "resolved"
+                    "@payload.row.status"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "DunningCase",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "DunningCaseUpdateFailed",
-                        "success": "DunningCaseUpdated"
-                      }
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle"
+                            },
+                            {
+                              "content": "@entity.subscriptionId",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "@entity.severity",
+                              "type": "badge",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "type": "badge",
+                              "variant": "default"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Customer",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.customerId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Currency"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.currency"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Failed at"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.failedAt",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Next retry",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.nextRetryAt",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@entity.amountDue",
+                              "label": "Amount due",
+                              "icon": "dollar-sign",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Attempt",
+                              "icon": "repeat",
+                              "value": "@entity.attemptNumber"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Total attempts",
+                              "icon": "list",
+                              "value": "@entity.attemptsTotal"
+                            },
+                            {
+                              "label": "Resolved at",
+                              "type": "stat-display",
+                              "value": "@entity.resolvedAt",
+                              "icon": "check-circle"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "action": "ESCALATE",
+                              "variant": "primary",
+                              "label": "Escalate",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "label": "Resolve",
+                              "action": "RESOLVE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "secondary"
+                            },
+                            {
+                              "label": "Suspend",
+                              "variant": "danger",
+                              "action": "SUSPEND",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button"
+                            }
+                          ]
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "escalating",
+                "to": "loading",
                 "event": "SUSPEND",
                 "effects": [
                   [
@@ -945,70 +747,206 @@
                     "@payload.id"
                   ],
                   [
-                    "set",
-                    "@entity.status",
-                    "suspended"
+                    "fetch",
+                    "DunningCase",
+                    {
+                      "emit": {
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
+                      }
+                    }
                   ],
-                  [
-                    "persist",
-                    "update",
-                    "DunningCase",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "ServiceSuspended",
-                        "failure": "DunningCaseUpdateFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "escalating",
-                "to": "loading",
-                "event": "DunningCaseUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "DunningCase",
-                    {
-                      "emit": {
-                        "success": "DunningCaseLoaded",
-                        "failure": "DunningCaseLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "escalating",
-                "to": "loading",
-                "event": "ServiceSuspended",
-                "effects": [
-                  [
-                    "fetch",
-                    "DunningCase",
-                    {
-                      "emit": {
-                        "success": "DunningCaseLoaded",
-                        "failure": "DunningCaseLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "escalating",
-                "to": "browsing",
-                "event": "DunningCaseUpdateFailed",
-                "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Suspending service…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "DunningCase",
+                    {
+                      "emit": {
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading dunning cases…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ESCALATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "DunningCase",
+                    {
+                      "emit": {
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Escalating case…"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "RESOLVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "DunningCase",
+                    {
+                      "emit": {
+                        "success": "DunningCaseLoaded",
+                        "failure": "DunningCaseLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Resolving case…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "SUSPEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "DunningCase",
+                    {
+                      "emit": {
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Suspending service…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1023,8 +961,8 @@
                     "DunningCase",
                     {
                       "emit": {
-                        "success": "DunningCaseLoaded",
-                        "failure": "DunningCaseLoadFailed"
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
                       }
                     }
                   ],
@@ -1032,8 +970,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

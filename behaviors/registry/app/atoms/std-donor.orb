@@ -1,7 +1,7 @@
 {
   "name": "std-donor",
   "version": "1.0.0",
-  "description": "std-donor — donor primitive: person or organization that has donated to a nonprofit, with lifetime giving total and contact info.",
+  "description": "std-donor — nonprofit donor primitive (person or org with lifetime giving total). Lists donors in `browsing`; opens donor detail in `viewing_single` with Thank / Solicit actions.",
   "orbitals": [
     {
       "name": "DonorOrbital",
@@ -75,7 +75,7 @@
           "linkedEntity": "Donor",
           "emits": [
             {
-              "event": "THANK_DONOR",
+              "event": "OPEN_DONOR",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -127,54 +127,25 @@
               ]
             },
             {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "THANK_DONOR",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
               "event": "SOLICIT_DONOR",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.email",
-                  "type": "string"
-                },
-                {
-                  "name": "row.phone",
-                  "type": "string"
-                },
-                {
-                  "name": "row.donorType",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lifetimeAmount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.firstDonationAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lastDonationAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.preferredCampaign",
-                  "type": "string"
-                },
-                {
-                  "name": "row.isRecurring",
-                  "type": "boolean"
                 }
               ]
             },
@@ -211,6 +182,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -244,6 +218,21 @@
                 ]
               },
               {
+                "key": "OPEN_DONOR",
+                "name": "Open Donor",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Donor"
+                  }
+                ]
+              },
+              {
                 "key": "THANK_DONOR",
                 "name": "Thank Donor",
                 "payloadSchema": [
@@ -253,6 +242,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               },
               {
                 "key": "SOLICIT_DONOR",
@@ -277,8 +270,8 @@
                     "Donor",
                     {
                       "emit": {
-                        "failure": "DonorLoadFailed",
-                        "success": "DonorLoaded"
+                        "success": "DonorLoaded",
+                        "failure": "DonorLoadFailed"
                       }
                     }
                   ],
@@ -286,6 +279,11 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -293,15 +291,10 @@
                         {
                           "type": "typography",
                           "color": "muted",
-                          "content": "Loading donors…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading donors…"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -315,104 +308,81 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "heart-handshake"
+                              "name": "heart"
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
-                            },
-                            {
-                              "type": "avatar",
-                              "name": "Top donor",
-                              "src": "https://i.pravatar.cc/64?u=top-donor"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "flip-card",
-                              "front": {
-                                "bio": "Gives monthly since 2020",
-                                "avatar": "https://i.pravatar.cc/120?u=sarah",
-                                "name": "Sarah Johnson",
-                                "type": "team-card",
-                                "role": "Top recurring donor"
-                              },
-                              "back": {
-                                "gap": "sm",
-                                "direction": "vertical",
-                                "children": [
-                                  {
-                                    "type": "typography",
-                                    "content": "Lifetime giving",
-                                    "variant": "h4"
-                                  },
-                                  {
-                                    "content": "$24,500 across 48 gifts",
-                                    "variant": "body",
-                                    "type": "typography"
-                                  }
-                                ],
-                                "type": "stack"
-                              }
+                              "value": "@payload.data.length",
+                              "icon": "heart",
+                              "label": "Total donors",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "team-card",
-                              "avatar": "https://i.pravatar.cc/120?u=lead",
-                              "role": "Field coordinator",
-                              "name": "Volunteer Team Lead",
-                              "bio": "Leads our regional volunteer corps"
+                              "type": "stat-display",
+                              "label": "Recurring",
+                              "value": "184",
+                              "icon": "refresh-cw"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "dollar-sign",
+                              "value": "$2.4M",
+                              "label": "Total lifetime"
+                            },
+                            {
+                              "label": "Avg gift",
+                              "icon": "trending-up",
+                              "value": "$148",
+                              "type": "stat-display"
                             }
                           ],
-                          "type": "stack"
-                        },
-                        {
-                          "type": "team-organism"
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "cols": 1.0,
                           "itemActions": [
                             {
                               "variant": "primary",
-                              "label": "Thank",
-                              "event": "THANK_DONOR"
+                              "event": "OPEN_DONOR",
+                              "label": "Open",
+                              "icon": "arrow-right"
                             },
                             {
-                              "event": "SOLICIT_DONOR",
-                              "variant": "ghost",
-                              "label": "Solicit"
+                              "event": "THANK_DONOR",
+                              "label": "Thank",
+                              "variant": "secondary"
                             }
                           ],
+                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "name": "name",
-                              "variant": "caption",
-                              "label": "Name"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "email",
-                              "label": "Email"
+                              "label": "Name",
+                              "variant": "h4",
+                              "name": "name"
                             },
                             {
                               "variant": "badge",
@@ -420,18 +390,21 @@
                               "name": "donorType"
                             },
                             {
-                              "name": "lifetimeAmount",
-                              "variant": "caption",
-                              "label": "Lifetime"
+                              "variant": "body",
+                              "name": "email",
+                              "label": "Email"
                             },
                             {
-                              "name": "lastDonationAt",
                               "variant": "caption",
-                              "label": "Last Gift"
+                              "label": "Lifetime",
+                              "name": "lifetimeAmount"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Last gift",
+                              "name": "lastDonationAt"
                             }
-                          ],
-                          "type": "data-grid",
-                          "gap": "sm"
+                          ]
                         }
                       ]
                     }
@@ -456,7 +429,215 @@
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_DONOR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.email",
+                    "@payload.row.email"
+                  ],
+                  [
+                    "set",
+                    "@entity.phone",
+                    "@payload.row.phone"
+                  ],
+                  [
+                    "set",
+                    "@entity.donorType",
+                    "@payload.row.donorType"
+                  ],
+                  [
+                    "set",
+                    "@entity.lifetimeAmount",
+                    "@payload.row.lifetimeAmount"
+                  ],
+                  [
+                    "set",
+                    "@entity.firstDonationAt",
+                    "@payload.row.firstDonationAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastDonationAt",
+                    "@payload.row.lastDonationAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.preferredCampaign",
+                    "@payload.row.preferredCampaign"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost",
+                              "label": "Back",
+                              "type": "button"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "heart"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.name"
+                            },
+                            {
+                              "label": "@entity.donorType",
+                              "variant": "default",
+                              "type": "badge"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "content": "Email",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.email",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Phone",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.phone"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Preferred campaign",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.preferredCampaign"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.lifetimeAmount",
+                              "icon": "dollar-sign",
+                              "label": "Lifetime amount"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "First donation",
+                              "icon": "calendar",
+                              "value": "@entity.firstDonationAt"
+                            },
+                            {
+                              "value": "@entity.lastDonationAt",
+                              "type": "stat-display",
+                              "label": "Last donation",
+                              "icon": "calendar-check"
+                            }
+                          ],
+                          "cols": 3.0
+                        },
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "THANK_DONOR",
+                              "label": "Thank Donor",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Solicit",
+                              "action": "SOLICIT_DONOR",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
                 "event": "THANK_DONOR",
                 "effects": [
                   [
@@ -465,42 +646,88 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "Donor",
+                    {
+                      "emit": {
+                        "failure": "DonorLoadFailed",
+                        "success": "DonorLoaded"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "success",
-                      "message": "Thank-you sent"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Sending thanks…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SOLICIT_DONOR",
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Donor",
+                    {
+                      "emit": {
+                        "failure": "DonorLoadFailed",
+                        "success": "DonorLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading donors…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "THANK_DONOR",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
                     "@payload.id"
                   ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "message": "Solicitation queued",
-                      "variant": "info"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
                   [
                     "fetch",
                     "Donor",
@@ -515,8 +742,91 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Sending thanks…"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "SOLICIT_DONOR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Donor",
+                    {
+                      "emit": {
+                        "failure": "DonorLoadFailed",
+                        "success": "DonorLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Soliciting donor…"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Donor",
+                    {
+                      "emit": {
+                        "failure": "DonorLoadFailed",
+                        "success": "DonorLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

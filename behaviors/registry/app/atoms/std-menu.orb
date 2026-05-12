@@ -89,6 +89,79 @@
           "linkedEntity": "MenuItem",
           "emits": [
             {
+              "event": "OPEN_ITEM",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.price",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.category",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.imageUrl",
+                  "type": "string"
+                },
+                {
+                  "name": "row.available",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.availableFrom",
+                  "type": "string"
+                },
+                {
+                  "name": "row.availableUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.tags",
+                  "type": "[string]"
+                },
+                {
+                  "name": "row.modifierGroupIds",
+                  "type": "[string]"
+                },
+                {
+                  "name": "row.prepTimeMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.order",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "CREATE",
               "payloadSchema": [
                 {
@@ -554,6 +627,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -587,42 +663,11 @@
                 ]
               },
               {
-                "key": "CREATE",
-                "name": "Create",
+                "key": "OPEN_ITEM",
+                "name": "Open Item",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "UPDATE",
-                "name": "Update",
-                "payloadSchema": [
-                  {
-                    "name": "itemId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "MenuItem"
-                  },
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TOGGLE_AVAILABLE",
-                "name": "Toggle Available",
-                "payloadSchema": [
-                  {
-                    "name": "itemId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -690,6 +735,56 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "itemId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MenuItem"
+                  },
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TOGGLE_AVAILABLE",
+                "name": "Toggle Available",
+                "payloadSchema": [
+                  {
+                    "name": "itemId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MenuItem"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -712,22 +807,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading menu…"
+                          "content": "Loading menu…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -743,21 +838,51 @@
                     {
                       "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "name": "utensils",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "label": "Menu items",
+                              "type": "stat-display",
+                              "icon": "utensils",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "value": "62",
+                              "icon": "check-circle",
+                              "label": "Available",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "list",
+                              "type": "stat-display",
+                              "value": "8",
+                              "label": "Categories"
+                            },
+                            {
+                              "value": "$14.50",
+                              "type": "stat-display",
+                              "label": "Avg price",
+                              "icon": "dollar-sign"
                             }
                           ]
                         },
@@ -767,40 +892,33 @@
                         {
                           "itemActions": [
                             {
-                              "label": "Update",
-                              "variant": "secondary",
-                              "event": "UPDATE",
-                              "icon": "edit"
-                            },
-                            {
-                              "event": "TOGGLE_AVAILABLE",
                               "variant": "primary",
-                              "icon": "power",
-                              "label": "Toggle"
+                              "icon": "arrow-right",
+                              "label": "Open",
+                              "event": "OPEN_ITEM"
                             },
                             {
                               "event": "DELETE",
+                              "variant": "danger",
                               "label": "Delete",
-                              "icon": "trash",
-                              "variant": "danger"
+                              "icon": "trash"
                             }
                           ],
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "variant": "badge",
-                              "name": "name",
-                              "label": "Item"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "category",
-                              "label": "Category"
-                            },
-                            {
                               "variant": "caption",
+                              "label": "Item",
+                              "name": "name"
+                            },
+                            {
+                              "label": "Category",
+                              "name": "category",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "price",
                               "label": "Price",
-                              "name": "price"
+                              "variant": "caption"
                             },
                             {
                               "label": "Currency",
@@ -808,28 +926,23 @@
                               "name": "currency"
                             },
                             {
+                              "variant": "caption",
                               "name": "prepTimeMinutes",
-                              "label": "Prep (min)",
-                              "variant": "caption"
+                              "label": "Prep (min)"
                             },
                             {
                               "label": "Available",
-                              "variant": "badge",
-                              "name": "available"
+                              "name": "available",
+                              "variant": "badge"
                             }
                           ],
+                          "gap": "sm",
+                          "type": "data-grid",
                           "cols": 1.0,
-                          "entity": "@payload.data",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "button",
-                          "action": "CREATE",
-                          "icon": "plus",
-                          "label": "New Item",
-                          "variant": "primary"
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -852,32 +965,13 @@
               },
               {
                 "from": "browsing",
-                "to": "loading",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "MenuItem",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "MenuItemCreated",
-                        "failure": "MenuItemWriteFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "UPDATE",
+                "to": "viewing_single",
+                "event": "OPEN_ITEM",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.itemId"
+                    "@payload.row.id"
                   ],
                   [
                     "set",
@@ -945,107 +1039,167 @@
                     "@payload.row.order"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "MenuItem",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "MenuItemWriteFailed",
-                        "success": "MenuItemUpdated"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "TOGGLE_AVAILABLE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.itemId"
-                  ],
-                  [
-                    "set",
-                    "@entity.name",
-                    "@payload.row.name"
-                  ],
-                  [
-                    "set",
-                    "@entity.description",
-                    "@payload.row.description"
-                  ],
-                  [
-                    "set",
-                    "@entity.price",
-                    "@payload.row.price"
-                  ],
-                  [
-                    "set",
-                    "@entity.currency",
-                    "@payload.row.currency"
-                  ],
-                  [
-                    "set",
-                    "@entity.category",
-                    "@payload.row.category"
-                  ],
-                  [
-                    "set",
-                    "@entity.imageUrl",
-                    "@payload.row.imageUrl"
-                  ],
-                  [
-                    "set",
-                    "@entity.available",
-                    [
-                      "not",
-                      "@payload.row.available"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.availableFrom",
-                    "@payload.row.availableFrom"
-                  ],
-                  [
-                    "set",
-                    "@entity.availableUntil",
-                    "@payload.row.availableUntil"
-                  ],
-                  [
-                    "set",
-                    "@entity.tags",
-                    "@payload.row.tags"
-                  ],
-                  [
-                    "set",
-                    "@entity.modifierGroupIds",
-                    "@payload.row.modifierGroupIds"
-                  ],
-                  [
-                    "set",
-                    "@entity.prepTimeMinutes",
-                    "@payload.row.prepTimeMinutes"
-                  ],
-                  [
-                    "set",
-                    "@entity.order",
-                    "@payload.row.order"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "MenuItem",
-                    "@entity",
-                    {
-                      "emit": {
-                        "failure": "MenuItemWriteFailed",
-                        "success": "MenuItemUpdated"
-                      }
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "utensils"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.name"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.category",
+                              "variant": "primary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Description",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.description",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Available from"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.availableFrom"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Available until"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.availableUntil"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "dollar-sign",
+                              "value": "@entity.price",
+                              "label": "Price"
+                            },
+                            {
+                              "label": "Currency",
+                              "type": "stat-display",
+                              "value": "@entity.currency",
+                              "icon": "circle-dollar-sign"
+                            },
+                            {
+                              "value": "@entity.prepTimeMinutes",
+                              "icon": "clock",
+                              "type": "stat-display",
+                              "label": "Prep (min)"
+                            },
+                            {
+                              "label": "Order",
+                              "icon": "list-ordered",
+                              "value": "@entity.order",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
+                        },
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Toggle Available",
+                              "action": "TOGGLE_AVAILABLE",
+                              "type": "button",
+                              "actionPayload": {
+                                "itemId": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Delete",
+                              "type": "button",
+                              "variant": "danger",
+                              "actionPayload": {
+                                "itemId": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "action": "DELETE"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1132,9 +1286,31 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "MenuItemWriteFailed",
-                        "success": "MenuItemDeleted"
+                        "success": "MenuItemDeleted",
+                        "failure": "MenuItemWriteFailed"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Deleting menu item…",
+                          "variant": "caption"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -1166,8 +1342,8 @@
                     "MenuItem",
                     {
                       "emit": {
-                        "success": "MenuItemLoaded",
-                        "failure": "MenuItemLoadFailed"
+                        "failure": "MenuItemLoadFailed",
+                        "success": "MenuItemLoaded"
                       }
                     }
                   ]
@@ -1183,8 +1359,8 @@
                     "MenuItem",
                     {
                       "emit": {
-                        "success": "MenuItemLoaded",
-                        "failure": "MenuItemLoadFailed"
+                        "failure": "MenuItemLoadFailed",
+                        "success": "MenuItemLoaded"
                       }
                     }
                   ]
@@ -1199,9 +1375,425 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "MenuItem",
+                    {
+                      "emit": {
+                        "failure": "MenuItemLoadFailed",
+                        "success": "MenuItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading menu…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "MenuItem",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "MenuItemWriteFailed",
+                        "success": "MenuItemCreated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Creating menu item…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "UPDATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.itemId"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.price",
+                    "@payload.row.price"
+                  ],
+                  [
+                    "set",
+                    "@entity.currency",
+                    "@payload.row.currency"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.row.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.imageUrl",
+                    "@payload.row.imageUrl"
+                  ],
+                  [
+                    "set",
+                    "@entity.available",
+                    "@payload.row.available"
+                  ],
+                  [
+                    "set",
+                    "@entity.availableFrom",
+                    "@payload.row.availableFrom"
+                  ],
+                  [
+                    "set",
+                    "@entity.availableUntil",
+                    "@payload.row.availableUntil"
+                  ],
+                  [
+                    "set",
+                    "@entity.tags",
+                    "@payload.row.tags"
+                  ],
+                  [
+                    "set",
+                    "@entity.modifierGroupIds",
+                    "@payload.row.modifierGroupIds"
+                  ],
+                  [
+                    "set",
+                    "@entity.prepTimeMinutes",
+                    "@payload.row.prepTimeMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.order",
+                    "@payload.row.order"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "MenuItem",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "MenuItemUpdated",
+                        "failure": "MenuItemWriteFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Updating menu item…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "TOGGLE_AVAILABLE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.itemId"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.price",
+                    "@payload.row.price"
+                  ],
+                  [
+                    "set",
+                    "@entity.currency",
+                    "@payload.row.currency"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.row.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.imageUrl",
+                    "@payload.row.imageUrl"
+                  ],
+                  [
+                    "set",
+                    "@entity.available",
+                    [
+                      "not",
+                      "@payload.row.available"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.availableFrom",
+                    "@payload.row.availableFrom"
+                  ],
+                  [
+                    "set",
+                    "@entity.availableUntil",
+                    "@payload.row.availableUntil"
+                  ],
+                  [
+                    "set",
+                    "@entity.tags",
+                    "@payload.row.tags"
+                  ],
+                  [
+                    "set",
+                    "@entity.modifierGroupIds",
+                    "@payload.row.modifierGroupIds"
+                  ],
+                  [
+                    "set",
+                    "@entity.prepTimeMinutes",
+                    "@payload.row.prepTimeMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.order",
+                    "@payload.row.order"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "MenuItem",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "MenuItemUpdated",
+                        "failure": "MenuItemWriteFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Toggling availability…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.itemId"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.price",
+                    "@payload.row.price"
+                  ],
+                  [
+                    "set",
+                    "@entity.currency",
+                    "@payload.row.currency"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.row.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.imageUrl",
+                    "@payload.row.imageUrl"
+                  ],
+                  [
+                    "set",
+                    "@entity.available",
+                    "@payload.row.available"
+                  ],
+                  [
+                    "set",
+                    "@entity.availableFrom",
+                    "@payload.row.availableFrom"
+                  ],
+                  [
+                    "set",
+                    "@entity.availableUntil",
+                    "@payload.row.availableUntil"
+                  ],
+                  [
+                    "set",
+                    "@entity.tags",
+                    "@payload.row.tags"
+                  ],
+                  [
+                    "set",
+                    "@entity.modifierGroupIds",
+                    "@payload.row.modifierGroupIds"
+                  ],
+                  [
+                    "set",
+                    "@entity.prepTimeMinutes",
+                    "@payload.row.prepTimeMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.order",
+                    "@payload.row.order"
+                  ],
+                  [
+                    "persist",
+                    "delete",
+                    "MenuItem",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "MenuItemDeleted",
+                        "failure": "MenuItemWriteFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Deleting menu item…"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1225,8 +1817,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

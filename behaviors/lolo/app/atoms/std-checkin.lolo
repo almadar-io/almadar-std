@@ -1,5 +1,5 @@
 app std-checkin "1.0.0"
-"std-checkin — unified arrival check-in atom. Config picks the verification mode (qr or geo); SCAN persists the captured location/code against a target (work-order, ticket, or appointment) and emits CheckinRecorded for cross-trait listeners."
+"std-checkin — arrival check-in atom listing recorded check-ins (qr or geo). Lists check-ins in `browsing`; opens detail in `viewing_single` with Verify / Revoke actions."
 
 orbital CheckinOrbital {
   entity Checkin [persistent: checkins] {
@@ -17,70 +17,74 @@ orbital CheckinOrbital {
 
   type CheckinLoaded     = Event { data : [Checkin] }                    "Fired when the check-in collection finishes loading"
   type CheckinLoadFailed = Event { error : string, code : string }       "Fired when the check-in collection fails to load"
-  type CheckinRecorded   = Event { row : Checkin }                       "Fired after a check-in persists successfully"
-  type CheckinFailed     = Event { error : string, code : string }       "Fired when persisting a check-in fails"
 
-  trait CheckinScan -> Checkin [interaction, instance] {
+  trait CheckinScan -> Checkin [interaction, collection] {
     config {
       mode  : string = "geo"
-      title : string = "Check in"
+      title : string = "Check-ins"
     }
     initial: loading
     state loading {
       INIT -> loading
         (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading check-in…" }] })
-      CheckinLoaded -> idle when (= @config.mode "qr")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "qr-scanner", onScan: "SCAN", facingMode: "environment", showOverlay: true, showCameraControls: true }] })
-      CheckinLoaded -> idle when (= @config.mode "geo")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "map-view", markers: [], centerLat: @entity.lat, centerLng: @entity.lng, height: "320px", zoom: 14, showClickedPin: true, mapClickEvent: "SCAN" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading check-ins…" }] })
+      CheckinLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total check-ins", value: "@payload.data.length", icon: "map-pin" }, { type: "stat-display", label: "Verified", value: "92%", icon: "check-circle" }, { type: "stat-display", label: "Today", value: "47", icon: "calendar" }, { type: "stat-display", label: "Sites covered", value: "18", icon: "globe" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "targetType", label: "Type", variant: "badge" }, { name: "targetId", label: "Target", variant: "caption" }, { name: "userId", label: "User", variant: "caption" }, { name: "mode", label: "Mode", variant: "badge" }, { name: "checkedInAt", label: "When", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CHECKIN", variant: "primary", icon: "arrow-right" }, { label: "Revoke", event: "REVOKE_CHECKIN", variant: "danger" }] }] })
       CheckinLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state idle {
-      SCAN -> checking-in when (= @config.mode "qr")
-        (set @entity.mode "qr")
-        (set @entity.verified true)
-        (persist create Checkin @payload.data { emit: { success: "CheckinRecorded", failure: "CheckinFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording check-in…" }] })
-      SCAN -> checking-in when (= @config.mode "geo")
-        (set @entity.mode "geo")
-        (set @entity.lat @payload.latitude)
-        (set @entity.lng @payload.longitude)
-        (set @entity.verified true)
-        (persist create Checkin @payload.data { emit: { success: "CheckinRecorded", failure: "CheckinFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording check-in…" }] })
-    }
-    state checking-in {
-      CheckinRecorded -> checked-in
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "check-circle", color: "success" }, { type: "typography", variant: "h3", content: "Checked in" }] })
-      CheckinFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
-    }
-    state checked-in {
-      INIT -> loading
+    state browsing {
+      OPEN_CHECKIN -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.mode @payload.row.mode)
+        (set @entity.targetId @payload.row.targetId)
+        (set @entity.targetType @payload.row.targetType)
+        (set @entity.userId @payload.row.userId)
+        (set @entity.lat @payload.row.lat)
+        (set @entity.lng @payload.row.lng)
+        (set @entity.qrCode @payload.row.qrCode)
+        (set @entity.verified @payload.row.verified)
+        (set @entity.checkedInAt @payload.row.checkedInAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "map-pin" }, { type: "typography", content: "@entity.targetId", variant: "h3" }, { type: "badge", label: "@entity.mode", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Target type" }, { type: "typography", variant: "body", content: "@entity.targetType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "User" }, { type: "typography", variant: "body", content: "@entity.userId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "QR code" }, { type: "typography", variant: "body", content: "@entity.qrCode" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Latitude", value: "@entity.lat", icon: "map" }, { type: "stat-display", label: "Longitude", value: "@entity.lng", icon: "map" }, { type: "stat-display", label: "Checked in", value: "@entity.checkedInAt", icon: "clock" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Verify", variant: "primary", action: "VERIFY_CHECKIN", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Revoke", variant: "danger", action: "REVOKE_CHECKIN", actionPayload: { id: "@entity.id" } }] }] })
+      REVOKE_CHECKIN -> loading
+        (set @entity.id @payload.id)
         (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading check-in…" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Revoking check-in…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading check-ins…" }] })
+      VERIFY_CHECKIN -> loading
+        (set @entity.id @payload.id)
+        (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Verifying check-in…" }] })
+      REVOKE_CHECKIN -> loading
+        (set @entity.id @payload.id)
+        (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Revoking check-in…" }] })
     }
     state error {
       INIT -> loading
         (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading check-in…" }] })
+        (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      SCAN { qrCode : string, lat : number, lng : number, latitude : number, longitude : number, result : object, data : object! }
-      CheckinLoaded { data : [Checkin] }
+      OPEN_CHECKIN      { id : string!, row : Checkin }
+      CLOSE_VIEW        { }
+      VERIFY_CHECKIN    { id : string! }
+      REVOKE_CHECKIN    { id : string! }
+      CheckinLoaded     { data : [Checkin] }
       CheckinLoadFailed { error : string, code : string }
-      CheckinRecorded { row : Checkin }
-      CheckinFailed { error : string, code : string }
     }
     listens {
-      SCAN { qrCode : string, lat : number, lng : number, latitude : number, longitude : number, result : object, data : object! }
-      CheckinLoaded { data : [Checkin] }
+      OPEN_CHECKIN      { id : string!, row : Checkin }
+      CLOSE_VIEW        { }
+      VERIFY_CHECKIN    { id : string! }
+      REVOKE_CHECKIN    { id : string! }
+      CheckinLoaded     { data : [Checkin] }
       CheckinLoadFailed { error : string, code : string }
-      CheckinRecorded { row : Checkin }
-      CheckinFailed { error : string, code : string }
     }
   }
-  page "/checkins/scan" as CheckinScanPage -> CheckinScan
+  page "/checkins" as CheckinScanPage -> CheckinScan
 }

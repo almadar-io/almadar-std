@@ -1,5 +1,5 @@
 app std-response-collector "1.0.0"
-"std-response-collector — survey per-respondent answer accumulator. ResponseCollect fetches Response rows on INIT, lists them, and on SUBMIT persists a new answer row tagged with surveyId, respondentId, questionId, and serialized answerJson, emitting ResponseSubmitted for cross-trait listeners."
+"std-response-collector — survey per-respondent answer accumulator. Lists responses in `browsing`; opens detail in `viewing_single` with Resubmit / Delete actions."
 
 orbital ResponseCollectorOrbital {
   entity Response [persistent: responses] {
@@ -11,10 +11,8 @@ orbital ResponseCollectorOrbital {
     submittedAt  : string
   }
 
-  type ResponseLoaded        = Event { data : [Response] }                "Fired when the response collection finishes loading"
-  type ResponseLoadFailed    = Event { error : string, code : string }    "Fired when the response collection fails to load"
-  type ResponseSubmitted     = Event { row : Response }                   "Fired after a response persists successfully"
-  type ResponseSubmitFailed  = Event { error : string, code : string }    "Fired when persisting a response fails"
+  type ResponseLoaded     = Event { data : [Response] }              "Fired when the response collection finishes loading"
+  type ResponseLoadFailed = Event { error : string, code : string }  "Fired when the response collection fails to load"
 
   trait ResponseCollect -> Response [interaction, collection] {
     config {
@@ -26,44 +24,61 @@ orbital ResponseCollectorOrbital {
         (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading responses…" }] })
       ResponseLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "questionId", label: "Question" }, { name: "respondentId", label: "Respondent" }, { name: "answerJson", label: "Answer" }, { name: "submittedAt", label: "Submitted" }], itemActions: [{ label: "View", event: "SUBMIT", icon: "eye" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total responses", value: "@payload.data.length", icon: "clipboard-list" }, { type: "stat-display", label: "Completion", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Respondents", value: "312", icon: "users" }, { type: "stat-display", label: "Surveys", value: "6", icon: "file-text" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "questionId", label: "Question", variant: "caption" }, { name: "respondentId", label: "Respondent", variant: "caption" }, { name: "surveyId", label: "Survey", variant: "caption" }, { name: "answerJson", label: "Answer", variant: "caption" }, { name: "submittedAt", label: "Submitted", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RESPONSE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_RESPONSE", variant: "danger" }] }] })
       ResponseLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      SUBMIT -> submitting
-        (set @entity.surveyId @payload.surveyId)
-        (set @entity.respondentId @payload.respondentId)
-        (set @entity.questionId @payload.questionId)
-        (set @entity.answerJson @payload.answerJson)
-        (persist create Response @payload.data { emit: { success: "ResponseSubmitted", failure: "ResponseSubmitFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting response…" }] })
-    }
-    state submitting {
-      ResponseSubmitted -> loading
+      OPEN_RESPONSE -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.surveyId @payload.row.surveyId)
+        (set @entity.respondentId @payload.row.respondentId)
+        (set @entity.questionId @payload.row.questionId)
+        (set @entity.answerJson @payload.row.answerJson)
+        (set @entity.submittedAt @payload.row.submittedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "clipboard-list" }, { type: "typography", content: "@entity.respondentId", variant: "h3" }, { type: "badge", label: "Submitted", variant: "success" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Survey" }, { type: "typography", variant: "body", content: "@entity.surveyId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Question" }, { type: "typography", variant: "body", content: "@entity.questionId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Answer" }, { type: "typography", variant: "body", content: "@entity.answerJson" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Respondent", value: "@entity.respondentId", icon: "user" }, { type: "stat-display", label: "Submitted", value: "@entity.submittedAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Resubmit", variant: "primary", action: "RESUBMIT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Delete", variant: "danger", action: "DELETE_RESPONSE", actionPayload: { id: "@entity.id" } }] }] })
+      RESUBMIT -> loading
+        (set @entity.id @payload.id)
         (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing responses…" }] })
-      ResponseSubmitFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resubmitting response…" }] })
+      DELETE_RESPONSE -> loading
+        (set @entity.id @payload.id)
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting response…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading responses…" }] })
+      RESUBMIT -> loading
+        (set @entity.id @payload.id)
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resubmitting response…" }] })
+      DELETE_RESPONSE -> loading
+        (set @entity.id @payload.id)
+        (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting response…" }] })
     }
     state error {
       INIT -> loading
         (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading responses…" }] })
+        (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      SUBMIT { surveyId : string!, respondentId : string!, questionId : string!, answerJson : string, data : object! }
-      ResponseLoaded { data : [Response] }
+      OPEN_RESPONSE      { id : string!, row : Response }
+      CLOSE_VIEW         { }
+      RESUBMIT           { id : string! }
+      DELETE_RESPONSE    { id : string! }
+      ResponseLoaded     { data : [Response] }
       ResponseLoadFailed { error : string, code : string }
-      ResponseSubmitted { row : Response }
-      ResponseSubmitFailed { error : string, code : string }
     }
     listens {
-      SUBMIT { surveyId : string!, respondentId : string!, questionId : string!, answerJson : string, data : object! }
-      ResponseLoaded { data : [Response] }
+      OPEN_RESPONSE      { id : string!, row : Response }
+      CLOSE_VIEW         { }
+      RESUBMIT           { id : string! }
+      DELETE_RESPONSE    { id : string! }
+      ResponseLoaded     { data : [Response] }
       ResponseLoadFailed { error : string, code : string }
-      ResponseSubmitted { row : Response }
-      ResponseSubmitFailed { error : string, code : string }
     }
   }
   page "/responses/collect" as ResponseCollectPage -> ResponseCollect

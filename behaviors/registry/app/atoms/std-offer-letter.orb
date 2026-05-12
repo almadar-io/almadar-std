@@ -71,6 +71,57 @@
           "linkedEntity": "OfferLetter",
           "emits": [
             {
+              "event": "OPEN_OFFER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.applicantName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.position",
+                  "type": "string"
+                },
+                {
+                  "name": "row.salary",
+                  "type": "number"
+                },
+                {
+                  "name": "row.startDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.expiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "SEND_OFFER",
               "payloadSchema": [
                 {
@@ -123,6 +174,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -156,8 +210,23 @@
                 ]
               },
               {
-                "key": "SEND_OFFER",
-                "name": "Send Offer",
+                "key": "OPEN_OFFER",
+                "name": "Open Offer",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "OfferLetter"
+                  }
+                ]
+              },
+              {
+                "key": "REVOKE_OFFER",
+                "name": "Revoke Offer",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -167,8 +236,12 @@
                 ]
               },
               {
-                "key": "REVOKE_OFFER",
-                "name": "Revoke Offer",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "SEND_OFFER",
+                "name": "Send Offer",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -198,22 +271,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Loading offer letters…"
                         }
                       ],
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -228,12 +301,8 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "file-text",
@@ -241,8 +310,42 @@
                             },
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "icon": "file-text",
+                              "label": "Total offers"
+                            },
+                            {
+                              "icon": "send",
+                              "label": "Sent",
+                              "type": "stat-display",
+                              "value": "23"
+                            },
+                            {
+                              "value": "14",
+                              "icon": "check-circle",
+                              "label": "Accepted",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "trending-up",
+                              "label": "Acceptance rate",
+                              "type": "stat-display",
+                              "value": "61%"
                             }
                           ]
                         },
@@ -250,52 +353,54 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Send",
-                              "variant": "primary",
-                              "event": "SEND_OFFER"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Revoke",
-                              "event": "REVOKE_OFFER"
-                            }
-                          ],
-                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "label": "Applicant",
+                              "variant": "caption",
                               "name": "applicantName",
-                              "variant": "caption"
+                              "label": "Applicant"
                             },
                             {
+                              "variant": "caption",
                               "label": "Position",
-                              "name": "position",
-                              "variant": "caption"
+                              "name": "position"
                             },
                             {
-                              "name": "salary",
                               "label": "Salary",
+                              "name": "salary",
                               "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "startDate",
-                              "label": "Start Date",
-                              "variant": "caption"
+                              "label": "Start Date"
                             },
                             {
                               "label": "Status",
                               "name": "status",
                               "variant": "badge"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "event": "OPEN_OFFER",
+                              "icon": "arrow-right",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Revoke",
+                              "variant": "danger",
+                              "event": "REVOKE_OFFER"
+                            }
+                          ],
+                          "cols": 1.0
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -309,8 +414,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -318,28 +423,215 @@
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "SEND_OFFER",
+                "to": "viewing_single",
+                "event": "OPEN_OFFER",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantId",
+                    "@payload.row.applicantId"
+                  ],
+                  [
+                    "set",
+                    "@entity.applicantName",
+                    "@payload.row.applicantName"
+                  ],
+                  [
+                    "set",
+                    "@entity.position",
+                    "@payload.row.position"
+                  ],
+                  [
+                    "set",
+                    "@entity.salary",
+                    "@payload.row.salary"
+                  ],
+                  [
+                    "set",
+                    "@entity.startDate",
+                    "@payload.row.startDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.expiresAt",
+                    "@payload.row.expiresAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "Offer sent",
-                      "type": "alert",
-                      "variant": "success"
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "type": "button"
+                            },
+                            {
+                              "name": "file-text",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@entity.applicantName",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "variant": "default",
+                              "label": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Position"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.position"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Applicant ID",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.applicantId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Notes"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.notes"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 3.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "dollar-sign",
+                              "value": "@entity.salary",
+                              "label": "Salary"
+                            },
+                            {
+                              "value": "@entity.startDate",
+                              "type": "stat-display",
+                              "icon": "calendar",
+                              "label": "Start date"
+                            },
+                            {
+                              "label": "Expires",
+                              "type": "stat-display",
+                              "icon": "calendar-x",
+                              "value": "@entity.expiresAt"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "SEND_OFFER",
+                              "label": "Send Offer",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Revoke",
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "REVOKE_OFFER",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "REVOKE_OFFER",
                 "effects": [
                   [
@@ -348,12 +640,162 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "OfferLetter",
+                    {
+                      "emit": {
+                        "success": "OfferLetterLoaded",
+                        "failure": "OfferLetterLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "Offer revoked",
-                      "variant": "info"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Revoking offer…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "OfferLetter",
+                    {
+                      "emit": {
+                        "success": "OfferLetterLoaded",
+                        "failure": "OfferLetterLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading offer letters…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "SEND_OFFER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "OfferLetter",
+                    {
+                      "emit": {
+                        "failure": "OfferLetterLoadFailed",
+                        "success": "OfferLetterLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Sending offer…"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REVOKE_OFFER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "OfferLetter",
+                    {
+                      "emit": {
+                        "failure": "OfferLetterLoadFailed",
+                        "success": "OfferLetterLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Revoking offer…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -371,6 +813,14 @@
                         "success": "OfferLetterLoaded",
                         "failure": "OfferLetterLoadFailed"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

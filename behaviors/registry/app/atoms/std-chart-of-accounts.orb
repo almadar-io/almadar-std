@@ -1,7 +1,7 @@
 {
   "name": "std-chart-of-accounts",
   "version": "1.0.0",
-  "description": "std-chart-of-accounts — list of all accounts (asset, liability, equity, revenue, expense) that ledger entries post against. Owns an Account entity and a single chart trait that loads accounts, renders them in a data-grid, and surfaces Activate / Deactivate per row.",
+  "description": "std-chart-of-accounts — list of all accounts (asset, liability, equity, revenue, expense) that ledger entries post against. Lists accounts in `browsing`; opens detail in `viewing_single` with Activate / Deactivate actions.",
   "orbitals": [
     {
       "name": "ChartOfAccountsOrbital",
@@ -61,6 +61,50 @@
           "linkedEntity": "Account",
           "emits": [
             {
+              "event": "OPEN_ACCOUNT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.code",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.type",
+                  "type": "string"
+                },
+                {
+                  "name": "row.parentCode",
+                  "type": "string"
+                },
+                {
+                  "name": "row.isActive",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.balance",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "ACTIVATE_ACCOUNT",
               "payloadSchema": [
                 {
@@ -113,6 +157,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -146,8 +193,23 @@
                 ]
               },
               {
-                "key": "ACTIVATE_ACCOUNT",
-                "name": "Activate Account",
+                "key": "OPEN_ACCOUNT",
+                "name": "Open Account",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Account"
+                  }
+                ]
+              },
+              {
+                "key": "DEACTIVATE_ACCOUNT",
+                "name": "Deactivate Account",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -157,8 +219,12 @@
                 ]
               },
               {
-                "key": "DEACTIVATE_ACCOUNT",
-                "name": "Deactivate Account",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "ACTIVATE_ACCOUNT",
+                "name": "Activate Account",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -189,21 +255,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading accounts…",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading accounts…",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -217,139 +283,107 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "name": "book-open",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
-                          "direction": "horizontal",
-                          "items": [
+                          "cols": 4.0,
+                          "children": [
                             {
-                              "label": "Assets",
-                              "color": "primary"
+                              "icon": "book-open",
+                              "label": "Total accounts",
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
                             },
                             {
+                              "label": "Active",
+                              "value": "118",
+                              "type": "stat-display",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "icon": "trending-up",
+                              "value": "$2.4M",
+                              "label": "Assets balance",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
                               "label": "Liabilities",
-                              "color": "warning"
-                            },
-                            {
-                              "label": "Equity",
-                              "color": "secondary"
-                            },
-                            {
-                              "color": "success",
-                              "label": "Revenue"
-                            },
-                            {
-                              "label": "Expense",
-                              "color": "destructive"
+                              "value": "$840K",
+                              "icon": "trending-down"
                             }
                           ],
-                          "type": "chart-legend"
-                        },
-                        {
-                          "items": [
-                            {
-                              "title": "Assets",
-                              "id": "assets",
-                              "content": "Current assets, fixed assets, and other resources owned."
-                            },
-                            {
-                              "content": "Accounts payable, loans, and other obligations.",
-                              "id": "liabilities",
-                              "title": "Liabilities"
-                            },
-                            {
-                              "content": "Owner capital, retained earnings, and contributions.",
-                              "title": "Equity",
-                              "id": "equity"
-                            },
-                            {
-                              "title": "Revenue",
-                              "content": "Operating income from sales and services.",
-                              "id": "revenue"
-                            },
-                            {
-                              "title": "Expense",
-                              "content": "Operating costs, depreciation, and write-offs.",
-                              "id": "expense"
-                            }
-                          ],
-                          "multiple": true,
-                          "type": "accordion"
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "label": "Code",
-                              "name": "code"
-                            },
-                            {
-                              "name": "name",
-                              "variant": "caption",
-                              "label": "Name"
-                            },
-                            {
-                              "name": "type",
-                              "label": "Type",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "parentCode",
-                              "label": "Parent"
-                            },
-                            {
-                              "name": "balance",
-                              "variant": "caption",
-                              "label": "Balance"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Active",
-                              "name": "isActive"
-                            }
-                          ],
                           "gap": "sm",
-                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "event": "ACTIVATE_ACCOUNT",
-                              "label": "Activate",
-                              "icon": "check-circle",
-                              "variant": "primary"
+                              "label": "Open",
+                              "variant": "primary",
+                              "icon": "arrow-right",
+                              "event": "OPEN_ACCOUNT"
                             },
                             {
                               "label": "Deactivate",
                               "event": "DEACTIVATE_ACCOUNT",
-                              "variant": "danger",
-                              "icon": "x-circle"
+                              "variant": "danger"
                             }
                           ],
                           "entity": "@payload.data",
-                          "cols": 1.0
+                          "fields": [
+                            {
+                              "variant": "caption",
+                              "name": "code",
+                              "label": "Code"
+                            },
+                            {
+                              "label": "Name",
+                              "name": "name",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "type",
+                              "label": "Type"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Parent",
+                              "name": "parentCode"
+                            },
+                            {
+                              "label": "Balance",
+                              "name": "balance",
+                              "variant": "caption"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -363,37 +397,190 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "ACTIVATE_ACCOUNT",
+                "to": "viewing_single",
+                "event": "OPEN_ACCOUNT",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.code",
+                    "@payload.row.code"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.type",
+                    "@payload.row.type"
+                  ],
+                  [
+                    "set",
+                    "@entity.parentCode",
+                    "@payload.row.parentCode"
+                  ],
+                  [
+                    "set",
+                    "@entity.isActive",
+                    "@payload.row.isActive"
+                  ],
+                  [
+                    "set",
+                    "@entity.balance",
+                    "@payload.row.balance"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "Account activated",
-                      "variant": "success"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "book-open"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.name"
+                            },
+                            {
+                              "label": "@entity.type",
+                              "variant": "primary",
+                              "type": "badge"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Code",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.code",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Parent",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.parentCode",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Balance",
+                              "value": "@entity.balance",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "label": "Type",
+                              "type": "stat-display",
+                              "value": "@entity.type",
+                              "icon": "tag"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "ACTIVATE_ACCOUNT",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "primary",
+                              "label": "Activate"
+                            },
+                            {
+                              "action": "DEACTIVATE_ACCOUNT",
+                              "label": "Deactivate",
+                              "variant": "danger",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "DEACTIVATE_ACCOUNT",
                 "effects": [
                   [
@@ -402,12 +589,162 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "Account",
+                    {
+                      "emit": {
+                        "success": "AccountLoaded",
+                        "failure": "AccountLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "Account deactivated",
-                      "variant": "info"
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Deactivating account…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Account",
+                    {
+                      "emit": {
+                        "success": "AccountLoaded",
+                        "failure": "AccountLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading accounts…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ACTIVATE_ACCOUNT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Account",
+                    {
+                      "emit": {
+                        "failure": "AccountLoadFailed",
+                        "success": "AccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Activating account…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "DEACTIVATE_ACCOUNT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Account",
+                    {
+                      "emit": {
+                        "success": "AccountLoaded",
+                        "failure": "AccountLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Deactivating account…",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]

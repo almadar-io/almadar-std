@@ -1,5 +1,5 @@
 app std-segment "1.0.0"
-"std-segment — contact segment primitive. Defines a filter criteria for grouping contacts (e.g. 'new signups in last 30 days'). Used by marketing campaigns for targeting."
+"std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action."
 
 orbital SegmentOrbital {
   entity Segment [persistent: segments] {
@@ -13,7 +13,6 @@ orbital SegmentOrbital {
 
   type SegmentLoaded       = Event { data : [Segment] }                "Fired when the segments collection finishes loading"
   type SegmentLoadFailed   = Event { error : string, code : string }   "Fired when the segments collection fails to load"
-  type SegmentRecalculated = Event { id : string, memberCount : number } "Fired after a segment's member count is recalculated"
 
   trait SegmentSegment -> Segment [interaction, collection] {
     config {
@@ -25,18 +24,32 @@ orbital SegmentOrbital {
         (fetch Segment { emit: { success: "SegmentLoaded", failure: "SegmentLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading segments…" }] })
       SegmentLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "geometric-pattern", variant: "khatam", opacity: 0.12 }, { type: "edge-decoration", side: "left", opacity: 0.2 }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "gradient-divider", color: "primary" }, { type: "tag-cloud", tags: [{ label: "New Signups" }, { label: "High Value" }, { label: "Churn Risk" }, { label: "Active 30d" }, { label: "Dormant" }, { label: "VIP" }, { label: "Trial" }, { label: "Enterprise" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "memberCount", label: "Members", variant: "badge" }, { name: "lastUpdated", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Recalculate", event: "RECALCULATE", variant: "ghost" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total segments", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Active members", value: "12,480", icon: "user-check" }, { type: "stat-display", label: "Avg size", value: "1,560", icon: "bar-chart" }, { type: "stat-display", label: "Updated 24h", value: "8", icon: "refresh-cw" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "memberCount", label: "Members", variant: "badge" }, { name: "lastUpdated", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_SEGMENT", variant: "primary", icon: "arrow-right" }, { label: "Recalculate", event: "RECALCULATE", variant: "danger" }] }] })
       SegmentLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      RECALCULATE -> calculating
+      OPEN_SEGMENT -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.description @payload.row.description)
+        (set @entity.criteria @payload.row.criteria)
+        (set @entity.memberCount @payload.row.memberCount)
+        (set @entity.lastUpdated @payload.row.lastUpdated)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "users" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.memberCount", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Criteria" }, { type: "typography", variant: "body", content: "@entity.criteria" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Members", value: "@entity.memberCount", icon: "users" }, { type: "stat-display", label: "Last updated", value: "@entity.lastUpdated", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Recalculate", variant: "primary", action: "RECALCULATE", actionPayload: { id: "@entity.id" } }] }] })
+      RECALCULATE -> loading
         (set @entity.id @payload.id)
+        (fetch Segment { emit: { success: "SegmentLoaded", failure: "SegmentLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recalculating segment…" }] })
     }
-    state calculating {
-      SegmentRecalculated -> browsing
-        (render-ui main { type: "alert", variant: "success", message: "Segment recalculated" })
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Segment { emit: { success: "SegmentLoaded", failure: "SegmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading segments…" }] })
+      RECALCULATE -> loading
+        (set @entity.id @payload.id)
+        (fetch Segment { emit: { success: "SegmentLoaded", failure: "SegmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recalculating segment…" }] })
     }
     state error {
       INIT -> loading
@@ -44,16 +57,18 @@ orbital SegmentOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_SEGMENT       { id : string!, row : Segment }
+      CLOSE_VIEW         { }
       RECALCULATE        { id : string! }
       SegmentLoaded      { data : [Segment] }
       SegmentLoadFailed  { error : string, code : string }
-      SegmentRecalculated { id : string, memberCount : number }
     }
     listens {
+      OPEN_SEGMENT       { id : string!, row : Segment }
+      CLOSE_VIEW         { }
       RECALCULATE        { id : string! }
       SegmentLoaded      { data : [Segment] }
       SegmentLoadFailed  { error : string, code : string }
-      SegmentRecalculated { id : string, memberCount : number }
     }
   }
   page "/segments" as SegmentPage -> SegmentSegment

@@ -1,5 +1,5 @@
 app std-version-history "1.0.0"
-"std-version-history — wiki/CMS revision history with diff + rollback. Owns a Revision entity (one row per saved version of a document); browses revisions in a data-grid, opens a side-by-side version-diff for any two picks, and persists a rollback by re-saving the chosen revision's content as a new update on the source document."
+"std-version-history — wiki/CMS revision history with diff + rollback. Browses revisions; opens detail in `viewing_single`; compares two revisions in `comparing` with intrinsic version-diff; persists rollback."
 
 orbital RevisionOrbital {
   entity Revision [persistent: revisions] {
@@ -29,12 +29,16 @@ orbital RevisionOrbital {
         (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
       RevisionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "versionNumber", label: "Version", variant: "badge" }, { name: "authorName", label: "Author", variant: "caption" }, { name: "summary", label: "Summary", variant: "caption" }, { name: "createdAt", label: "Saved", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary", icon: "eye" }, { label: "Compare", event: "COMPARE", variant: "secondary", icon: "git-compare" }, { label: "Rollback", event: "ROLLBACK", variant: "primary", icon: "rotate-ccw" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total revisions", value: "@payload.data.length", icon: "history" }, { type: "stat-display", label: "Authors", value: "6", icon: "users" }, { type: "stat-display", label: "Saves this week", value: "14", icon: "save" }, { type: "stat-display", label: "Rollbacks", value: "2", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "versionNumber", label: "Version", variant: "badge" }, { name: "authorName", label: "Author", variant: "caption" }, { name: "summary", label: "Summary", variant: "caption" }, { name: "createdAt", label: "Saved", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_REVISION", variant: "primary", icon: "arrow-right" }, { label: "Rollback", event: "ROLLBACK", variant: "danger", icon: "rotate-ccw" }] }] })
+      RevisionRolledBack -> loading
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+      RevisionRollbackFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
       RevisionLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      VIEW -> browsing
+      OPEN_REVISION -> viewing_single
         (set @entity.id @payload.row.id)
         (set @entity.documentId @payload.row.documentId)
         (set @entity.documentType @payload.row.documentType)
@@ -44,50 +48,32 @@ orbital RevisionOrbital {
         (set @entity.content @payload.row.content)
         (set @entity.summary @payload.row.summary)
         (set @entity.createdAt @payload.row.createdAt)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@entity.summary", variant: "h3" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", content: "@entity.authorName", variant: "caption", color: "muted" }, { type: "typography", content: "@entity.createdAt", variant: "caption", color: "muted" }] }, { type: "divider" }, { type: "typography", content: "@entity.content", variant: "body" }, { type: "button", label: "Back", action: "INIT", variant: "secondary", icon: "arrow-left" }] })
-      COMPARE -> comparing
-        (set @entity.id @payload.afterRow.id)
-        (set @entity.documentId @payload.afterRow.documentId)
-        (set @entity.documentType @payload.afterRow.documentType)
-        (set @entity.versionNumber @payload.afterRow.versionNumber)
-        (set @entity.authorId @payload.afterRow.authorId)
-        (set @entity.authorName @payload.afterRow.authorName)
-        (set @entity.content @payload.afterRow.content)
-        (set @entity.summary @payload.afterRow.summary)
-        (set @entity.createdAt @payload.afterRow.createdAt)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "git-compare" }, { type: "typography", content: "Compare versions", variant: "h3" }] }, { type: "divider" }, { type: "version-diff", revisions: "@payload.revisions", beforeId: "@payload.beforeId", afterId: "@payload.afterId", view: "side-by-side", onRevert: "ROLLBACK" }, { type: "button", label: "Back", action: "INIT", variant: "secondary", icon: "arrow-left" }] })
-      ROLLBACK -> browsing
-        (set @entity.id @payload.row.documentId)
-        (set @entity.documentId @payload.row.documentId)
-        (set @entity.documentType @payload.row.documentType)
-        (set @entity.versionNumber @payload.row.versionNumber)
-        (set @entity.authorId @payload.row.authorId)
-        (set @entity.authorName @payload.row.authorName)
-        (set @entity.content @payload.row.content)
-        (set @entity.summary @payload.row.summary)
-        (set @entity.createdAt @payload.row.createdAt)
-        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
-      RevisionRolledBack -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.summary", variant: "h3" }, { type: "badge", label: "@entity.versionNumber", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Author" }, { type: "typography", variant: "body", content: "@entity.authorName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Saved" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Version", value: "@entity.versionNumber", icon: "tag" }, { type: "stat-display", label: "Document", value: "@entity.documentId", icon: "file" }, { type: "stat-display", label: "Type", value: "@entity.documentType", icon: "layers" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Compare", variant: "secondary", action: "COMPARE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Rollback", variant: "danger", action: "ROLLBACK", actionPayload: { id: "@entity.id" } }] }] })
+      ROLLBACK -> loading
+        (set @entity.id @payload.id)
         (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-      RevisionRollbackFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
+      COMPARE -> comparing
+        (set @entity.id @payload.id)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "git-compare" }, { type: "typography", content: "Compare versions", variant: "h3" }] }, { type: "divider" }, { type: "version-diff", revisions: "@payload.revisions", beforeId: "@payload.beforeId", afterId: "@payload.afterId", view: "side-by-side", onRevert: "ROLLBACK" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Rollback", variant: "danger", action: "ROLLBACK", actionPayload: { id: "@entity.id" } }] }] })
+      ROLLBACK -> loading
+        (set @entity.id @payload.id)
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
     }
     state comparing {
-      ROLLBACK -> browsing
-        (set @entity.id @payload.row.documentId)
-        (set @entity.documentId @payload.row.documentId)
-        (set @entity.documentType @payload.row.documentType)
-        (set @entity.versionNumber @payload.row.versionNumber)
-        (set @entity.authorId @payload.row.authorId)
-        (set @entity.authorName @payload.row.authorName)
-        (set @entity.content @payload.row.content)
-        (set @entity.summary @payload.row.summary)
-        (set @entity.createdAt @payload.row.createdAt)
-        (persist update Revision @entity { emit: { success: "RevisionRolledBack", failure: "RevisionRollbackFailed" } })
-      RevisionRolledBack -> loading
+      CLOSE_VIEW -> loading
         (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
-      RevisionRollbackFailed -> comparing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading version history…" }] })
+      ROLLBACK -> loading
+        (set @entity.id @payload.id)
+        (fetch Revision { emit: { success: "RevisionLoaded", failure: "RevisionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rolling back…" }] })
     }
     state error {
       INIT -> loading
@@ -95,18 +81,20 @@ orbital RevisionOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW     { revisionId : string!, row : Revision }
-      COMPARE  { beforeId : string!, afterId : string!, beforeRow : Revision, afterRow : Revision, revisions : [Revision] }
-      ROLLBACK { id : string!, revisionId : string!, row : Revision }
+      OPEN_REVISION { id : string!, row : Revision }
+      CLOSE_VIEW    { }
+      COMPARE       { id : string!, beforeId : string!, afterId : string!, revisions : [Revision] }
+      ROLLBACK      { id : string! }
       RevisionLoaded         { data : [Revision] }
       RevisionLoadFailed     { error : string, code : string }
       RevisionRolledBack     { row : Revision }
       RevisionRollbackFailed { error : string, code : string }
     }
     listens {
-      VIEW     { revisionId : string!, row : Revision }
-      COMPARE  { beforeId : string!, afterId : string!, beforeRow : Revision, afterRow : Revision, revisions : [Revision] }
-      ROLLBACK { id : string!, revisionId : string!, row : Revision }
+      OPEN_REVISION { id : string!, row : Revision }
+      CLOSE_VIEW    { }
+      COMPARE       { id : string!, beforeId : string!, afterId : string!, revisions : [Revision] }
+      ROLLBACK      { id : string! }
       RevisionLoaded         { data : [Revision] }
       RevisionLoadFailed     { error : string, code : string }
       RevisionRolledBack     { row : Revision }

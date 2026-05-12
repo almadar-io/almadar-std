@@ -37,39 +37,30 @@ orbital InvoiceOrbital {
         (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading invoices…" }] })
       InvoiceLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "invoiceNumber", label: "Invoice #", variant: "caption" }, { name: "customerId", label: "Customer", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "total", label: "Total", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "dueAt", label: "Due", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary", icon: "eye" }, { label: "Send", event: "SEND", variant: "primary", icon: "send" }, { label: "Mark Paid", event: "MARK_PAID", variant: "primary", icon: "check" }, { label: "Void", event: "VOID", variant: "danger", icon: "x" }, { label: "Refund", event: "REFUND", variant: "danger", icon: "rotate-ccw" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total invoices", value: "@payload.data.length", icon: "receipt" }, { type: "stat-display", label: "Outstanding", value: "$28,400", icon: "alert-triangle" }, { type: "stat-display", label: "Paid this month", value: "$112,800", icon: "dollar-sign" }, { type: "stat-display", label: "Overdue", value: "9", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "invoiceNumber", label: "Invoice #", variant: "caption" }, { name: "customerId", label: "Customer", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "total", label: "Total", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "dueAt", label: "Due", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_INVOICE", variant: "primary", icon: "arrow-right" }, { label: "Void", event: "VOID", variant: "danger", icon: "x" }] }] })
       InvoiceLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      VIEW -> viewing
-        (set @entity.id @payload.invoiceId)
+      OPEN_INVOICE -> viewing_single
+        (set @entity.id @payload.row.id)
         (set @entity.invoiceNumber @payload.row.invoiceNumber)
+        (set @entity.customerId @payload.row.customerId)
         (set @entity.status @payload.row.status)
+        (set @entity.currency @payload.row.currency)
+        (set @entity.subtotal @payload.row.subtotal)
+        (set @entity.tax @payload.row.tax)
+        (set @entity.total @payload.row.total)
         (set @entity.issuedAt @payload.row.issuedAt)
         (set @entity.dueAt @payload.row.dueAt)
-        (set @entity.customerId @payload.row.customerId)
-        (set @entity.currency @payload.row.currency)
+        (set @entity.paidAt @payload.row.paidAt)
         (set @entity.notes @payload.row.notes)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@entity.invoiceNumber", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "secondary" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "lg", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "Issued", variant: "caption", color: "muted" }, { type: "typography", content: "@entity.issuedAt", variant: "body2" }] }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "Due", variant: "caption", color: "muted" }, { type: "typography", content: "@entity.dueAt", variant: "body2" }] }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "Currency", variant: "caption", color: "muted" }, { type: "typography", content: "@entity.currency", variant: "body2" }] }] }, { type: "divider" }, { type: "typography", content: "@entity.notes", variant: "body2", color: "muted" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Send", action: "SEND", variant: "primary", icon: "send" }, { type: "button", label: "Mark Paid", action: "MARK_PAID", variant: "primary", icon: "check" }, { type: "button", label: "Void", action: "VOID", variant: "danger", icon: "x" }, { type: "button", label: "Refund", action: "REFUND", variant: "danger", icon: "rotate-ccw" }, { type: "button", label: "Back", action: "INIT", variant: "secondary", icon: "arrow-left" }] }] })
-      SEND -> browsing
-        (set @entity.id @payload.invoiceId)
-        (set @entity.status "sent")
-        (set @entity.issuedAt "now")
-        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
-        (call-service email send { invoiceId: @payload.invoiceId } { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
-      MARK_PAID -> browsing
-        (set @entity.id @payload.invoiceId)
-        (set @entity.status "paid")
-        (set @entity.paidAt "now")
-        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
-      VOID -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "receipt" }, { type: "typography", content: "@entity.invoiceNumber", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Customer" }, { type: "typography", variant: "body", content: "@entity.customerId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Currency" }, { type: "typography", variant: "body", content: "@entity.currency" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Subtotal", value: "@entity.subtotal", icon: "dollar-sign" }, { type: "stat-display", label: "Tax", value: "@entity.tax", icon: "percent" }, { type: "stat-display", label: "Total", value: "@entity.total", icon: "dollar-sign" }, { type: "stat-display", label: "Due", value: "@entity.dueAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Send", variant: "primary", action: "SEND", actionPayload: { invoiceId: "@entity.id" } }, { type: "button", label: "Mark Paid", variant: "primary", action: "MARK_PAID", actionPayload: { invoiceId: "@entity.id" } }, { type: "button", label: "Void", variant: "danger", action: "VOID", actionPayload: { invoiceId: "@entity.id" } }, { type: "button", label: "Refund", variant: "danger", action: "REFUND", actionPayload: { invoiceId: "@entity.id", amount: 0 } }] }] })
+      VOID -> loading
         (set @entity.id @payload.invoiceId)
         (set @entity.status "void")
         (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
-      REFUND -> browsing
-        (set @entity.id @payload.invoiceId)
-        (call-service stripe refund { invoiceId: @payload.invoiceId, amount: @payload.amount } { emit: { success: "InvoiceRefunded", failure: "InvoiceRefundFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding invoice…" }] })
       InvoiceUpdated -> loading
         (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
       InvoiceUpdateFailed -> browsing
@@ -79,11 +70,31 @@ orbital InvoiceOrbital {
       InvoiceRefundFailed -> browsing
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      INIT -> loading
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
-      InvoiceUpdated -> loading
-        (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading invoices…" }] })
+      SEND -> loading
+        (set @entity.id @payload.invoiceId)
+        (set @entity.status "sent")
+        (set @entity.issuedAt "now")
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Sending invoice…" }] })
+      MARK_PAID -> loading
+        (set @entity.id @payload.invoiceId)
+        (set @entity.status "paid")
+        (set @entity.paidAt "now")
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking invoice paid…" }] })
+      VOID -> loading
+        (set @entity.id @payload.invoiceId)
+        (set @entity.status "void")
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding invoice…" }] })
+      REFUND -> loading
+        (set @entity.id @payload.invoiceId)
+        (call-service stripe refund { invoiceId: @payload.invoiceId, amount: @payload.amount } { emit: { success: "InvoiceRefunded", failure: "InvoiceRefundFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refunding invoice…" }] })
     }
     state error {
       INIT -> loading
@@ -91,11 +102,12 @@ orbital InvoiceOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW       { invoiceId : string!, row : InvoiceRecord }
-      SEND       { invoiceId : string! }
-      MARK_PAID  { invoiceId : string! }
-      VOID       { invoiceId : string! }
-      REFUND     { invoiceId : string!, amount : number! }
+      OPEN_INVOICE { id : string!, row : InvoiceRecord }
+      CLOSE_VIEW   { }
+      SEND         { invoiceId : string! }
+      MARK_PAID    { invoiceId : string! }
+      VOID         { invoiceId : string! }
+      REFUND       { invoiceId : string!, amount : number! }
       InvoiceLoaded       { data : [InvoiceRecord] }
       InvoiceLoadFailed   { error : string, code : string }
       InvoiceUpdated      { row : InvoiceRecord }
@@ -104,11 +116,12 @@ orbital InvoiceOrbital {
       InvoiceRefundFailed { error : string, code : string }
     }
     listens {
-      VIEW       { invoiceId : string!, row : InvoiceRecord }
-      SEND       { invoiceId : string! }
-      MARK_PAID  { invoiceId : string! }
-      VOID       { invoiceId : string! }
-      REFUND     { invoiceId : string!, amount : number! }
+      OPEN_INVOICE { id : string!, row : InvoiceRecord }
+      CLOSE_VIEW   { }
+      SEND         { invoiceId : string! }
+      MARK_PAID    { invoiceId : string! }
+      VOID         { invoiceId : string! }
+      REFUND       { invoiceId : string!, amount : number! }
       InvoiceLoaded       { data : [InvoiceRecord] }
       InvoiceLoadFailed   { error : string, code : string }
       InvoiceUpdated      { row : InvoiceRecord }

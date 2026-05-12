@@ -31,29 +31,55 @@ orbital KitchenTicketOrbital {
         (fetch KitchenTicket { emit: { success: "KitchenTicketLoaded", failure: "KitchenTicketLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading kitchen tickets…" }] })
       KitchenTicketLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "chef-hat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "orderId", label: "Order", variant: "caption" }, { name: "tableLabel", label: "Table", variant: "caption" }, { name: "serverName", label: "Server", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "aging", label: "Aging", variant: "badge" }, { name: "receivedAt", label: "Received", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Mark Preparing", event: "MARK_PREPARING", variant: "secondary", icon: "flame" }, { label: "Mark Ready", event: "MARK_READY", variant: "primary", icon: "check" }, { label: "Mark Served", event: "MARK_SERVED", variant: "primary", icon: "utensils" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "chef-hat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open tickets", value: "@payload.data.length", icon: "chef-hat" }, { type: "stat-display", label: "Preparing", value: "8", icon: "flame" }, { type: "stat-display", label: "Ready", value: "3", icon: "check-circle" }, { type: "stat-display", label: "Avg prep (min)", value: "14", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "orderId", label: "Order", variant: "caption" }, { name: "tableLabel", label: "Table", variant: "caption" }, { name: "serverName", label: "Server", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "aging", label: "Aging", variant: "badge" }, { name: "receivedAt", label: "Received", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TICKET", variant: "primary", icon: "arrow-right" }, { label: "Mark Served", event: "MARK_SERVED", variant: "danger", icon: "utensils" }] }] })
       KitchenTicketLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      MARK_PREPARING -> browsing
-        (set @entity.id @payload.ticketId)
-        (set @entity.status "preparing")
-        (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
-      MARK_READY -> browsing
-        (set @entity.id @payload.ticketId)
-        (set @entity.status "ready")
-        (set @entity.readyAt @payload.readyAt)
-        (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
-      MARK_SERVED -> browsing
+      OPEN_TICKET -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.orderId @payload.row.orderId)
+        (set @entity.tableLabel @payload.row.tableLabel)
+        (set @entity.serverName @payload.row.serverName)
+        (set @entity.itemsJson @payload.row.itemsJson)
+        (set @entity.status @payload.row.status)
+        (set @entity.aging @payload.row.aging)
+        (set @entity.receivedAt @payload.row.receivedAt)
+        (set @entity.readyAt @payload.row.readyAt)
+        (set @entity.servedAt @payload.row.servedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "chef-hat" }, { type: "typography", content: "@entity.orderId", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }, { type: "badge", label: "@entity.aging", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Table" }, { type: "typography", variant: "body", content: "@entity.tableLabel" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Server" }, { type: "typography", variant: "body", content: "@entity.serverName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Items" }, { type: "typography", variant: "body", content: "@entity.itemsJson" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Received", value: "@entity.receivedAt", icon: "clock" }, { type: "stat-display", label: "Ready at", value: "@entity.readyAt", icon: "check-circle" }, { type: "stat-display", label: "Served at", value: "@entity.servedAt", icon: "utensils" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Mark Preparing", variant: "secondary", action: "MARK_PREPARING", actionPayload: { ticketId: "@entity.id" } }, { type: "button", label: "Mark Ready", variant: "primary", action: "MARK_READY", actionPayload: { ticketId: "@entity.id", readyAt: "now" } }, { type: "button", label: "Mark Served", variant: "primary", action: "MARK_SERVED", actionPayload: { ticketId: "@entity.id", servedAt: "now" } }] }] })
+      MARK_SERVED -> loading
         (set @entity.id @payload.ticketId)
         (set @entity.status "served")
         (set @entity.servedAt @payload.servedAt)
         (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking ticket served…" }] })
       KitchenTicketUpdated -> loading
         (fetch KitchenTicket { emit: { success: "KitchenTicketLoaded", failure: "KitchenTicketLoadFailed" } })
       KitchenTicketUpdateFailed -> browsing
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch KitchenTicket { emit: { success: "KitchenTicketLoaded", failure: "KitchenTicketLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading kitchen tickets…" }] })
+      MARK_PREPARING -> loading
+        (set @entity.id @payload.ticketId)
+        (set @entity.status "preparing")
+        (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking ticket preparing…" }] })
+      MARK_READY -> loading
+        (set @entity.id @payload.ticketId)
+        (set @entity.status "ready")
+        (set @entity.readyAt @payload.readyAt)
+        (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking ticket ready…" }] })
+      MARK_SERVED -> loading
+        (set @entity.id @payload.ticketId)
+        (set @entity.status "served")
+        (set @entity.servedAt @payload.servedAt)
+        (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking ticket served…" }] })
     }
     state error {
       INIT -> loading
@@ -61,6 +87,8 @@ orbital KitchenTicketOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_TICKET    { id : string!, row : KitchenTicket }
+      CLOSE_VIEW     { }
       MARK_PREPARING { ticketId : string!, row : KitchenTicket }
       MARK_READY     { ticketId : string!, readyAt : string!, row : KitchenTicket }
       MARK_SERVED    { ticketId : string!, servedAt : string!, row : KitchenTicket }
@@ -70,6 +98,8 @@ orbital KitchenTicketOrbital {
       KitchenTicketUpdateFailed { error : string, code : string }
     }
     listens {
+      OPEN_TICKET    { id : string!, row : KitchenTicket }
+      CLOSE_VIEW     { }
       MARK_PREPARING { ticketId : string!, row : KitchenTicket }
       MARK_READY     { ticketId : string!, readyAt : string!, row : KitchenTicket }
       MARK_SERVED    { ticketId : string!, servedAt : string!, row : KitchenTicket }

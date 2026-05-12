@@ -75,6 +75,61 @@
           "linkedEntity": "KitchenTicket",
           "emits": [
             {
+              "event": "OPEN_TICKET",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.orderId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.tableLabel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.serverName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.itemsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.aging",
+                  "type": "string"
+                },
+                {
+                  "name": "row.receivedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.readyAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.servedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "MARK_PREPARING",
               "payloadSchema": [
                 {
@@ -333,6 +388,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -366,31 +424,11 @@
                 ]
               },
               {
-                "key": "MARK_PREPARING",
-                "name": "Mark Preparing",
+                "key": "OPEN_TICKET",
+                "name": "Open Ticket",
                 "payloadSchema": [
                   {
-                    "name": "ticketId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "KitchenTicket"
-                  }
-                ]
-              },
-              {
-                "key": "MARK_READY",
-                "name": "Mark Ready",
-                "payloadSchema": [
-                  {
-                    "name": "ticketId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "readyAt",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -443,6 +481,45 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "MARK_PREPARING",
+                "name": "Mark Preparing",
+                "payloadSchema": [
+                  {
+                    "name": "ticketId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "KitchenTicket"
+                  }
+                ]
+              },
+              {
+                "key": "MARK_READY",
+                "name": "Mark Ready",
+                "payloadSchema": [
+                  {
+                    "name": "ticketId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "readyAt",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "KitchenTicket"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -465,21 +542,21 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "content": "Loading kitchen tickets…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -494,52 +571,75 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "chef-hat"
+                              "name": "chef-hat",
+                              "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "label": "Open tickets",
+                              "value": "@payload.data.length",
+                              "icon": "chef-hat",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "flame",
+                              "value": "8",
+                              "label": "Preparing"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "value": "3",
+                              "label": "Ready",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "14",
+                              "label": "Avg prep (min)",
+                              "icon": "clock",
+                              "type": "stat-display"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 1.0,
                           "itemActions": [
                             {
-                              "icon": "flame",
-                              "event": "MARK_PREPARING",
-                              "variant": "secondary",
-                              "label": "Mark Preparing"
-                            },
-                            {
-                              "event": "MARK_READY",
+                              "label": "Open",
                               "variant": "primary",
-                              "icon": "check",
-                              "label": "Mark Ready"
+                              "event": "OPEN_TICKET",
+                              "icon": "arrow-right"
                             },
                             {
                               "icon": "utensils",
-                              "variant": "primary",
                               "label": "Mark Served",
+                              "variant": "danger",
                               "event": "MARK_SERVED"
                             }
                           ],
                           "type": "data-grid",
                           "entity": "@payload.data",
-                          "cols": 1.0,
                           "fields": [
                             {
                               "label": "Order",
@@ -547,24 +647,24 @@
                               "variant": "caption"
                             },
                             {
-                              "label": "Table",
                               "variant": "caption",
-                              "name": "tableLabel"
+                              "name": "tableLabel",
+                              "label": "Table"
                             },
                             {
                               "label": "Server",
-                              "variant": "caption",
-                              "name": "serverName"
+                              "name": "serverName",
+                              "variant": "caption"
                             },
                             {
-                              "name": "status",
+                              "label": "Status",
                               "variant": "badge",
-                              "label": "Status"
+                              "name": "status"
                             },
                             {
+                              "variant": "badge",
                               "name": "aging",
-                              "label": "Aging",
-                              "variant": "badge"
+                              "label": "Aging"
                             },
                             {
                               "label": "Received",
@@ -575,6 +675,8 @@
                           "gap": "sm"
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -589,79 +691,245 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "MARK_PREPARING",
+                "to": "viewing_single",
+                "event": "OPEN_TICKET",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.ticketId"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.orderId",
+                    "@payload.row.orderId"
+                  ],
+                  [
+                    "set",
+                    "@entity.tableLabel",
+                    "@payload.row.tableLabel"
+                  ],
+                  [
+                    "set",
+                    "@entity.serverName",
+                    "@payload.row.serverName"
+                  ],
+                  [
+                    "set",
+                    "@entity.itemsJson",
+                    "@payload.row.itemsJson"
                   ],
                   [
                     "set",
                     "@entity.status",
-                    "preparing"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "KitchenTicket",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "KitchenTicketUpdated",
-                        "failure": "KitchenTicketUpdateFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "MARK_READY",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.ticketId"
+                    "@payload.row.status"
                   ],
                   [
                     "set",
-                    "@entity.status",
-                    "ready"
+                    "@entity.aging",
+                    "@payload.row.aging"
+                  ],
+                  [
+                    "set",
+                    "@entity.receivedAt",
+                    "@payload.row.receivedAt"
                   ],
                   [
                     "set",
                     "@entity.readyAt",
-                    "@payload.readyAt"
+                    "@payload.row.readyAt"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "KitchenTicket",
-                    "@entity",
+                    "set",
+                    "@entity.servedAt",
+                    "@payload.row.servedAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "success": "KitchenTicketUpdated",
-                        "failure": "KitchenTicketUpdateFailed"
-                      }
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "chef-hat"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.orderId"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "@entity.status",
+                              "type": "badge"
+                            },
+                            {
+                              "variant": "default",
+                              "label": "@entity.aging",
+                              "type": "badge"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Table",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.tableLabel"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Server"
+                                },
+                                {
+                                  "content": "@entity.serverName",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Items"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.itemsJson"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "icon": "clock",
+                              "label": "Received",
+                              "type": "stat-display",
+                              "value": "@entity.receivedAt"
+                            },
+                            {
+                              "value": "@entity.readyAt",
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Ready at"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.servedAt",
+                              "icon": "utensils",
+                              "label": "Served at"
+                            }
+                          ],
+                          "cols": 3.0
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "actionPayload": {
+                                "ticketId": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "secondary",
+                              "action": "MARK_PREPARING",
+                              "label": "Mark Preparing"
+                            },
+                            {
+                              "actionPayload": {
+                                "readyAt": "now",
+                                "ticketId": "@entity.id"
+                              },
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "MARK_READY",
+                              "label": "Mark Ready"
+                            },
+                            {
+                              "action": "MARK_SERVED",
+                              "label": "Mark Served",
+                              "type": "button",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "servedAt": "now",
+                                "ticketId": "@entity.id"
+                              }
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "MARK_SERVED",
                 "effects": [
                   [
@@ -686,9 +954,31 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "KitchenTicketUpdated",
-                        "failure": "KitchenTicketUpdateFailed"
+                        "failure": "KitchenTicketUpdateFailed",
+                        "success": "KitchenTicketUpdated"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Marking ticket served…",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -719,9 +1009,211 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "KitchenTicket",
+                    {
+                      "emit": {
+                        "failure": "KitchenTicketLoadFailed",
+                        "success": "KitchenTicketLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading kitchen tickets…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MARK_PREPARING",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.ticketId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "preparing"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "KitchenTicket",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "KitchenTicketUpdateFailed",
+                        "success": "KitchenTicketUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Marking ticket preparing…"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MARK_READY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.ticketId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "ready"
+                  ],
+                  [
+                    "set",
+                    "@entity.readyAt",
+                    "@payload.readyAt"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "KitchenTicket",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "KitchenTicketUpdated",
+                        "failure": "KitchenTicketUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Marking ticket ready…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MARK_SERVED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.ticketId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "served"
+                  ],
+                  [
+                    "set",
+                    "@entity.servedAt",
+                    "@payload.servedAt"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "KitchenTicket",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "KitchenTicketUpdated",
+                        "failure": "KitchenTicketUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Marking ticket served…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -754,13 +1246,13 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Kitchen Display"
-            },
             "overdueMinutes": {
               "type": "number",
               "default": 20.0
+            },
+            "title": {
+              "type": "string",
+              "default": "Kitchen Display"
             }
           },
           "scope": "collection"

@@ -1,5 +1,5 @@
 app std-class-roster "1.0.0"
-"std-class-roster — list of members enrolled in a specific class session, with attendance tracking. Owns a RosterEntry entity and a single roster trait that loads entries, renders them in a data-grid, and surfaces Check In / No Show per row."
+"std-class-roster — list of members enrolled in a specific class session. Lists roster entries in `browsing`; opens entry detail in `viewing_single` with Check In / No Show actions."
 
 orbital ClassRosterOrbital {
   entity RosterEntry [persistent: rosterentries] {
@@ -26,17 +26,42 @@ orbital ClassRosterOrbital {
         (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading roster…" }] })
       RosterEntryLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "avatar", src: "https://picsum.photos/seed/instructor/64/64", alt: "Instructor", size: "sm" }] }, { type: "progress-bar", value: 65, max: 100, label: "Attendance", showLabel: true, variant: "primary" }, { type: "pull-to-refresh", refreshEvent: "INIT", children: { type: "typography", variant: "caption", color: "muted", content: "Pull to refresh roster" } }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "memberName", label: "Member", variant: "caption" }, { name: "sessionId", label: "Session", variant: "caption" }, { name: "status", label: "Status", variant: "caption" }, { name: "checkedInAt", label: "Checked In", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Check In", event: "CHECK_IN", variant: "primary" }, { label: "No Show", event: "MARK_NO_SHOW", variant: "ghost" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Enrolled", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Checked in", value: "14", icon: "check-circle" }, { type: "stat-display", label: "No shows", value: "3", icon: "user-x" }, { type: "stat-display", label: "Waitlist", value: "5", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "memberName", label: "Member", variant: "caption" }, { name: "sessionId", label: "Session", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "checkedInAt", label: "Checked In", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ENTRY", variant: "primary", icon: "arrow-right" }, { label: "Check In", event: "CHECK_IN", variant: "secondary" }, { label: "No Show", event: "MARK_NO_SHOW", variant: "danger" }] }] })
       RosterEntryLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      CHECK_IN -> browsing
+      OPEN_ENTRY -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.sessionId @payload.row.sessionId)
+        (set @entity.memberId @payload.row.memberId)
+        (set @entity.memberName @payload.row.memberName)
+        (set @entity.enrolledAt @payload.row.enrolledAt)
+        (set @entity.checkedInAt @payload.row.checkedInAt)
+        (set @entity.status @payload.row.status)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "user" }, { type: "typography", content: "@entity.memberName", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Session" }, { type: "typography", variant: "body", content: "@entity.sessionId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Enrolled at", value: "@entity.enrolledAt", icon: "calendar" }, { type: "stat-display", label: "Checked in at", value: "@entity.checkedInAt", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Check In", variant: "primary", action: "CHECK_IN", actionPayload: { id: "@entity.id" } }, { type: "button", label: "No Show", variant: "danger", action: "MARK_NO_SHOW", actionPayload: { id: "@entity.id" } }] }] })
+      CHECK_IN -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Checked in" })
-      MARK_NO_SHOW -> browsing
+        (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Checking in…" }] })
+      MARK_NO_SHOW -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Marked no-show" })
+        (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking no-show…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading roster…" }] })
+      CHECK_IN -> loading
+        (set @entity.id @payload.id)
+        (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Checking in…" }] })
+      MARK_NO_SHOW -> loading
+        (set @entity.id @payload.id)
+        (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking no-show…" }] })
     }
     state error {
       INIT -> loading
@@ -44,12 +69,16 @@ orbital ClassRosterOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_ENTRY             { id : string!, row : RosterEntry }
+      CLOSE_VIEW             { }
       CHECK_IN               { id : string! }
       MARK_NO_SHOW           { id : string! }
       RosterEntryLoaded      { data : [RosterEntry] }
       RosterEntryLoadFailed  { error : string, code : string }
     }
     listens {
+      OPEN_ENTRY             { id : string!, row : RosterEntry }
+      CLOSE_VIEW             { }
       CHECK_IN               { id : string! }
       MARK_NO_SHOW           { id : string! }
       RosterEntryLoaded      { data : [RosterEntry] }

@@ -1,7 +1,7 @@
 {
   "name": "std-rent-charge",
   "version": "1.0.0",
-  "description": "Rent charge ledger: monthly rent owed by a tenant (tenant-pays semantics).",
+  "description": "std-rent-charge — monthly rent charge ledger. Lists charges in `browsing`; opens detail in `viewing_single` with Mark Paid / Late Fee / Waive actions.",
   "orbitals": [
     {
       "name": "RentChargeOrbital",
@@ -70,6 +70,58 @@
           "linkedEntity": "RentCharge",
           "emits": [
             {
+              "event": "OPEN_CHARGE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.tenantId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.leaseId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.amount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.dueDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.paidAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lateFee",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "MARK_PAID",
               "payloadSchema": [
                 {
@@ -132,6 +184,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -161,6 +216,21 @@
                   {
                     "name": "code",
                     "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_CHARGE",
+                "name": "Open Charge",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "RentCharge"
                   }
                 ]
               },
@@ -196,6 +266,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -218,7 +292,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading rent charges…"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -232,57 +321,112 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "data-grid",
-                      "itemActions": [
+                      "children": [
                         {
-                          "event": "MARK_PAID",
-                          "variant": "primary",
-                          "label": "Mark Paid"
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "home",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
-                          "variant": "ghost",
-                          "label": "Late Fee",
-                          "event": "ASSESS_LATE_FEE"
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "label": "Total charges",
+                              "icon": "home",
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "label": "Collected",
+                              "value": "$284,500",
+                              "type": "stat-display",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Overdue",
+                              "icon": "alert-triangle",
+                              "value": "11"
+                            },
+                            {
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "label": "Late fees",
+                              "value": "$1,840"
+                            }
+                          ]
                         },
                         {
-                          "event": "WAIVE_CHARGE",
-                          "variant": "danger",
-                          "label": "Waive"
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "OPEN_CHARGE",
+                              "icon": "arrow-right",
+                              "variant": "primary",
+                              "label": "Open"
+                            },
+                            {
+                              "event": "WAIVE_CHARGE",
+                              "variant": "danger",
+                              "label": "Waive"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "label": "Tenant",
+                              "variant": "caption",
+                              "name": "tenantId"
+                            },
+                            {
+                              "name": "amount",
+                              "variant": "caption",
+                              "label": "Amount"
+                            },
+                            {
+                              "label": "Due",
+                              "variant": "caption",
+                              "name": "dueDate"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "paidAt",
+                              "variant": "caption",
+                              "label": "Paid"
+                            },
+                            {
+                              "name": "lateFee",
+                              "variant": "caption",
+                              "label": "Late Fee"
+                            }
+                          ]
                         }
                       ],
-                      "entity": "@payload.data",
-                      "fields": [
-                        {
-                          "label": "Tenant",
-                          "variant": "caption",
-                          "name": "tenantId"
-                        },
-                        {
-                          "variant": "h4",
-                          "name": "amount",
-                          "label": "Amount"
-                        },
-                        {
-                          "name": "dueDate",
-                          "label": "Due Date",
-                          "variant": "caption"
-                        },
-                        {
-                          "label": "Status",
-                          "name": "status",
-                          "variant": "badge"
-                        },
-                        {
-                          "variant": "caption",
-                          "label": "Paid At",
-                          "name": "paidAt"
-                        },
-                        {
-                          "name": "lateFee",
-                          "label": "Late Fee",
-                          "variant": "caption"
-                        }
-                      ]
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -296,16 +440,221 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "Failed to load rent charges"
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_CHARGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.tenantId",
+                    "@payload.row.tenantId"
+                  ],
+                  [
+                    "set",
+                    "@entity.leaseId",
+                    "@payload.row.leaseId"
+                  ],
+                  [
+                    "set",
+                    "@entity.amount",
+                    "@payload.row.amount"
+                  ],
+                  [
+                    "set",
+                    "@entity.dueDate",
+                    "@payload.row.dueDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.paidAt",
+                    "@payload.row.paidAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.lateFee",
+                    "@payload.row.lateFee"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "name": "home",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.tenantId",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "default"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Lease",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.leaseId",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Notes"
+                                },
+                                {
+                                  "content": "@entity.notes",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.amount",
+                              "label": "Amount",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "value": "@entity.lateFee",
+                              "type": "stat-display",
+                              "label": "Late fee",
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.dueDate",
+                              "label": "Due",
+                              "icon": "calendar"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Paid",
+                              "value": "@entity.paidAt"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Mark Paid",
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "MARK_PAID"
+                            },
+                            {
+                              "label": "Assess Late Fee",
+                              "variant": "secondary",
+                              "type": "button",
+                              "action": "ASSESS_LATE_FEE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "WAIVE_CHARGE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Waive"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
                 "event": "MARK_PAID",
                 "effects": [
                   [
@@ -313,52 +662,6 @@
                     "@entity.id",
                     "@payload.id"
                   ],
-                  [
-                    "notify",
-                    "Rent recorded as paid",
-                    "success"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ASSESS_LATE_FEE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "notify",
-                    "Late fee assessed",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "WAIVE_CHARGE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "notify",
-                    "Charge waived",
-                    "info"
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
                   [
                     "fetch",
                     "RentCharge",
@@ -373,6 +676,305 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Recording payment…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ASSESS_LATE_FEE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "failure": "RentChargeLoadFailed",
+                        "success": "RentChargeLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Assessing late fee…"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "WAIVE_CHARGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "failure": "RentChargeLoadFailed",
+                        "success": "RentChargeLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Waiving charge…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading rent charges…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MARK_PAID",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "failure": "RentChargeLoadFailed",
+                        "success": "RentChargeLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Recording payment…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ASSESS_LATE_FEE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Assessing late fee…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "WAIVE_CHARGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Waiving charge…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
                       "type": "spinner"
                     }
                   ]

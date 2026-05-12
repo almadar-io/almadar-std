@@ -1,5 +1,5 @@
 app std-email-broadcast "1.0.0"
-"std-email-broadcast — send an email blast to a segment of contacts using a chosen template; tracks send progress."
+"std-email-broadcast — send an email blast to a segment of contacts using a chosen template. Lists broadcasts in `browsing`; opens detail in `viewing_single` with Send / Cancel actions."
 
 orbital EmailBroadcastOrbital {
   entity EmailBroadcast [persistent: emailbroadcasts] {
@@ -16,7 +16,6 @@ orbital EmailBroadcastOrbital {
 
   type EmailBroadcastLoaded     = Event { data : [EmailBroadcast] }         "Fired when the broadcast collection finishes loading"
   type EmailBroadcastLoadFailed = Event { error : string, code : string }   "Fired when the broadcast collection fails to load"
-  type BroadcastSent            = Event { id : string }                     "Fired after a broadcast send is dispatched"
 
   trait EmailBroadcastBroadcast -> EmailBroadcast [interaction, collection] {
     config {
@@ -28,18 +27,39 @@ orbital EmailBroadcastOrbital {
         (fetch EmailBroadcast { emit: { success: "EmailBroadcastLoaded", failure: "EmailBroadcastLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading broadcasts…" }] })
       EmailBroadcastLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "recipientCount", label: "Recipients", variant: "badge" }, { name: "sentCount", label: "Sent", variant: "badge" }, { name: "scheduledAt", label: "Scheduled", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Send", event: "SEND", variant: "primary", icon: "send" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total broadcasts", value: "@payload.data.length", icon: "mail" }, { type: "stat-display", label: "Sent this month", value: "23", icon: "send" }, { type: "stat-display", label: "Open rate", value: "41%", icon: "eye" }, { type: "stat-display", label: "Click rate", value: "12%", icon: "mouse-pointer" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "recipientCount", label: "Recipients", variant: "caption" }, { name: "sentCount", label: "Sent", variant: "caption" }, { name: "scheduledAt", label: "Scheduled", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_BROADCAST", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL_BROADCAST", variant: "danger" }] }] })
       EmailBroadcastLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      SEND -> sending
-        (set @entity.id @payload.broadcastId)
-        (emit BroadcastSent { id: @payload.broadcastId })
+      OPEN_BROADCAST -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.subject @payload.row.subject)
+        (set @entity.segmentId @payload.row.segmentId)
+        (set @entity.templateId @payload.row.templateId)
+        (set @entity.status @payload.row.status)
+        (set @entity.scheduledAt @payload.row.scheduledAt)
+        (set @entity.recipientCount @payload.row.recipientCount)
+        (set @entity.sentCount @payload.row.sentCount)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "mail" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Segment" }, { type: "typography", variant: "body", content: "@entity.segmentId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Template" }, { type: "typography", variant: "body", content: "@entity.templateId" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Recipients", value: "@entity.recipientCount", icon: "users" }, { type: "stat-display", label: "Sent", value: "@entity.sentCount", icon: "send" }, { type: "stat-display", label: "Scheduled", value: "@entity.scheduledAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Send Now", variant: "primary", action: "SEND", actionPayload: { id: "@entity.id", broadcastId: "@entity.id" } }, { type: "button", label: "Cancel", variant: "danger", action: "CANCEL_BROADCAST", actionPayload: { id: "@entity.id" } }] }] })
+      CANCEL_BROADCAST -> loading
+        (set @entity.id @payload.id)
+        (fetch EmailBroadcast { emit: { success: "EmailBroadcastLoaded", failure: "EmailBroadcastLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling broadcast…" }] })
     }
-    state sending {
-      BroadcastSent -> browsing
-        (render-ui main { type: "alert", variant: "success", message: "Broadcast sent" })
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch EmailBroadcast { emit: { success: "EmailBroadcastLoaded", failure: "EmailBroadcastLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading broadcasts…" }] })
+      SEND -> loading
+        (set @entity.id @payload.broadcastId)
+        (fetch EmailBroadcast { emit: { success: "EmailBroadcastLoaded", failure: "EmailBroadcastLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Sending broadcast…" }] })
+      CANCEL_BROADCAST -> loading
+        (set @entity.id @payload.id)
+        (fetch EmailBroadcast { emit: { success: "EmailBroadcastLoaded", failure: "EmailBroadcastLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling broadcast…" }] })
     }
     state error {
       INIT -> loading
@@ -47,16 +67,20 @@ orbital EmailBroadcastOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      SEND                    { broadcastId : string! }
+      OPEN_BROADCAST   { id : string!, row : EmailBroadcast }
+      CLOSE_VIEW       { }
+      SEND             { broadcastId : string! }
+      CANCEL_BROADCAST { id : string! }
       EmailBroadcastLoaded    { data : [EmailBroadcast] }
       EmailBroadcastLoadFailed { error : string, code : string }
-      BroadcastSent           { id : string }
     }
     listens {
-      SEND                    { broadcastId : string! }
+      OPEN_BROADCAST   { id : string!, row : EmailBroadcast }
+      CLOSE_VIEW       { }
+      SEND             { broadcastId : string! }
+      CANCEL_BROADCAST { id : string! }
       EmailBroadcastLoaded    { data : [EmailBroadcast] }
       EmailBroadcastLoadFailed { error : string, code : string }
-      BroadcastSent           { id : string }
     }
   }
   page "/broadcasts" as EmailBroadcastPage -> EmailBroadcastBroadcast

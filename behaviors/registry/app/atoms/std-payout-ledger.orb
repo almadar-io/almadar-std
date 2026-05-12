@@ -1,7 +1,7 @@
 {
   "name": "std-payout-ledger",
   "version": "1.0.0",
-  "description": "std-payout-ledger — marketplace vendor payout atom. Owns a Payout entity and a single trait that loads payout history into a data-grid alongside a balance-summary stat strip, requests stripe withdrawals, and marks rows paid.",
+  "description": "std-payout-ledger — marketplace vendor payout atom. Lists payouts in `browsing`; opens detail in `viewing_single` with Withdraw / Mark Paid actions.",
   "orbitals": [
     {
       "name": "PayoutOrbital",
@@ -66,15 +66,10 @@
           "linkedEntity": "Payout",
           "emits": [
             {
-              "event": "REQUEST_WITHDRAW",
+              "event": "OPEN_PAYOUT",
               "payloadSchema": [
                 {
-                  "name": "amount",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "vendorId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -120,51 +115,25 @@
               ]
             },
             {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "REQUEST_WITHDRAW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
               "event": "MARK_PAID",
               "payloadSchema": [
                 {
-                  "name": "payoutId",
+                  "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.vendorId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.bankAccountMasked",
-                  "type": "string"
-                },
-                {
-                  "name": "row.requestedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.paidAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.notes",
-                  "type": "string"
                 }
               ]
             },
@@ -189,107 +158,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "PayoutUpdated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.vendorId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.bankAccountMasked",
-                  "type": "string"
-                },
-                {
-                  "name": "row.requestedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.paidAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.notes",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "PayoutWithdrawn",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.vendorId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.bankAccountMasked",
-                  "type": "string"
-                },
-                {
-                  "name": "row.requestedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.paidAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.notes",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "PayoutWithdrawFailed",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -302,7 +170,7 @@
                 "name": "browsing"
               },
               {
-                "name": "withdrawing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -338,22 +206,28 @@
                 ]
               },
               {
-                "key": "REQUEST_WITHDRAW",
-                "name": "Request Withdraw",
+                "key": "OPEN_PAYOUT",
+                "name": "Open Payout",
                 "payloadSchema": [
                   {
-                    "name": "amount",
-                    "type": "number",
-                    "required": true
-                  },
-                  {
-                    "name": "vendorId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
                   {
                     "name": "row",
                     "type": "Payout"
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_WITHDRAW",
+                "name": "Request Withdraw",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   }
                 ]
               },
@@ -362,49 +236,15 @@
                 "name": "Mark Paid",
                 "payloadSchema": [
                   {
-                    "name": "payoutId",
+                    "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Payout"
                   }
                 ]
               },
               {
-                "key": "PayoutUpdated",
-                "name": "Payout updated",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Payout"
-                  }
-                ]
-              },
-              {
-                "key": "PayoutWithdrawn",
-                "name": "Payout withdrawn",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Payout"
-                  }
-                ]
-              },
-              {
-                "key": "PayoutWithdrawFailed",
-                "name": "Payout withdraw failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -418,8 +258,8 @@
                     "Payout",
                     {
                       "emit": {
-                        "success": "PayoutLoaded",
-                        "failure": "PayoutLoadFailed"
+                        "failure": "PayoutLoadFailed",
+                        "success": "PayoutLoaded"
                       }
                     }
                   ],
@@ -427,22 +267,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Loading payouts…",
-                          "type": "typography"
+                          "content": "Loading payouts…"
                         }
-                      ],
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -456,82 +296,101 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "wallet"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "icon": "wallet",
+                              "label": "Total payouts"
+                            },
+                            {
+                              "label": "Pending",
+                              "value": "12",
+                              "type": "stat-display",
+                              "icon": "clock"
+                            },
+                            {
+                              "label": "Paid this month",
+                              "type": "stat-display",
+                              "value": "$48,200",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "@config.minimumWithdrawal",
+                              "icon": "dollar-sign",
+                              "label": "Minimum",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "children": [
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "itemActions": [
                             {
-                              "type": "stat-display",
-                              "label": "Pending",
-                              "icon": "clock",
-                              "value": 0.0,
-                              "variant": "warning",
-                              "format": "currency"
+                              "event": "OPEN_PAYOUT",
+                              "label": "Open",
+                              "icon": "arrow-right",
+                              "variant": "primary"
                             },
                             {
-                              "type": "stat-display",
-                              "icon": "check-circle",
-                              "variant": "success",
-                              "format": "currency",
-                              "value": 0.0,
-                              "label": "Paid"
-                            },
-                            {
-                              "icon": "dollar-sign",
-                              "label": "Minimum Withdrawal",
-                              "value": "@config.minimumWithdrawal",
-                              "variant": "info",
-                              "format": "currency",
-                              "type": "stat-display"
+                              "variant": "danger",
+                              "label": "Withdraw",
+                              "event": "REQUEST_WITHDRAW"
                             }
                           ],
-                          "cols": 3.0,
-                          "type": "simple-grid"
-                        },
-                        {
                           "fields": [
                             {
-                              "variant": "caption",
                               "name": "vendorId",
-                              "label": "Vendor"
+                              "label": "Vendor",
+                              "variant": "caption"
                             },
                             {
                               "label": "Amount",
-                              "variant": "caption",
-                              "name": "amount"
+                              "name": "amount",
+                              "variant": "caption"
                             },
                             {
+                              "name": "currency",
                               "label": "Currency",
-                              "variant": "badge",
-                              "name": "currency"
+                              "variant": "badge"
                             },
                             {
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "name": "status",
+                              "variant": "badge"
                             },
                             {
+                              "name": "bankAccountMasked",
                               "label": "Bank",
-                              "variant": "caption",
-                              "name": "bankAccountMasked"
+                              "variant": "caption"
                             },
                             {
                               "name": "requestedAt",
@@ -539,29 +398,10 @@
                               "variant": "caption"
                             }
                           ],
-                          "gap": "sm",
                           "type": "data-grid",
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "REQUEST_WITHDRAW",
-                              "icon": "send",
-                              "label": "Withdraw",
-                              "variant": "primary"
-                            },
-                            {
-                              "icon": "check",
-                              "label": "Mark Paid",
-                              "variant": "secondary",
-                              "event": "MARK_PAID"
-                            }
-                          ]
+                          "entity": "@payload.data"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -575,92 +415,22 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "withdrawing",
-                "event": "REQUEST_WITHDRAW",
+                "to": "viewing_single",
+                "event": "OPEN_PAYOUT",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
                     "@payload.row.id"
-                  ],
-                  [
-                    "set",
-                    "@entity.vendorId",
-                    "@payload.vendorId"
-                  ],
-                  [
-                    "set",
-                    "@entity.amount",
-                    "@payload.amount"
-                  ],
-                  [
-                    "set",
-                    "@entity.currency",
-                    "@payload.row.currency"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "processing"
-                  ],
-                  [
-                    "set",
-                    "@entity.bankAccountMasked",
-                    "@payload.row.bankAccountMasked"
-                  ],
-                  [
-                    "set",
-                    "@entity.requestedAt",
-                    "now"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "Payout",
-                    "@entity",
-                    {
-                      "emit": {
-                        "failure": "PayoutWithdrawFailed",
-                        "success": "PayoutUpdated"
-                      }
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "stripe-payout",
-                    "create",
-                    {
-                      "amount": "@payload.amount",
-                      "currency": "@entity.currency",
-                      "vendorId": "@payload.vendorId"
-                    },
-                    {
-                      "emit": {
-                        "success": "PayoutWithdrawn",
-                        "failure": "PayoutWithdrawFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "MARK_PAID",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.payoutId"
                   ],
                   [
                     "set",
@@ -679,6 +449,11 @@
                   ],
                   [
                     "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
                     "@entity.bankAccountMasked",
                     "@payload.row.bankAccountMasked"
                   ],
@@ -689,24 +464,150 @@
                   ],
                   [
                     "set",
-                    "@entity.status",
-                    "paid"
+                    "@entity.paidAt",
+                    "@payload.row.paidAt"
                   ],
                   [
                     "set",
-                    "@entity.paidAt",
-                    "now"
+                    "@entity.notes",
+                    "@payload.row.notes"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "Payout",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "PayoutWithdrawFailed",
-                        "success": "PayoutUpdated"
-                      }
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "wallet"
+                            },
+                            {
+                              "content": "@entity.vendorId",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Bank",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.bankAccountMasked",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Notes"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.notes",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.amount",
+                              "icon": "dollar-sign",
+                              "label": "Amount"
+                            },
+                            {
+                              "label": "Requested",
+                              "icon": "calendar",
+                              "type": "stat-display",
+                              "value": "@entity.requestedAt"
+                            },
+                            {
+                              "label": "Paid",
+                              "icon": "check-circle",
+                              "value": "@entity.paidAt",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "cols": 3.0
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Withdraw",
+                              "action": "REQUEST_WITHDRAW",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "action": "MARK_PAID",
+                              "label": "Mark Paid",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "secondary",
+                              "type": "button"
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -714,8 +615,13 @@
               {
                 "from": "browsing",
                 "to": "loading",
-                "event": "PayoutUpdated",
+                "event": "REQUEST_WITHDRAW",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Payout",
@@ -725,13 +631,79 @@
                         "failure": "PayoutLoadFailed"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Requesting withdrawal…"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
                   ]
                 ]
               },
               {
                 "from": "browsing",
                 "to": "loading",
-                "event": "PayoutWithdrawn",
+                "event": "MARK_PAID",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Payout",
+                    {
+                      "emit": {
+                        "failure": "PayoutLoadFailed",
+                        "success": "PayoutLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Marking paid…"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -742,30 +714,41 @@
                         "success": "PayoutLoaded"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PayoutWithdrawFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading payouts…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "withdrawing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "PayoutWithdrawn",
+                "event": "REQUEST_WITHDRAW",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Payout",
@@ -775,14 +758,41 @@
                         "success": "PayoutLoaded"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Requesting withdrawal…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12"
+                    }
                   ]
                 ]
               },
               {
-                "from": "withdrawing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "PayoutUpdated",
+                "event": "MARK_PAID",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Payout",
@@ -792,21 +802,27 @@
                         "failure": "PayoutLoadFailed"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "withdrawing",
-                "to": "browsing",
-                "event": "PayoutWithdrawFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Marking paid…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -830,8 +846,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -839,13 +855,13 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Payouts"
-            },
             "minimumWithdrawal": {
               "type": "number",
               "default": 50.0
+            },
+            "title": {
+              "type": "string",
+              "default": "Payouts"
             }
           },
           "scope": "collection"

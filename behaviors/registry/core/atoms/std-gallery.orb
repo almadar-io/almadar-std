@@ -1,7 +1,7 @@
 {
   "name": "std-gallery",
   "version": "1.0.0",
-  "description": "std-gallery as a Function",
+  "description": "std-gallery — image gallery primitive. Browses GalleryItems in a media-gallery grid; opens a lightbox modal for full-size viewing.",
   "orbitals": [
     {
       "name": "GalleryItemOrbital",
@@ -51,9 +51,46 @@
           "linkedEntity": "GalleryItem",
           "emits": [
             {
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.imageUrl",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE"
+            },
+            {
               "event": "GalleryItemLoaded",
-              "description": "Fired when GalleryItem finishes loading; payload.data holds the gallery",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -63,8 +100,6 @@
             },
             {
               "event": "GalleryItemLoadFailed",
-              "description": "Fired when GalleryItem fails to load",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -130,6 +165,10 @@
                     "name": "id",
                     "type": "string",
                     "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "GalleryItem"
                   }
                 ]
               },
@@ -158,22 +197,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading…",
+                          "type": "typography",
+                          "content": "Loading gallery…",
                           "color": "muted",
-                          "variant": "caption",
-                          "type": "typography"
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -187,72 +226,35 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "image"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "GalleryItems Gallery",
-                                  "variant": "h2"
-                                }
-                              ]
+                              "type": "icon",
+                              "name": "image"
                             },
                             {
-                              "color": "muted",
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Click any image to view full size"
+                              "variant": "h3"
                             }
                           ],
-                          "justify": "between",
-                          "align": "center",
                           "direction": "horizontal",
-                          "gap": "md",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
-                          "imageField": "imageUrl",
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "icon": "maximize",
-                              "label": "View",
-                              "event": "VIEW"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "label": "Title",
-                              "variant": "h4",
-                              "name": "name"
-                            },
-                            {
-                              "name": "status",
-                              "variant": "badge",
-                              "label": "Status"
-                            }
-                          ],
-                          "cols": 3.0,
+                          "type": "media-gallery",
                           "entity": "@payload.data"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -266,36 +268,9 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "color": "destructive"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Failed to load",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@payload.error",
-                          "color": "muted"
-                        },
-                        {
-                          "icon": "rotate-ccw",
-                          "type": "button",
-                          "action": "INIT",
-                          "label": "Retry",
-                          "variant": "primary"
-                        }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack"
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -306,21 +281,41 @@
                 "event": "VIEW",
                 "effects": [
                   [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.imageUrl",
+                    "@payload.row.imageUrl"
+                  ],
+                  [
                     "render-ui",
                     "modal",
                     {
-                      "type": "lightbox",
-                      "closeAction": "CLOSE",
                       "images": [
                         {
-                          "src": "https://picsum.photos/seed/gallery1/800/600",
-                          "alt": "Image",
-                          "caption": "Image"
+                          "alt": "@entity.name",
+                          "src": "@entity.imageUrl",
+                          "caption": "@entity.name"
                         }
                       ],
-                      "isOpen": true,
                       "showCounter": true,
-                      "currentIndex": 0.0
+                      "type": "lightbox",
+                      "isOpen": true,
+                      "currentIndex": 0.0,
+                      "closeAction": "CLOSE"
                     }
                   ]
                 ]
@@ -340,8 +335,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "failure": "GalleryItemLoadFailed",
-                        "success": "GalleryItemLoaded"
+                        "success": "GalleryItemLoaded",
+                        "failure": "GalleryItemLoadFailed"
                       }
                     }
                   ],
@@ -349,7 +344,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading gallery…",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -373,12 +383,19 @@
                     "render-ui",
                     "main",
                     {
+                      "size": "sm",
                       "type": "spinner"
                     }
                   ]
                 ]
               }
             ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Gallery"
+            }
           },
           "scope": "collection"
         }

@@ -1,7 +1,7 @@
 {
   "name": "std-technician-dispatch",
   "version": "1.0.0",
-  "description": "std-technician-dispatch — dispatch board for field technicians. Owns a Technician entity (id, skills, availability, current assignment, last-known location) and a single trait that loads the roster, renders an Assign / SetUnavailable data-grid, and tracks accept / reject responses so a parent molecule can wire them to its WorkOrder.",
+  "description": "std-technician-dispatch — dispatch board for field technicians. Lists technicians in `browsing`; opens detail in `viewing_single` with Assign / Accept / Reject / Toggle Availability actions.",
   "orbitals": [
     {
       "name": "TechnicianDispatchOrbital",
@@ -60,6 +60,57 @@
           "category": "interaction",
           "linkedEntity": "Technician",
           "emits": [
+            {
+              "event": "OPEN_TECHNICIAN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.skills",
+                  "type": "[string]"
+                },
+                {
+                  "name": "row.available",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.currentOrderId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lat",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lng",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lastSeenAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
             {
               "event": "ASSIGN",
               "payloadSchema": [
@@ -219,6 +270,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -248,6 +302,21 @@
                   {
                     "name": "code",
                     "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_TECHNICIAN",
+                "name": "Open Technician",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Technician"
                   }
                 ]
               },
@@ -350,6 +419,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -372,22 +445,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading technicians…"
+                          "color": "muted",
+                          "content": "Loading technicians…",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
                       "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -401,77 +474,107 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "hard-hat"
+                              "name": "hard-hat",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
                               "variant": "h3",
                               "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "users",
+                              "label": "Total technicians",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "value": "18",
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Available now"
+                            },
+                            {
+                              "icon": "navigation",
+                              "label": "On assignment",
+                              "value": "9",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "clock",
+                              "type": "stat-display",
+                              "label": "Avg response",
+                              "value": "12m"
+                            }
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "type": "data-grid",
-                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "fields": [
                             {
-                              "variant": "body",
                               "name": "name",
-                              "label": "Technician"
+                              "label": "Technician",
+                              "variant": "body"
                             },
                             {
-                              "name": "skills",
+                              "label": "Skills",
                               "variant": "caption",
-                              "label": "Skills"
+                              "name": "skills"
                             },
                             {
-                              "label": "Available",
                               "variant": "badge",
-                              "name": "available"
+                              "name": "available",
+                              "label": "Available"
                             },
                             {
+                              "name": "currentOrderId",
                               "variant": "caption",
-                              "label": "Current Order",
-                              "name": "currentOrderId"
+                              "label": "Current Order"
                             },
                             {
+                              "name": "lastSeenAt",
                               "label": "Last Seen",
-                              "variant": "caption",
-                              "name": "lastSeenAt"
+                              "variant": "caption"
                             }
                           ],
-                          "cols": 1.0,
+                          "gap": "sm",
                           "itemActions": [
                             {
-                              "event": "ASSIGN",
-                              "variant": "primary",
-                              "label": "Assign",
-                              "icon": "user-plus"
+                              "icon": "arrow-right",
+                              "label": "Open",
+                              "event": "OPEN_TECHNICIAN",
+                              "variant": "primary"
                             },
                             {
-                              "icon": "user-minus",
-                              "label": "Set Unavailable",
-                              "variant": "secondary",
-                              "event": "TOGGLE_AVAILABLE"
+                              "variant": "danger",
+                              "event": "ASSIGN",
+                              "label": "Assign"
                             }
                           ]
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -485,16 +588,238 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_TECHNICIAN",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.phone",
+                    "@payload.row.phone"
+                  ],
+                  [
+                    "set",
+                    "@entity.skills",
+                    "@payload.row.skills"
+                  ],
+                  [
+                    "set",
+                    "@entity.available",
+                    "@payload.row.available"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentOrderId",
+                    "@payload.row.currentOrderId"
+                  ],
+                  [
+                    "set",
+                    "@entity.lat",
+                    "@payload.row.lat"
+                  ],
+                  [
+                    "set",
+                    "@entity.lng",
+                    "@payload.row.lng"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastSeenAt",
+                    "@payload.row.lastSeenAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "hard-hat"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.name"
+                            },
+                            {
+                              "label": "@entity.lastSeenAt",
+                              "variant": "primary",
+                              "type": "badge"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Phone"
+                                },
+                                {
+                                  "content": "@entity.phone",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Current order",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.currentOrderId",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Last seen",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.lastSeenAt",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "label": "Latitude",
+                              "value": "@entity.lat",
+                              "type": "stat-display",
+                              "icon": "map-pin"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "map-pin",
+                              "label": "Longitude",
+                              "value": "@entity.lng"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "ASSIGN",
+                              "actionPayload": {
+                                "orderId": "@entity.currentOrderId",
+                                "technicianId": "@entity.id"
+                              },
+                              "label": "Assign"
+                            },
+                            {
+                              "actionPayload": {
+                                "technicianId": "@entity.id"
+                              },
+                              "label": "Accept",
+                              "variant": "secondary",
+                              "type": "button",
+                              "action": "ACCEPT"
+                            },
+                            {
+                              "action": "REJECT",
+                              "actionPayload": {
+                                "technicianId": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Reject"
+                            },
+                            {
+                              "action": "TOGGLE_AVAILABLE",
+                              "actionPayload": {
+                                "technicianId": "@entity.id",
+                                "available": false
+                              },
+                              "variant": "secondary",
+                              "label": "Toggle Available",
+                              "type": "button"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
                 "event": "ASSIGN",
                 "effects": [
                   [
@@ -503,25 +828,35 @@
                     "@payload.technicianId"
                   ],
                   [
-                    "set",
-                    "@entity.currentOrderId",
-                    "@payload.orderId"
-                  ],
-                  [
-                    "set",
-                    "@entity.available",
-                    false
-                  ],
-                  [
-                    "persist",
-                    "update",
+                    "fetch",
                     "Technician",
-                    "@entity",
                     {
                       "emit": {
-                        "failure": "TechnicianUpdateFailed",
-                        "success": "TechnicianUpdated"
+                        "success": "TechnicianLoaded",
+                        "failure": "TechnicianLoadFailed"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Assigning technician…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -542,7 +877,7 @@
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "REJECT",
                 "effects": [
                   [
@@ -551,39 +886,49 @@
                     "@payload.technicianId"
                   ],
                   [
-                    "set",
-                    "@entity.currentOrderId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.available",
-                    true
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "Technician",
-                    "@entity",
-                    {
-                      "emit": {
-                        "failure": "TechnicianUpdateFailed",
-                        "success": "TechnicianUpdated"
-                      }
-                    }
-                  ],
-                  [
                     "emit",
                     "AssignmentRejected",
                     {
                       "technicianId": "@payload.technicianId"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "Technician",
+                    {
+                      "emit": {
+                        "failure": "TechnicianLoadFailed",
+                        "success": "TechnicianLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Releasing technician…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "TOGGLE_AVAILABLE",
                 "effects": [
                   [
@@ -603,9 +948,31 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "TechnicianUpdated",
-                        "failure": "TechnicianUpdateFailed"
+                        "failure": "TechnicianUpdateFailed",
+                        "success": "TechnicianUpdated"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Updating availability…"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -636,8 +1003,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -654,6 +1021,221 @@
                 "event": "AssignmentRejected"
               },
               {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Technician",
+                    {
+                      "emit": {
+                        "success": "TechnicianLoaded",
+                        "failure": "TechnicianLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading technicians…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ASSIGN",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.technicianId"
+                  ],
+                  [
+                    "fetch",
+                    "Technician",
+                    {
+                      "emit": {
+                        "success": "TechnicianLoaded",
+                        "failure": "TechnicianLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Assigning technician…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ACCEPT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.technicianId"
+                  ],
+                  [
+                    "fetch",
+                    "Technician",
+                    {
+                      "emit": {
+                        "failure": "TechnicianLoadFailed",
+                        "success": "TechnicianLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Confirming assignment…"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REJECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.technicianId"
+                  ],
+                  [
+                    "fetch",
+                    "Technician",
+                    {
+                      "emit": {
+                        "failure": "TechnicianLoadFailed",
+                        "success": "TechnicianLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Releasing technician…"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "TOGGLE_AVAILABLE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.technicianId"
+                  ],
+                  [
+                    "fetch",
+                    "Technician",
+                    {
+                      "emit": {
+                        "success": "TechnicianLoaded",
+                        "failure": "TechnicianLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Updating availability…"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
                 "from": "error",
                 "to": "loading",
                 "event": "INIT",
@@ -663,8 +1245,8 @@
                     "Technician",
                     {
                       "emit": {
-                        "failure": "TechnicianLoadFailed",
-                        "success": "TechnicianLoaded"
+                        "success": "TechnicianLoaded",
+                        "failure": "TechnicianLoadFailed"
                       }
                     }
                   ],

@@ -1,7 +1,7 @@
 {
   "name": "std-form-builder",
   "version": "1.0.0",
-  "description": "std-form-builder — survey form composer. One Survey entity holds metadata, a JSON-encoded question library, and JSON-encoded branching rules. Three traits coordinate authoring on a single page: SurveyManage (CRUD on the survey), SurveyQuestions (in-place editing of questionsJson), SurveyBranching (in-place editing of rulesJson).",
+  "description": "std-form-builder — survey form composer with list/detail browse + sidebar question and rules editors.",
   "orbitals": [
     {
       "name": "FormBuilderOrbital",
@@ -54,20 +54,10 @@
           "linkedEntity": "Survey",
           "emits": [
             {
-              "event": "CREATE",
+              "event": "OPEN_SURVEY",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "object",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "UPDATE",
-              "payloadSchema": [
-                {
-                  "name": "surveyId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -100,6 +90,19 @@
                 {
                   "name": "row.createdAt",
                   "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "CREATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 },
                 {
                   "name": "data",
@@ -111,6 +114,11 @@
             {
               "event": "PUBLISH",
               "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
                 {
                   "name": "surveyId",
                   "type": "string",
@@ -279,7 +287,7 @@
                 "name": "browsing"
               },
               {
-                "name": "editing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -315,28 +323,28 @@
                 ]
               },
               {
-                "key": "CREATE",
-                "name": "Create",
+                "key": "OPEN_SURVEY",
+                "name": "Open Survey",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "UPDATE",
-                "name": "Update",
-                "payloadSchema": [
-                  {
-                    "name": "surveyId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
                   {
                     "name": "row",
                     "type": "Survey"
+                  }
+                ]
+              },
+              {
+                "key": "CREATE",
+                "name": "Create",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
                   },
                   {
                     "name": "data",
@@ -349,6 +357,11 @@
                 "key": "PUBLISH",
                 "name": "Publish",
                 "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
                   {
                     "name": "surveyId",
                     "type": "string",
@@ -390,6 +403,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -403,8 +420,8 @@
                     "Survey",
                     {
                       "emit": {
-                        "failure": "SurveyLoadFailed",
-                        "success": "SurveyLoaded"
+                        "success": "SurveyLoaded",
+                        "failure": "SurveyLoadFailed"
                       }
                     }
                   ],
@@ -412,22 +429,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
+                      "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading surveys…"
+                          "content": "Loading surveys…",
+                          "color": "muted"
                         }
                       ],
                       "gap": "md",
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -442,61 +459,88 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "clipboard-list"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "@config.title"
-                                }
-                              ]
+                              "type": "icon",
+                              "name": "clipboard-list"
                             },
                             {
-                              "variant": "primary",
-                              "action": "CREATE",
-                              "label": "New survey",
-                              "type": "button",
-                              "icon": "plus"
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "label": "Total surveys",
+                              "type": "stat-display",
+                              "icon": "clipboard-list"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "5",
+                              "icon": "edit",
+                              "label": "Drafts"
+                            },
+                            {
+                              "label": "Published",
+                              "type": "stat-display",
+                              "value": "12",
+                              "icon": "send"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "users",
+                              "value": "284",
+                              "label": "Responses today"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "label": "Open",
+                              "event": "OPEN_SURVEY",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "label": "Publish",
+                              "event": "PUBLISH",
+                              "icon": "send",
+                              "variant": "secondary"
+                            }
+                          ],
                           "fields": [
                             {
-                              "label": "Title",
+                              "variant": "caption",
                               "name": "title",
-                              "variant": "h4"
+                              "label": "Title"
                             },
                             {
                               "name": "description",
-                              "label": "Description",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Description"
                             },
                             {
+                              "variant": "badge",
                               "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "label": "Status"
                             },
                             {
                               "name": "createdAt",
@@ -504,24 +548,13 @@
                               "variant": "caption"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "variant": "ghost",
-                              "label": "Edit",
-                              "icon": "edit",
-                              "event": "UPDATE"
-                            },
-                            {
-                              "label": "Publish",
-                              "icon": "send",
-                              "event": "PUBLISH",
-                              "variant": "primary"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -535,8 +568,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert"
                     }
                   ]
@@ -544,32 +577,13 @@
               },
               {
                 "from": "browsing",
-                "to": "editing",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "Survey",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "SurveyCreated",
-                        "failure": "SurveyLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "editing",
-                "event": "UPDATE",
+                "to": "viewing_single",
+                "event": "OPEN_SURVEY",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.surveyId"
+                    "@payload.row.id"
                   ],
                   [
                     "set",
@@ -602,22 +616,186 @@
                     "@payload.row.createdAt"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "Survey",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "SurveyLoadFailed",
-                        "success": "SurveyUpdated"
-                      }
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "variant": "ghost",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "clipboard-list"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.title"
+                            },
+                            {
+                              "type": "badge",
+                              "variant": "default",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Description",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.description"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Survey ID",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.id"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Created",
+                              "value": "@entity.createdAt",
+                              "icon": "calendar"
+                            },
+                            {
+                              "label": "Status",
+                              "type": "stat-display",
+                              "icon": "activity",
+                              "value": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Publish",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "surveyId": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "primary",
+                              "action": "PUBLISH"
+                            },
+                            {
+                              "label": "New Survey",
+                              "action": "CREATE",
+                              "variant": "secondary",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "data": "@entity"
+                              }
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "editing",
+                "to": "loading",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Survey",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "SurveyLoadFailed",
+                        "success": "SurveyCreated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Creating survey…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
                 "event": "PUBLISH",
                 "effects": [
                   [
@@ -641,6 +819,28 @@
                         "failure": "SurveyLoadFailed"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Publishing survey…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
+                    }
                   ]
                 ]
               },
@@ -671,23 +871,6 @@
                     "Survey",
                     {
                       "emit": {
-                        "success": "SurveyLoaded",
-                        "failure": "SurveyLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "SurveyPublished",
-                "effects": [
-                  [
-                    "fetch",
-                    "Survey",
-                    {
-                      "emit": {
                         "failure": "SurveyLoadFailed",
                         "success": "SurveyLoaded"
                       }
@@ -697,56 +880,6 @@
               },
               {
                 "from": "browsing",
-                "to": "error",
-                "event": "SurveyLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "SurveyCreated",
-                "effects": [
-                  [
-                    "fetch",
-                    "Survey",
-                    {
-                      "emit": {
-                        "failure": "SurveyLoadFailed",
-                        "success": "SurveyLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "SurveyUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "Survey",
-                    {
-                      "emit": {
-                        "success": "SurveyLoaded",
-                        "failure": "SurveyLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
                 "to": "loading",
                 "event": "SurveyPublished",
                 "effects": [
@@ -763,7 +896,7 @@
                 ]
               },
               {
-                "from": "editing",
+                "from": "browsing",
                 "to": "error",
                 "event": "SurveyLoadFailed",
                 "effects": [
@@ -771,9 +904,140 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Survey",
+                    {
+                      "emit": {
+                        "failure": "SurveyLoadFailed",
+                        "success": "SurveyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading surveys…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "PUBLISH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "published"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Survey",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "SurveyPublished",
+                        "failure": "SurveyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Publishing survey…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Survey",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "SurveyCreated",
+                        "failure": "SurveyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Creating survey…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -788,8 +1052,8 @@
                     "Survey",
                     {
                       "emit": {
-                        "success": "SurveyLoaded",
-                        "failure": "SurveyLoadFailed"
+                        "failure": "SurveyLoadFailed",
+                        "success": "SurveyLoaded"
                       }
                     }
                   ],
@@ -939,8 +1203,8 @@
                     "Survey",
                     {
                       "emit": {
-                        "failure": "QuestionsSaveFailed",
-                        "success": "SurveyHydrated"
+                        "success": "SurveyHydrated",
+                        "failure": "QuestionsSaveFailed"
                       }
                     }
                   ],
@@ -949,8 +1213,14 @@
                     "sidebar",
                     {
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "list-checks",
@@ -961,30 +1231,25 @@
                               "content": "@config.title",
                               "type": "typography"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "value": "@entity.questionsJson",
-                          "action": "EDIT_QUESTIONS_JSON",
                           "placeholder": "Questions JSON",
-                          "type": "input"
+                          "type": "input",
+                          "value": "@entity.questionsJson",
+                          "action": "EDIT_QUESTIONS_JSON"
                         },
                         {
-                          "action": "SAVE_QUESTIONS",
-                          "label": "Save questions",
                           "type": "button",
-                          "variant": "primary",
-                          "icon": "save"
+                          "label": "Save questions",
+                          "action": "SAVE_QUESTIONS",
+                          "icon": "save",
+                          "variant": "primary"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -1182,8 +1447,8 @@
                     "Survey",
                     {
                       "emit": {
-                        "failure": "RulesSaveFailed",
-                        "success": "SurveyHydrated"
+                        "success": "SurveyHydrated",
+                        "failure": "RulesSaveFailed"
                       }
                     }
                   ],
@@ -1191,48 +1456,44 @@
                     "render-ui",
                     "sidebar",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "name": "git-branch",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "questions": [],
-                          "type": "branching-logic-builder",
-                          "rules": []
-                        },
-                        {
-                          "placeholder": "Rules JSON",
-                          "value": "@entity.rulesJson",
                           "type": "input",
-                          "action": "EDIT_RULES_JSON"
+                          "value": "@entity.rulesJson",
+                          "action": "EDIT_RULES_JSON",
+                          "placeholder": "Rules JSON"
                         },
                         {
+                          "type": "button",
                           "variant": "primary",
                           "icon": "save",
                           "label": "Save rules",
-                          "type": "button",
                           "action": "SAVE_RULES"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1261,8 +1522,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "RulesChanged",
-                        "failure": "RulesSaveFailed"
+                        "failure": "RulesSaveFailed",
+                        "success": "RulesChanged"
                       }
                     }
                   ]
@@ -1287,9 +1548,9 @@
                     "render-ui",
                     "sidebar",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]

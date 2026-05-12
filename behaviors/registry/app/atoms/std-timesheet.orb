@@ -1,7 +1,7 @@
 {
   "name": "std-timesheet",
   "version": "1.0.0",
-  "description": "std-timesheet — weekly timesheet primitive holding total/billable hours for one employee and tracking approval status.",
+  "description": "std-timesheet — weekly timesheet primitive holding total/billable hours for one employee. Lists timesheets in `browsing`; opens detail in `viewing_single` with Submit / Approve / Reject / Revise / Delete actions.",
   "orbitals": [
     {
       "name": "TimesheetOrbital",
@@ -91,7 +91,7 @@
           "linkedEntity": "Timesheet",
           "emits": [
             {
-              "event": "VIEW",
+              "event": "OPEN_TIMESHEET",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -99,47 +99,65 @@
                   "required": true
                 },
                 {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
+                  "name": "row.id",
                   "type": "string",
                   "required": true
                 },
                 {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CREATE",
-              "payloadSchema": [
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "REQUEST_DELETE",
-              "payloadSchema": [
-                {
-                  "name": "id",
+                  "name": "row.employeeId",
                   "type": "string",
                   "required": true
                 },
                 {
-                  "name": "source",
+                  "name": "row.employeeName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.periodStart",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.periodEnd",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.totalHours",
+                  "type": "number"
+                },
+                {
+                  "name": "row.billableHours",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.approvedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.approvedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "SUBMIT",
@@ -406,6 +424,16 @@
               ]
             },
             {
+              "event": "REQUEST_DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
               "event": "TimesheetLoaded",
               "payloadSchema": [
                 {
@@ -439,7 +467,10 @@
                 "isInitial": true
               },
               {
-                "name": "viewing"
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -479,108 +510,17 @@
                 ]
               },
               {
-                "key": "REFRESH",
-                "name": "Refresh",
-                "payloadSchema": [
-                  {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SEARCH",
-                "name": "Search",
-                "payloadSchema": [
-                  {
-                    "name": "query",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "FILTER_STATUS",
-                "name": "Filter Status",
-                "payloadSchema": [
-                  {
-                    "name": "status",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SUBMIT",
-                "name": "Submit",
+                "key": "OPEN_TIMESHEET",
+                "name": "Open Timesheet",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
                     "required": true
-                  }
-                ]
-              },
-              {
-                "key": "APPROVE",
-                "name": "Approve",
-                "payloadSchema": [
+                  },
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REJECT",
-                "name": "Reject",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REQUEST_REVISION",
-                "name": "Request Revision",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CREATE",
-                "name": "Create",
-                "payloadSchema": [
-                  {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
+                    "name": "row",
+                    "type": "Timesheet"
                   }
                 ]
               },
@@ -592,6 +532,70 @@
                     "name": "id",
                     "type": "string",
                     "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Timesheet"
+                  }
+                ]
+              },
+              {
+                "key": "APPROVE",
+                "name": "Approve",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Timesheet"
+                  }
+                ]
+              },
+              {
+                "key": "REJECT",
+                "name": "Reject",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Timesheet"
+                  }
+                ]
+              },
+              {
+                "key": "REQUEST_REVISION",
+                "name": "Request Revision",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Timesheet"
                   }
                 ]
               }
@@ -607,8 +611,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "failure": "TimesheetLoadFailed",
-                        "success": "TimesheetLoaded"
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
                       }
                     }
                   ],
@@ -616,20 +620,20 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Loading timesheets…"
                         }
                       ],
                       "align": "center",
                       "type": "stack",
-                      "className": "py-12",
                       "direction": "vertical",
                       "gap": "md"
                     }
@@ -638,7 +642,7 @@
               },
               {
                 "from": "loading",
-                "to": "viewing",
+                "to": "browsing",
                 "event": "TimesheetLoaded",
                 "effects": [
                   [
@@ -647,47 +651,51 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "clock"
+                              "name": "clock",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
                               "content": "@config.title",
                               "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "clock",
+                              "value": "@payload.data.length",
+                              "label": "Total timesheets"
                             },
                             {
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "New Timesheet",
-                              "action": "CREATE"
+                              "label": "Pending approval",
+                              "type": "stat-display",
+                              "value": "14",
+                              "icon": "hourglass"
+                            },
+                            {
+                              "icon": "dollar-sign",
+                              "value": "1,240",
+                              "type": "stat-display",
+                              "label": "Billable hours wk"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "value": "38",
+                              "type": "stat-display",
+                              "label": "Approved this wk"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "progress-dots",
-                          "size": "md",
-                          "count": 7.0,
-                          "currentIndex": 3.0
-                        },
-                        {
-                          "type": "calendar-grid",
-                          "timeSlots": [
-                            "09:00",
-                            "10:00",
-                            "11:00",
-                            "12:00",
-                            "13:00",
-                            "14:00",
-                            "15:00",
-                            "16:00",
-                            "17:00"
-                          ]
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
@@ -695,43 +703,18 @@
                         {
                           "itemActions": [
                             {
-                              "event": "VIEW",
-                              "variant": "ghost",
-                              "label": "View"
-                            },
-                            {
-                              "variant": "secondary",
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Submit",
-                              "event": "SUBMIT",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "APPROVE",
+                              "icon": "arrow-right",
                               "variant": "primary",
-                              "label": "Approve"
+                              "label": "Open",
+                              "event": "OPEN_TIMESHEET"
                             },
                             {
-                              "variant": "danger",
-                              "label": "Reject",
-                              "event": "REJECT"
-                            },
-                            {
-                              "variant": "secondary",
-                              "event": "REQUEST_REVISION",
-                              "label": "Revise"
-                            },
-                            {
-                              "variant": "danger",
+                              "event": "REQUEST_DELETE",
                               "label": "Delete",
-                              "event": "REQUEST_DELETE"
+                              "variant": "danger"
                             }
                           ],
-                          "cols": 1.0,
-                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": [
                             {
                               "name": "employeeName",
@@ -739,43 +722,44 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "name": "periodStart",
-                              "label": "Period Start"
+                              "label": "Period Start",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "periodEnd",
+                              "variant": "caption",
+                              "label": "Period End"
                             },
                             {
                               "variant": "caption",
-                              "label": "Period End",
-                              "name": "periodEnd"
-                            },
-                            {
                               "name": "totalHours",
-                              "label": "Total Hours",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Billable",
-                              "name": "billableHours",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
+                              "label": "Total Hours"
                             },
                             {
                               "variant": "caption",
+                              "name": "billableHours",
+                              "label": "Billable"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            },
+                            {
                               "name": "approvedBy",
-                              "label": "Approved By"
+                              "label": "Approved By",
+                              "variant": "caption"
                             }
                           ],
+                          "entity": "@payload.data",
                           "gap": "sm",
-                          "type": "data-grid"
+                          "cols": 1.0
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -789,275 +773,276 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "loading",
-                "event": "REFRESH",
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_TIMESHEET",
                 "effects": [
                   [
-                    "fetch",
-                    "Timesheet",
-                    {
-                      "emit": {
-                        "success": "TimesheetLoaded",
-                        "failure": "TimesheetLoadFailed"
-                      }
-                    }
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.employeeId",
+                    "@payload.row.employeeId"
+                  ],
+                  [
+                    "set",
+                    "@entity.employeeName",
+                    "@payload.row.employeeName"
+                  ],
+                  [
+                    "set",
+                    "@entity.periodStart",
+                    "@payload.row.periodStart"
+                  ],
+                  [
+                    "set",
+                    "@entity.periodEnd",
+                    "@payload.row.periodEnd"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalHours",
+                    "@payload.row.totalHours"
+                  ],
+                  [
+                    "set",
+                    "@entity.billableHours",
+                    "@payload.row.billableHours"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.submittedAt",
+                    "@payload.row.submittedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.approvedBy",
+                    "@payload.row.approvedBy"
+                  ],
+                  [
+                    "set",
+                    "@entity.approvedAt",
+                    "@payload.row.approvedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "Refreshing timesheets…",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "align": "center",
                       "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "Timesheet",
-                    {
-                      "emit": {
-                        "success": "TimesheetLoaded",
-                        "failure": "TimesheetLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "spinner"
+                          "children": [
+                            {
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "type": "button"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "clock"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.employeeName"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Searching timesheets…"
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Employee ID",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.employeeId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Approved by",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.approvedBy",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Notes",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.notes"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@entity.totalHours",
+                              "type": "stat-display",
+                              "label": "Total hours",
+                              "icon": "clock"
+                            },
+                            {
+                              "label": "Billable",
+                              "value": "@entity.billableHours",
+                              "icon": "dollar-sign",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Period start",
+                              "value": "@entity.periodStart",
+                              "type": "stat-display",
+                              "icon": "calendar"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "calendar-check",
+                              "value": "@entity.periodEnd",
+                              "label": "Period end"
+                            }
+                          ],
+                          "cols": 4.0
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "SUBMIT",
+                              "label": "Submit",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              },
+                              "label": "Approve",
+                              "variant": "primary",
+                              "action": "APPROVE",
+                              "type": "button"
+                            },
+                            {
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              },
+                              "action": "REJECT",
+                              "type": "button",
+                              "label": "Reject",
+                              "variant": "danger"
+                            },
+                            {
+                              "action": "REQUEST_REVISION",
+                              "variant": "secondary",
+                              "label": "Revise",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "REQUEST_DELETE",
+                              "label": "Delete",
+                              "variant": "danger"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
+                "from": "browsing",
                 "to": "loading",
-                "event": "FILTER_STATUS",
-                "effects": [
-                  [
-                    "fetch",
-                    "Timesheet",
-                    {
-                      "emit": {
-                        "success": "TimesheetLoaded",
-                        "failure": "TimesheetLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Filtering timesheets…",
-                          "type": "typography"
-                        }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "SUBMIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "Timesheet submitted",
-                      "variant": "success",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "APPROVE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "success",
-                      "message": "Timesheet approved",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "REJECT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "variant": "info",
-                      "message": "Timesheet rejected"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "REQUEST_REVISION",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "Revision requested",
-                      "type": "alert",
-                      "variant": "info"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "message": "Creating new timesheet",
-                      "variant": "info"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "info",
-                      "message": "Viewing timesheet",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "EDIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "variant": "info",
-                      "message": "Editing timesheet"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
                 "event": "REQUEST_DELETE",
                 "effects": [
                   [
@@ -1066,12 +1051,294 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "Delete requested",
-                      "variant": "warning"
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Deleting timesheet…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "failure": "TimesheetLoadFailed",
+                        "success": "TimesheetLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading timesheets…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Submitting timesheet…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "APPROVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Approving timesheet…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REJECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "failure": "TimesheetLoadFailed",
+                        "success": "TimesheetLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Rejecting timesheet…"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REQUEST_REVISION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "failure": "TimesheetLoadFailed",
+                        "success": "TimesheetLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Requesting revision…"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Timesheet",
+                    {
+                      "emit": {
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Deleting timesheet…"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -1086,8 +1353,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "failure": "TimesheetLoadFailed",
-                        "success": "TimesheetLoaded"
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
                       }
                     }
                   ],

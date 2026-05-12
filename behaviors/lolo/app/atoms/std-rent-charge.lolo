@@ -1,20 +1,21 @@
 app std-rent-charge "1.0.0"
-"Rent charge ledger: monthly rent owed by a tenant (tenant-pays semantics)."
+"std-rent-charge — monthly rent charge ledger. Lists charges in `browsing`; opens detail in `viewing_single` with Mark Paid / Late Fee / Waive actions."
 
 orbital RentChargeOrbital {
   entity RentCharge [persistent: rentcharges] {
-    id : string!
+    id       : string!
     tenantId : string!
-    leaseId : string = ""
-    amount : number = 0
-    dueDate : string!
-    paidAt : string = ""
-    status : "unpaid" | "paid" | "overdue" | "waived" = "unpaid"
-    lateFee : number = 0
-    notes : string = ""
+    leaseId  : string = ""
+    amount   : number = 0
+    dueDate  : string!
+    paidAt   : string = ""
+    status   : "unpaid" | "paid" | "overdue" | "waived" = "unpaid"
+    lateFee  : number = 0
+    notes    : string = ""
   }
-  type RentChargeLoaded = Event { data : [RentCharge] }
-  type RentChargeLoadFailed = Event { error : string, code : string }
+
+  type RentChargeLoaded     = Event { data : [RentCharge] }            "Fired when the rent charge collection finishes loading"
+  type RentChargeLoadFailed = Event { error : string, code : string }  "Fired when the rent charge collection fails to load"
 
   trait RentChargeLedger -> RentCharge [interaction, collection] {
     config {
@@ -24,42 +25,76 @@ orbital RentChargeOrbital {
     state loading {
       INIT -> loading
         (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading rent charges…" }] })
       RentChargeLoaded -> browsing
-        (render-ui main { type: "data-grid", entity: @payload.data, fields: [{ name: "tenantId", label: "Tenant", variant: "caption" }, { name: "amount", label: "Amount", variant: "h4" }, { name: "dueDate", label: "Due Date", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "paidAt", label: "Paid At", variant: "caption" }, { name: "lateFee", label: "Late Fee", variant: "caption" }], itemActions: [{ label: "Mark Paid", event: "MARK_PAID", variant: "primary" }, { label: "Late Fee", event: "ASSESS_LATE_FEE", variant: "ghost" }, { label: "Waive", event: "WAIVE_CHARGE", variant: "danger" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "home" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total charges", value: "@payload.data.length", icon: "home" }, { type: "stat-display", label: "Collected", value: "$284,500", icon: "check-circle" }, { type: "stat-display", label: "Overdue", value: "11", icon: "alert-triangle" }, { type: "stat-display", label: "Late fees", value: "$1,840", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "tenantId", label: "Tenant", variant: "caption" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "dueDate", label: "Due", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "paidAt", label: "Paid", variant: "caption" }, { name: "lateFee", label: "Late Fee", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CHARGE", variant: "primary", icon: "arrow-right" }, { label: "Waive", event: "WAIVE_CHARGE", variant: "danger" }] }] })
       RentChargeLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "Failed to load rent charges" })
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      MARK_PAID -> browsing
+      OPEN_CHARGE -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.tenantId @payload.row.tenantId)
+        (set @entity.leaseId @payload.row.leaseId)
+        (set @entity.amount @payload.row.amount)
+        (set @entity.dueDate @payload.row.dueDate)
+        (set @entity.paidAt @payload.row.paidAt)
+        (set @entity.status @payload.row.status)
+        (set @entity.lateFee @payload.row.lateFee)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "home" }, { type: "typography", content: "@entity.tenantId", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Lease" }, { type: "typography", variant: "body", content: "@entity.leaseId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Amount", value: "@entity.amount", icon: "dollar-sign" }, { type: "stat-display", label: "Late fee", value: "@entity.lateFee", icon: "alert-triangle" }, { type: "stat-display", label: "Due", value: "@entity.dueDate", icon: "calendar" }, { type: "stat-display", label: "Paid", value: "@entity.paidAt", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Mark Paid", variant: "primary", action: "MARK_PAID", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Assess Late Fee", variant: "secondary", action: "ASSESS_LATE_FEE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Waive", variant: "danger", action: "WAIVE_CHARGE", actionPayload: { id: "@entity.id" } }] }] })
+      MARK_PAID -> loading
         (set @entity.id @payload.id)
-        (notify "Rent recorded as paid" success)
-      ASSESS_LATE_FEE -> browsing
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording payment…" }] })
+      ASSESS_LATE_FEE -> loading
         (set @entity.id @payload.id)
-        (notify "Late fee assessed" info)
-      WAIVE_CHARGE -> browsing
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Assessing late fee…" }] })
+      WAIVE_CHARGE -> loading
         (set @entity.id @payload.id)
-        (notify "Charge waived" info)
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Waiving charge…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading rent charges…" }] })
+      MARK_PAID -> loading
+        (set @entity.id @payload.id)
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording payment…" }] })
+      ASSESS_LATE_FEE -> loading
+        (set @entity.id @payload.id)
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Assessing late fee…" }] })
+      WAIVE_CHARGE -> loading
+        (set @entity.id @payload.id)
+        (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Waiving charge…" }] })
     }
     state error {
       INIT -> loading
         (fetch RentCharge { emit: { success: "RentChargeLoaded", failure: "RentChargeLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "spinner", size: "sm" })
     }
-
     emits {
-      MARK_PAID { id : string! }
-      ASSESS_LATE_FEE { id : string! }
-      WAIVE_CHARGE { id : string! }
-      RentChargeLoaded { data : [RentCharge] }
-      RentChargeLoadFailed { error : string, code : string }
+      OPEN_CHARGE           { id : string!, row : RentCharge }
+      CLOSE_VIEW            { }
+      MARK_PAID             { id : string! }
+      ASSESS_LATE_FEE       { id : string! }
+      WAIVE_CHARGE          { id : string! }
+      RentChargeLoaded      { data : [RentCharge] }
+      RentChargeLoadFailed  { error : string, code : string }
     }
     listens {
-      MARK_PAID { id : string! }
-      ASSESS_LATE_FEE { id : string! }
-      WAIVE_CHARGE { id : string! }
-      RentChargeLoaded { data : [RentCharge] }
-      RentChargeLoadFailed { error : string, code : string }
+      OPEN_CHARGE           { id : string!, row : RentCharge }
+      CLOSE_VIEW            { }
+      MARK_PAID             { id : string! }
+      ASSESS_LATE_FEE       { id : string! }
+      WAIVE_CHARGE          { id : string! }
+      RentChargeLoaded      { data : [RentCharge] }
+      RentChargeLoadFailed  { error : string, code : string }
     }
   }
   page "/rent-charges" as RentChargePage -> RentChargeLedger

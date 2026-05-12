@@ -1,5 +1,5 @@
 app std-matter "1.0.0"
-"std-matter — legal matter primitive: a single legal case (litigation, contract review, immigration filing) with client, status, lead attorney, and billing reference."
+"std-matter — legal matter primitive: a single case (litigation, contract review, immigration filing) with client, status, lead attorney. Lists matters in `browsing`; opens matter detail in `viewing_single` with Close / Hold / Reopen actions."
 
 orbital MatterOrbital {
   entity Matter [persistent: matters] {
@@ -28,20 +28,44 @@ orbital MatterOrbital {
         (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading matters…" }] })
       MatterLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "breadcrumb", items: [{ label: "Court" }, { label: "Cases" }, { label: "Matter" }] }, { type: "wizard-progress", steps: [{ id: "intake", title: "Intake" }, { id: "discovery", title: "Discovery" }, { id: "pretrial", title: "Pre-Trial" }, { id: "trial", title: "Trial" }, { id: "closed", title: "Closed" }], currentStep: 1 }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "scale" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "file-tree", tree: [{ name: "Pleadings", path: "Pleadings", type: "dir", children: [{ name: "Complaint.pdf", path: "Complaint.pdf", type: "file" }, { name: "Answer.pdf", path: "Answer.pdf", type: "file" }] }, { name: "Discovery", path: "Discovery", type: "dir", children: [{ name: "Interrogatories.pdf", path: "Discovery/Interrogatories.pdf", type: "file" }, { name: "Depositions", path: "Discovery/Depositions", type: "dir", children: [{ name: "Smith.pdf", path: "Discovery/Depositions/Smith.pdf", type: "file" }] }] }, { name: "Motions", path: "Motions", type: "dir", children: [{ name: "Motion-to-Dismiss.pdf", path: "Motions/Motion-to-Dismiss.pdf", type: "file" }] }] }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "accordion", items: [{ id: "facts", title: "Facts of the Case", content: "Plaintiff alleges breach of contract dated 2025-08-01." }, { id: "issues", title: "Legal Issues", content: "Material breach, damages calculation, statute of limitations." }, { id: "strategy", title: "Strategy", content: "Motion practice followed by summary judgment." }] }, { type: "law-reference-tooltip", reference: { law: "FRCP", article: "12(b)(6)", clause: "Failure to State a Claim" }, position: "top", children: [{ type: "typography", content: "Rule 12(b)(6) motion pending" }] }] }] }, { type: "document-viewer", title: "Complaint.pdf", documentType: "pdf", src: "/docs/complaint.pdf", currentPage: 1, totalPages: 24, showToolbar: true }, { type: "doc-pagination", prev: { label: "Previous Page", href: "#prev" }, next: { label: "Next Page", href: "#next" } }, { type: "quest-tracker", quests: [{ id: "answer-due", title: "File Answer", progress: 0, maxProgress: 1, active: true }, { id: "discovery-cutoff", title: "Discovery Cutoff", progress: 0, maxProgress: 1 }, { id: "pretrial-brief", title: "Pretrial Brief", progress: 0, maxProgress: 1 }], activeQuestId: "answer-due" }, { type: "content-renderer", content: "Status conference scheduled. All parties to appear. Discovery is ongoing.", direction: "ltr" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "matterNumber", label: "Matter #", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "clientName", label: "Client", variant: "caption" }, { name: "practiceArea", label: "Practice", variant: "badge" }, { name: "leadAttorney", label: "Lead", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Close", event: "CLOSE_MATTER", variant: "primary" }, { label: "Hold", event: "HOLD_MATTER", variant: "ghost" }, { label: "Reopen", event: "REOPEN_MATTER", variant: "ghost" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "scale" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total matters", value: "@payload.data.length", icon: "scale" }, { type: "stat-display", label: "Active", value: "34", icon: "play-circle" }, { type: "stat-display", label: "On hold", value: "6", icon: "pause-circle" }, { type: "stat-display", label: "Closed this month", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "matterNumber", label: "Matter #", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "clientName", label: "Client", variant: "caption" }, { name: "practiceArea", label: "Practice", variant: "badge" }, { name: "leadAttorney", label: "Lead", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_MATTER", variant: "primary", icon: "arrow-right" }, { label: "Close", event: "CLOSE_MATTER", variant: "danger" }] }] })
       MatterLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      CLOSE_MATTER -> browsing
+      OPEN_MATTER -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.matterNumber @payload.row.matterNumber)
+        (set @entity.title @payload.row.title)
+        (set @entity.clientName @payload.row.clientName)
+        (set @entity.practiceArea @payload.row.practiceArea)
+        (set @entity.leadAttorney @payload.row.leadAttorney)
+        (set @entity.status @payload.row.status)
+        (set @entity.openedAt @payload.row.openedAt)
+        (set @entity.closedAt @payload.row.closedAt)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "scale" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.practiceArea", variant: "primary" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Matter #" }, { type: "typography", variant: "body", content: "@entity.matterNumber" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Client" }, { type: "typography", variant: "body", content: "@entity.clientName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Lead attorney" }, { type: "typography", variant: "body", content: "@entity.leadAttorney" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Opened", value: "@entity.openedAt", icon: "calendar" }, { type: "stat-display", label: "Closed", value: "@entity.closedAt", icon: "calendar-check" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Close Matter", variant: "danger", action: "CLOSE_MATTER", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Hold", variant: "secondary", action: "HOLD_MATTER", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Reopen", variant: "primary", action: "REOPEN_MATTER", actionPayload: { id: "@entity.id" } }] }] })
+      CLOSE_MATTER -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Matter closed" })
-      HOLD_MATTER -> browsing
+        (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing matter…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading matters…" }] })
+      CLOSE_MATTER -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Matter on hold" })
-      REOPEN_MATTER -> browsing
+        (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing matter…" }] })
+      HOLD_MATTER -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Matter reopened" })
+        (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Putting matter on hold…" }] })
+      REOPEN_MATTER -> loading
+        (set @entity.id @payload.id)
+        (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reopening matter…" }] })
     }
     state error {
       INIT -> loading
@@ -49,13 +73,17 @@ orbital MatterOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      CLOSE_MATTER     { id : string!, row : Matter }
-      HOLD_MATTER      { id : string!, row : Matter }
-      REOPEN_MATTER    { id : string!, row : Matter }
+      OPEN_MATTER      { id : string!, row : Matter }
+      CLOSE_VIEW       { }
+      CLOSE_MATTER     { id : string! }
+      HOLD_MATTER      { id : string! }
+      REOPEN_MATTER    { id : string! }
       MatterLoaded     { data : [Matter] }
       MatterLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_MATTER      { id : string!, row : Matter }
+      CLOSE_VIEW       { }
       CLOSE_MATTER     { id : string! }
       HOLD_MATTER      { id : string! }
       REOPEN_MATTER    { id : string! }

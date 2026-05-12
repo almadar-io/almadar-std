@@ -1,5 +1,5 @@
 app std-technician-dispatch "1.0.0"
-"std-technician-dispatch — dispatch board for field technicians. Owns a Technician entity (id, skills, availability, current assignment, last-known location) and a single trait that loads the roster, renders an Assign / SetUnavailable data-grid, and tracks accept / reject responses so a parent molecule can wire them to its WorkOrder."
+"std-technician-dispatch — dispatch board for field technicians. Lists technicians in `browsing`; opens detail in `viewing_single` with Assign / Accept / Reject / Toggle Availability actions."
 
 orbital TechnicianDispatchOrbital {
   entity Technician [persistent: technicians] {
@@ -31,28 +31,38 @@ orbital TechnicianDispatchOrbital {
         (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading technicians…" }] })
       TechnicianLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "hard-hat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Technician", variant: "body" }, { name: "skills", label: "Skills", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }, { name: "currentOrderId", label: "Current Order", variant: "caption" }, { name: "lastSeenAt", label: "Last Seen", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Assign", event: "ASSIGN", variant: "primary", icon: "user-plus" }, { label: "Set Unavailable", event: "TOGGLE_AVAILABLE", variant: "secondary", icon: "user-minus" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "hard-hat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total technicians", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Available now", value: "18", icon: "check-circle" }, { type: "stat-display", label: "On assignment", value: "9", icon: "navigation" }, { type: "stat-display", label: "Avg response", value: "12m", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Technician", variant: "body" }, { name: "skills", label: "Skills", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }, { name: "currentOrderId", label: "Current Order", variant: "caption" }, { name: "lastSeenAt", label: "Last Seen", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TECHNICIAN", variant: "primary", icon: "arrow-right" }, { label: "Assign", event: "ASSIGN", variant: "danger" }] }] })
       TechnicianLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      ASSIGN -> browsing
+      OPEN_TECHNICIAN -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.phone @payload.row.phone)
+        (set @entity.skills @payload.row.skills)
+        (set @entity.available @payload.row.available)
+        (set @entity.currentOrderId @payload.row.currentOrderId)
+        (set @entity.lat @payload.row.lat)
+        (set @entity.lng @payload.row.lng)
+        (set @entity.lastSeenAt @payload.row.lastSeenAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "hard-hat" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.lastSeenAt", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Current order" }, { type: "typography", variant: "body", content: "@entity.currentOrderId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Last seen" }, { type: "typography", variant: "body", content: "@entity.lastSeenAt" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Latitude", value: "@entity.lat", icon: "map-pin" }, { type: "stat-display", label: "Longitude", value: "@entity.lng", icon: "map-pin" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Assign", variant: "primary", action: "ASSIGN", actionPayload: { technicianId: "@entity.id", orderId: "@entity.currentOrderId" } }, { type: "button", label: "Accept", variant: "secondary", action: "ACCEPT", actionPayload: { technicianId: "@entity.id" } }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", actionPayload: { technicianId: "@entity.id" } }, { type: "button", label: "Toggle Available", variant: "secondary", action: "TOGGLE_AVAILABLE", actionPayload: { technicianId: "@entity.id", available: false } }] }] })
+      ASSIGN -> loading
         (set @entity.id @payload.technicianId)
-        (set @entity.currentOrderId @payload.orderId)
-        (set @entity.available false)
-        (persist update Technician @entity { emit: { success: "TechnicianUpdated", failure: "TechnicianUpdateFailed" } })
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Assigning technician…" }] })
       ACCEPT -> browsing
         (emit AssignmentAccepted { technicianId: @payload.technicianId })
-      REJECT -> browsing
+      REJECT -> loading
         (set @entity.id @payload.technicianId)
-        (set @entity.currentOrderId "")
-        (set @entity.available true)
-        (persist update Technician @entity { emit: { success: "TechnicianUpdated", failure: "TechnicianUpdateFailed" } })
         (emit AssignmentRejected { technicianId: @payload.technicianId })
-      TOGGLE_AVAILABLE -> browsing
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Releasing technician…" }] })
+      TOGGLE_AVAILABLE -> loading
         (set @entity.id @payload.technicianId)
         (set @entity.available @payload.available)
         (persist update Technician @entity { emit: { success: "TechnicianUpdated", failure: "TechnicianUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating availability…" }] })
       TechnicianUpdated -> loading
         (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
       TechnicianUpdateFailed -> browsing
@@ -60,12 +70,35 @@ orbital TechnicianDispatchOrbital {
       AssignmentAccepted -> browsing
       AssignmentRejected -> browsing
     }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading technicians…" }] })
+      ASSIGN -> loading
+        (set @entity.id @payload.technicianId)
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Assigning technician…" }] })
+      ACCEPT -> loading
+        (set @entity.id @payload.technicianId)
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Confirming assignment…" }] })
+      REJECT -> loading
+        (set @entity.id @payload.technicianId)
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Releasing technician…" }] })
+      TOGGLE_AVAILABLE -> loading
+        (set @entity.id @payload.technicianId)
+        (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating availability…" }] })
+    }
     state error {
       INIT -> loading
         (fetch Technician { emit: { success: "TechnicianLoaded", failure: "TechnicianLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_TECHNICIAN  { id : string!, row : Technician }
+      CLOSE_VIEW       { }
       ASSIGN           { technicianId : string!, orderId : string! }
       ACCEPT           { technicianId : string! }
       REJECT           { technicianId : string! }
@@ -78,6 +111,8 @@ orbital TechnicianDispatchOrbital {
       AssignmentRejected     { technicianId : string! }
     }
     listens {
+      OPEN_TECHNICIAN  { id : string!, row : Technician }
+      CLOSE_VIEW       { }
       ASSIGN           { technicianId : string!, orderId : string! }
       ACCEPT           { technicianId : string! }
       REJECT           { technicianId : string! }

@@ -1,7 +1,7 @@
 {
   "name": "std-customer-account",
   "version": "1.0.0",
-  "description": "Retail customer profile primitive with purchase history reference, store credit, and loyalty points.",
+  "description": "std-customer-account — retail customer profile primitive with loyalty points, store credit, and spend history. Lists customers in `browsing`; opens detail in `viewing_single` with Grant Points / Issue Credit / Ban actions.",
   "orbitals": [
     {
       "name": "CustomerAccountOrbital",
@@ -74,6 +74,61 @@
           "linkedEntity": "CustomerAccount",
           "emits": [
             {
+              "event": "OPEN_CUSTOMER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.loyaltyPoints",
+                  "type": "number"
+                },
+                {
+                  "name": "row.storeCreditAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.totalSpent",
+                  "type": "number"
+                },
+                {
+                  "name": "row.joinedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastVisitAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "GRANT_POINTS",
               "payloadSchema": [
                 {
@@ -85,6 +140,16 @@
             },
             {
               "event": "GRANT_CREDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "BAN_CUSTOMER",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -126,6 +191,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -157,6 +225,36 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "OPEN_CUSTOMER",
+                "name": "Open Customer",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "CustomerAccount"
+                  }
+                ]
+              },
+              {
+                "key": "BAN_CUSTOMER",
+                "name": "Ban Customer",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               },
               {
                 "key": "GRANT_POINTS",
@@ -201,7 +299,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "align": "center",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading customers…"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -215,91 +328,86 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "type": "media-gallery",
-                          "items": [
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
                             {
-                              "src": "https://picsum.photos/seed/receipt1/400/300",
-                              "alt": "Receipt #1024",
-                              "id": "r1"
+                              "name": "users",
+                              "type": "icon"
                             },
                             {
-                              "id": "r2",
-                              "src": "https://picsum.photos/seed/receipt2/400/300",
-                              "alt": "Receipt #1025"
-                            },
-                            {
-                              "id": "r3",
-                              "src": "https://picsum.photos/seed/receipt3/400/300",
-                              "alt": "Receipt #1026"
-                            },
-                            {
-                              "id": "r4",
-                              "alt": "Receipt #1027",
-                              "src": "https://picsum.photos/seed/receipt4/400/300"
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
-                          "height": "h-48",
-                          "type": "flip-card",
-                          "back": {
-                            "direction": "vertical",
-                            "children": [
-                              {
-                                "type": "typography",
-                                "content": "2,450 points",
-                                "variant": "h4"
-                              },
-                              {
-                                "variant": "body",
-                                "type": "typography",
-                                "content": "Next reward at 3,000 points"
-                              }
-                            ],
-                            "type": "stack",
-                            "gap": "sm",
-                            "align": "center"
-                          },
-                          "front": {
-                            "children": [
-                              {
-                                "name": "award",
-                                "type": "icon"
-                              },
-                              {
-                                "type": "typography",
-                                "variant": "h4",
-                                "content": "Loyalty Tier: Gold"
-                              },
-                              {
-                                "content": "Tap to view points",
-                                "color": "muted",
-                                "type": "typography",
-                                "variant": "caption"
-                              }
-                            ],
-                            "type": "stack",
-                            "direction": "vertical",
-                            "gap": "sm",
-                            "align": "center"
-                          }
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "label": "Total customers",
+                              "icon": "users"
+                            },
+                            {
+                              "value": "1,284",
+                              "icon": "check-circle",
+                              "label": "Active",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "76%",
+                              "icon": "award",
+                              "label": "Loyalty members"
+                            },
+                            {
+                              "label": "Avg lifetime value",
+                              "type": "stat-display",
+                              "icon": "dollar-sign",
+                              "value": "$412"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "event": "OPEN_CUSTOMER",
+                              "label": "Open",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "BAN_CUSTOMER",
+                              "label": "Ban"
+                            }
+                          ],
+                          "cols": 1.0,
                           "type": "data-grid",
+                          "entity": "@payload.data",
+                          "gap": "sm",
                           "fields": [
                             {
+                              "variant": "caption",
                               "name": "name",
-                              "variant": "h4",
                               "label": "Name"
                             },
                             {
-                              "name": "email",
                               "label": "Email",
-                              "variant": "body"
+                              "variant": "caption",
+                              "name": "email"
                             },
                             {
                               "variant": "caption",
@@ -307,37 +415,25 @@
                               "label": "Phone"
                             },
                             {
-                              "name": "loyaltyPoints",
-                              "label": "Points",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "totalSpent",
                               "variant": "caption",
-                              "label": "Total Spent"
+                              "name": "loyaltyPoints",
+                              "label": "Points"
                             },
                             {
+                              "variant": "caption",
+                              "label": "Total Spent",
+                              "name": "totalSpent"
+                            },
+                            {
+                              "name": "status",
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
+                              "variant": "badge"
                             }
-                          ],
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "event": "GRANT_POINTS",
-                              "label": "Add Points"
-                            },
-                            {
-                              "event": "GRANT_CREDIT",
-                              "variant": "ghost",
-                              "label": "Issue Credit"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          ]
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -351,59 +447,271 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "GRANT_POINTS",
+                "to": "viewing_single",
+                "event": "OPEN_CUSTOMER",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.email",
+                    "@payload.row.email"
+                  ],
+                  [
+                    "set",
+                    "@entity.phone",
+                    "@payload.row.phone"
+                  ],
+                  [
+                    "set",
+                    "@entity.loyaltyPoints",
+                    "@payload.row.loyaltyPoints"
+                  ],
+                  [
+                    "set",
+                    "@entity.storeCreditAmount",
+                    "@payload.row.storeCreditAmount"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSpent",
+                    "@payload.row.totalSpent"
+                  ],
+                  [
+                    "set",
+                    "@entity.joinedAt",
+                    "@payload.row.joinedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastVisitAt",
+                    "@payload.row.lastVisitAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "Points granted",
-                      "type": "alert",
-                      "variant": "success"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@entity.name",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "primary",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Email",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.email",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Phone"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.phone"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "value": "@entity.loyaltyPoints",
+                              "label": "Loyalty points",
+                              "type": "stat-display",
+                              "icon": "award"
+                            },
+                            {
+                              "icon": "credit-card",
+                              "value": "@entity.storeCreditAmount",
+                              "type": "stat-display",
+                              "label": "Store credit"
+                            },
+                            {
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "value": "@entity.totalSpent",
+                              "label": "Total spent"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.lastVisitAt",
+                              "label": "Last visit",
+                              "icon": "calendar"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "action": "GRANT_POINTS",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Grant Points"
+                            },
+                            {
+                              "action": "GRANT_CREDIT",
+                              "type": "button",
+                              "label": "Issue Credit",
+                              "variant": "secondary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "BAN_CUSTOMER",
+                              "label": "Ban"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "GRANT_CREDIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "message": "Store credit issued",
-                      "variant": "success"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
                 "to": "loading",
-                "event": "INIT",
+                "event": "BAN_CUSTOMER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CustomerAccount",
+                    {
+                      "emit": {
+                        "failure": "CustomerAccountLoadFailed",
+                        "success": "CustomerAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Banning customer…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -419,7 +727,179 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading customers…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "GRANT_POINTS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CustomerAccount",
+                    {
+                      "emit": {
+                        "failure": "CustomerAccountLoadFailed",
+                        "success": "CustomerAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Granting points…",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "GRANT_CREDIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CustomerAccount",
+                    {
+                      "emit": {
+                        "failure": "CustomerAccountLoadFailed",
+                        "success": "CustomerAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Issuing store credit…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "BAN_CUSTOMER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CustomerAccount",
+                    {
+                      "emit": {
+                        "failure": "CustomerAccountLoadFailed",
+                        "success": "CustomerAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Banning customer…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CustomerAccount",
+                    {
+                      "emit": {
+                        "failure": "CustomerAccountLoadFailed",
+                        "success": "CustomerAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

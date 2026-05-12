@@ -1,7 +1,7 @@
 {
   "name": "std-event",
   "version": "1.0.0",
-  "description": "std-event — event-ticketing event entity. Owns an EventRecord (date, venue, capacity, RFC5545 recurrenceRule, status). Browses events in a data-grid with Edit / Publish / Cancel actions; CREATE/UPDATE/PUBLISH/CANCEL persist a draft and re-fetch.",
+  "description": "std-event — event-ticketing event entity (date, venue, capacity, recurrenceRule, status). Lists events in `browsing`; opens detail in `viewing_single` with Publish / Cancel / Update actions.",
   "orbitals": [
     {
       "name": "EventOrbital",
@@ -82,11 +82,80 @@
           "linkedEntity": "EventRecord",
           "emits": [
             {
-              "event": "CREATE",
+              "event": "OPEN_EVENT",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "object",
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.venue",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lat",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lng",
+                  "type": "number"
+                },
+                {
+                  "name": "row.startsAt",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.endsAt",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.recurrenceRule",
+                  "type": "string"
+                },
+                {
+                  "name": "row.capacity",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.organizerId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "PUBLISH",
+              "payloadSchema": [
+                {
+                  "name": "eventId",
+                  "type": "string",
                   "required": true
                 }
               ]
@@ -98,133 +167,6 @@
                   "name": "eventId",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "data",
-                  "type": "object",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "PUBLISH",
-              "payloadSchema": [
-                {
-                  "name": "eventId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
                 }
               ]
             },
@@ -235,62 +177,6 @@
                   "name": "eventId",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
                 }
               ]
             },
@@ -315,250 +201,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "EventCreated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EventUpdated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EventPublished",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EventCancelled",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.name",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.description",
-                  "type": "string"
-                },
-                {
-                  "name": "row.venue",
-                  "type": "string"
-                },
-                {
-                  "name": "row.lat",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lng",
-                  "type": "number"
-                },
-                {
-                  "name": "row.startsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.endsAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.recurrenceRule",
-                  "type": "string"
-                },
-                {
-                  "name": "row.capacity",
-                  "type": "number"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.organizerId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -571,7 +213,7 @@
                 "name": "browsing"
               },
               {
-                "name": "editing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -607,42 +249,11 @@
                 ]
               },
               {
-                "key": "CREATE",
-                "name": "Create",
+                "key": "OPEN_EVENT",
+                "name": "Open Event",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "UPDATE",
-                "name": "Update",
-                "payloadSchema": [
-                  {
-                    "name": "eventId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "EventRecord"
-                  },
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PUBLISH",
-                "name": "Publish",
-                "payloadSchema": [
-                  {
-                    "name": "eventId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -660,50 +271,32 @@
                     "name": "eventId",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "EventRecord"
                   }
                 ]
               },
               {
-                "key": "EventCreated",
-                "name": "Event created",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "PUBLISH",
+                "name": "Publish",
                 "payloadSchema": [
                   {
-                    "name": "row",
-                    "type": "EventRecord"
+                    "name": "eventId",
+                    "type": "string",
+                    "required": true
                   }
                 ]
               },
               {
-                "key": "EventUpdated",
-                "name": "Event updated",
+                "key": "UPDATE",
+                "name": "Update",
                 "payloadSchema": [
                   {
-                    "name": "row",
-                    "type": "EventRecord"
-                  }
-                ]
-              },
-              {
-                "key": "EventPublished",
-                "name": "Event published",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "EventRecord"
-                  }
-                ]
-              },
-              {
-                "key": "EventCancelled",
-                "name": "Event cancelled",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "EventRecord"
+                    "name": "eventId",
+                    "type": "string",
+                    "required": true
                   }
                 ]
               }
@@ -719,8 +312,8 @@
                     "EventRecord",
                     {
                       "emit": {
-                        "failure": "EventLoadFailed",
-                        "success": "EventLoaded"
+                        "success": "EventLoaded",
+                        "failure": "EventLoadFailed"
                       }
                     }
                   ],
@@ -728,22 +321,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Loading events…",
-                          "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
                       "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -758,11 +351,8 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
                           "children": [
@@ -771,18 +361,43 @@
                               "name": "calendar"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "type": "typography"
+                            }
+                          ],
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "calendar",
+                              "label": "Total events",
+                              "value": "@payload.data.length"
                             },
                             {
-                              "action": "CREATE",
-                              "label": "New Event",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "plus"
+                              "label": "Published",
+                              "type": "stat-display",
+                              "value": "28",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "label": "Tickets sold",
+                              "type": "stat-display",
+                              "value": "4,820",
+                              "icon": "ticket"
+                            },
+                            {
+                              "icon": "alert-circle",
+                              "label": "Sold-out",
+                              "value": "6",
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
@@ -791,6 +406,7 @@
                           "cols": 1.0,
                           "gap": "sm",
                           "type": "data-grid",
+                          "entity": "@payload.data",
                           "fields": [
                             {
                               "name": "name",
@@ -808,8 +424,8 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "endsAt",
                               "variant": "caption",
+                              "name": "endsAt",
                               "label": "Ends"
                             },
                             {
@@ -818,34 +434,29 @@
                               "variant": "caption"
                             },
                             {
-                              "name": "status",
+                              "label": "Status",
                               "variant": "badge",
-                              "label": "Status"
+                              "name": "status"
                             }
                           ],
-                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Edit",
-                              "icon": "edit",
-                              "event": "UPDATE",
-                              "variant": "secondary"
-                            },
-                            {
-                              "icon": "send",
-                              "event": "PUBLISH",
                               "variant": "primary",
-                              "label": "Publish"
+                              "event": "OPEN_EVENT",
+                              "label": "Open",
+                              "icon": "arrow-right"
                             },
                             {
-                              "icon": "x",
-                              "label": "Cancel",
+                              "variant": "danger",
                               "event": "CANCEL",
-                              "variant": "danger"
+                              "icon": "x",
+                              "label": "Cancel"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -859,41 +470,22 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "loading",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "EventRecord",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "failure": "EventLoadFailed",
-                        "success": "EventCreated"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "editing",
-                "event": "UPDATE",
+                "to": "viewing_single",
+                "event": "OPEN_EVENT",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.eventId"
+                    "@payload.row.id"
                   ],
                   [
                     "set",
@@ -956,59 +548,195 @@
                     "@payload.row.createdAt"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "EventRecord",
-                    "@payload.data",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "success": "EventUpdated",
-                        "failure": "EventLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "PUBLISH",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.eventId"
-                  ],
-                  [
-                    "set",
-                    "@entity.name",
-                    "@payload.row.name"
-                  ],
-                  [
-                    "set",
-                    "@entity.startsAt",
-                    "@payload.row.startsAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.endsAt",
-                    "@payload.row.endsAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "published"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "EventRecord",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "EventPublished",
-                        "failure": "EventLoadFailed"
-                      }
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "calendar"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.name",
+                              "variant": "h3"
+                            },
+                            {
+                              "variant": "primary",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Venue",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.venue",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Description"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.description",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Organizer",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.organizerId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Recurrence",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.recurrenceRule",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "icon": "calendar",
+                              "type": "stat-display",
+                              "value": "@entity.startsAt",
+                              "label": "Starts"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Ends",
+                              "icon": "calendar-check",
+                              "value": "@entity.endsAt"
+                            },
+                            {
+                              "icon": "users",
+                              "label": "Capacity",
+                              "type": "stat-display",
+                              "value": "@entity.capacity"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Created",
+                              "icon": "clock",
+                              "value": "@entity.createdAt"
+                            }
+                          ]
+                        },
+                        {
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "actionPayload": {
+                                "eventId": "@entity.id",
+                                "id": "@entity.id"
+                              },
+                              "label": "Publish",
+                              "action": "PUBLISH",
+                              "type": "button"
+                            },
+                            {
+                              "label": "Update",
+                              "action": "UPDATE",
+                              "variant": "secondary",
+                              "actionPayload": {
+                                "eventId": "@entity.id",
+                                "id": "@entity.id"
+                              },
+                              "type": "button"
+                            },
+                            {
+                              "label": "Cancel",
+                              "variant": "danger",
+                              "action": "CANCEL",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "eventId": "@entity.id"
+                              }
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1024,62 +752,6 @@
                     "@payload.eventId"
                   ],
                   [
-                    "set",
-                    "@entity.name",
-                    "@payload.row.name"
-                  ],
-                  [
-                    "set",
-                    "@entity.startsAt",
-                    "@payload.row.startsAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.endsAt",
-                    "@payload.row.endsAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "cancelled"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "EventRecord",
-                    "@entity",
-                    {
-                      "emit": {
-                        "failure": "EventLoadFailed",
-                        "success": "EventCancelled"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "EventCreated",
-                "effects": [
-                  [
-                    "fetch",
-                    "EventRecord",
-                    {
-                      "emit": {
-                        "success": "EventLoaded",
-                        "failure": "EventLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "EventUpdated",
-                "effects": [
-                  [
                     "fetch",
                     "EventRecord",
                     {
@@ -1088,72 +760,198 @@
                         "success": "EventLoaded"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "EventPublished",
-                "effects": [
-                  [
-                    "fetch",
-                    "EventRecord",
-                    {
-                      "emit": {
-                        "success": "EventLoaded",
-                        "failure": "EventLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "EventCancelled",
-                "effects": [
-                  [
-                    "fetch",
-                    "EventRecord",
-                    {
-                      "emit": {
-                        "success": "EventLoaded",
-                        "failure": "EventLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "EventUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "EventRecord",
-                    {
-                      "emit": {
-                        "failure": "EventLoadFailed",
-                        "success": "EventLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "error",
-                "event": "EventLoadFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Cancelling event…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "EventRecord",
+                    {
+                      "emit": {
+                        "failure": "EventLoadFailed",
+                        "success": "EventLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading events…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "PUBLISH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.eventId"
+                  ],
+                  [
+                    "fetch",
+                    "EventRecord",
+                    {
+                      "emit": {
+                        "success": "EventLoaded",
+                        "failure": "EventLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Publishing event…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "UPDATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.eventId"
+                  ],
+                  [
+                    "fetch",
+                    "EventRecord",
+                    {
+                      "emit": {
+                        "success": "EventLoaded",
+                        "failure": "EventLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Updating event…",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.eventId"
+                  ],
+                  [
+                    "fetch",
+                    "EventRecord",
+                    {
+                      "emit": {
+                        "success": "EventLoaded",
+                        "failure": "EventLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Cancelling event…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1177,8 +975,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

@@ -1,7 +1,7 @@
 {
   "name": "std-time-entry",
   "version": "1.0.0",
-  "description": "std-time-entry — Time tracking line within a timesheet: project/task, hours, date, billable flag, and rate.",
+  "description": "std-time-entry — time tracking line within a timesheet: project/task, hours, date, billable flag, rate. Lists entries in `browsing`; opens entry detail in `viewing_single` with Delete action.",
   "orbitals": [
     {
       "name": "TimeEntryOrbital",
@@ -85,7 +85,7 @@
           "linkedEntity": "TimeEntry",
           "emits": [
             {
-              "event": "VIEW",
+              "event": "OPEN_ENTRY",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -93,33 +93,61 @@
                   "required": true
                 },
                 {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
+                  "name": "row.id",
                   "type": "string",
                   "required": true
                 },
                 {
-                  "name": "source",
+                  "name": "row.timesheetId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.projectId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.projectName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.taskDescription",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.workDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.hours",
+                  "type": "number"
+                },
+                {
+                  "name": "row.billable",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.hourlyRate",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
                   "type": "string"
                 }
               ]
             },
             {
-              "event": "CREATE",
-              "payloadSchema": [
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "REQUEST_DELETE",
@@ -128,10 +156,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
                 }
               ]
             },
@@ -169,7 +193,10 @@
                 "isInitial": true
               },
               {
-                "name": "viewing"
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -209,74 +236,17 @@
                 ]
               },
               {
-                "key": "REFRESH",
-                "name": "Refresh",
-                "payloadSchema": [
-                  {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SEARCH",
-                "name": "Search",
-                "payloadSchema": [
-                  {
-                    "name": "query",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "FILTER_BILLABLE",
-                "name": "Filter Billable",
-                "payloadSchema": [
-                  {
-                    "name": "billable",
-                    "type": "boolean"
-                  }
-                ]
-              },
-              {
-                "key": "FILTER_STATUS",
-                "name": "Filter Status",
-                "payloadSchema": [
-                  {
-                    "name": "status",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CREATE",
-                "name": "Create",
-                "payloadSchema": [
-                  {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
+                "key": "OPEN_ENTRY",
+                "name": "Open Entry",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
                     "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
+                  },
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
+                    "name": "row",
+                    "type": "TimeEntry"
                   }
                 ]
               },
@@ -290,6 +260,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -303,8 +277,8 @@
                     "TimeEntry",
                     {
                       "emit": {
-                        "success": "TimeEntryLoaded",
-                        "failure": "TimeEntryLoadFailed"
+                        "failure": "TimeEntryLoadFailed",
+                        "success": "TimeEntryLoaded"
                       }
                     }
                   ],
@@ -312,126 +286,115 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "content": "Loading time entries…",
+                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
               },
               {
                 "from": "loading",
-                "to": "viewing",
+                "to": "browsing",
                 "event": "TimeEntryLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "children": [
-                            {
-                              "name": "clock",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
-                            },
-                            {
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "Log Time",
-                              "action": "CREATE"
-                            }
-                          ]
-                        },
-                        {
-                          "tabs": [
-                            {
-                              "id": "active",
-                              "label": "Active"
-                            },
-                            {
-                              "label": "Logged",
-                              "id": "logged"
-                            },
-                            {
-                              "label": "Approved",
-                              "id": "approved"
-                            }
-                          ],
-                          "defaultActiveTab": "active",
-                          "type": "tabs",
-                          "variant": "underline"
-                        },
-                        {
-                          "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "timer-display",
-                              "seconds": 1845.0,
-                              "running": true,
-                              "format": "mm:ss",
-                              "size": "lg"
+                              "type": "icon",
+                              "name": "clock"
                             },
                             {
-                              "thresholds": [
-                                {
-                                  "color": "warning",
-                                  "value": 20.0
-                                },
-                                {
-                                  "value": 35.0,
-                                  "color": "success"
-                                }
-                              ],
-                              "variant": "linear",
-                              "label": "Weekly Utilization",
-                              "min": 0.0,
-                              "type": "meter",
-                              "max": 40.0,
-                              "unit": "h",
-                              "value": 32.0
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
+                          "direction": "horizontal",
                           "align": "center"
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total entries",
+                              "icon": "list"
+                            },
+                            {
+                              "value": "32",
+                              "icon": "clock",
+                              "type": "stat-display",
+                              "label": "Hours this week"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Billable %",
+                              "value": "78%",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "label": "Avg per day",
+                              "icon": "trending-up",
+                              "type": "stat-display",
+                              "value": "6.4h"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
+                          "cols": 1.0,
+                          "itemActions": [
                             {
-                              "variant": "caption",
-                              "name": "projectName",
-                              "label": "Project"
+                              "icon": "arrow-right",
+                              "variant": "primary",
+                              "label": "Open",
+                              "event": "OPEN_ENTRY"
                             },
                             {
-                              "label": "Task",
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "name": "projectName",
+                              "label": "Project",
+                              "variant": "caption"
+                            },
+                            {
                               "variant": "caption",
-                              "name": "taskDescription"
+                              "name": "taskDescription",
+                              "label": "Task"
                             },
                             {
                               "label": "Date",
@@ -439,19 +402,19 @@
                               "name": "workDate"
                             },
                             {
+                              "name": "hours",
                               "label": "Hours",
-                              "variant": "caption",
-                              "name": "hours"
+                              "variant": "caption"
                             },
                             {
-                              "variant": "badge",
                               "name": "billable",
+                              "variant": "badge",
                               "label": "Billable"
                             },
                             {
                               "name": "hourlyRate",
-                              "variant": "caption",
-                              "label": "Rate"
+                              "label": "Rate",
+                              "variant": "caption"
                             },
                             {
                               "label": "Status",
@@ -459,32 +422,10 @@
                               "variant": "badge"
                             }
                           ],
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "VIEW",
-                              "variant": "secondary",
-                              "label": "View"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT",
-                              "variant": "secondary"
-                            },
-                            {
-                              "event": "REQUEST_DELETE",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "gap": "sm"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -498,230 +439,220 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "loading",
-                "event": "REFRESH",
-                "effects": [
-                  [
-                    "fetch",
-                    "TimeEntry",
-                    {
-                      "emit": {
-                        "success": "TimeEntryLoaded",
-                        "failure": "TimeEntryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Refreshing time entries…",
-                          "type": "typography"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "SEARCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "TimeEntry",
-                    {
-                      "emit": {
-                        "success": "TimeEntryLoaded",
-                        "failure": "TimeEntryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Searching time entries…",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "FILTER_BILLABLE",
-                "effects": [
-                  [
-                    "fetch",
-                    "TimeEntry",
-                    {
-                      "emit": {
-                        "success": "TimeEntryLoaded",
-                        "failure": "TimeEntryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "Filtering time entries…",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "FILTER_STATUS",
-                "effects": [
-                  [
-                    "fetch",
-                    "TimeEntry",
-                    {
-                      "emit": {
-                        "success": "TimeEntryLoaded",
-                        "failure": "TimeEntryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Filtering time entries…",
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "info",
-                      "message": "Logging new time entry",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "VIEW",
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_ENTRY",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
                   ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "variant": "info",
-                      "message": "Viewing time entry"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "EDIT",
-                "effects": [
                   [
                     "set",
-                    "@entity.id",
-                    "@payload.id"
+                    "@entity.timesheetId",
+                    "@payload.row.timesheetId"
+                  ],
+                  [
+                    "set",
+                    "@entity.projectId",
+                    "@payload.row.projectId"
+                  ],
+                  [
+                    "set",
+                    "@entity.projectName",
+                    "@payload.row.projectName"
+                  ],
+                  [
+                    "set",
+                    "@entity.taskDescription",
+                    "@payload.row.taskDescription"
+                  ],
+                  [
+                    "set",
+                    "@entity.workDate",
+                    "@payload.row.workDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.hours",
+                    "@payload.row.hours"
+                  ],
+                  [
+                    "set",
+                    "@entity.hourlyRate",
+                    "@payload.row.hourlyRate"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "Editing time entry",
-                      "type": "alert",
-                      "variant": "info"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "clock"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.projectName"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "variant": "default",
+                              "type": "badge"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Task",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.taskDescription",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Timesheet"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.timesheetId"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Notes",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.notes",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "value": "@entity.hours",
+                              "type": "stat-display",
+                              "icon": "clock",
+                              "label": "Hours"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.hourlyRate",
+                              "label": "Rate",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Date",
+                              "value": "@entity.workDate",
+                              "icon": "calendar"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "label": "Delete",
+                              "action": "REQUEST_DELETE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "viewing",
+                "from": "browsing",
+                "to": "loading",
                 "event": "REQUEST_DELETE",
                 "effects": [
                   [
@@ -730,12 +661,118 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "TimeEntry",
+                    {
+                      "emit": {
+                        "success": "TimeEntryLoaded",
+                        "failure": "TimeEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "warning",
-                      "message": "Delete requested"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Deleting time entry…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "TimeEntry",
+                    {
+                      "emit": {
+                        "success": "TimeEntryLoaded",
+                        "failure": "TimeEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading time entries…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REQUEST_DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "TimeEntry",
+                    {
+                      "emit": {
+                        "failure": "TimeEntryLoadFailed",
+                        "success": "TimeEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Deleting time entry…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -759,8 +796,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]

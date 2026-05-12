@@ -1,5 +1,5 @@
 app std-payout-ledger "1.0.0"
-"std-payout-ledger — marketplace vendor payout atom. Owns a Payout entity and a single trait that loads payout history into a data-grid alongside a balance-summary stat strip, requests stripe withdrawals, and marks rows paid."
+"std-payout-ledger — marketplace vendor payout atom. Lists payouts in `browsing`; opens detail in `viewing_single` with Withdraw / Mark Paid actions."
 
 orbital PayoutOrbital {
   entity Payout [persistent: payouts] {
@@ -16,9 +16,6 @@ orbital PayoutOrbital {
 
   type PayoutLoaded          = Event { data : [Payout] }                "Fired when the payout collection finishes loading"
   type PayoutLoadFailed      = Event { error : string, code : string }  "Fired when the payout collection fails to load"
-  type PayoutUpdated         = Event { row : Payout }                   "Fired after a payout row's status persists (mark-paid)"
-  type PayoutWithdrawn       = Event { row : Payout }                   "Fired when a stripe-payout withdrawal call completes successfully"
-  type PayoutWithdrawFailed  = Event { error : string, code : string }  "Fired when a stripe-payout withdrawal call fails"
 
   trait PayoutLedger -> Payout [interaction, collection] {
     config {
@@ -31,45 +28,43 @@ orbital PayoutOrbital {
         (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading payouts…" }] })
       PayoutLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wallet" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Pending", value: 0, icon: "clock", variant: "warning", format: "currency" }, { type: "stat-display", label: "Paid", value: 0, icon: "check-circle", variant: "success", format: "currency" }, { type: "stat-display", label: "Minimum Withdrawal", value: "@config.minimumWithdrawal", icon: "dollar-sign", variant: "info", format: "currency" }] }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vendorId", label: "Vendor", variant: "caption" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "bankAccountMasked", label: "Bank", variant: "caption" }, { name: "requestedAt", label: "Requested", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Withdraw", event: "REQUEST_WITHDRAW", variant: "primary", icon: "send" }, { label: "Mark Paid", event: "MARK_PAID", variant: "secondary", icon: "check" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wallet" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total payouts", value: "@payload.data.length", icon: "wallet" }, { type: "stat-display", label: "Pending", value: "12", icon: "clock" }, { type: "stat-display", label: "Paid this month", value: "$48,200", icon: "check-circle" }, { type: "stat-display", label: "Minimum", value: "@config.minimumWithdrawal", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vendorId", label: "Vendor", variant: "caption" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "bankAccountMasked", label: "Bank", variant: "caption" }, { name: "requestedAt", label: "Requested", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_PAYOUT", variant: "primary", icon: "arrow-right" }, { label: "Withdraw", event: "REQUEST_WITHDRAW", variant: "danger" }] }] })
       PayoutLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      REQUEST_WITHDRAW -> withdrawing
+      OPEN_PAYOUT -> viewing_single
         (set @entity.id @payload.row.id)
-        (set @entity.vendorId @payload.vendorId)
-        (set @entity.amount @payload.amount)
-        (set @entity.currency @payload.row.currency)
-        (set @entity.status "processing")
-        (set @entity.bankAccountMasked @payload.row.bankAccountMasked)
-        (set @entity.requestedAt "now")
-        (persist update Payout @entity { emit: { success: "PayoutUpdated", failure: "PayoutWithdrawFailed" } })
-        (call-service stripe-payout "create" { vendorId: "@payload.vendorId", amount: "@payload.amount", currency: "@entity.currency" } { emit: { success: "PayoutWithdrawn", failure: "PayoutWithdrawFailed" } })
-      MARK_PAID -> browsing
-        (set @entity.id @payload.payoutId)
         (set @entity.vendorId @payload.row.vendorId)
         (set @entity.amount @payload.row.amount)
         (set @entity.currency @payload.row.currency)
+        (set @entity.status @payload.row.status)
         (set @entity.bankAccountMasked @payload.row.bankAccountMasked)
         (set @entity.requestedAt @payload.row.requestedAt)
-        (set @entity.status "paid")
-        (set @entity.paidAt "now")
-        (persist update Payout @entity { emit: { success: "PayoutUpdated", failure: "PayoutWithdrawFailed" } })
-      PayoutUpdated -> loading
+        (set @entity.paidAt @payload.row.paidAt)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "wallet" }, { type: "typography", content: "@entity.vendorId", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Bank" }, { type: "typography", variant: "body", content: "@entity.bankAccountMasked" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Amount", value: "@entity.amount", icon: "dollar-sign" }, { type: "stat-display", label: "Requested", value: "@entity.requestedAt", icon: "calendar" }, { type: "stat-display", label: "Paid", value: "@entity.paidAt", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Withdraw", variant: "primary", action: "REQUEST_WITHDRAW", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Mark Paid", variant: "secondary", action: "MARK_PAID", actionPayload: { id: "@entity.id" } }] }] })
+      REQUEST_WITHDRAW -> loading
+        (set @entity.id @payload.id)
         (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
-      PayoutWithdrawn -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Requesting withdrawal…" }] })
+      MARK_PAID -> loading
+        (set @entity.id @payload.id)
         (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
-      PayoutWithdrawFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking paid…" }] })
     }
-    state withdrawing {
-      PayoutWithdrawn -> loading
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
-      PayoutUpdated -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading payouts…" }] })
+      REQUEST_WITHDRAW -> loading
+        (set @entity.id @payload.id)
         (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
-      PayoutWithdrawFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Requesting withdrawal…" }] })
+      MARK_PAID -> loading
+        (set @entity.id @payload.id)
+        (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking paid…" }] })
     }
     state error {
       INIT -> loading
@@ -77,22 +72,20 @@ orbital PayoutOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      REQUEST_WITHDRAW { amount : number!, vendorId : string!, row : Payout }
-      MARK_PAID        { payoutId : string!, row : Payout }
+      OPEN_PAYOUT          { id : string!, row : Payout }
+      CLOSE_VIEW           { }
+      REQUEST_WITHDRAW     { id : string! }
+      MARK_PAID            { id : string! }
       PayoutLoaded         { data : [Payout] }
       PayoutLoadFailed     { error : string, code : string }
-      PayoutUpdated        { row : Payout }
-      PayoutWithdrawn      { row : Payout }
-      PayoutWithdrawFailed { error : string, code : string }
     }
     listens {
-      REQUEST_WITHDRAW { amount : number!, vendorId : string!, row : Payout }
-      MARK_PAID        { payoutId : string!, row : Payout }
+      OPEN_PAYOUT          { id : string!, row : Payout }
+      CLOSE_VIEW           { }
+      REQUEST_WITHDRAW     { id : string! }
+      MARK_PAID            { id : string! }
       PayoutLoaded         { data : [Payout] }
       PayoutLoadFailed     { error : string, code : string }
-      PayoutUpdated        { row : Payout }
-      PayoutWithdrawn      { row : Payout }
-      PayoutWithdrawFailed { error : string, code : string }
     }
   }
   page "/payouts/ledger" as PayoutLedgerPage -> PayoutLedger

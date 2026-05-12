@@ -1,7 +1,7 @@
 {
   "name": "std-segment",
   "version": "1.0.0",
-  "description": "std-segment — contact segment primitive. Defines a filter criteria for grouping contacts (e.g. 'new signups in last 30 days'). Used by marketing campaigns for targeting.",
+  "description": "std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action.",
   "orbitals": [
     {
       "name": "SegmentOrbital",
@@ -49,6 +49,45 @@
           "linkedEntity": "Segment",
           "emits": [
             {
+              "event": "OPEN_SEGMENT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.criteria",
+                  "type": "string"
+                },
+                {
+                  "name": "row.memberCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lastUpdated",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "RECALCULATE",
               "payloadSchema": [
                 {
@@ -79,19 +118,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "SegmentRecalculated",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "memberCount",
-                  "type": "number"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -104,7 +130,7 @@
                 "name": "browsing"
               },
               {
-                "name": "calculating"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -140,6 +166,21 @@
                 ]
               },
               {
+                "key": "OPEN_SEGMENT",
+                "name": "Open Segment",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Segment"
+                  }
+                ]
+              },
+              {
                 "key": "RECALCULATE",
                 "name": "Recalculate",
                 "payloadSchema": [
@@ -151,18 +192,8 @@
                 ]
               },
               {
-                "key": "SegmentRecalculated",
-                "name": "Segment recalculated",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "memberCount",
-                    "type": "number"
-                  }
-                ]
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -185,22 +216,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Loading segments…",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Loading segments…"
                         }
-                      ],
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -214,21 +245,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "opacity": 0.12,
-                          "type": "geometric-pattern",
-                          "variant": "khatam"
-                        },
-                        {
-                          "type": "edge-decoration",
-                          "side": "left",
-                          "opacity": 0.2
-                        },
-                        {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -236,60 +258,72 @@
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
-                          "type": "gradient-divider",
-                          "color": "primary"
-                        },
-                        {
-                          "type": "tag-cloud",
-                          "tags": [
+                          "type": "simple-grid",
+                          "children": [
                             {
-                              "label": "New Signups"
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "label": "Total segments",
+                              "icon": "users"
                             },
                             {
-                              "label": "High Value"
+                              "value": "12,480",
+                              "type": "stat-display",
+                              "icon": "user-check",
+                              "label": "Active members"
                             },
                             {
-                              "label": "Churn Risk"
+                              "icon": "bar-chart",
+                              "type": "stat-display",
+                              "label": "Avg size",
+                              "value": "1,560"
                             },
                             {
-                              "label": "Active 30d"
-                            },
-                            {
-                              "label": "Dormant"
-                            },
-                            {
-                              "label": "VIP"
-                            },
-                            {
-                              "label": "Trial"
-                            },
-                            {
-                              "label": "Enterprise"
+                              "label": "Updated 24h",
+                              "type": "stat-display",
+                              "value": "8",
+                              "icon": "refresh-cw"
                             }
-                          ]
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "event": "OPEN_SEGMENT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "event": "RECALCULATE",
+                              "variant": "danger",
+                              "label": "Recalculate"
+                            }
+                          ],
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "variant": "caption",
                               "name": "name",
+                              "variant": "caption",
                               "label": "Name"
                             },
                             {
-                              "name": "description",
                               "label": "Description",
+                              "name": "description",
                               "variant": "caption"
                             },
                             {
@@ -298,24 +332,15 @@
                               "label": "Members"
                             },
                             {
-                              "variant": "caption",
+                              "name": "lastUpdated",
                               "label": "Updated",
-                              "name": "lastUpdated"
+                              "variant": "caption"
                             }
                           ],
                           "entity": "@payload.data",
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Recalculate",
-                              "event": "RECALCULATE",
-                              "variant": "ghost"
-                            }
-                          ],
-                          "type": "data-grid"
+                          "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -329,39 +354,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "calculating",
-                "event": "RECALCULATE",
+                "to": "viewing_single",
+                "event": "OPEN_SEGMENT",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.criteria",
+                    "@payload.row.criteria"
+                  ],
+                  [
+                    "set",
+                    "@entity.memberCount",
+                    "@payload.row.memberCount"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastUpdated",
+                    "@payload.row.lastUpdated"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "spinner"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost",
+                              "type": "button"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "users"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "@entity.memberCount",
+                              "type": "badge"
+                            }
+                          ]
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Recalculating segment…"
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Description"
+                                },
+                                {
+                                  "content": "@entity.description",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Criteria",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.criteria",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "icon": "users",
+                              "label": "Members",
+                              "value": "@entity.memberCount",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Last updated",
+                              "icon": "calendar",
+                              "type": "stat-display",
+                              "value": "@entity.lastUpdated"
+                            }
+                          ],
+                          "cols": 2.0
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Recalculate",
+                              "action": "RECALCULATE",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
                         }
                       ],
                       "direction": "vertical",
@@ -371,17 +522,128 @@
                 ]
               },
               {
-                "from": "calculating",
-                "to": "browsing",
-                "event": "SegmentRecalculated",
+                "from": "browsing",
+                "to": "loading",
+                "event": "RECALCULATE",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Segment",
+                    {
+                      "emit": {
+                        "success": "SegmentLoaded",
+                        "failure": "SegmentLoadFailed"
+                      }
+                    }
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "success",
-                      "message": "Segment recalculated"
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Recalculating segment…"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Segment",
+                    {
+                      "emit": {
+                        "failure": "SegmentLoadFailed",
+                        "success": "SegmentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading segments…"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "RECALCULATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Segment",
+                    {
+                      "emit": {
+                        "success": "SegmentLoaded",
+                        "failure": "SegmentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Recalculating segment…"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]

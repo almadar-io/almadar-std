@@ -1,7 +1,7 @@
 {
   "name": "std-recurring-charge",
   "version": "1.0.0",
-  "description": "std-recurring-charge — subscription cycle clock with retry policy and inline proration math. Owns a Subscription entity; CHARGE invokes the stripe-charge service, PRORATE adjusts amount inline by daysIntoPeriod, CANCEL flips status. Persists results back to the row and emits SubscriptionUpdated for downstream listeners.",
+  "description": "std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions.",
   "orbitals": [
     {
       "name": "SubscriptionOrbital",
@@ -93,10 +93,10 @@
           "linkedEntity": "Subscription",
           "emits": [
             {
-              "event": "CHARGE",
+              "event": "OPEN_SUBSCRIPTION",
               "payloadSchema": [
                 {
-                  "name": "subscriptionId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -162,81 +162,15 @@
               ]
             },
             {
-              "event": "PRORATE",
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "CHARGE",
               "payloadSchema": [
                 {
-                  "name": "subscriptionId",
+                  "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "newPlanId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "daysIntoPeriod",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.planId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.interval",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodStart",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodEnd",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextBillingAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptCount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lastChargeAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.cancelledAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
                 }
               ]
             },
@@ -244,73 +178,9 @@
               "event": "CANCEL",
               "payloadSchema": [
                 {
-                  "name": "subscriptionId",
+                  "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "cancelledAt",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.planId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.interval",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodStart",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodEnd",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextBillingAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptCount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lastChargeAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.cancelledAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
                 }
               ]
             },
@@ -335,147 +205,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "ChargeSucceeded",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.planId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.interval",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodStart",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodEnd",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextBillingAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptCount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lastChargeAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.cancelledAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ChargeFailed",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SubscriptionUpdated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.customerId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.planId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.amount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.currency",
-                  "type": "string"
-                },
-                {
-                  "name": "row.interval",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodStart",
-                  "type": "string"
-                },
-                {
-                  "name": "row.currentPeriodEnd",
-                  "type": "string"
-                },
-                {
-                  "name": "row.nextBillingAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.attemptCount",
-                  "type": "number"
-                },
-                {
-                  "name": "row.lastChargeAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.cancelledAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -488,7 +217,7 @@
                 "name": "browsing"
               },
               {
-                "name": "charging"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -524,11 +253,11 @@
                 ]
               },
               {
-                "key": "CHARGE",
-                "name": "Charge",
+                "key": "OPEN_SUBSCRIPTION",
+                "name": "Open Subscription",
                 "payloadSchema": [
                   {
-                    "name": "subscriptionId",
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
@@ -539,27 +268,13 @@
                 ]
               },
               {
-                "key": "PRORATE",
-                "name": "Prorate",
+                "key": "CHARGE",
+                "name": "Charge",
                 "payloadSchema": [
                   {
-                    "name": "subscriptionId",
+                    "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "newPlanId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "daysIntoPeriod",
-                    "type": "number",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Subscription"
                   }
                 ]
               },
@@ -568,54 +283,15 @@
                 "name": "Cancel",
                 "payloadSchema": [
                   {
-                    "name": "subscriptionId",
+                    "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "cancelledAt",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Subscription"
                   }
                 ]
               },
               {
-                "key": "SubscriptionUpdated",
-                "name": "Subscription updated",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Subscription"
-                  }
-                ]
-              },
-              {
-                "key": "ChargeSucceeded",
-                "name": "Charge succeeded",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Subscription"
-                  }
-                ]
-              },
-              {
-                "key": "ChargeFailed",
-                "name": "Charge failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -629,8 +305,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "failure": "SubscriptionLoadFailed",
-                        "success": "SubscriptionLoaded"
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
                       }
                     }
                   ],
@@ -638,20 +314,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Loading subscriptions…"
+                          "variant": "caption",
+                          "content": "Loading subscriptions…",
+                          "color": "muted"
                         }
                       ]
                     }
@@ -667,25 +343,7 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
-                        {
-                          "items": [
-                            {
-                              "href": "/billing",
-                              "label": "Billing"
-                            },
-                            {
-                              "href": "/plans",
-                              "label": "Plans"
-                            },
-                            {
-                              "label": "@config.title"
-                            }
-                          ],
-                          "type": "breadcrumb"
-                        },
                         {
                           "children": [
                             {
@@ -694,116 +352,53 @@
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "label": "Total subscriptions",
+                              "icon": "repeat",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "248",
+                              "label": "Active",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "$18,400",
+                              "icon": "dollar-sign",
+                              "label": "MRR",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "7",
+                              "label": "Past due",
+                              "type": "stat-display",
+                              "icon": "alert-triangle"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "pricing-grid",
-                          "plans": [
-                            {
-                              "name": "Starter",
-                              "description": "For solo accounts getting started",
-                              "features": [
-                                "Ten thousand events",
-                                "Email support",
-                                "One seat"
-                              ],
-                              "action": {
-                                "label": "Choose Starter",
-                                "href": "#"
-                              },
-                              "price": "$9"
-                            },
-                            {
-                              "description": "For growing teams who need headroom",
-                              "name": "Team",
-                              "features": [
-                                "Hundred thousand events",
-                                "Priority support",
-                                "Ten seats"
-                              ],
-                              "action": {
-                                "label": "Choose Team",
-                                "href": "#"
-                              },
-                              "price": "$29",
-                              "highlighted": true
-                            },
-                            {
-                              "name": "Scale",
-                              "features": [
-                                "One million events",
-                                "Round the clock support",
-                                "Unlimited seats"
-                              ],
-                              "action": {
-                                "label": "Choose Scale",
-                                "href": "#"
-                              },
-                              "description": "High-volume usage with SLA",
-                              "price": "$99"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "max": 100.0,
-                              "variant": "linear",
-                              "type": "meter",
-                              "showValue": true,
-                              "label": "Usage this period",
-                              "min": 0.0,
-                              "unit": "%",
-                              "value": 68.0
-                            },
-                            {
-                              "variant": "segmented",
-                              "value": 4.0,
-                              "segments": 4.0,
-                              "max": 4.0,
-                              "label": "Retries",
-                              "type": "meter",
-                              "showValue": true,
-                              "min": 0.0
-                            }
-                          ]
-                        },
-                        {
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "icon": "credit-card",
-                              "label": "Charge",
-                              "event": "CHARGE"
-                            },
-                            {
-                              "icon": "calculator",
-                              "event": "PRORATE",
-                              "label": "Prorate",
-                              "variant": "secondary"
-                            },
-                            {
-                              "label": "Cancel",
-                              "variant": "danger",
-                              "icon": "x",
-                              "event": "CANCEL"
-                            }
-                          ],
-                          "entity": "@payload.data",
                           "type": "data-grid",
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
                           "fields": [
                             {
                               "name": "customerId",
@@ -812,23 +407,18 @@
                             },
                             {
                               "label": "Plan",
-                              "variant": "caption",
-                              "name": "planId"
+                              "name": "planId",
+                              "variant": "caption"
                             },
                             {
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "label": "Status",
+                              "name": "status"
                             },
                             {
+                              "name": "amount",
                               "variant": "caption",
-                              "label": "Amount",
-                              "name": "amount"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "currency",
-                              "label": "Currency"
+                              "label": "Amount"
                             },
                             {
                               "name": "interval",
@@ -836,21 +426,34 @@
                               "variant": "badge"
                             },
                             {
-                              "variant": "caption",
                               "label": "Next Bill",
+                              "variant": "caption",
                               "name": "nextBillingAt"
                             },
                             {
+                              "name": "attemptCount",
                               "label": "Retries",
-                              "variant": "caption",
-                              "name": "attemptCount"
+                              "variant": "caption"
                             }
                           ],
-                          "cols": 1.0,
-                          "gap": "sm"
+                          "itemActions": [
+                            {
+                              "event": "OPEN_SUBSCRIPTION",
+                              "variant": "primary",
+                              "label": "Open",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "event": "CANCEL",
+                              "label": "Cancel",
+                              "variant": "danger"
+                            }
+                          ]
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -864,338 +467,17 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "charging",
-                "event": "CHARGE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.subscriptionId"
-                  ],
-                  [
-                    "set",
-                    "@entity.customerId",
-                    "@payload.row.customerId"
-                  ],
-                  [
-                    "set",
-                    "@entity.planId",
-                    "@payload.row.planId"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "@payload.row.status"
-                  ],
-                  [
-                    "set",
-                    "@entity.amount",
-                    "@payload.row.amount"
-                  ],
-                  [
-                    "set",
-                    "@entity.currency",
-                    "@payload.row.currency"
-                  ],
-                  [
-                    "set",
-                    "@entity.interval",
-                    "@payload.row.interval"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentPeriodStart",
-                    "@payload.row.currentPeriodStart"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentPeriodEnd",
-                    "@payload.row.currentPeriodEnd"
-                  ],
-                  [
-                    "set",
-                    "@entity.nextBillingAt",
-                    "@payload.row.nextBillingAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.attemptCount",
-                    "@payload.row.attemptCount"
-                  ],
-                  [
-                    "set",
-                    "@entity.lastChargeAt",
-                    "@payload.row.lastChargeAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.cancelledAt",
-                    "@payload.row.cancelledAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@payload.row.createdAt"
-                  ],
-                  [
-                    "call-service",
-                    "stripe-charge",
-                    "charge",
-                    {
-                      "subscriptionId": "@payload.subscriptionId",
-                      "amount": "@entity.amount",
-                      "currency": "@entity.currency"
-                    },
-                    {
-                      "emit": {
-                        "success": "ChargeSucceeded",
-                        "failure": "ChargeFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Charging subscription…",
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ],
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PRORATE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.subscriptionId"
-                  ],
-                  [
-                    "set",
-                    "@entity.customerId",
-                    "@payload.row.customerId"
-                  ],
-                  [
-                    "set",
-                    "@entity.planId",
-                    "@payload.newPlanId"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "@payload.row.status"
-                  ],
-                  [
-                    "set",
-                    "@entity.amount",
-                    [
-                      "*",
-                      "@payload.row.amount",
-                      [
-                        "-",
-                        1.0,
-                        [
-                          "/",
-                          "@payload.daysIntoPeriod",
-                          30.0
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.currency",
-                    "@payload.row.currency"
-                  ],
-                  [
-                    "set",
-                    "@entity.interval",
-                    "@payload.row.interval"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentPeriodStart",
-                    "@payload.row.currentPeriodStart"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentPeriodEnd",
-                    "@payload.row.currentPeriodEnd"
-                  ],
-                  [
-                    "set",
-                    "@entity.nextBillingAt",
-                    "@payload.row.nextBillingAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.attemptCount",
-                    "@payload.row.attemptCount"
-                  ],
-                  [
-                    "set",
-                    "@entity.lastChargeAt",
-                    "@payload.row.lastChargeAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.cancelledAt",
-                    "@payload.row.cancelledAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@payload.row.createdAt"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "Subscription",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "SubscriptionUpdated",
-                        "failure": "ChargeFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.subscriptionId"
-                  ],
-                  [
-                    "set",
-                    "@entity.customerId",
-                    "@payload.row.customerId"
-                  ],
-                  [
-                    "set",
-                    "@entity.planId",
-                    "@payload.row.planId"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "cancelled"
-                  ],
-                  [
-                    "set",
-                    "@entity.amount",
-                    "@payload.row.amount"
-                  ],
-                  [
-                    "set",
-                    "@entity.currency",
-                    "@payload.row.currency"
-                  ],
-                  [
-                    "set",
-                    "@entity.interval",
-                    "@payload.row.interval"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentPeriodStart",
-                    "@payload.row.currentPeriodStart"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentPeriodEnd",
-                    "@payload.row.currentPeriodEnd"
-                  ],
-                  [
-                    "set",
-                    "@entity.nextBillingAt",
-                    "@payload.row.nextBillingAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.attemptCount",
-                    "@payload.row.attemptCount"
-                  ],
-                  [
-                    "set",
-                    "@entity.lastChargeAt",
-                    "@payload.row.lastChargeAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.cancelledAt",
-                    "@payload.cancelledAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@payload.row.createdAt"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "Subscription",
-                    "@entity",
-                    {
-                      "emit": {
-                        "success": "SubscriptionUpdated",
-                        "failure": "ChargeFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SubscriptionUpdated",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "type": "alert",
-                      "variant": "success",
-                      "message": "Subscription updated"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
               },
               {
-                "from": "charging",
-                "to": "loading",
-                "event": "ChargeSucceeded",
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_SUBSCRIPTION",
                 "effects": [
                   [
                     "set",
@@ -1250,7 +532,7 @@
                   [
                     "set",
                     "@entity.attemptCount",
-                    0.0
+                    "@payload.row.attemptCount"
                   ],
                   [
                     "set",
@@ -1268,16 +550,209 @@
                     "@payload.row.createdAt"
                   ],
                   [
-                    "persist",
-                    "update",
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "label": "Back",
+                              "type": "button",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "name": "repeat",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.customerId"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "variant": "default",
+                              "type": "badge"
+                            },
+                            {
+                              "variant": "primary",
+                              "type": "badge",
+                              "label": "@entity.interval"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Plan",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.planId",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Currency",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.currency",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "dollar-sign",
+                              "label": "Amount",
+                              "value": "@entity.amount"
+                            },
+                            {
+                              "label": "Retries",
+                              "type": "stat-display",
+                              "value": "@entity.attemptCount",
+                              "icon": "rotate-cw"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Next bill",
+                              "icon": "calendar",
+                              "value": "@entity.nextBillingAt"
+                            },
+                            {
+                              "label": "Last charge",
+                              "value": "@entity.lastChargeAt",
+                              "type": "stat-display",
+                              "icon": "credit-card"
+                            }
+                          ],
+                          "cols": 4.0
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "CHARGE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Charge",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "CANCEL",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Cancel"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "CHARGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
                     "Subscription",
-                    "@entity",
                     {
                       "emit": {
-                        "failure": "ChargeFailed",
-                        "success": "SubscriptionUpdated"
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Charging subscription…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
                   ],
                   [
                     "fetch",
@@ -1288,32 +763,43 @@
                         "success": "SubscriptionLoaded"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Cancelling subscription…"
+                        }
+                      ]
+                    }
                   ]
                 ]
               },
               {
-                "from": "charging",
-                "to": "browsing",
-                "event": "ChargeFailed",
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
-                    "set",
-                    "@entity.attemptCount",
-                    [
-                      "+",
-                      "@entity.attemptCount",
-                      1.0
-                    ]
-                  ],
-                  [
-                    "persist",
-                    "update",
+                    "fetch",
                     "Subscription",
-                    "@entity",
                     {
                       "emit": {
-                        "failure": "ChargeFailed",
-                        "success": "SubscriptionUpdated"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ],
@@ -1321,9 +807,110 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading subscriptions…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CHARGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Subscription",
+                    {
+                      "emit": {
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Charging subscription…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Subscription",
+                    {
+                      "emit": {
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Cancelling subscription…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -1338,8 +925,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "success": "SubscriptionLoaded",
-                        "failure": "SubscriptionLoadFailed"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ],

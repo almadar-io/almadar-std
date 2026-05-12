@@ -1,5 +1,5 @@
 app std-question-bank "1.0.0"
-"std-question-bank — typed question library for surveys. Owns a Question entity (label + kind + options + required + category + surveyId + order). QuestionManage loads questions on INIT, renders them in a data-grid with Edit / Delete actions plus a Create button, and persists add/update/delete via explicit ADD_QUESTION / UPDATE_QUESTION / DELETE_QUESTION events."
+"std-question-bank — typed question library for surveys. Lists questions in `browsing`; opens detail in `viewing_single` with Update / Delete actions."
 
 orbital QuestionBankOrbital {
   entity Question [persistent: questions] {
@@ -15,9 +15,6 @@ orbital QuestionBankOrbital {
 
   type QuestionLoaded     = Event { data : [Question] }              "Fired when the question collection finishes loading"
   type QuestionLoadFailed = Event { error : string, code : string }  "Fired when the question collection fails to load"
-  type QuestionAdded      = Event { row : Question }                 "Fired after a question is created"
-  type QuestionUpdated    = Event { row : Question }                 "Fired after a question is updated"
-  type QuestionDeleted    = Event { id : string }                    "Fired after a question is deleted"
 
   trait QuestionManage -> Question [interaction, collection] {
     config {
@@ -29,15 +26,13 @@ orbital QuestionBankOrbital {
         (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading questions…" }] })
       QuestionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "Add Question", action: "ADD_QUESTION", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "label", label: "Question", variant: "h4" }, { name: "kind", label: "Type", variant: "badge" }, { name: "category", label: "Category", variant: "caption" }, { name: "required", label: "Required", variant: "badge" }, { name: "order", label: "Order", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Edit", event: "UPDATE_QUESTION", variant: "ghost", icon: "edit" }, { label: "Delete", event: "DELETE_QUESTION", variant: "danger", icon: "trash" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total questions", value: "@payload.data.length", icon: "list-checks" }, { type: "stat-display", label: "Required", value: "18", icon: "alert-circle" }, { type: "stat-display", label: "Surveys", value: "6", icon: "clipboard-list" }, { type: "stat-display", label: "Categories", value: "9", icon: "tag" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "label", label: "Question", variant: "caption" }, { name: "kind", label: "Type", variant: "badge" }, { name: "category", label: "Category", variant: "caption" }, { name: "surveyId", label: "Survey", variant: "caption" }, { name: "order", label: "Order", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_QUESTION", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_QUESTION", variant: "danger" }] }] })
       QuestionLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      ADD_QUESTION -> editing
-        (persist create Question @payload.data { emit: { success: "QuestionAdded", failure: "QuestionLoadFailed" } })
-      UPDATE_QUESTION -> editing
-        (set @entity.id @payload.questionId)
+      OPEN_QUESTION -> viewing_single
+        (set @entity.id @payload.row.id)
         (set @entity.label @payload.row.label)
         (set @entity.kind @payload.row.kind)
         (set @entity.optionsJson @payload.row.optionsJson)
@@ -45,28 +40,28 @@ orbital QuestionBankOrbital {
         (set @entity.category @payload.row.category)
         (set @entity.surveyId @payload.row.surveyId)
         (set @entity.order @payload.row.order)
-        (persist update Question @entity { emit: { success: "QuestionUpdated", failure: "QuestionLoadFailed" } })
-      DELETE_QUESTION -> editing
-        (set @entity.id @payload.questionId)
-        (persist delete Question @entity.id { emit: { success: "QuestionDeleted", failure: "QuestionLoadFailed" } })
-      QuestionAdded -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "list-checks" }, { type: "typography", content: "@entity.label", variant: "h3" }, { type: "badge", label: "@entity.kind", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Survey" }, { type: "typography", variant: "body", content: "@entity.surveyId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Options" }, { type: "typography", variant: "body", content: "@entity.optionsJson" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Kind", value: "@entity.kind", icon: "tag" }, { type: "stat-display", label: "Order", value: "@entity.order", icon: "hash" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Update", variant: "primary", action: "UPDATE_QUESTION", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Delete", variant: "danger", action: "DELETE_QUESTION", actionPayload: { id: "@entity.id" } }] }] })
+      UPDATE_QUESTION -> loading
+        (set @entity.id @payload.id)
         (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
-      QuestionUpdated -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating question…" }] })
+      DELETE_QUESTION -> loading
+        (set @entity.id @payload.id)
         (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
-      QuestionDeleted -> loading
-        (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
-      QuestionLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting question…" }] })
     }
-    state editing {
-      QuestionAdded -> loading
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
-      QuestionUpdated -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading questions…" }] })
+      UPDATE_QUESTION -> loading
+        (set @entity.id @payload.id)
         (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
-      QuestionDeleted -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating question…" }] })
+      DELETE_QUESTION -> loading
+        (set @entity.id @payload.id)
         (fetch Question { emit: { success: "QuestionLoaded", failure: "QuestionLoadFailed" } })
-      QuestionLoadFailed -> error
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting question…" }] })
     }
     state error {
       INIT -> loading
@@ -74,24 +69,20 @@ orbital QuestionBankOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      ADD_QUESTION    { data : object! }
-      UPDATE_QUESTION { questionId : string!, row : Question, data : object! }
-      DELETE_QUESTION { questionId : string!, row : Question }
+      OPEN_QUESTION      { id : string!, row : Question }
+      CLOSE_VIEW         { }
+      UPDATE_QUESTION    { id : string! }
+      DELETE_QUESTION    { id : string! }
       QuestionLoaded     { data : [Question] }
       QuestionLoadFailed { error : string, code : string }
-      QuestionAdded      { row : Question }
-      QuestionUpdated    { row : Question }
-      QuestionDeleted    { id : string }
     }
     listens {
-      ADD_QUESTION    { data : object! }
-      UPDATE_QUESTION { questionId : string!, row : Question, data : object! }
-      DELETE_QUESTION { questionId : string!, row : Question }
+      OPEN_QUESTION      { id : string!, row : Question }
+      CLOSE_VIEW         { }
+      UPDATE_QUESTION    { id : string! }
+      DELETE_QUESTION    { id : string! }
       QuestionLoaded     { data : [Question] }
       QuestionLoadFailed { error : string, code : string }
-      QuestionAdded      { row : Question }
-      QuestionUpdated    { row : Question }
-      QuestionDeleted    { id : string }
     }
   }
   page "/questions/manage" as QuestionManagePage -> QuestionManage

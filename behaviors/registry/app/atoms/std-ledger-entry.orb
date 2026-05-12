@@ -1,7 +1,7 @@
 {
   "name": "std-ledger-entry",
   "version": "1.0.0",
-  "description": "std-ledger-entry — general-ledger journal entry atom. Owns a LedgerEntry entity (double-entry debit/credit) and a single trait that loads journal entries into a data-grid with reconcile and reverse row actions.",
+  "description": "std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions.",
   "orbitals": [
     {
       "name": "LedgerEntryOrbital",
@@ -76,6 +76,62 @@
           "linkedEntity": "LedgerEntry",
           "emits": [
             {
+              "event": "OPEN_ENTRY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.accountId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.accountName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.entryDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.debit",
+                  "type": "number"
+                },
+                {
+                  "name": "row.credit",
+                  "type": "number"
+                },
+                {
+                  "name": "row.referenceType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.referenceId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.isReconciled",
+                  "type": "boolean"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "RECONCILE_ENTRY",
               "payloadSchema": [
                 {
@@ -128,6 +184,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -161,8 +220,23 @@
                 ]
               },
               {
-                "key": "RECONCILE_ENTRY",
-                "name": "Reconcile Entry",
+                "key": "OPEN_ENTRY",
+                "name": "Open Entry",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "LedgerEntry"
+                  }
+                ]
+              },
+              {
+                "key": "REVERSE_ENTRY",
+                "name": "Reverse Entry",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -172,8 +246,12 @@
                 ]
               },
               {
-                "key": "REVERSE_ENTRY",
-                "name": "Reverse Entry",
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "RECONCILE_ENTRY",
+                "name": "Reconcile Entry",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -194,8 +272,8 @@
                     "LedgerEntry",
                     {
                       "emit": {
-                        "failure": "LedgerEntryLoadFailed",
-                        "success": "LedgerEntryLoaded"
+                        "success": "LedgerEntryLoaded",
+                        "failure": "LedgerEntryLoadFailed"
                       }
                     }
                   ],
@@ -203,21 +281,21 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "Loading journal entries…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
+                      "align": "center",
                       "type": "stack",
-                      "gap": "md",
                       "className": "py-12"
                     }
                   ]
@@ -232,206 +310,112 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "book-open",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
-                            },
-                            {
-                              "position": "right",
-                              "content": "Running ledger balance computed from posted debits minus credits.",
-                              "children": [
-                                {
-                                  "name": "info",
-                                  "type": "icon"
-                                }
-                              ],
-                              "type": "tooltip"
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
-                          "activeTab": "journal",
-                          "items": [
-                            {
-                              "id": "journal",
-                              "label": "Journal"
-                            },
-                            {
-                              "label": "Ledger",
-                              "id": "ledger"
-                            },
-                            {
-                              "label": "Reports",
-                              "id": "reports"
-                            }
-                          ],
-                          "type": "tabs"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "animated": true,
-                              "value": 12480.0,
-                              "type": "score-display",
-                              "label": "Net Balance",
-                              "size": "lg"
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "icon": "book-open",
+                              "label": "Entries"
                             },
                             {
-                              "cols": 8.0,
-                              "spacing": 24.0,
-                              "x": 0.0,
-                              "y": 0.0,
-                              "rows": 4.0,
-                              "nodeRadius": 2.0,
-                              "color": "muted",
-                              "opacity": 0.35,
-                              "type": "svg-grid"
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "value": "$12,480",
+                              "label": "Net balance"
                             },
                             {
-                              "points": [
-                                [
-                                  10.0,
-                                  30.0
-                                ],
-                                [
-                                  80.0,
-                                  30.0
-                                ],
-                                [
-                                  160.0,
-                                  30.0
-                                ]
-                              ],
-                              "color": "primary",
-                              "strokeWidth": 2.0,
-                              "animated": true,
-                              "type": "svg-flow"
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Reconciled",
+                              "value": "84%"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Pending",
+                              "value": "23",
+                              "icon": "clock"
                             }
                           ],
-                          "gap": "md"
-                        },
-                        {
-                          "minCardWidth": 240.0,
-                          "gap": "md",
-                          "maxCols": 3.0,
-                          "fields": [
-                            {
-                              "name": "entryDate",
-                              "label": "Date"
-                            },
-                            {
-                              "name": "accountName",
-                              "label": "Account"
-                            },
-                            {
-                              "name": "debit",
-                              "label": "Debit"
-                            },
-                            {
-                              "label": "Credit",
-                              "name": "credit"
-                            }
-                          ],
-                          "type": "entity-cards",
-                          "entity": "@payload.data"
-                        },
-                        {
-                          "showDividers": true,
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "name": "entryDate",
-                              "label": "Date"
-                            },
-                            {
-                              "name": "accountName",
-                              "label": "Account"
-                            },
-                            {
-                              "label": "Description",
-                              "name": "description"
-                            },
-                            {
-                              "name": "debit",
-                              "label": "Debit"
-                            },
-                            {
-                              "name": "credit",
-                              "label": "Credit"
-                            }
-                          ],
-                          "type": "entity-list"
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "entity": "@payload.data",
                           "cols": 1.0,
+                          "type": "data-grid",
                           "gap": "sm",
                           "itemActions": [
                             {
+                              "event": "OPEN_ENTRY",
+                              "label": "Open",
                               "variant": "primary",
-                              "event": "RECONCILE_ENTRY",
-                              "label": "Reconcile"
+                              "icon": "arrow-right"
                             },
                             {
+                              "variant": "danger",
                               "label": "Reverse",
-                              "event": "REVERSE_ENTRY",
-                              "variant": "danger"
+                              "event": "REVERSE_ENTRY"
                             }
                           ],
                           "fields": [
                             {
-                              "name": "entryDate",
                               "label": "Date",
+                              "name": "entryDate",
                               "variant": "caption"
                             },
                             {
                               "name": "accountName",
+                              "label": "Account",
+                              "variant": "caption"
+                            },
+                            {
                               "variant": "caption",
-                              "label": "Account"
-                            },
-                            {
                               "label": "Description",
-                              "name": "description",
-                              "variant": "caption"
+                              "name": "description"
                             },
                             {
+                              "variant": "caption",
                               "name": "debit",
-                              "label": "Debit",
-                              "variant": "caption"
+                              "label": "Debit"
                             },
                             {
-                              "name": "credit",
+                              "variant": "caption",
                               "label": "Credit",
-                              "variant": "caption"
+                              "name": "credit"
                             },
                             {
-                              "label": "Reconciled",
                               "name": "isReconciled",
+                              "label": "Reconciled",
                               "variant": "badge"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -445,33 +429,224 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "RECONCILE_ENTRY",
+                "to": "viewing_single",
+                "event": "OPEN_ENTRY",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
                   ],
                   [
-                    "notify",
-                    "Entry reconciled",
-                    "success"
+                    "set",
+                    "@entity.accountId",
+                    "@payload.row.accountId"
+                  ],
+                  [
+                    "set",
+                    "@entity.accountName",
+                    "@payload.row.accountName"
+                  ],
+                  [
+                    "set",
+                    "@entity.entryDate",
+                    "@payload.row.entryDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.debit",
+                    "@payload.row.debit"
+                  ],
+                  [
+                    "set",
+                    "@entity.credit",
+                    "@payload.row.credit"
+                  ],
+                  [
+                    "set",
+                    "@entity.referenceType",
+                    "@payload.row.referenceType"
+                  ],
+                  [
+                    "set",
+                    "@entity.referenceId",
+                    "@payload.row.referenceId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "book-open"
+                            },
+                            {
+                              "content": "@entity.accountName",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "@entity.referenceType"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Account ID",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.accountId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Description"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.description"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Reference",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.referenceId",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "icon": "calendar",
+                              "label": "Date",
+                              "value": "@entity.entryDate",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.debit",
+                              "icon": "arrow-down",
+                              "label": "Debit"
+                            },
+                            {
+                              "value": "@entity.credit",
+                              "type": "stat-display",
+                              "label": "Credit",
+                              "icon": "arrow-up"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Reconcile",
+                              "action": "RECONCILE_ENTRY"
+                            },
+                            {
+                              "action": "REVERSE_ENTRY",
+                              "variant": "danger",
+                              "label": "Reverse",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "REVERSE_ENTRY",
                 "effects": [
                   [
@@ -480,9 +655,163 @@
                     "@payload.id"
                   ],
                   [
-                    "notify",
-                    "Entry reversed",
-                    "info"
+                    "fetch",
+                    "LedgerEntry",
+                    {
+                      "emit": {
+                        "failure": "LedgerEntryLoadFailed",
+                        "success": "LedgerEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Reversing entry…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "LedgerEntry",
+                    {
+                      "emit": {
+                        "success": "LedgerEntryLoaded",
+                        "failure": "LedgerEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading journal…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "RECONCILE_ENTRY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "LedgerEntry",
+                    {
+                      "emit": {
+                        "failure": "LedgerEntryLoadFailed",
+                        "success": "LedgerEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Reconciling entry…"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REVERSE_ENTRY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "LedgerEntry",
+                    {
+                      "emit": {
+                        "success": "LedgerEntryLoaded",
+                        "failure": "LedgerEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Reversing entry…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md"
+                    }
                   ]
                 ]
               },
@@ -496,8 +825,8 @@
                     "LedgerEntry",
                     {
                       "emit": {
-                        "success": "LedgerEntryLoaded",
-                        "failure": "LedgerEntryLoadFailed"
+                        "failure": "LedgerEntryLoadFailed",
+                        "success": "LedgerEntryLoaded"
                       }
                     }
                   ],

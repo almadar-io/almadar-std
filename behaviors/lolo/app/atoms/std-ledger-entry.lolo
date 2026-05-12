@@ -1,5 +1,5 @@
 app std-ledger-entry "1.0.0"
-"std-ledger-entry — general-ledger journal entry atom. Owns a LedgerEntry entity (double-entry debit/credit) and a single trait that loads journal entries into a data-grid with reconcile and reverse row actions."
+"std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions."
 
 orbital LedgerEntryOrbital {
   entity LedgerEntry [persistent: ledgerentries] {
@@ -28,17 +28,39 @@ orbital LedgerEntryOrbital {
         (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading journal entries…" }] })
       LedgerEntryLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "tooltip", content: "Running ledger balance computed from posted debits minus credits.", position: "right", children: [{ type: "icon", name: "info" }] }] }, { type: "tabs", items: [{ id: "journal", label: "Journal" }, { id: "ledger", label: "Ledger" }, { id: "reports", label: "Reports" }], activeTab: "journal" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "score-display", value: 12480, label: "Net Balance", size: "lg", animated: true }, { type: "svg-grid", x: 0, y: 0, cols: 8, rows: 4, spacing: 24, nodeRadius: 2, color: "muted", opacity: 0.35 }, { type: "svg-flow", points: [[10, 30], [80, 30], [160, 30]], color: "primary", strokeWidth: 2, animated: true }] }, { type: "entity-cards", entity: "@payload.data", fields: [{ name: "entryDate", label: "Date" }, { name: "accountName", label: "Account" }, { name: "debit", label: "Debit" }, { name: "credit", label: "Credit" }], minCardWidth: 240, gap: "md", maxCols: 3 }, { type: "entity-list", entity: "@payload.data", fields: [{ name: "entryDate", label: "Date" }, { name: "accountName", label: "Account" }, { name: "description", label: "Description" }, { name: "debit", label: "Debit" }, { name: "credit", label: "Credit" }], showDividers: true }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "entryDate", label: "Date", variant: "caption" }, { name: "accountName", label: "Account", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "debit", label: "Debit", variant: "caption" }, { name: "credit", label: "Credit", variant: "caption" }, { name: "isReconciled", label: "Reconciled", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Reconcile", event: "RECONCILE_ENTRY", variant: "primary" }, { label: "Reverse", event: "REVERSE_ENTRY", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Entries", value: "@payload.data.length", icon: "book-open" }, { type: "stat-display", label: "Net balance", value: "$12,480", icon: "dollar-sign" }, { type: "stat-display", label: "Reconciled", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Pending", value: "23", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "entryDate", label: "Date", variant: "caption" }, { name: "accountName", label: "Account", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "debit", label: "Debit", variant: "caption" }, { name: "credit", label: "Credit", variant: "caption" }, { name: "isReconciled", label: "Reconciled", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ENTRY", variant: "primary", icon: "arrow-right" }, { label: "Reverse", event: "REVERSE_ENTRY", variant: "danger" }] }] })
       LedgerEntryLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      RECONCILE_ENTRY -> browsing
+      OPEN_ENTRY -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.accountId @payload.row.accountId)
+        (set @entity.accountName @payload.row.accountName)
+        (set @entity.entryDate @payload.row.entryDate)
+        (set @entity.description @payload.row.description)
+        (set @entity.debit @payload.row.debit)
+        (set @entity.credit @payload.row.credit)
+        (set @entity.referenceType @payload.row.referenceType)
+        (set @entity.referenceId @payload.row.referenceId)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "book-open" }, { type: "typography", content: "@entity.accountName", variant: "h3" }, { type: "badge", label: "@entity.referenceType", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Account ID" }, { type: "typography", variant: "body", content: "@entity.accountId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reference" }, { type: "typography", variant: "body", content: "@entity.referenceId" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Date", value: "@entity.entryDate", icon: "calendar" }, { type: "stat-display", label: "Debit", value: "@entity.debit", icon: "arrow-down" }, { type: "stat-display", label: "Credit", value: "@entity.credit", icon: "arrow-up" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Reconcile", variant: "primary", action: "RECONCILE_ENTRY", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Reverse", variant: "danger", action: "REVERSE_ENTRY", actionPayload: { id: "@entity.id" } }] }] })
+      REVERSE_ENTRY -> loading
         (set @entity.id @payload.id)
-        (notify "Entry reconciled" success)
-      REVERSE_ENTRY -> browsing
+        (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reversing entry…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading journal…" }] })
+      RECONCILE_ENTRY -> loading
         (set @entity.id @payload.id)
-        (notify "Entry reversed" info)
+        (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reconciling entry…" }] })
+      REVERSE_ENTRY -> loading
+        (set @entity.id @payload.id)
+        (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reversing entry…" }] })
     }
     state error {
       INIT -> loading
@@ -46,12 +68,16 @@ orbital LedgerEntryOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_ENTRY             { id : string!, row : LedgerEntry }
+      CLOSE_VIEW             { }
       RECONCILE_ENTRY        { id : string! }
       REVERSE_ENTRY          { id : string! }
       LedgerEntryLoaded      { data : [LedgerEntry] }
       LedgerEntryLoadFailed  { error : string, code : string }
     }
     listens {
+      OPEN_ENTRY             { id : string!, row : LedgerEntry }
+      CLOSE_VIEW             { }
       RECONCILE_ENTRY        { id : string! }
       REVERSE_ENTRY          { id : string! }
       LedgerEntryLoaded      { data : [LedgerEntry] }

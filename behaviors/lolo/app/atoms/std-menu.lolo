@@ -36,15 +36,13 @@ orbital MenuOrbital {
         (fetch MenuItem { emit: { success: "MenuItemLoaded", failure: "MenuItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading menu…" }] })
       MenuItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "utensils" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Item", variant: "badge" }, { name: "category", label: "Category", variant: "badge" }, { name: "price", label: "Price", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "prepTimeMinutes", label: "Prep (min)", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Update", event: "UPDATE", variant: "secondary", icon: "edit" }, { label: "Toggle", event: "TOGGLE_AVAILABLE", variant: "primary", icon: "power" }, { label: "Delete", event: "DELETE", variant: "danger", icon: "trash" }] }, { type: "button", label: "New Item", action: "CREATE", variant: "primary", icon: "plus" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "utensils" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Menu items", value: "@payload.data.length", icon: "utensils" }, { type: "stat-display", label: "Available", value: "62", icon: "check-circle" }, { type: "stat-display", label: "Categories", value: "8", icon: "list" }, { type: "stat-display", label: "Avg price", value: "$14.50", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Item", variant: "caption" }, { name: "category", label: "Category", variant: "badge" }, { name: "price", label: "Price", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "prepTimeMinutes", label: "Prep (min)", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ITEM", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE", variant: "danger", icon: "trash" }] }] })
       MenuItemLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      CREATE -> loading
-        (persist create MenuItem @payload.data { emit: { success: "MenuItemCreated", failure: "MenuItemWriteFailed" } })
-      UPDATE -> loading
-        (set @entity.id @payload.itemId)
+      OPEN_ITEM -> viewing_single
+        (set @entity.id @payload.row.id)
         (set @entity.name @payload.row.name)
         (set @entity.description @payload.row.description)
         (set @entity.price @payload.row.price)
@@ -58,23 +56,7 @@ orbital MenuOrbital {
         (set @entity.modifierGroupIds @payload.row.modifierGroupIds)
         (set @entity.prepTimeMinutes @payload.row.prepTimeMinutes)
         (set @entity.order @payload.row.order)
-        (persist update MenuItem @entity { emit: { success: "MenuItemUpdated", failure: "MenuItemWriteFailed" } })
-      TOGGLE_AVAILABLE -> loading
-        (set @entity.id @payload.itemId)
-        (set @entity.name @payload.row.name)
-        (set @entity.description @payload.row.description)
-        (set @entity.price @payload.row.price)
-        (set @entity.currency @payload.row.currency)
-        (set @entity.category @payload.row.category)
-        (set @entity.imageUrl @payload.row.imageUrl)
-        (set @entity.available (not @payload.row.available))
-        (set @entity.availableFrom @payload.row.availableFrom)
-        (set @entity.availableUntil @payload.row.availableUntil)
-        (set @entity.tags @payload.row.tags)
-        (set @entity.modifierGroupIds @payload.row.modifierGroupIds)
-        (set @entity.prepTimeMinutes @payload.row.prepTimeMinutes)
-        (set @entity.order @payload.row.order)
-        (persist update MenuItem @entity { emit: { success: "MenuItemUpdated", failure: "MenuItemWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "utensils" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.category", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Available from" }, { type: "typography", variant: "body", content: "@entity.availableFrom" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Available until" }, { type: "typography", variant: "body", content: "@entity.availableUntil" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Price", value: "@entity.price", icon: "dollar-sign" }, { type: "stat-display", label: "Currency", value: "@entity.currency", icon: "circle-dollar-sign" }, { type: "stat-display", label: "Prep (min)", value: "@entity.prepTimeMinutes", icon: "clock" }, { type: "stat-display", label: "Order", value: "@entity.order", icon: "list-ordered" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Toggle Available", variant: "primary", action: "TOGGLE_AVAILABLE", actionPayload: { itemId: "@entity.id", row: "@entity" } }, { type: "button", label: "Delete", variant: "danger", action: "DELETE", actionPayload: { itemId: "@entity.id", row: "@entity" } }] }] })
       DELETE -> loading
         (set @entity.id @payload.itemId)
         (set @entity.name @payload.row.name)
@@ -91,6 +73,7 @@ orbital MenuOrbital {
         (set @entity.prepTimeMinutes @payload.row.prepTimeMinutes)
         (set @entity.order @payload.row.order)
         (persist delete MenuItem @entity { emit: { success: "MenuItemDeleted", failure: "MenuItemWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting menu item…" }] })
       MenuItemCreated -> loading
         (fetch MenuItem { emit: { success: "MenuItemLoaded", failure: "MenuItemLoadFailed" } })
       MenuItemUpdated -> loading
@@ -100,12 +83,73 @@ orbital MenuOrbital {
       MenuItemWriteFailed -> browsing
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch MenuItem { emit: { success: "MenuItemLoaded", failure: "MenuItemLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading menu…" }] })
+      CREATE -> loading
+        (persist create MenuItem @payload.data { emit: { success: "MenuItemCreated", failure: "MenuItemWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Creating menu item…" }] })
+      UPDATE -> loading
+        (set @entity.id @payload.itemId)
+        (set @entity.name @payload.row.name)
+        (set @entity.description @payload.row.description)
+        (set @entity.price @payload.row.price)
+        (set @entity.currency @payload.row.currency)
+        (set @entity.category @payload.row.category)
+        (set @entity.imageUrl @payload.row.imageUrl)
+        (set @entity.available @payload.row.available)
+        (set @entity.availableFrom @payload.row.availableFrom)
+        (set @entity.availableUntil @payload.row.availableUntil)
+        (set @entity.tags @payload.row.tags)
+        (set @entity.modifierGroupIds @payload.row.modifierGroupIds)
+        (set @entity.prepTimeMinutes @payload.row.prepTimeMinutes)
+        (set @entity.order @payload.row.order)
+        (persist update MenuItem @entity { emit: { success: "MenuItemUpdated", failure: "MenuItemWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating menu item…" }] })
+      TOGGLE_AVAILABLE -> loading
+        (set @entity.id @payload.itemId)
+        (set @entity.name @payload.row.name)
+        (set @entity.description @payload.row.description)
+        (set @entity.price @payload.row.price)
+        (set @entity.currency @payload.row.currency)
+        (set @entity.category @payload.row.category)
+        (set @entity.imageUrl @payload.row.imageUrl)
+        (set @entity.available (not @payload.row.available))
+        (set @entity.availableFrom @payload.row.availableFrom)
+        (set @entity.availableUntil @payload.row.availableUntil)
+        (set @entity.tags @payload.row.tags)
+        (set @entity.modifierGroupIds @payload.row.modifierGroupIds)
+        (set @entity.prepTimeMinutes @payload.row.prepTimeMinutes)
+        (set @entity.order @payload.row.order)
+        (persist update MenuItem @entity { emit: { success: "MenuItemUpdated", failure: "MenuItemWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Toggling availability…" }] })
+      DELETE -> loading
+        (set @entity.id @payload.itemId)
+        (set @entity.name @payload.row.name)
+        (set @entity.description @payload.row.description)
+        (set @entity.price @payload.row.price)
+        (set @entity.currency @payload.row.currency)
+        (set @entity.category @payload.row.category)
+        (set @entity.imageUrl @payload.row.imageUrl)
+        (set @entity.available @payload.row.available)
+        (set @entity.availableFrom @payload.row.availableFrom)
+        (set @entity.availableUntil @payload.row.availableUntil)
+        (set @entity.tags @payload.row.tags)
+        (set @entity.modifierGroupIds @payload.row.modifierGroupIds)
+        (set @entity.prepTimeMinutes @payload.row.prepTimeMinutes)
+        (set @entity.order @payload.row.order)
+        (persist delete MenuItem @entity { emit: { success: "MenuItemDeleted", failure: "MenuItemWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting menu item…" }] })
+    }
     state error {
       INIT -> loading
         (fetch MenuItem { emit: { success: "MenuItemLoaded", failure: "MenuItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_ITEM        { id : string!, row : MenuItem }
+      CLOSE_VIEW       { }
       CREATE           { data : object! }
       UPDATE           { itemId : string!, row : MenuItem, data : object! }
       TOGGLE_AVAILABLE { itemId : string!, row : MenuItem }
@@ -118,6 +162,8 @@ orbital MenuOrbital {
       MenuItemWriteFailed { error : string, code : string }
     }
     listens {
+      OPEN_ITEM        { id : string!, row : MenuItem }
+      CLOSE_VIEW       { }
       CREATE           { data : object! }
       UPDATE           { itemId : string!, row : MenuItem, data : object! }
       TOGGLE_AVAILABLE { itemId : string!, row : MenuItem }

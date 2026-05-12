@@ -1,5 +1,5 @@
 app std-ticket-tier "1.0.0"
-"std-ticket-tier — event ticket pricing tiers (VIP, general, early-bird) with quantity tracking. Owns a TicketTier entity (price, quantityTotal, quantitySold, status) and a single manage trait that loads tiers, browses them in a data-grid with Create / Update / Sell / Close actions, and persists each verdict back to the row."
+"std-ticket-tier — event ticket pricing tiers (VIP, general, early-bird) with quantity tracking. Lists tiers in `browsing`; opens detail in `viewing_single` with Update / Sell / Close actions."
 
 orbital TicketTierOrbital {
   entity TicketTier [persistent: tickettiers] {
@@ -15,13 +15,8 @@ orbital TicketTierOrbital {
     status         : "available" | "sold-out" | "closed" = "available"
   }
 
-  type TicketTierLoaded     = Event { data : [TicketTier] }                "Fired when the ticket-tier collection finishes loading"
-  type TicketTierLoadFailed = Event { error : string, code : string }      "Fired when the ticket-tier collection fails to load"
-  type TicketTierCreated    = Event { row : TicketTier }                   "Fired after a new ticket-tier persists successfully"
-  type TicketTierUpdated    = Event { row : TicketTier }                   "Fired after a ticket-tier row updates successfully"
-  type TicketTierSold       = Event { row : TicketTier }                   "Fired after a ticket-tier sale increments quantitySold"
-  type TicketTierClosed     = Event { row : TicketTier }                   "Fired after a ticket-tier is closed (status = closed)"
-  type TicketTierWriteFailed = Event { error : string, code : string }     "Fired when a ticket-tier create / update / sell / close fails to persist"
+  type TicketTierLoaded      = Event { data : [TicketTier] }              "Fired when the ticket-tier collection finishes loading"
+  type TicketTierLoadFailed  = Event { error : string, code : string }    "Fired when the ticket-tier collection fails to load"
 
   trait TicketTierManage -> TicketTier [interaction, collection] {
     config {
@@ -33,15 +28,13 @@ orbital TicketTierOrbital {
         (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading ticket tiers…" }] })
       TicketTierLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "ticket" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Tier", variant: "badge" }, { name: "price", label: "Price", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "quantityTotal", label: "Total", variant: "caption" }, { name: "quantitySold", label: "Sold", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Update", event: "UPDATE", variant: "secondary", icon: "edit" }, { label: "Sell", event: "SELL", variant: "primary", icon: "shopping-cart" }, { label: "Close", event: "CLOSE", variant: "danger", icon: "x" }] }, { type: "button", label: "New Tier", action: "CREATE", variant: "primary", icon: "plus" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "ticket" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total tiers", value: "@payload.data.length", icon: "ticket" }, { type: "stat-display", label: "Gross sales", value: "$184,200", icon: "dollar-sign" }, { type: "stat-display", label: "Sold seats", value: "2,840", icon: "users" }, { type: "stat-display", label: "Sell-through", value: "73%", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Tier", variant: "badge" }, { name: "price", label: "Price", variant: "caption" }, { name: "currency", label: "Currency", variant: "badge" }, { name: "quantityTotal", label: "Total", variant: "caption" }, { name: "quantitySold", label: "Sold", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TIER", variant: "primary", icon: "arrow-right" }, { label: "Close", event: "CLOSE", variant: "danger", icon: "x" }] }] })
       TicketTierLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      CREATE -> loading
-        (persist create TicketTier @payload.data { emit: { success: "TicketTierCreated", failure: "TicketTierWriteFailed" } })
-      UPDATE -> loading
-        (set @entity.id @payload.tierId)
+      OPEN_TIER -> viewing_single
+        (set @entity.id @payload.row.id)
         (set @entity.eventId @payload.row.eventId)
         (set @entity.name @payload.row.name)
         (set @entity.price @payload.row.price)
@@ -51,41 +44,36 @@ orbital TicketTierOrbital {
         (set @entity.availableFrom @payload.row.availableFrom)
         (set @entity.availableUntil @payload.row.availableUntil)
         (set @entity.status @payload.row.status)
-        (persist update TicketTier @entity { emit: { success: "TicketTierUpdated", failure: "TicketTierWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "ticket" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Event" }, { type: "typography", variant: "body", content: "@entity.eventId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Available from" }, { type: "typography", variant: "body", content: "@entity.availableFrom" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Available until" }, { type: "typography", variant: "body", content: "@entity.availableUntil" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Price", value: "@entity.price", icon: "dollar-sign" }, { type: "stat-display", label: "Currency", value: "@entity.currency", icon: "globe" }, { type: "stat-display", label: "Total seats", value: "@entity.quantityTotal", icon: "users" }, { type: "stat-display", label: "Sold", value: "@entity.quantitySold", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Update", variant: "primary", action: "UPDATE", actionPayload: { tierId: "@entity.id", row: "@entity", data: {} } }, { type: "button", label: "Sell", variant: "secondary", action: "SELL", actionPayload: { tierId: "@entity.id", row: "@entity", qty: 1 } }, { type: "button", label: "Close", variant: "danger", action: "CLOSE", actionPayload: { tierId: "@entity.id", row: "@entity" } }] }] })
+      UPDATE -> loading
+        (set @entity.id @payload.tierId)
+        (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating tier…" }] })
       SELL -> loading
         (set @entity.id @payload.tierId)
-        (set @entity.eventId @payload.row.eventId)
-        (set @entity.name @payload.row.name)
-        (set @entity.price @payload.row.price)
-        (set @entity.currency @payload.row.currency)
-        (set @entity.quantityTotal @payload.row.quantityTotal)
-        (set @entity.quantitySold (+ @payload.row.quantitySold @payload.qty))
-        (set @entity.availableFrom @payload.row.availableFrom)
-        (set @entity.availableUntil @payload.row.availableUntil)
-        (set @entity.status (if (>= (+ @payload.row.quantitySold @payload.qty) (+ @payload.row.quantityTotal 0)) "sold-out" "available"))
-        (persist update TicketTier @entity { emit: { success: "TicketTierSold", failure: "TicketTierWriteFailed" } })
+        (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Selling tickets…" }] })
       CLOSE -> loading
         (set @entity.id @payload.tierId)
-        (set @entity.eventId @payload.row.eventId)
-        (set @entity.name @payload.row.name)
-        (set @entity.price @payload.row.price)
-        (set @entity.currency @payload.row.currency)
-        (set @entity.quantityTotal @payload.row.quantityTotal)
-        (set @entity.quantitySold @payload.row.quantitySold)
-        (set @entity.availableFrom @payload.row.availableFrom)
-        (set @entity.availableUntil @payload.row.availableUntil)
-        (set @entity.status "closed")
-        (persist update TicketTier @entity { emit: { success: "TicketTierClosed", failure: "TicketTierWriteFailed" } })
-      TicketTierCreated -> loading
         (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
-      TicketTierUpdated -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing tier…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
-      TicketTierSold -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading ticket tiers…" }] })
+      UPDATE -> loading
+        (set @entity.id @payload.tierId)
         (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
-      TicketTierClosed -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating tier…" }] })
+      SELL -> loading
+        (set @entity.id @payload.tierId)
         (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
-      TicketTierWriteFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Selling tickets…" }] })
+      CLOSE -> loading
+        (set @entity.id @payload.tierId)
+        (fetch TicketTier { emit: { success: "TicketTierLoaded", failure: "TicketTierLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing tier…" }] })
     }
     state error {
       INIT -> loading
@@ -93,30 +81,22 @@ orbital TicketTierOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      CREATE { data : object! }
-      UPDATE { tierId : string!, row : TicketTier, data : object! }
-      SELL   { tierId : string!, row : TicketTier, qty : number! }
-      CLOSE  { tierId : string!, row : TicketTier }
+      OPEN_TIER  { id : string!, row : TicketTier }
+      CLOSE_VIEW { }
+      UPDATE     { tierId : string!, row : TicketTier, data : object! }
+      SELL       { tierId : string!, row : TicketTier, qty : number! }
+      CLOSE      { tierId : string!, row : TicketTier }
       TicketTierLoaded      { data : [TicketTier] }
       TicketTierLoadFailed  { error : string, code : string }
-      TicketTierCreated     { row : TicketTier }
-      TicketTierUpdated     { row : TicketTier }
-      TicketTierSold        { row : TicketTier }
-      TicketTierClosed      { row : TicketTier }
-      TicketTierWriteFailed { error : string, code : string }
     }
     listens {
-      CREATE { data : object! }
-      UPDATE { tierId : string!, row : TicketTier, data : object! }
-      SELL   { tierId : string!, row : TicketTier, qty : number! }
-      CLOSE  { tierId : string!, row : TicketTier }
+      OPEN_TIER  { id : string!, row : TicketTier }
+      CLOSE_VIEW { }
+      UPDATE     { tierId : string!, row : TicketTier, data : object! }
+      SELL       { tierId : string!, row : TicketTier, qty : number! }
+      CLOSE      { tierId : string!, row : TicketTier }
       TicketTierLoaded      { data : [TicketTier] }
       TicketTierLoadFailed  { error : string, code : string }
-      TicketTierCreated     { row : TicketTier }
-      TicketTierUpdated     { row : TicketTier }
-      TicketTierSold        { row : TicketTier }
-      TicketTierClosed      { row : TicketTier }
-      TicketTierWriteFailed { error : string, code : string }
     }
   }
   page "/tickettiers/manage" as TicketTierManagePage -> TicketTierManage

@@ -1,5 +1,5 @@
 app std-driver "1.0.0"
-"std-driver — fleet driver primitive tracking license info, hire date, status, and currently-assigned vehicle."
+"std-driver — fleet driver primitive tracking license info, hire date, status, assigned vehicle. Lists drivers in `browsing`; opens detail in `viewing_single` with Suspend / Reinstate / Terminate / Assign Vehicle actions."
 
 orbital DriverOrbital {
   entity Driver [persistent: drivers] {
@@ -28,44 +28,49 @@ orbital DriverOrbital {
       INIT -> loading
         (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading drivers…" }] })
-      DriverLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "truck" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "status-dot", status: "online", pulse: true, size: "md", label: "On duty" }, { type: "badge", label: "On Duty", variant: "default" }, { type: "button", label: "New Driver", variant: "primary", action: "CREATE" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "licenseNumber", label: "License #", variant: "caption" }, { name: "licenseClass", label: "Class", variant: "badge" }, { name: "licenseExpiresAt", label: "Expires", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "assignedVehicleId", label: "Vehicle", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Suspend", event: "SUSPEND", variant: "secondary" }, { label: "Reinstate", event: "REINSTATE", variant: "secondary" }, { label: "Terminate", event: "TERMINATE", variant: "danger" }, { label: "Assign Vehicle", event: "ASSIGN_VEHICLE", variant: "primary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      DriverLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total drivers", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Active", value: "24", icon: "check-circle" }, { type: "stat-display", label: "On leave", value: "3", icon: "pause-circle" }, { type: "stat-display", label: "License expiring 30d", value: "4", icon: "alert-triangle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "licenseNumber", label: "License", variant: "caption" }, { name: "licenseClass", label: "Class", variant: "badge" }, { name: "licenseExpiresAt", label: "Expires", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "assignedVehicleId", label: "Vehicle", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_DRIVER", variant: "primary", icon: "arrow-right" }, { label: "Suspend", event: "SUSPEND", variant: "danger" }] }] })
       DriverLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      REFRESH -> loading
+    state browsing {
+      OPEN_DRIVER -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.licenseNumber @payload.row.licenseNumber)
+        (set @entity.licenseClass @payload.row.licenseClass)
+        (set @entity.licenseExpiresAt @payload.row.licenseExpiresAt)
+        (set @entity.hiredAt @payload.row.hiredAt)
+        (set @entity.phone @payload.row.phone)
+        (set @entity.email @payload.row.email)
+        (set @entity.status @payload.row.status)
+        (set @entity.assignedVehicleId @payload.row.assignedVehicleId)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "user" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.licenseClass", variant: "primary" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "License #" }, { type: "typography", variant: "body", content: "@entity.licenseNumber" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Vehicle" }, { type: "typography", variant: "body", content: "@entity.assignedVehicleId" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Hired", value: "@entity.hiredAt", icon: "calendar" }, { type: "stat-display", label: "License expires", value: "@entity.licenseExpiresAt", icon: "calendar-x" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Assign Vehicle", variant: "primary", action: "ASSIGN_VEHICLE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Suspend", variant: "danger", action: "SUSPEND", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Reinstate", variant: "secondary", action: "REINSTATE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Terminate", variant: "danger", action: "TERMINATE", actionPayload: { id: "@entity.id" } }] }] })
+      SUSPEND -> loading
+        (set @entity.id @payload.id)
         (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing drivers…" }] })
-      SEARCH -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Suspending driver…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching drivers…" }] })
-      FILTER_STATUS -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading drivers…" }] })
+      ASSIGN_VEHICLE -> loading
+        (set @entity.id @payload.id)
         (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering drivers…" }] })
-      SUSPEND -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Assigning vehicle…" }] })
+      SUSPEND -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Driver suspended" })
-      REINSTATE -> viewing
+        (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Suspending driver…" }] })
+      REINSTATE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Driver reinstated" })
-      TERMINATE -> viewing
+        (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reinstating driver…" }] })
+      TERMINATE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "error", message: "Driver terminated" })
-      ASSIGN_VEHICLE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Vehicle assigned" })
-      CREATE -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Creating new driver" })
-      VIEW -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing driver" })
-      EDIT -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Editing driver" })
-      REQUEST_DELETE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+        (fetch Driver { emit: { success: "DriverLoaded", failure: "DriverLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Terminating driver…" }] })
     }
     state error {
       INIT -> loading
@@ -73,29 +78,22 @@ orbital DriverOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW             { id : string!, source : string }
-      EDIT             { id : string!, source : string }
-      CREATE           { source : string }
-      REQUEST_DELETE   { id : string!, source : string }
-      SUSPEND          { id : string!, row : Driver }
-      REINSTATE        { id : string!, row : Driver }
-      TERMINATE        { id : string!, row : Driver }
-      ASSIGN_VEHICLE   { id : string!, row : Driver }
+      OPEN_DRIVER      { id : string!, row : Driver }
+      CLOSE_VIEW       { }
+      ASSIGN_VEHICLE   { id : string! }
+      SUSPEND          { id : string! }
+      REINSTATE        { id : string! }
+      TERMINATE        { id : string! }
       DriverLoaded     { data : [Driver], totalCount : number }
       DriverLoadFailed { error : string, code : string }
     }
     listens {
-      VIEW             { id : string! }
-      EDIT             { id : string! }
-      CREATE           { source : string }
-      REQUEST_DELETE   { id : string! }
+      OPEN_DRIVER      { id : string!, row : Driver }
+      CLOSE_VIEW       { }
+      ASSIGN_VEHICLE   { id : string! }
       SUSPEND          { id : string! }
       REINSTATE        { id : string! }
       TERMINATE        { id : string! }
-      ASSIGN_VEHICLE   { id : string! }
-      REFRESH          { source : string }
-      SEARCH           { query : string }
-      FILTER_STATUS    { status : string }
       DriverLoaded     { data : [Driver], totalCount : number }
       DriverLoadFailed { error : string, code : string }
     }

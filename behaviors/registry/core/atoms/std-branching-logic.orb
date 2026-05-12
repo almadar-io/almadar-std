@@ -1,7 +1,7 @@
 {
   "name": "std-branching-logic",
   "version": "1.0.0",
-  "description": "std-branching-logic — survey skip-logic rules. Owns a BranchingRule entity and a manage trait that fetches rules on INIT, lists them via the branching-logic-builder pattern, and persists ADD_RULE / UPDATE_RULE / DELETE_RULE.",
+  "description": "std-branching-logic — survey skip-logic rules. Lists rules in `browsing`; opens rule detail in `viewing_single` with Edit / Delete actions.",
   "orbitals": [
     {
       "name": "BranchingLogicOrbital",
@@ -59,20 +59,10 @@
           "linkedEntity": "BranchingRule",
           "emits": [
             {
-              "event": "ADD_RULE",
+              "event": "OPEN_RULE",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "object",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "UPDATE_RULE",
-              "payloadSchema": [
-                {
-                  "name": "ruleId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -107,58 +97,14 @@
                 {
                   "name": "row.priority",
                   "type": "number"
-                },
-                {
-                  "name": "data",
-                  "type": "object",
-                  "required": true
                 }
               ]
+            },
+            {
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "DELETE_RULE",
-              "payloadSchema": [
-                {
-                  "name": "ruleId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.surveyId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.sourceQuestionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.operator",
-                  "type": "string"
-                },
-                {
-                  "name": "row.value",
-                  "type": "string"
-                },
-                {
-                  "name": "row.targetQuestionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.priority",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -166,49 +112,6 @@
                   "required": true
                 }
               ]
-            },
-            {
-              "event": "EDIT_SOURCE",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "EDIT_OPERATOR",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "EDIT_VALUE",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "EDIT_TARGET",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "CANCEL"
             },
             {
               "event": "BranchingRuleLoaded",
@@ -231,90 +134,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "BranchingRuleAdded",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.surveyId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.sourceQuestionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.operator",
-                  "type": "string"
-                },
-                {
-                  "name": "row.value",
-                  "type": "string"
-                },
-                {
-                  "name": "row.targetQuestionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.priority",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "BranchingRuleUpdated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.surveyId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.sourceQuestionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.operator",
-                  "type": "string"
-                },
-                {
-                  "name": "row.value",
-                  "type": "string"
-                },
-                {
-                  "name": "row.targetQuestionId",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.priority",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "BranchingRuleDeleted",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -327,7 +146,7 @@
                 "name": "browsing"
               },
               {
-                "name": "editing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -363,24 +182,17 @@
                 ]
               },
               {
-                "key": "ADD_RULE",
-                "name": "Add Rule",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
+                "key": "OPEN_RULE",
+                "name": "Open Rule",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
                     "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "BranchingRule"
                   }
                 ]
               },
@@ -389,41 +201,6 @@
                 "name": "Delete Rule",
                 "payloadSchema": [
                   {
-                    "name": "ruleId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "BranchingRule"
-                  }
-                ]
-              },
-              {
-                "key": "BranchingRuleAdded",
-                "name": "BranchingRule added",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "BranchingRule"
-                  }
-                ]
-              },
-              {
-                "key": "BranchingRuleUpdated",
-                "name": "BranchingRule updated",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "BranchingRule"
-                  }
-                ]
-              },
-              {
-                "key": "BranchingRuleDeleted",
-                "name": "BranchingRule deleted",
-                "payloadSchema": [
-                  {
                     "name": "id",
                     "type": "string",
                     "required": true
@@ -431,72 +208,8 @@
                 ]
               },
               {
-                "key": "EDIT_SOURCE",
-                "name": "Edit Source",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT_OPERATOR",
-                "name": "Edit Operator",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT_VALUE",
-                "name": "Edit Value",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT_TARGET",
-                "name": "Edit Target",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "UPDATE_RULE",
-                "name": "Update Rule",
-                "payloadSchema": [
-                  {
-                    "name": "ruleId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "BranchingRule"
-                  },
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -510,8 +223,8 @@
                     "BranchingRule",
                     {
                       "emit": {
-                        "failure": "BranchingRuleLoadFailed",
-                        "success": "BranchingRuleLoaded"
+                        "success": "BranchingRuleLoaded",
+                        "failure": "BranchingRuleLoadFailed"
                       }
                     }
                   ],
@@ -519,22 +232,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
                       "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "content": "Loading branching rules…",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading branching rules…"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -548,8 +261,15 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -557,28 +277,64 @@
                             },
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "icon": "git-branch",
+                              "label": "Total rules"
+                            },
+                            {
+                              "label": "Active surveys",
+                              "icon": "clipboard-list",
+                              "type": "stat-display",
+                              "value": "8"
+                            },
+                            {
+                              "icon": "skip-forward",
+                              "type": "stat-display",
+                              "value": "42",
+                              "label": "Skip jumps"
+                            },
+                            {
+                              "value": "3",
+                              "label": "Priority avg",
+                              "type": "stat-display",
+                              "icon": "trending-up"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "branching-logic-builder",
-                          "rules": "@payload.data",
-                          "questions": []
-                        },
-                        {
-                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "variant": "primary",
+                              "event": "OPEN_RULE",
+                              "icon": "arrow-right"
+                            },
+                            {
+                              "icon": "trash-2",
+                              "label": "Delete",
+                              "event": "DELETE_RULE",
+                              "variant": "danger"
+                            }
+                          ],
                           "fields": [
                             {
                               "name": "sourceQuestionId",
-                              "label": "If question"
+                              "label": "If question",
+                              "variant": "caption"
                             },
                             {
                               "name": "operator",
@@ -586,48 +342,27 @@
                               "label": "Op"
                             },
                             {
-                              "label": "Value",
-                              "name": "value"
+                              "variant": "caption",
+                              "name": "value",
+                              "label": "Value"
                             },
                             {
-                              "name": "targetQuestionId",
-                              "label": "Jump to"
+                              "label": "Jump to",
+                              "variant": "caption",
+                              "name": "targetQuestionId"
                             },
                             {
+                              "name": "priority",
                               "label": "Priority",
-                              "variant": "badge",
-                              "name": "priority"
+                              "variant": "badge"
                             }
                           ],
                           "cols": 1.0,
+                          "type": "data-grid",
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "EDIT",
-                              "variant": "secondary",
-                              "label": "Edit",
-                              "icon": "pencil"
-                            },
-                            {
-                              "event": "DELETE_RULE",
-                              "label": "Delete",
-                              "variant": "danger",
-                              "icon": "trash-2"
-                            }
-                          ],
-                          "type": "data-grid"
-                        },
-                        {
-                          "label": "Add rule",
-                          "variant": "primary",
-                          "type": "button",
-                          "action": "ADD_RULE",
-                          "icon": "plus"
+                          "entity": "@payload.data"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -650,276 +385,18 @@
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "ADD_RULE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "BranchingRule",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "failure": "BranchingRuleLoadFailed",
-                        "success": "BranchingRuleAdded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "editing",
-                "event": "EDIT",
+                "to": "viewing_single",
+                "event": "OPEN_RULE",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "pencil"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Edit branching rule"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "value": "@entity.sourceQuestionId",
-                          "placeholder": "Source question id",
-                          "action": "EDIT_SOURCE",
-                          "type": "input"
-                        },
-                        {
-                          "action": "EDIT_OPERATOR",
-                          "type": "select",
-                          "placeholder": "Operator",
-                          "options": [
-                            {
-                              "label": "Equals",
-                              "value": "equals"
-                            },
-                            {
-                              "label": "Not equals",
-                              "value": "not-equals"
-                            },
-                            {
-                              "label": "Contains",
-                              "value": "contains"
-                            },
-                            {
-                              "value": "in",
-                              "label": "In"
-                            }
-                          ],
-                          "value": "@entity.operator"
-                        },
-                        {
-                          "type": "input",
-                          "action": "EDIT_VALUE",
-                          "value": "@entity.value",
-                          "placeholder": "Value"
-                        },
-                        {
-                          "value": "@entity.targetQuestionId",
-                          "action": "EDIT_TARGET",
-                          "placeholder": "Target question id",
-                          "type": "input"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "variant": "primary",
-                              "icon": "check",
-                              "type": "button",
-                              "label": "Save",
-                              "action": "UPDATE_RULE"
-                            },
-                            {
-                              "action": "CANCEL",
-                              "label": "Cancel",
-                              "type": "button",
-                              "variant": "secondary",
-                              "icon": "x"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "DELETE_RULE",
-                "effects": [
-                  [
                     "set",
-                    "@entity.id",
-                    "@payload.ruleId"
-                  ],
-                  [
-                    "persist",
-                    "delete",
-                    "BranchingRule",
-                    "@payload.row",
-                    {
-                      "emit": {
-                        "success": "BranchingRuleDeleted",
-                        "failure": "BranchingRuleLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "BranchingRuleAdded",
-                "effects": [
-                  [
-                    "fetch",
-                    "BranchingRule",
-                    {
-                      "emit": {
-                        "failure": "BranchingRuleLoadFailed",
-                        "success": "BranchingRuleLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "BranchingRuleUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "BranchingRule",
-                    {
-                      "emit": {
-                        "success": "BranchingRuleLoaded",
-                        "failure": "BranchingRuleLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "BranchingRuleDeleted",
-                "effects": [
-                  [
-                    "fetch",
-                    "BranchingRule",
-                    {
-                      "emit": {
-                        "failure": "BranchingRuleLoadFailed",
-                        "success": "BranchingRuleLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "error",
-                "event": "BranchingRuleLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "EDIT_SOURCE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.sourceQuestionId",
-                    "@payload.value"
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "EDIT_OPERATOR",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.operator",
-                    "@payload.value"
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "EDIT_VALUE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.value",
-                    "@payload.value"
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "EDIT_TARGET",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.targetQuestionId",
-                    "@payload.value"
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "browsing",
-                "event": "UPDATE_RULE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.ruleId"
+                    "@entity.surveyId",
+                    "@payload.row.surveyId"
                   ],
                   [
                     "set",
@@ -947,40 +424,184 @@
                     "@payload.row.priority"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "BranchingRule",
-                    "@payload.data",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "BranchingRuleLoadFailed",
-                        "success": "BranchingRuleUpdated"
-                      }
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
+                            },
+                            {
+                              "name": "git-branch",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@entity.sourceQuestionId",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "@entity.operator"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Survey"
+                                },
+                                {
+                                  "content": "@entity.surveyId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Value"
+                                },
+                                {
+                                  "content": "@entity.value",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "label": "Source",
+                              "icon": "help-circle",
+                              "type": "stat-display",
+                              "value": "@entity.sourceQuestionId"
+                            },
+                            {
+                              "label": "Target",
+                              "type": "stat-display",
+                              "icon": "arrow-right-circle",
+                              "value": "@entity.targetQuestionId"
+                            },
+                            {
+                              "icon": "trending-up",
+                              "type": "stat-display",
+                              "label": "Priority",
+                              "value": "@entity.priority"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "variant": "danger",
+                              "label": "Delete",
+                              "type": "button",
+                              "action": "DELETE_RULE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
-                "from": "editing",
+                "from": "browsing",
                 "to": "loading",
-                "event": "CANCEL",
+                "event": "DELETE_RULE",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "BranchingRule",
                     {
                       "emit": {
-                        "failure": "BranchingRuleLoadFailed",
-                        "success": "BranchingRuleLoaded"
+                        "success": "BranchingRuleLoaded",
+                        "failure": "BranchingRuleLoadFailed"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Deleting rule…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
               },
               {
-                "from": "editing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "BranchingRuleUpdated",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -991,21 +612,71 @@
                         "failure": "BranchingRuleLoadFailed"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "error",
-                "event": "BranchingRuleLoadFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading branching rules…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "DELETE_RULE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "BranchingRule",
+                    {
+                      "emit": {
+                        "failure": "BranchingRuleLoadFailed",
+                        "success": "BranchingRuleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Deleting rule…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]

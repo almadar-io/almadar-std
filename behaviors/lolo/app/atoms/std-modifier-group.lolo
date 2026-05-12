@@ -29,22 +29,20 @@ orbital ModifierGroupOrbital {
         (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading modifier groups…" }] })
       ModifierGroupLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Group", variant: "badge" }, { name: "constraintType", label: "Constraint", variant: "badge" }, { name: "required", label: "Required", variant: "badge" }, { name: "minSelect", label: "Min", variant: "caption" }, { name: "maxSelect", label: "Max", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Update", event: "UPDATE", variant: "secondary", icon: "edit" }, { label: "Delete", event: "DELETE", variant: "danger", icon: "trash" }] }, { type: "button", label: "New Group", action: "CREATE", variant: "primary", icon: "plus" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total groups", value: "@payload.data.length", icon: "list-checks" }, { type: "stat-display", label: "Required", value: "12", icon: "asterisk" }, { type: "stat-display", label: "Multi-select", value: "9", icon: "check-square" }, { type: "stat-display", label: "Avg options", value: "5", icon: "list" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Group", variant: "caption" }, { name: "constraintType", label: "Constraint", variant: "badge" }, { name: "required", label: "Required", variant: "badge" }, { name: "minSelect", label: "Min", variant: "caption" }, { name: "maxSelect", label: "Max", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_GROUP", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE", variant: "danger", icon: "trash" }] }] })
       ModifierGroupLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      CREATE -> loading
-        (persist create ModifierGroupRecord @payload.data { emit: { success: "ModifierGroupCreated", failure: "ModifierGroupWriteFailed" } })
-      UPDATE -> loading
-        (set @entity.id @payload.groupId)
+      OPEN_GROUP -> viewing_single
+        (set @entity.id @payload.row.id)
         (set @entity.name @payload.row.name)
         (set @entity.constraintType @payload.row.constraintType)
         (set @entity.required @payload.row.required)
         (set @entity.minSelect @payload.row.minSelect)
         (set @entity.maxSelect @payload.row.maxSelect)
         (set @entity.optionsJson @payload.row.optionsJson)
-        (persist update ModifierGroupRecord @entity { emit: { success: "ModifierGroupUpdated", failure: "ModifierGroupWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "list-checks" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.constraintType", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Options JSON" }, { type: "typography", variant: "body", content: "@entity.optionsJson" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Min select", value: "@entity.minSelect", icon: "minus" }, { type: "stat-display", label: "Max select", value: "@entity.maxSelect", icon: "plus" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "DELETE", actionPayload: { groupId: "@entity.id", row: "@entity" } }] }] })
       DELETE -> loading
         (set @entity.id @payload.groupId)
         (set @entity.name @payload.row.name)
@@ -54,6 +52,7 @@ orbital ModifierGroupOrbital {
         (set @entity.maxSelect @payload.row.maxSelect)
         (set @entity.optionsJson @payload.row.optionsJson)
         (persist delete ModifierGroupRecord @entity { emit: { success: "ModifierGroupDeleted", failure: "ModifierGroupWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting modifier group…" }] })
       ModifierGroupCreated -> loading
         (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
       ModifierGroupUpdated -> loading
@@ -63,15 +62,45 @@ orbital ModifierGroupOrbital {
       ModifierGroupWriteFailed -> browsing
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading modifier groups…" }] })
+      CREATE -> loading
+        (persist create ModifierGroupRecord @payload.data { emit: { success: "ModifierGroupCreated", failure: "ModifierGroupWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Creating modifier group…" }] })
+      UPDATE -> loading
+        (set @entity.id @payload.groupId)
+        (set @entity.name @payload.row.name)
+        (set @entity.constraintType @payload.row.constraintType)
+        (set @entity.required @payload.row.required)
+        (set @entity.minSelect @payload.row.minSelect)
+        (set @entity.maxSelect @payload.row.maxSelect)
+        (set @entity.optionsJson @payload.row.optionsJson)
+        (persist update ModifierGroupRecord @entity { emit: { success: "ModifierGroupUpdated", failure: "ModifierGroupWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating modifier group…" }] })
+      DELETE -> loading
+        (set @entity.id @payload.groupId)
+        (set @entity.name @payload.row.name)
+        (set @entity.constraintType @payload.row.constraintType)
+        (set @entity.required @payload.row.required)
+        (set @entity.minSelect @payload.row.minSelect)
+        (set @entity.maxSelect @payload.row.maxSelect)
+        (set @entity.optionsJson @payload.row.optionsJson)
+        (persist delete ModifierGroupRecord @entity { emit: { success: "ModifierGroupDeleted", failure: "ModifierGroupWriteFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting modifier group…" }] })
+    }
     state error {
       INIT -> loading
         (fetch ModifierGroupRecord { emit: { success: "ModifierGroupLoaded", failure: "ModifierGroupLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      CREATE { data : object! }
-      UPDATE { groupId : string!, row : ModifierGroupRecord, data : object! }
-      DELETE { groupId : string!, row : ModifierGroupRecord }
+      OPEN_GROUP { id : string!, row : ModifierGroupRecord }
+      CLOSE_VIEW { }
+      CREATE     { data : object! }
+      UPDATE     { groupId : string!, row : ModifierGroupRecord, data : object! }
+      DELETE     { groupId : string!, row : ModifierGroupRecord }
       ModifierGroupLoaded      { data : [ModifierGroupRecord] }
       ModifierGroupLoadFailed  { error : string, code : string }
       ModifierGroupCreated     { row : ModifierGroupRecord }
@@ -80,9 +109,11 @@ orbital ModifierGroupOrbital {
       ModifierGroupWriteFailed { error : string, code : string }
     }
     listens {
-      CREATE { data : object! }
-      UPDATE { groupId : string!, row : ModifierGroupRecord, data : object! }
-      DELETE { groupId : string!, row : ModifierGroupRecord }
+      OPEN_GROUP { id : string!, row : ModifierGroupRecord }
+      CLOSE_VIEW { }
+      CREATE     { data : object! }
+      UPDATE     { groupId : string!, row : ModifierGroupRecord, data : object! }
+      DELETE     { groupId : string!, row : ModifierGroupRecord }
       ModifierGroupLoaded      { data : [ModifierGroupRecord] }
       ModifierGroupLoadFailed  { error : string, code : string }
       ModifierGroupCreated     { row : ModifierGroupRecord }

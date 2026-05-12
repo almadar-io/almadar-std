@@ -1,5 +1,5 @@
 app std-ap-bill "1.0.0"
-"std-ap-bill — accounts-payable bill atom. Owns an ApBill entity (vendor bills we owe) and a single trait that loads bills into a data-grid with Pay and Void row actions. Counterpart to std-invoice on the payables side."
+"std-ap-bill — accounts-payable bill (vendor bills we owe). Lists bills in `browsing`; opens bill detail in `viewing_single` with Pay / Void actions. Counterpart to std-invoice on the payables side."
 
 orbital ApBillOrbital {
   entity ApBill [persistent: apbills] {
@@ -27,17 +27,39 @@ orbital ApBillOrbital {
         (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading bills…" }] })
       ApBillLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "date-range-selector", options: [{ value: "this-month", label: "This Month" }, { value: "last-month", label: "Last Month" }, { value: "this-quarter", label: "This Quarter" }, { value: "this-year", label: "This Year" }], selected: "this-month" }, { type: "line-chart", data: [{ date: "Jan", value: 12400 }, { date: "Feb", value: 9850 }, { date: "Mar", value: 15320 }, { date: "Apr", value: 11070 }, { date: "May", value: 13980 }], showGrid: true, showArea: true, lineColor: "primary" }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vendor", label: "Vendor", variant: "caption" }, { name: "billNumber", label: "Bill #", variant: "caption" }, { name: "billDate", label: "Bill Date", variant: "caption" }, { name: "dueDate", label: "Due", variant: "caption" }, { name: "amountTotal", label: "Total", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Pay", event: "PAY_BILL", variant: "primary" }, { label: "Void", event: "VOID_BILL", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open bills", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Total payable", value: "$48,200", icon: "dollar-sign" }, { type: "stat-display", label: "Overdue", value: "6", icon: "alert-triangle" }, { type: "stat-display", label: "Paid this month", value: "32", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vendor", label: "Vendor", variant: "caption" }, { name: "billNumber", label: "Bill #", variant: "caption" }, { name: "billDate", label: "Bill Date", variant: "caption" }, { name: "dueDate", label: "Due", variant: "caption" }, { name: "amountTotal", label: "Total", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_BILL", variant: "primary", icon: "arrow-right" }, { label: "Void", event: "VOID_BILL", variant: "danger" }] }] })
       ApBillLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      PAY_BILL -> browsing
+      OPEN_BILL -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.vendor @payload.row.vendor)
+        (set @entity.billNumber @payload.row.billNumber)
+        (set @entity.billDate @payload.row.billDate)
+        (set @entity.dueDate @payload.row.dueDate)
+        (set @entity.amountTotal @payload.row.amountTotal)
+        (set @entity.amountPaid @payload.row.amountPaid)
+        (set @entity.status @payload.row.status)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.vendor", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Bill #" }, { type: "typography", variant: "body", content: "@entity.billNumber" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total", value: "@entity.amountTotal", icon: "dollar-sign" }, { type: "stat-display", label: "Paid", value: "@entity.amountPaid", icon: "check-circle" }, { type: "stat-display", label: "Bill date", value: "@entity.billDate", icon: "calendar" }, { type: "stat-display", label: "Due", value: "@entity.dueDate", icon: "calendar-clock" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Pay Bill", variant: "primary", action: "PAY_BILL", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Void", variant: "danger", action: "VOID_BILL", actionPayload: { id: "@entity.id" } }] }] })
+      VOID_BILL -> loading
         (set @entity.id @payload.id)
-        (notify "Bill paid" success)
-      VOID_BILL -> browsing
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding bill…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading bills…" }] })
+      PAY_BILL -> loading
         (set @entity.id @payload.id)
-        (notify "Bill voided" info)
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Paying bill…" }] })
+      VOID_BILL -> loading
+        (set @entity.id @payload.id)
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding bill…" }] })
     }
     state error {
       INIT -> loading
@@ -45,12 +67,16 @@ orbital ApBillOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_BILL        { id : string!, row : ApBill }
+      CLOSE_VIEW       { }
       PAY_BILL         { id : string! }
       VOID_BILL        { id : string! }
       ApBillLoaded     { data : [ApBill] }
       ApBillLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_BILL        { id : string!, row : ApBill }
+      CLOSE_VIEW       { }
       PAY_BILL         { id : string! }
       VOID_BILL        { id : string! }
       ApBillLoaded     { data : [ApBill] }

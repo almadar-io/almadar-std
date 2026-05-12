@@ -1,7 +1,7 @@
 {
   "name": "std-question-bank",
   "version": "1.0.0",
-  "description": "std-question-bank — typed question library for surveys. Owns a Question entity (label + kind + options + required + category + surveyId + order). QuestionManage loads questions on INIT, renders them in a data-grid with Edit / Delete actions plus a Create button, and persists add/update/delete via explicit ADD_QUESTION / UPDATE_QUESTION / DELETE_QUESTION events.",
+  "description": "std-question-bank — typed question library for surveys. Lists questions in `browsing`; opens detail in `viewing_single` with Update / Delete actions.",
   "orbitals": [
     {
       "name": "QuestionBankOrbital",
@@ -65,20 +65,10 @@
           "linkedEntity": "Question",
           "emits": [
             {
-              "event": "ADD_QUESTION",
+              "event": "OPEN_QUESTION",
               "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "object",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "UPDATE_QUESTION",
-              "payloadSchema": [
-                {
-                  "name": "questionId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -115,10 +105,18 @@
                 {
                   "name": "row.order",
                   "type": "number"
-                },
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "UPDATE_QUESTION",
+              "payloadSchema": [
                 {
-                  "name": "data",
-                  "type": "object",
+                  "name": "id",
+                  "type": "string",
                   "required": true
                 }
               ]
@@ -127,43 +125,9 @@
               "event": "DELETE_QUESTION",
               "payloadSchema": [
                 {
-                  "name": "questionId",
+                  "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.label",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.kind",
-                  "type": "string"
-                },
-                {
-                  "name": "row.optionsJson",
-                  "type": "string"
-                },
-                {
-                  "name": "row.required",
-                  "type": "boolean"
-                },
-                {
-                  "name": "row.category",
-                  "type": "string"
-                },
-                {
-                  "name": "row.surveyId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.order",
-                  "type": "number"
                 }
               ]
             },
@@ -188,93 +152,6 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "QuestionAdded",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.label",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.kind",
-                  "type": "string"
-                },
-                {
-                  "name": "row.optionsJson",
-                  "type": "string"
-                },
-                {
-                  "name": "row.required",
-                  "type": "boolean"
-                },
-                {
-                  "name": "row.category",
-                  "type": "string"
-                },
-                {
-                  "name": "row.surveyId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.order",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "QuestionUpdated",
-              "payloadSchema": [
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.label",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.kind",
-                  "type": "string"
-                },
-                {
-                  "name": "row.optionsJson",
-                  "type": "string"
-                },
-                {
-                  "name": "row.required",
-                  "type": "boolean"
-                },
-                {
-                  "name": "row.category",
-                  "type": "string"
-                },
-                {
-                  "name": "row.surveyId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.order",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "QuestionDeleted",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "stateMachine": {
@@ -287,7 +164,7 @@
                 "name": "browsing"
               },
               {
-                "name": "editing"
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -323,13 +200,17 @@
                 ]
               },
               {
-                "key": "ADD_QUESTION",
-                "name": "Add Question",
+                "key": "OPEN_QUESTION",
+                "name": "Open Question",
                 "payloadSchema": [
                   {
-                    "name": "data",
-                    "type": "object",
+                    "name": "id",
+                    "type": "string",
                     "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Question"
                   }
                 ]
               },
@@ -338,17 +219,8 @@
                 "name": "Update Question",
                 "payloadSchema": [
                   {
-                    "name": "questionId",
+                    "name": "id",
                     "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Question"
-                  },
-                  {
-                    "name": "data",
-                    "type": "object",
                     "required": true
                   }
                 ]
@@ -358,45 +230,15 @@
                 "name": "Delete Question",
                 "payloadSchema": [
                   {
-                    "name": "questionId",
+                    "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Question"
                   }
                 ]
               },
               {
-                "key": "QuestionAdded",
-                "name": "Question added",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Question"
-                  }
-                ]
-              },
-              {
-                "key": "QuestionUpdated",
-                "name": "Question updated",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Question"
-                  }
-                ]
-              },
-              {
-                "key": "QuestionDeleted",
-                "name": "Question deleted",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -410,8 +252,8 @@
                     "Question",
                     {
                       "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
                       }
                     }
                   ],
@@ -419,9 +261,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -429,12 +273,10 @@
                         {
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading questions…"
+                          "content": "Loading questions…",
+                          "color": "muted"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -448,92 +290,107 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal",
+                          "align": "center",
                           "gap": "sm",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "list-checks"
-                                },
-                                {
-                                  "variant": "h3",
-                                  "type": "typography",
-                                  "content": "@config.title"
-                                }
-                              ],
-                              "direction": "horizontal"
+                              "name": "list-checks",
+                              "type": "icon"
                             },
                             {
-                              "type": "button",
-                              "label": "Add Question",
-                              "variant": "primary",
-                              "action": "ADD_QUESTION",
-                              "icon": "plus"
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "label": "Total questions",
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "icon": "list-checks"
+                            },
+                            {
+                              "value": "18",
+                              "label": "Required",
+                              "type": "stat-display",
+                              "icon": "alert-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "clipboard-list",
+                              "label": "Surveys",
+                              "value": "6"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Categories",
+                              "icon": "tag",
+                              "value": "9"
+                            }
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "type": "data-grid",
-                          "cols": 1.0,
                           "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "variant": "ghost",
-                              "icon": "edit",
-                              "event": "UPDATE_QUESTION",
-                              "label": "Edit"
-                            },
-                            {
-                              "event": "DELETE_QUESTION",
-                              "variant": "danger",
-                              "label": "Delete",
-                              "icon": "trash"
-                            }
-                          ],
+                          "gap": "sm",
                           "fields": [
                             {
                               "name": "label",
                               "label": "Question",
-                              "variant": "h4"
+                              "variant": "caption"
                             },
                             {
+                              "name": "kind",
                               "label": "Type",
-                              "variant": "badge",
-                              "name": "kind"
-                            },
-                            {
-                              "name": "category",
-                              "variant": "caption",
-                              "label": "Category"
-                            },
-                            {
-                              "label": "Required",
-                              "variant": "badge",
-                              "name": "required"
+                              "variant": "badge"
                             },
                             {
                               "variant": "caption",
+                              "label": "Category",
+                              "name": "category"
+                            },
+                            {
+                              "label": "Survey",
+                              "name": "surveyId",
+                              "variant": "caption"
+                            },
+                            {
                               "name": "order",
-                              "label": "Order"
+                              "label": "Order",
+                              "variant": "caption"
                             }
-                          ]
+                          ],
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "icon": "arrow-right",
+                              "event": "OPEN_QUESTION",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "DELETE_QUESTION",
+                              "variant": "danger"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "cols": 1.0
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -547,8 +404,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error"
                     }
                   ]
@@ -556,32 +413,13 @@
               },
               {
                 "from": "browsing",
-                "to": "editing",
-                "event": "ADD_QUESTION",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "Question",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "QuestionAdded",
-                        "failure": "QuestionLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "editing",
-                "event": "UPDATE_QUESTION",
+                "to": "viewing_single",
+                "event": "OPEN_QUESTION",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.questionId"
+                    "@payload.row.id"
                   ],
                   [
                     "set",
@@ -619,82 +457,294 @@
                     "@payload.row.order"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "Question",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionUpdated"
-                      }
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "list-checks"
+                            },
+                            {
+                              "content": "@entity.label",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.kind",
+                              "variant": "default"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Category",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.category",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Survey"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.surveyId",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "Options",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.optionsJson"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Kind",
+                              "icon": "tag",
+                              "value": "@entity.kind"
+                            },
+                            {
+                              "label": "Order",
+                              "icon": "hash",
+                              "type": "stat-display",
+                              "value": "@entity.order"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "children": [
+                            {
+                              "label": "Update",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "UPDATE_QUESTION",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Delete",
+                              "action": "DELETE_QUESTION"
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "editing",
+                "to": "loading",
+                "event": "UPDATE_QUESTION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Question",
+                    {
+                      "emit": {
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating question…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
                 "event": "DELETE_QUESTION",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.questionId"
+                    "@payload.id"
                   ],
                   [
-                    "persist",
-                    "delete",
+                    "fetch",
                     "Question",
+                    {
+                      "emit": {
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Deleting question…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Question",
+                    {
+                      "emit": {
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading questions…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "UPDATE_QUESTION",
+                "effects": [
+                  [
+                    "set",
                     "@entity.id",
-                    {
-                      "emit": {
-                        "success": "QuestionDeleted",
-                        "failure": "QuestionLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "QuestionAdded",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "QuestionUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "QuestionDeleted",
-                "effects": [
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Question",
@@ -704,30 +754,41 @@
                         "failure": "QuestionLoadFailed"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "error",
-                "event": "QuestionLoadFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating question…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "editing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "QuestionAdded",
+                "event": "DELETE_QUESTION",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Question",
@@ -737,55 +798,27 @@
                         "failure": "QuestionLoadFailed"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "QuestionUpdated",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "success": "QuestionLoaded",
-                        "failure": "QuestionLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "QuestionDeleted",
-                "effects": [
-                  [
-                    "fetch",
-                    "Question",
-                    {
-                      "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "error",
-                "event": "QuestionLoadFailed",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Deleting question…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]

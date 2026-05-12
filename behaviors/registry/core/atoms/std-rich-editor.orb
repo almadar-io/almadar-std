@@ -1,7 +1,7 @@
 {
   "name": "std-rich-editor",
   "version": "1.0.0",
-  "description": "std-rich-editor — wiki / CMS Notion-style block editor. Owns a Document entity (page / doc / post) with a serialized RichBlock[] payload, browses documents in a data-grid, opens the rich-block-editor on a selected row, and persists block edits + publish status back to the row.",
+  "description": "std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status.",
   "orbitals": [
     {
       "name": "DocumentOrbital",
@@ -80,7 +80,7 @@
               "event": "OPEN",
               "payloadSchema": [
                 {
-                  "name": "documentId",
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -127,6 +127,9 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "BLOCKS_CHANGE",
@@ -141,13 +144,9 @@
               "event": "SAVE",
               "payloadSchema": [
                 {
-                  "name": "documentId",
+                  "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "blocks",
-                  "type": "[object]"
                 }
               ]
             },
@@ -155,51 +154,9 @@
               "event": "PUBLISH",
               "payloadSchema": [
                 {
-                  "name": "documentId",
+                  "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.title",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.blocksJson",
-                  "type": "[object]"
-                },
-                {
-                  "name": "row.authorId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.parentId",
-                  "type": "string"
-                },
-                {
-                  "name": "row.kind",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.version",
-                  "type": "number"
-                },
-                {
-                  "name": "row.createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.updatedAt",
-                  "type": "string"
                 }
               ]
             },
@@ -365,75 +322,6 @@
                 ]
               },
               {
-                "key": "DocumentLoadFailed",
-                "name": "Document load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "OPEN",
-                "name": "Open",
-                "payloadSchema": [
-                  {
-                    "name": "documentId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Document"
-                  }
-                ]
-              },
-              {
-                "key": "PUBLISH",
-                "name": "Publish",
-                "payloadSchema": [
-                  {
-                    "name": "documentId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Document"
-                  }
-                ]
-              },
-              {
-                "key": "BLOCKS_CHANGE",
-                "name": "Blocks Change",
-                "payloadSchema": [
-                  {
-                    "name": "blocks",
-                    "type": "[object]"
-                  }
-                ]
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payloadSchema": [
-                  {
-                    "name": "documentId",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "blocks",
-                    "type": "[object]"
-                  }
-                ]
-              },
-              {
                 "key": "DocumentSaved",
                 "name": "Document saved",
                 "payloadSchema": [
@@ -466,6 +354,71 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "DocumentLoadFailed",
+                "name": "Document load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN",
+                "name": "Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ]
+              },
+              {
+                "key": "PUBLISH",
+                "name": "Publish",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "BLOCKS_CHANGE",
+                "name": "Blocks Change",
+                "payloadSchema": [
+                  {
+                    "name": "blocks",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -488,22 +441,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading documents…",
                           "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading documents…"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -517,184 +470,78 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "subtitle": "Wiki / CMS Notion-style Docs",
-                          "author": "Team Knowledge Base",
-                          "type": "book-cover-page",
-                          "title": "@config.title",
-                          "coverImageUrl": "https://picsum.photos/seed/notes-cover/1200/400"
-                        },
-                        {
-                          "totalPages": 24.0,
-                          "type": "book-nav-bar",
-                          "chapterTitle": "Getting Started",
-                          "currentPage": 1.0
-                        },
-                        {
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
-                              "content": "@config.title",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "activeId": "blocks",
-                          "type": "doc-toc",
-                          "items": [
-                            {
-                              "id": "intro",
-                              "level": 1.0,
-                              "label": "Introduction"
-                            },
-                            {
-                              "id": "blocks",
-                              "level": 1.0,
-                              "label": "Block Types"
-                            },
-                            {
-                              "level": 1.0,
-                              "id": "publish",
-                              "label": "Publishing Workflow"
-                            },
-                            {
-                              "level": 2.0,
-                              "id": "archive",
-                              "label": "Archived Docs"
+                              "content": "@config.title"
                             }
                           ]
                         },
                         {
-                          "type": "tag-cloud",
-                          "tags": [
-                            {
-                              "label": "Engineering"
-                            },
-                            {
-                              "label": "Product"
-                            },
-                            {
-                              "label": "Design"
-                            },
-                            {
-                              "label": "Operations"
-                            },
-                            {
-                              "label": "Onboarding"
-                            },
-                            {
-                              "label": "Runbooks"
-                            }
-                          ],
-                          "variant": "primary"
-                        },
-                        {
-                          "type": "accordion",
-                          "items": [
-                            {
-                              "id": "drafts",
-                              "content": "All in-progress documents that have not yet been published.",
-                              "title": "Drafts"
-                            },
-                            {
-                              "id": "published",
-                              "title": "Published",
-                              "content": "Documents visible to readers across the workspace."
-                            },
-                            {
-                              "title": "Archived",
-                              "content": "Read-only legacy documents preserved for historical reference.",
-                              "id": "archived"
-                            }
-                          ]
-                        },
-                        {
-                          "children": "Documents are the long-term memory of the organization.",
-                          "type": "pull-quote"
-                        },
-                        {
-                          "direction": "ltr",
-                          "type": "markdown-content",
-                          "content": "Welcome to the wiki workspace."
-                        },
-                        {
-                          "chapter": {
-                            "title": "Introduction",
-                            "content": "This chapter walks through composing your first document and publishing it to the workspace.",
-                            "id": "intro"
-                          },
-                          "type": "book-chapter-view"
-                        },
-                        {
-                          "language": "javascript",
-                          "code": "const greet = name => 'Hello ' + name",
-                          "type": "code-block",
-                          "showCopyButton": true,
-                          "showLanguageBadge": true,
-                          "foldable": true
-                        },
-                        {
-                          "title": "Sample document payload",
-                          "code": "title: Release Notes, version: 1.2.0, status: published",
-                          "type": "doc-code-block",
-                          "language": "json",
-                          "showLineNumbers": true
-                        },
-                        {
-                          "type": "code-view",
-                          "label": "Inspect document JSON",
-                          "defaultExpanded": false,
-                          "data": {
-                            "kind": "document",
-                            "blocks": 7.0,
-                            "version": 12.0,
-                            "status": "published"
-                          }
-                        },
-                        {
-                          "annotationId": "tip-1",
-                          "type": "text-highlight",
-                          "highlightType": "note",
                           "children": [
                             {
-                              "content": "Pro tip: pin the most-edited document to the workspace home for one-click access.",
-                              "type": "typography",
-                              "variant": "body"
+                              "label": "Total docs",
+                              "icon": "file-text",
+                              "value": "@payload.data.length",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "12",
+                              "type": "stat-display",
+                              "icon": "edit-3",
+                              "label": "Drafts"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Published",
+                              "value": "84"
+                            },
+                            {
+                              "label": "Archived",
+                              "icon": "archive",
+                              "type": "stat-display",
+                              "value": "9"
                             }
-                          ]
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "label": "Open",
-                              "event": "OPEN",
                               "variant": "primary",
-                              "icon": "edit"
+                              "icon": "edit",
+                              "label": "Open",
+                              "event": "OPEN"
                             },
                             {
                               "variant": "secondary",
+                              "label": "Publish",
                               "event": "PUBLISH",
-                              "icon": "send",
-                              "label": "Publish"
+                              "icon": "send"
                             }
                           ],
                           "entity": "@payload.data",
-                          "type": "data-grid",
-                          "gap": "sm",
                           "fields": [
                             {
                               "label": "Title",
@@ -702,30 +549,79 @@
                               "name": "title"
                             },
                             {
-                              "label": "Kind",
+                              "variant": "badge",
                               "name": "kind",
+                              "label": "Kind"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
                               "variant": "badge"
                             },
                             {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "label": "v",
+                              "variant": "caption",
+                              "name": "version"
                             },
                             {
-                              "name": "version",
                               "variant": "caption",
-                              "label": "v"
-                            },
-                            {
-                              "label": "Updated",
-                              "variant": "caption",
-                              "name": "updatedAt"
+                              "name": "updatedAt",
+                              "label": "Updated"
                             }
                           ],
                           "cols": 1.0
                         }
-                      ],
-                      "type": "stack"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "DocumentSaved",
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "DocumentPublished",
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "DocumentSaveFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -739,9 +635,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -754,7 +650,7 @@
                   [
                     "set",
                     "@entity.id",
-                    "@payload.documentId"
+                    "@payload.row.id"
                   ],
                   [
                     "set",
@@ -805,61 +701,73 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "label": "Back"
+                            },
                             {
                               "name": "file-text",
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "variant": "secondary",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "type": "badge"
                             }
                           ],
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "showToolbar": true,
                           "placeholder": "Start writing…",
+                          "changeEvent": "BLOCKS_CHANGE",
                           "type": "rich-block-editor",
-                          "initialBlocks": "@entity.blocksJson",
-                          "changeEvent": "BLOCKS_CHANGE"
+                          "showToolbar": true,
+                          "initialBlocks": "@entity.blocksJson"
                         },
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Save",
-                              "variant": "primary",
-                              "icon": "save",
                               "type": "button",
-                              "action": "SAVE"
+                              "label": "Save",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "SAVE",
+                              "variant": "primary"
                             },
                             {
-                              "variant": "secondary",
-                              "icon": "send",
-                              "action": "PUBLISH",
+                              "type": "button",
                               "label": "Publish",
-                              "type": "button"
+                              "variant": "secondary",
+                              "action": "PUBLISH",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
                             }
                           ],
+                          "align": "center",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         }
                       ]
                     }
@@ -868,69 +776,44 @@
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "PUBLISH",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.documentId"
+                    "@payload.id"
                   ],
                   [
-                    "set",
-                    "@entity.title",
-                    "@payload.row.title"
-                  ],
-                  [
-                    "set",
-                    "@entity.blocksJson",
-                    "@payload.row.blocksJson"
-                  ],
-                  [
-                    "set",
-                    "@entity.authorId",
-                    "@payload.row.authorId"
-                  ],
-                  [
-                    "set",
-                    "@entity.parentId",
-                    "@payload.row.parentId"
-                  ],
-                  [
-                    "set",
-                    "@entity.kind",
-                    "@payload.row.kind"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "published"
-                  ],
-                  [
-                    "set",
-                    "@entity.version",
-                    "@payload.row.version"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@payload.row.createdAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.updatedAt",
-                    "@payload.row.updatedAt"
-                  ],
-                  [
-                    "persist",
-                    "update",
+                    "fetch",
                     "Document",
-                    "@entity",
                     {
                       "emit": {
-                        "success": "DocumentPublished",
-                        "failure": "DocumentSaveFailed"
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Publishing document…",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -949,18 +832,52 @@
               },
               {
                 "from": "editing",
-                "to": "editing",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading documents…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "editing",
+                "to": "loading",
                 "event": "SAVE",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.documentId"
-                  ],
-                  [
-                    "set",
-                    "@entity.blocksJson",
-                    "@payload.blocks"
+                    "@payload.id"
                   ],
                   [
                     "persist",
@@ -973,63 +890,45 @@
                         "failure": "DocumentSaveFailed"
                       }
                     }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Saving document…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
                   ]
                 ]
               },
               {
                 "from": "editing",
-                "to": "editing",
+                "to": "loading",
                 "event": "PUBLISH",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.documentId"
-                  ],
-                  [
-                    "set",
-                    "@entity.title",
-                    "@payload.row.title"
-                  ],
-                  [
-                    "set",
-                    "@entity.blocksJson",
-                    "@payload.row.blocksJson"
-                  ],
-                  [
-                    "set",
-                    "@entity.authorId",
-                    "@payload.row.authorId"
-                  ],
-                  [
-                    "set",
-                    "@entity.parentId",
-                    "@payload.row.parentId"
-                  ],
-                  [
-                    "set",
-                    "@entity.kind",
-                    "@payload.row.kind"
+                    "@payload.id"
                   ],
                   [
                     "set",
                     "@entity.status",
                     "published"
-                  ],
-                  [
-                    "set",
-                    "@entity.version",
-                    "@payload.row.version"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@payload.row.createdAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.updatedAt",
-                    "@payload.row.updatedAt"
                   ],
                   [
                     "persist",
@@ -1042,54 +941,27 @@
                         "failure": "DocumentSaveFailed"
                       }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "DocumentSaved",
-                "effects": [
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "success",
-                      "type": "alert",
-                      "message": "Saved"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "DocumentPublished",
-                "effects": [
-                  [
-                    "fetch",
-                    "Document",
-                    {
-                      "emit": {
-                        "success": "DocumentLoaded",
-                        "failure": "DocumentLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "DocumentSaveFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Publishing document…",
+                          "variant": "caption"
+                        }
+                      ]
                     }
                   ]
                 ]

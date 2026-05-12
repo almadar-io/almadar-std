@@ -1,5 +1,5 @@
 app std-tenant "1.0.0"
-"Tenant primitive: person/company occupying a leased unit."
+"std-tenant — person/company occupying a leased unit. Lists tenants in `browsing`; opens tenant detail (name, contact, lease, move-in/out dates, status) in `viewing_single` with Activate / Move Out actions."
 
 orbital TenantOrbital {
   entity Tenant [persistent: tenants] {
@@ -24,32 +24,59 @@ orbital TenantOrbital {
     state loading {
       INIT -> loading
         (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading tenants…" }] })
       TenantLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "mini-map", width: 120, height: 80, mapWidth: 1000, mapHeight: 1000, tiles: [], units: [] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }] }, { type: "map-view", markers: [], height: "240px", zoom: 10 }, { type: "divider" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "email", label: "Email", variant: "body" }, { name: "phone", label: "Phone", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "moveInDate", label: "Move-In", variant: "caption" }], itemActions: [{ label: "Activate", event: "ACTIVATE_TENANT", variant: "primary" }, { label: "Move Out", event: "MOVE_OUT", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total tenants", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Current", value: "42", icon: "check-circle" }, { type: "stat-display", label: "Prospective", value: "8", icon: "user-plus" }, { type: "stat-display", label: "Former", value: "120", icon: "user-minus" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "email", label: "Email", variant: "body" }, { name: "phone", label: "Phone", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "moveInDate", label: "Move-In", variant: "caption" }], itemActions: [{ label: "Open", event: "OPEN_TENANT", variant: "primary", icon: "arrow-right" }, { label: "Move Out", event: "MOVE_OUT", variant: "danger" }] }] })
       TenantLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", title: "Failed to load tenants", message: "@payload.error" })
     }
     state browsing {
-      ACTIVATE_TENANT -> browsing
+      OPEN_TENANT -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.email @payload.row.email)
+        (set @entity.phone @payload.row.phone)
+        (set @entity.leaseId @payload.row.leaseId)
+        (set @entity.moveInDate @payload.row.moveInDate)
+        (set @entity.moveOutDate @payload.row.moveOutDate)
+        (set @entity.status @payload.row.status)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_TENANT" }, { type: "icon", name: "user" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Lease" }, { type: "typography", variant: "body", content: "@entity.leaseId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Move-In", value: "@entity.moveInDate", icon: "calendar" }, { type: "stat-display", label: "Move-Out", value: "@entity.moveOutDate", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Activate", variant: "primary", action: "ACTIVATE_TENANT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Move Out", variant: "danger", action: "MOVE_OUT", actionPayload: { id: "@entity.id" } }] }] })
+      MOVE_OUT -> loading
         (set @entity.id @payload.id)
-        (notify "Tenant activated" success)
-      MOVE_OUT -> browsing
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording move-out…" }] })
+    }
+    state viewing_single {
+      CLOSE_TENANT -> loading
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading tenants…" }] })
+      ACTIVATE_TENANT -> loading
         (set @entity.id @payload.id)
-        (notify "Tenant move-out recorded" info)
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Activating tenant…" }] })
+      MOVE_OUT -> loading
+        (set @entity.id @payload.id)
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording move-out…" }] })
     }
     state error {
       INIT -> loading
         (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
     }
 
     emits {
+      OPEN_TENANT { id : string!, row : Tenant }
+      CLOSE_TENANT { }
       ACTIVATE_TENANT { id : string! }
       MOVE_OUT { id : string! }
-      TenantLoaded
-      TenantLoadFailed
+      TenantLoaded { data : [Tenant] }
+      TenantLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_TENANT { id : string!, row : Tenant }
+      CLOSE_TENANT { }
       ACTIVATE_TENANT { id : string! }
       MOVE_OUT { id : string! }
       TenantLoaded { data : [Tenant] }

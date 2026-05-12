@@ -1,5 +1,5 @@
 app std-dunning "1.0.0"
-"std-dunning — failed-payment escalation ladder for subscriptions. Owns a DunningCase entity and a single trait that loads open cases, renders them in a data-grid alongside a per-case dunning-banner, and advances severity (soft -> urgent -> final -> suspend) or marks resolved."
+"std-dunning — failed-payment escalation ladder for subscriptions. Lists open dunning cases in `browsing`; opens detail in `viewing_single` with Escalate / Resolve / Suspend actions."
 
 orbital DunningCaseOrbital {
   entity DunningCase [persistent: dunningcases] {
@@ -19,8 +19,6 @@ orbital DunningCaseOrbital {
 
   type DunningCaseLoaded     = Event { data : [DunningCase] }              "Fired when the dunning-case collection finishes loading"
   type DunningCaseLoadFailed = Event { error : string, code : string }     "Fired when the dunning-case collection fails to load"
-  type DunningCaseUpdated    = Event { row : DunningCase }                 "Fired after a dunning case row persists (severity advance / resolve / suspend)"
-  type ServiceSuspended      = Event { row : DunningCase }                 "Fired when a dunning case reaches final and the subscription is suspended"
 
   trait DunningEscalate -> DunningCase [interaction, collection] {
     config {
@@ -32,38 +30,46 @@ orbital DunningCaseOrbital {
         (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading dunning cases…" }] })
       DunningCaseLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "split-section", title: "Collections health", description: "Track recovery against open cases and route the right escalation to each customer.", bullets: ["Severity ladders from soft to final", "Auto-suspend at the last attempt", "Resolve when payment recovers"], background: "alt", imagePosition: "right" }, { type: "stats-grid", columns: 4, stats: [{ label: "Open cases", value: "42" }, { label: "Recovered", value: "18" }, { label: "Suspended", value: "3" }, { label: "Recovery rate", value: "62%" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "showcase-card", title: "Acme Corp", description: "Final notice. Suspension in 2 days.", image: { src: "https://picsum.photos/seed/dun-acme/600/400", alt: "Acme" }, badge: "Final", accentColor: "danger" }, { type: "showcase-card", title: "Globex Ltd", description: "Urgent — second retry failed.", image: { src: "https://picsum.photos/seed/dun-globex/600/400", alt: "Globex" }, badge: "Urgent", accentColor: "warning" }] }, { type: "swipeable-row", threshold: 80, leftActions: [{ label: "Resolve", event: "RESOLVE", variant: "primary" }], rightActions: [{ label: "Suspend", event: "SUSPEND", variant: "danger" }], children: { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", variant: "body", content: "Swipe a case row for quick actions" }] } }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "subscriptionId", label: "Subscription", variant: "caption" }, { name: "customerId", label: "Customer", variant: "caption" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "attemptNumber", label: "Attempt", variant: "caption" }, { name: "amountDue", label: "Amount Due", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Escalate", event: "ESCALATE", variant: "primary", icon: "arrow-up" }, { label: "Resolve", event: "RESOLVE", variant: "secondary", icon: "check" }, { label: "Suspend", event: "SUSPEND", variant: "danger", icon: "ban" }] }, { type: "drawer", title: "Case detail", isOpen: false, position: "right", width: "md", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Selected case" }, { type: "typography", variant: "body", content: "Use the grid actions to escalate, resolve, or suspend." }] }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open cases", value: "@payload.data.length", icon: "alert-triangle" }, { type: "stat-display", label: "Recovered", value: "18", icon: "check-circle" }, { type: "stat-display", label: "Suspended", value: "3", icon: "ban" }, { type: "stat-display", label: "Recovery rate", value: "62%", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "subscriptionId", label: "Subscription", variant: "caption" }, { name: "customerId", label: "Customer", variant: "caption" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "attemptNumber", label: "Attempt", variant: "caption" }, { name: "amountDue", label: "Amount Due", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CASE", variant: "primary", icon: "arrow-right" }, { label: "Suspend", event: "SUSPEND", variant: "danger", icon: "ban" }] }] })
       DunningCaseLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      ESCALATE -> escalating
-        (set @entity.id @payload.id)
-        (set @entity.severity (cond (= @payload.row.severity "soft") "urgent" (= @payload.row.severity "urgent") "final" "final"))
-        (set @entity.attemptNumber (+ @payload.row.attemptNumber 1))
+      OPEN_CASE -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.subscriptionId @payload.row.subscriptionId)
+        (set @entity.customerId @payload.row.customerId)
+        (set @entity.severity @payload.row.severity)
+        (set @entity.attemptNumber @payload.row.attemptNumber)
         (set @entity.attemptsTotal @payload.row.attemptsTotal)
         (set @entity.failedAt @payload.row.failedAt)
         (set @entity.nextRetryAt @payload.row.nextRetryAt)
         (set @entity.amountDue @payload.row.amountDue)
         (set @entity.currency @payload.row.currency)
-        (render-ui main { type: "alert", variant: "warning", title: "Payment failed", message: "Attempt @entity.attemptNumber of @entity.attemptsTotal — amount @entity.amountDue @entity.currency. Next retry @entity.nextRetryAt.", dismissible: false })
-        (persist update DunningCase @entity { emit: { success: "DunningCaseUpdated", failure: "DunningCaseUpdateFailed" } })
-      RESOLVE -> escalating
+        (set @entity.resolvedAt @payload.row.resolvedAt)
+        (set @entity.status @payload.row.status)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "alert-triangle" }, { type: "typography", content: "@entity.subscriptionId", variant: "h3" }, { type: "badge", label: "@entity.severity", variant: "primary" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Customer" }, { type: "typography", variant: "body", content: "@entity.customerId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Currency" }, { type: "typography", variant: "body", content: "@entity.currency" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Failed at" }, { type: "typography", variant: "body", content: "@entity.failedAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Next retry" }, { type: "typography", variant: "body", content: "@entity.nextRetryAt" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Amount due", value: "@entity.amountDue", icon: "dollar-sign" }, { type: "stat-display", label: "Attempt", value: "@entity.attemptNumber", icon: "repeat" }, { type: "stat-display", label: "Total attempts", value: "@entity.attemptsTotal", icon: "list" }, { type: "stat-display", label: "Resolved at", value: "@entity.resolvedAt", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Escalate", variant: "primary", action: "ESCALATE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Resolve", variant: "secondary", action: "RESOLVE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Suspend", variant: "danger", action: "SUSPEND", actionPayload: { id: "@entity.id" } }] }] })
+      SUSPEND -> loading
         (set @entity.id @payload.id)
-        (set @entity.status "resolved")
-        (persist update DunningCase @entity { emit: { success: "DunningCaseUpdated", failure: "DunningCaseUpdateFailed" } })
-      SUSPEND -> escalating
-        (set @entity.id @payload.id)
-        (set @entity.status "suspended")
-        (persist update DunningCase @entity { emit: { success: "ServiceSuspended", failure: "DunningCaseUpdateFailed" } })
+        (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Suspending service…" }] })
     }
-    state escalating {
-      DunningCaseUpdated -> loading
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
-      ServiceSuspended -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading dunning cases…" }] })
+      ESCALATE -> loading
+        (set @entity.id @payload.id)
         (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
-      DunningCaseUpdateFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Escalating case…" }] })
+      RESOLVE -> loading
+        (set @entity.id @payload.id)
+        (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resolving case…" }] })
+      SUSPEND -> loading
+        (set @entity.id @payload.id)
+        (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Suspending service…" }] })
     }
     state error {
       INIT -> loading
@@ -71,24 +77,22 @@ orbital DunningCaseOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      ESCALATE { id : string!, row : DunningCase }
-      RESOLVE  { id : string!, row : DunningCase }
-      SUSPEND  { id : string!, row : DunningCase }
-      DunningCaseLoaded       { data : [DunningCase] }
-      DunningCaseLoadFailed   { error : string, code : string }
-      DunningCaseUpdated      { row : DunningCase }
-      DunningCaseUpdateFailed { error : string, code : string }
-      ServiceSuspended        { row : DunningCase }
+      OPEN_CASE  { id : string!, row : DunningCase }
+      CLOSE_VIEW { }
+      ESCALATE   { id : string! }
+      RESOLVE    { id : string! }
+      SUSPEND    { id : string! }
+      DunningCaseLoaded     { data : [DunningCase] }
+      DunningCaseLoadFailed { error : string, code : string }
     }
     listens {
-      ESCALATE { id : string!, row : DunningCase }
-      RESOLVE  { id : string!, row : DunningCase }
-      SUSPEND  { id : string!, row : DunningCase }
-      DunningCaseLoaded       { data : [DunningCase] }
-      DunningCaseLoadFailed   { error : string, code : string }
-      DunningCaseUpdated      { row : DunningCase }
-      DunningCaseUpdateFailed { error : string, code : string }
-      ServiceSuspended        { row : DunningCase }
+      OPEN_CASE  { id : string!, row : DunningCase }
+      CLOSE_VIEW { }
+      ESCALATE   { id : string! }
+      RESOLVE    { id : string! }
+      SUSPEND    { id : string! }
+      DunningCaseLoaded     { data : [DunningCase] }
+      DunningCaseLoadFailed { error : string, code : string }
     }
   }
   page "/dunningcases/escalate" as DunningEscalatePage -> DunningEscalate

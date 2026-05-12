@@ -1,5 +1,5 @@
 app std-telematics-event "1.0.0"
-"std-telematics-event — read-only per-vehicle telemetry stream from GPS/OBD-II devices with acknowledge and severity/type filtering."
+"std-telematics-event — read-only per-vehicle telemetry stream from GPS/OBD-II devices. Lists events in `browsing`; opens event detail in `viewing_single` with Acknowledge action."
 
 orbital TelematicsEventOrbital {
   entity TelematicsEvent [persistent: telematicsevents] {
@@ -28,27 +28,37 @@ orbital TelematicsEventOrbital {
       INIT -> loading
         (fetch TelematicsEvent { emit: { success: "TelematicsEventLoaded", failure: "TelematicsEventLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading telematics events…" }] })
-      TelematicsEventLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "meter", value: 72, min: 0, max: 100, label: "Engine Health", unit: "%", variant: "radial", thresholds: [{ value: 30, color: "danger" }, { value: 70, color: "warning" }] }, { type: "range-slider", min: 0, max: 200, value: 80, step: 5, showTooltip: true, action: "FILTER_SEVERITY" }] }, { type: "svg-pulse", cx: 60, cy: 60, rings: 3, maxRadius: 40, color: "warning", animated: true }, { type: "transition-arrow", from: { x: 40, y: 80 }, to: { x: 220, y: 80 }, eventLabel: "hard-brake", guardHint: "severity >= warning", isActive: true }, { type: "timeline", entity: "@payload.data", fields: ["eventType", "occurredAt", "severity"] }, { type: "event-log", entries: [], maxHeight: 240, label: "Live Event Stream" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vehicleId", label: "Vehicle", variant: "caption" }, { name: "eventType", label: "Type", variant: "badge" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "speed", label: "Speed", variant: "caption" }, { name: "occurredAt", label: "Occurred", variant: "caption" }, { name: "acknowledged", label: "Ack", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Acknowledge", event: "ACKNOWLEDGE", variant: "primary" }, { label: "View", event: "VIEW", variant: "secondary" }] }] })
+      TelematicsEventLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Events 24h", value: "@payload.data.length", icon: "activity" }, { type: "stat-display", label: "Critical", value: "3", icon: "alert-triangle" }, { type: "stat-display", label: "Unacked", value: "12", icon: "bell" }, { type: "stat-display", label: "Most common", value: "speeding", icon: "gauge" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "vehicleId", label: "Vehicle", variant: "caption" }, { name: "eventType", label: "Type", variant: "badge" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "speed", label: "Speed", variant: "caption" }, { name: "occurredAt", label: "Occurred", variant: "caption" }, { name: "acknowledged", label: "Ack", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_EVENT", variant: "primary", icon: "arrow-right" }, { label: "Acknowledge", event: "ACKNOWLEDGE", variant: "secondary" }] }] })
       TelematicsEventLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      ACKNOWLEDGE -> viewing
+    state browsing {
+      OPEN_EVENT -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.vehicleId @payload.row.vehicleId)
+        (set @entity.eventType @payload.row.eventType)
+        (set @entity.severity @payload.row.severity)
+        (set @entity.speed @payload.row.speed)
+        (set @entity.locationLat @payload.row.locationLat)
+        (set @entity.locationLng @payload.row.locationLng)
+        (set @entity.occurredAt @payload.row.occurredAt)
+        (set @entity.acknowledgedBy @payload.row.acknowledgedBy)
+        (set @entity.acknowledgedAt @payload.row.acknowledgedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "activity" }, { type: "typography", content: "@entity.eventType", variant: "h3" }, { type: "badge", label: "@entity.severity", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Vehicle" }, { type: "typography", variant: "body", content: "@entity.vehicleId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Acknowledged by" }, { type: "typography", variant: "body", content: "@entity.acknowledgedBy" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Speed", value: "@entity.speed", icon: "gauge" }, { type: "stat-display", label: "Lat", value: "@entity.locationLat", icon: "map-pin" }, { type: "stat-display", label: "Lng", value: "@entity.locationLng", icon: "map-pin" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Acknowledge", variant: "primary", action: "ACKNOWLEDGE", actionPayload: { id: "@entity.id" } }] }] })
+      ACKNOWLEDGE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Event acknowledged" })
-      VIEW -> viewing
+        (fetch TelematicsEvent { emit: { success: "TelematicsEventLoaded", failure: "TelematicsEventLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Acknowledging event…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch TelematicsEvent { emit: { success: "TelematicsEventLoaded", failure: "TelematicsEventLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading events…" }] })
+      ACKNOWLEDGE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing event" })
-      REFRESH -> loading
         (fetch TelematicsEvent { emit: { success: "TelematicsEventLoaded", failure: "TelematicsEventLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      FILTER_SEVERITY -> loading
-        (fetch TelematicsEvent { emit: { success: "TelematicsEventLoaded", failure: "TelematicsEventLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      FILTER_TYPE -> loading
-        (fetch TelematicsEvent { emit: { success: "TelematicsEventLoaded", failure: "TelematicsEventLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Acknowledging event…" }] })
     }
     state error {
       INIT -> loading
@@ -56,17 +66,16 @@ orbital TelematicsEventOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW                       { id : string!, row : TelematicsEvent }
-      ACKNOWLEDGE                { id : string!, row : TelematicsEvent }
+      OPEN_EVENT                 { id : string!, row : TelematicsEvent }
+      CLOSE_VIEW                 { }
+      ACKNOWLEDGE                { id : string! }
       TelematicsEventLoaded      { data : [TelematicsEvent], totalCount : number }
       TelematicsEventLoadFailed  { error : string, code : string }
     }
     listens {
-      VIEW                       { id : string! }
+      OPEN_EVENT                 { id : string!, row : TelematicsEvent }
+      CLOSE_VIEW                 { }
       ACKNOWLEDGE                { id : string! }
-      REFRESH                    { }
-      FILTER_SEVERITY            { severity : string! }
-      FILTER_TYPE                { eventType : string! }
       TelematicsEventLoaded      { data : [TelematicsEvent], totalCount : number }
       TelematicsEventLoadFailed  { error : string, code : string }
     }

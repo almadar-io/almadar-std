@@ -1,5 +1,5 @@
 app std-court-deadline "1.0.0"
-"std-court-deadline — statutory filing deadline tied to a legal matter. Browses deadlines in a data-grid with Complete / Extend row actions."
+"std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions."
 
 orbital CourtDeadlineOrbital {
   entity CourtDeadline [persistent: courtdeadlines] {
@@ -26,32 +26,58 @@ orbital CourtDeadlineOrbital {
     state loading {
       INIT -> loading
         (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading deadlines…" }] })
       CourtDeadlineLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "date-range-selector", options: [{ value: "this-week", label: "This Week" }, { value: "this-month", label: "This Month" }, { value: "this-quarter", label: "This Quarter" }, { value: "this-year", label: "This Year" }], selected: "this-month" }, { type: "timeline", title: "Deadline Chronology", items: [{ id: "filing", title: "Filing", date: "2026-01-15", status: "complete", description: "Initial filing submitted" }, { id: "response", title: "Response", date: "2026-02-20", status: "active", description: "Defendant response due" }, { id: "discovery", title: "Discovery", date: "2026-04-10", status: "pending", description: "Discovery cutoff" }, { id: "hearing", title: "Hearing", date: "2026-06-15", status: "pending", description: "Pretrial hearing" }, { id: "trial", title: "Trial", date: "2026-09-01", status: "pending", description: "Trial date" }], fields: ["title", "date", "status", "description"] }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "deadlineType", label: "Type", variant: "badge" }, { name: "dueAt", label: "Due", variant: "caption" }, { name: "jurisdiction", label: "Jurisdiction", variant: "caption" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Complete", event: "MARK_COMPLETED", variant: "primary" }, { label: "Extend", event: "EXTEND_DEADLINE", variant: "ghost" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar-clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total deadlines", value: "@payload.data.length", icon: "calendar-clock" }, { type: "stat-display", label: "Due this week", value: "7", icon: "alert-triangle" }, { type: "stat-display", label: "Completed", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Missed YTD", value: "2", icon: "x-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "deadlineType", label: "Type", variant: "badge" }, { name: "dueAt", label: "Due", variant: "caption" }, { name: "jurisdiction", label: "Jurisdiction", variant: "caption" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_DEADLINE", variant: "primary", icon: "arrow-right" }, { label: "Complete", event: "MARK_COMPLETED", variant: "danger" }] }] })
       CourtDeadlineLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      MARK_COMPLETED -> browsing
+      OPEN_DEADLINE -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.matterId @payload.row.matterId)
+        (set @entity.title @payload.row.title)
+        (set @entity.deadlineType @payload.row.deadlineType)
+        (set @entity.dueAt @payload.row.dueAt)
+        (set @entity.jurisdiction @payload.row.jurisdiction)
+        (set @entity.assignedTo @payload.row.assignedTo)
+        (set @entity.status @payload.row.status)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "calendar-clock" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.deadlineType", variant: "primary" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Matter" }, { type: "typography", variant: "body", content: "@entity.matterId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Jurisdiction" }, { type: "typography", variant: "body", content: "@entity.jurisdiction" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Assigned to" }, { type: "typography", variant: "body", content: "@entity.assignedTo" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Due", value: "@entity.dueAt", icon: "calendar" }, { type: "stat-display", label: "Status", value: "@entity.status", icon: "tag" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Mark Complete", variant: "primary", action: "MARK_COMPLETED", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Extend", variant: "secondary", action: "EXTEND_DEADLINE", actionPayload: { id: "@entity.id" } }] }] })
+      MARK_COMPLETED -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Deadline completed" })
-      EXTEND_DEADLINE -> browsing
+        (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Completing deadline…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading deadlines…" }] })
+      MARK_COMPLETED -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Deadline extended" })
+        (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Completing deadline…" }] })
+      EXTEND_DEADLINE -> loading
+        (set @entity.id @payload.id)
+        (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Extending deadline…" }] })
     }
     state error {
       INIT -> loading
         (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_DEADLINE           { id : string!, row : CourtDeadline }
+      CLOSE_VIEW              { }
       MARK_COMPLETED          { id : string! }
       EXTEND_DEADLINE         { id : string! }
       CourtDeadlineLoaded     { data : [CourtDeadline] }
       CourtDeadlineLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_DEADLINE           { id : string!, row : CourtDeadline }
+      CLOSE_VIEW              { }
       MARK_COMPLETED          { id : string! }
       EXTEND_DEADLINE         { id : string! }
       CourtDeadlineLoaded     { data : [CourtDeadline] }

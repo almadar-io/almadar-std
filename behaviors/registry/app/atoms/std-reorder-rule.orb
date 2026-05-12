@@ -1,7 +1,7 @@
 {
   "name": "std-reorder-rule",
   "version": "1.0.0",
-  "description": "std-reorder-rule — automatic stock-replenishment rule for a SKU at a location. Owns a ReorderRule entity and a single manager trait that loads rules, renders them in a data-grid, and surfaces Enable / Disable actions per row.",
+  "description": "std-reorder-rule — automatic stock-replenishment rule per SKU/location. Lists rules in `browsing`; opens detail in `viewing_single` with Enable / Disable actions.",
   "orbitals": [
     {
       "name": "ReorderRuleOrbital",
@@ -59,6 +59,53 @@
           "linkedEntity": "ReorderRule",
           "emits": [
             {
+              "event": "OPEN_RULE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.sku",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.locationId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.thresholdQty",
+                  "type": "number"
+                },
+                {
+                  "name": "row.reorderQty",
+                  "type": "number"
+                },
+                {
+                  "name": "row.vendor",
+                  "type": "string"
+                },
+                {
+                  "name": "row.leadTimeDays",
+                  "type": "number"
+                },
+                {
+                  "name": "row.isActive",
+                  "type": "boolean"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "ENABLE_RULE",
               "payloadSchema": [
                 {
@@ -111,6 +158,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -144,6 +194,21 @@
                 ]
               },
               {
+                "key": "OPEN_RULE",
+                "name": "Open Rule",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "ReorderRule"
+                  }
+                ]
+              },
+              {
                 "key": "ENABLE_RULE",
                 "name": "Enable Rule",
                 "payloadSchema": [
@@ -164,6 +229,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -171,6 +240,453 @@
                 "from": "loading",
                 "to": "loading",
                 "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "failure": "ReorderRuleLoadFailed",
+                        "success": "ReorderRuleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading reorder rules…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ReorderRuleLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "repeat",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Total rules",
+                              "icon": "repeat",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "label": "Active",
+                              "icon": "check-circle",
+                              "value": "47",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Triggered today",
+                              "value": "9",
+                              "icon": "zap"
+                            },
+                            {
+                              "icon": "clock",
+                              "label": "Avg lead time",
+                              "value": "6.4d",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [
+                            {
+                              "label": "SKU",
+                              "name": "sku",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "locationId",
+                              "label": "Location",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "thresholdQty",
+                              "label": "Threshold",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "reorderQty",
+                              "label": "Reorder Qty"
+                            },
+                            {
+                              "name": "vendor",
+                              "variant": "caption",
+                              "label": "Vendor"
+                            },
+                            {
+                              "name": "leadTimeDays",
+                              "variant": "caption",
+                              "label": "Lead (d)"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "icon": "arrow-right",
+                              "variant": "primary",
+                              "event": "OPEN_RULE"
+                            },
+                            {
+                              "label": "Disable",
+                              "event": "DISABLE_RULE",
+                              "variant": "danger"
+                            }
+                          ],
+                          "cols": 1.0
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ReorderRuleLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_RULE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.sku",
+                    "@payload.row.sku"
+                  ],
+                  [
+                    "set",
+                    "@entity.locationId",
+                    "@payload.row.locationId"
+                  ],
+                  [
+                    "set",
+                    "@entity.thresholdQty",
+                    "@payload.row.thresholdQty"
+                  ],
+                  [
+                    "set",
+                    "@entity.reorderQty",
+                    "@payload.row.reorderQty"
+                  ],
+                  [
+                    "set",
+                    "@entity.vendor",
+                    "@payload.row.vendor"
+                  ],
+                  [
+                    "set",
+                    "@entity.leadTimeDays",
+                    "@payload.row.leadTimeDays"
+                  ],
+                  [
+                    "set",
+                    "@entity.isActive",
+                    "@payload.row.isActive"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "name": "repeat",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@entity.sku",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active",
+                              "variant": "success"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Location",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.locationId",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Vendor",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.vendor"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "label": "Threshold",
+                              "type": "stat-display",
+                              "value": "@entity.thresholdQty",
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "label": "Reorder qty",
+                              "type": "stat-display",
+                              "icon": "package",
+                              "value": "@entity.reorderQty"
+                            },
+                            {
+                              "value": "@entity.leadTimeDays",
+                              "type": "stat-display",
+                              "icon": "clock",
+                              "label": "Lead time (d)"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "ENABLE_RULE",
+                              "type": "button",
+                              "label": "Enable",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "label": "Disable",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "DISABLE_RULE",
+                              "type": "button",
+                              "variant": "danger"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ENABLE_RULE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "success": "ReorderRuleLoaded",
+                        "failure": "ReorderRuleLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Enabling rule…",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DISABLE_RULE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "failure": "ReorderRuleLoadFailed",
+                        "success": "ReorderRuleLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Disabling rule…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -186,115 +702,20 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "content": "Loading reorder rules…",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "browsing",
-                "event": "ReorderRuleLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "repeat"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
-                            },
-                            {
-                              "label": "Active",
-                              "type": "badge",
-                              "variant": "success"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Enable",
-                              "event": "ENABLE_RULE",
-                              "variant": "primary",
-                              "icon": "check"
-                            },
-                            {
-                              "label": "Disable",
-                              "icon": "x",
-                              "event": "DISABLE_RULE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "name": "sku",
-                              "label": "SKU"
-                            },
-                            {
-                              "label": "Location",
-                              "variant": "caption",
-                              "name": "locationId"
-                            },
-                            {
-                              "name": "thresholdQty",
-                              "variant": "caption",
-                              "label": "Threshold"
-                            },
-                            {
-                              "label": "Reorder Qty",
-                              "variant": "caption",
-                              "name": "reorderQty"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "vendor",
-                              "label": "Vendor"
-                            },
-                            {
-                              "label": "Active",
-                              "variant": "caption",
-                              "name": "isActive"
-                            }
-                          ]
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ]
                     }
@@ -302,24 +723,8 @@
                 ]
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "ReorderRuleLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "ENABLE_RULE",
                 "effects": [
                   [
@@ -328,19 +733,42 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "failure": "ReorderRuleLoadFailed",
+                        "success": "ReorderRuleLoaded"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "message": "Reorder rule enabled",
-                      "type": "alert",
-                      "variant": "success"
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Enabling rule…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "DISABLE_RULE",
                 "effects": [
                   [
@@ -349,12 +777,35 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "ReorderRule",
+                    {
+                      "emit": {
+                        "failure": "ReorderRuleLoadFailed",
+                        "success": "ReorderRuleLoaded"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "message": "Reorder rule disabled",
-                      "type": "alert",
-                      "variant": "info"
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Disabling rule…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]

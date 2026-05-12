@@ -1,5 +1,5 @@
 app std-rfi "1.0.0"
-"std-rfi — Request For Information primitive tracking formal questions raised during construction with response and deadline."
+"std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions."
 
 orbital RfiOrbital {
   entity Rfi [persistent: rfis] {
@@ -29,41 +29,54 @@ orbital RfiOrbital {
       INIT -> loading
         (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading RFIs…" }] })
-      RfiLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "badge", label: "Open", variant: "warning" }, { type: "button", label: "New RFI", variant: "primary", action: "CREATE" }] }, { type: "divider" }, { type: "master-detail-layout", master: { type: "data-grid", entity: "@payload.data", fields: [{ name: "rfiNumber", label: "RFI #", variant: "caption" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "raisedBy", label: "Raised By", variant: "caption" }, { name: "dueAt", label: "Due", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Submit", event: "SUBMIT", variant: "primary" }, { label: "Answer", event: "ANSWER", variant: "primary" }, { label: "Close", event: "CLOSE", variant: "ghost" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }, detail: { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "RFI Detail" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "Closed", variant: "success" }, { type: "badge", label: "Resolved", variant: "primary" }] }, { type: "typography", variant: "caption", color: "muted", content: "Select an RFI to view question, response, and audit trail." }] } }, { type: "divider" }, { type: "typography", variant: "h4", content: "Deadline Calendar" }, { type: "calendar-grid" }] })
+      RfiLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total RFIs", value: "@payload.data.length", icon: "help-circle" }, { type: "stat-display", label: "Open", value: "18", icon: "mail" }, { type: "stat-display", label: "Overdue", value: "5", icon: "alert-triangle" }, { type: "stat-display", label: "Avg response", value: "3.2d", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "rfiNumber", label: "RFI #", variant: "caption" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "raisedBy", label: "Raised By", variant: "caption" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "dueAt", label: "Due", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RFI", variant: "primary", icon: "arrow-right" }, { label: "Close", event: "CLOSE", variant: "danger" }] }] })
       RfiLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      REFRESH -> loading
+    state browsing {
+      OPEN_RFI -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.rfiNumber @payload.row.rfiNumber)
+        (set @entity.subject @payload.row.subject)
+        (set @entity.question @payload.row.question)
+        (set @entity.response @payload.row.response)
+        (set @entity.status @payload.row.status)
+        (set @entity.raisedBy @payload.row.raisedBy)
+        (set @entity.assignedTo @payload.row.assignedTo)
+        (set @entity.raisedAt @payload.row.raisedAt)
+        (set @entity.dueAt @payload.row.dueAt)
+        (set @entity.answeredAt @payload.row.answeredAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "help-circle" }, { type: "typography", content: "@entity.subject", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "RFI #" }, { type: "typography", variant: "body", content: "@entity.rfiNumber" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Question" }, { type: "typography", variant: "body", content: "@entity.question" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Response" }, { type: "typography", variant: "body", content: "@entity.response" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Raised by", value: "@entity.raisedBy", icon: "user" }, { type: "stat-display", label: "Assigned", value: "@entity.assignedTo", icon: "user-check" }, { type: "stat-display", label: "Due", value: "@entity.dueAt", icon: "calendar" }, { type: "stat-display", label: "Answered", value: "@entity.answeredAt", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Submit", variant: "primary", action: "SUBMIT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Answer", variant: "secondary", action: "ANSWER", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Close", variant: "danger", action: "CLOSE", actionPayload: { id: "@entity.id" } }] }] })
+      SUBMIT -> loading
+        (set @entity.id @payload.id)
         (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing RFIs…" }] })
-      SEARCH -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting RFI…" }] })
+      ANSWER -> loading
+        (set @entity.id @payload.id)
         (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching RFIs…" }] })
-      FILTER_STATUS -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Answering RFI…" }] })
+      CLOSE -> loading
+        (set @entity.id @payload.id)
         (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering RFIs…" }] })
-      SUBMIT -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing RFI…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading RFIs…" }] })
+      SUBMIT -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "RFI submitted" })
-      ANSWER -> viewing
+        (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting RFI…" }] })
+      ANSWER -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "RFI answered" })
-      CLOSE -> viewing
+        (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Answering RFI…" }] })
+      CLOSE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "RFI closed" })
-      CREATE -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Creating new RFI" })
-      VIEW -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing RFI" })
-      EDIT -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Editing RFI" })
-      REQUEST_DELETE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+        (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing RFI…" }] })
     }
     state error {
       INIT -> loading
@@ -71,27 +84,20 @@ orbital RfiOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW           { id : string!, source : string }
-      EDIT           { id : string!, source : string }
-      CREATE         { source : string }
-      REQUEST_DELETE { id : string!, source : string }
-      SUBMIT         { id : string!, row : Rfi }
-      ANSWER         { id : string!, row : Rfi }
-      CLOSE          { id : string!, row : Rfi }
+      OPEN_RFI       { id : string!, row : Rfi }
+      CLOSE_VIEW     { }
+      SUBMIT         { id : string! }
+      ANSWER         { id : string! }
+      CLOSE          { id : string! }
       RfiLoaded      { data : [Rfi], totalCount : number }
       RfiLoadFailed  { error : string, code : string }
     }
     listens {
-      VIEW           { id : string! }
-      EDIT           { id : string! }
-      CREATE         { source : string }
-      REQUEST_DELETE { id : string! }
+      OPEN_RFI       { id : string!, row : Rfi }
+      CLOSE_VIEW     { }
       SUBMIT         { id : string! }
       ANSWER         { id : string! }
       CLOSE          { id : string! }
-      REFRESH        { source : string }
-      SEARCH         { query : string }
-      FILTER_STATUS  { status : string }
       RfiLoaded      { data : [Rfi], totalCount : number }
       RfiLoadFailed  { error : string, code : string }
     }

@@ -32,11 +32,10 @@ orbital VendorOnboardingOrbital {
           { type: "typography", variant: "caption", color: "muted", content: "Loading vendor application…" }
         ] })
       VendorLoaded -> business-info
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user" }, { type: "typography", content: "Vendor Onboarding", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 0 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Business Info" },
           { type: "form-section", mode: "create", submitEvent: "NEXT_STEP", cancelEvent: "INIT", fields: ["businessName", "legalName"] },
           { type: "wizard-navigation", currentStep: 0, totalSteps: 5, showBack: false, showNext: true, showComplete: false, onNext: "NEXT_STEP" }
         ] })
@@ -48,54 +47,33 @@ orbital VendorOnboardingOrbital {
         (set @entity.businessName @payload.data.businessName)
         (set @entity.legalName @payload.data.legalName)
         (set @entity.currentStep "tax-id")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Tax ID", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 1 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Tax ID" },
           { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "BACK_STEP", fields: ["ein"] },
           { type: "wizard-navigation", currentStep: 1, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
-        ] })
-      EDIT_BUSINESS -> business-info
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
-          { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 0 },
-          { type: "divider" },
-          { type: "typography", variant: "h3", content: "Business Info" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "INIT", fields: ["businessName", "legalName"] },
-          { type: "wizard-navigation", currentStep: 0, totalSteps: 5, showBack: false, showNext: true, showComplete: false, onNext: "NEXT_STEP" }
         ] })
     }
     state tax-id {
       NEXT_STEP -> bank-link
         (set @entity.ein @payload.data.ein)
         (set @entity.currentStep "bank-link")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Bank Link", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 2 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Bank Link" },
           { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "BACK_STEP", fields: ["bankRoutingMasked", "bankAcctMasked"] },
           { type: "wizard-navigation", currentStep: 2, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
       BACK_STEP -> business-info
         (set @entity.currentStep "business-info")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "user" }, { type: "typography", content: "Business Info", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 0 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Business Info" },
           { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "INIT", fields: ["businessName", "legalName"] },
           { type: "wizard-navigation", currentStep: 0, totalSteps: 5, showBack: false, showNext: true, showComplete: false, onNext: "NEXT_STEP" }
-        ] })
-      EDIT_TAX -> tax-id
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
-          { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 1 },
-          { type: "divider" },
-          { type: "typography", variant: "h3", content: "Tax ID" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "BACK_STEP", fields: ["ein"] },
-          { type: "wizard-navigation", currentStep: 1, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
     }
     state bank-link {
@@ -103,70 +81,64 @@ orbital VendorOnboardingOrbital {
         (set @entity.bankRoutingMasked @payload.data.bankRoutingMasked)
         (set @entity.bankAcctMasked @payload.data.bankAcctMasked)
         (set @entity.currentStep "identity-verify")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Identity Verification", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 3 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Identity Verification" },
           { type: "typography", variant: "body", color: "muted", content: "Upload a government-issued ID to verify your identity." },
           { type: "upload-drop-zone", accept: "image/*", maxSize: 10485760, maxFiles: 2, label: "Drop ID document here", description: "or click to browse", icon: "credit-card", action: "UPLOAD_IDENTITY" },
           { type: "wizard-navigation", currentStep: 3, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
       BACK_STEP -> tax-id
         (set @entity.currentStep "tax-id")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Tax ID", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 1 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Tax ID" },
           { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "BACK_STEP", fields: ["ein"] },
           { type: "wizard-navigation", currentStep: 1, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
-        ] })
-      EDIT_BANK -> bank-link
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
-          { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 2 },
-          { type: "divider" },
-          { type: "typography", variant: "h3", content: "Bank Link" },
-          { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "BACK_STEP", fields: ["bankRoutingMasked", "bankAcctMasked"] },
-          { type: "wizard-navigation", currentStep: 2, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
     }
     state identity-verify {
       UPLOAD_IDENTITY -> identity-verify
         (set @entity.identityDocUrl @payload.url)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Identity Verification", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 3 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Identity Verification" },
           { type: "alert", variant: "success", message: "Identity document uploaded." },
+          { type: "stack", direction: "vertical", gap: "sm", children: [
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Document URL" }, { type: "typography", variant: "body", content: "@entity.identityDocUrl" }] }
+          ] },
           { type: "wizard-navigation", currentStep: 3, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
       NEXT_STEP -> review
         (set @entity.currentStep "review")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Review", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 4 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Review" },
           { type: "stack", direction: "vertical", gap: "sm", children: [
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Business Name" }, { type: "typography", variant: "body", content: "@entity.businessName" }] },
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Legal Name" }, { type: "typography", variant: "body", content: "@entity.legalName" }] },
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "EIN" }, { type: "typography", variant: "body", content: "@entity.ein" }] },
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Bank Routing" }, { type: "typography", variant: "body", content: "@entity.bankRoutingMasked" }] },
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Bank Account" }, { type: "typography", variant: "body", content: "@entity.bankAcctMasked" }] },
-            { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "typography", variant: "caption", content: "Identity Doc" }, { type: "typography", variant: "body", content: "@entity.identityDocUrl" }] }
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Business Name" }, { type: "typography", variant: "body", content: "@entity.businessName" }] },
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Legal Name" }, { type: "typography", variant: "body", content: "@entity.legalName" }] },
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "EIN" }, { type: "typography", variant: "body", content: "@entity.ein" }] },
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Bank Routing" }, { type: "typography", variant: "body", content: "@entity.bankRoutingMasked" }] },
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Bank Account" }, { type: "typography", variant: "body", content: "@entity.bankAcctMasked" }] },
+            { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Identity Doc" }, { type: "typography", variant: "body", content: "@entity.identityDocUrl" }] }
+          ] },
+          { type: "divider" },
+          { type: "simple-grid", cols: 2, children: [
+            { type: "stat-display", label: "Business", value: "@entity.businessName", icon: "user" },
+            { type: "stat-display", label: "EIN", value: "@entity.ein", icon: "credit-card" }
           ] },
           { type: "wizard-navigation", currentStep: 4, totalSteps: 5, showBack: true, showNext: false, showComplete: true, onBack: "BACK_STEP", onComplete: "SUBMIT" }
         ] })
       BACK_STEP -> bank-link
         (set @entity.currentStep "bank-link")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Bank Link", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 2 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Bank Link" },
           { type: "form-section", entity: @entity, mode: "edit", submitEvent: "NEXT_STEP", cancelEvent: "BACK_STEP", fields: ["bankRoutingMasked", "bankAcctMasked"] },
           { type: "wizard-navigation", currentStep: 2, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
@@ -175,18 +147,17 @@ orbital VendorOnboardingOrbital {
       SUBMIT -> submitted
         (set @entity.currentStep "submitted")
         (set @entity.submittedAt @payload.submittedAt)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", className: "max-w-2xl mx-auto w-full py-12", children: [
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "max-w-2xl mx-auto w-full py-12", children: [
           { type: "icon", name: "check-circle", color: "success" },
-          { type: "typography", variant: "h2", content: "Application Submitted" },
+          { type: "typography", variant: "h3", content: "Application Submitted" },
           { type: "typography", variant: "body", color: "muted", content: "Thanks. We will review your vendor application and email you within 2 business days." }
         ] })
       BACK_STEP -> identity-verify
         (set @entity.currentStep "identity-verify")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-2xl mx-auto w-full", children: [
-          { type: "typography", variant: "h2", content: "Vendor Onboarding" },
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", className: "max-w-2xl mx-auto w-full", children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "Identity Verification", variant: "h3" }] },
           { type: "wizard-progress", steps: ["Business", "Tax ID", "Bank", "Identity", "Review"], currentStep: 3 },
           { type: "divider" },
-          { type: "typography", variant: "h3", content: "Identity Verification" },
           { type: "upload-drop-zone", accept: "image/*", maxSize: 10485760, maxFiles: 2, label: "Drop ID document here", description: "or click to browse", icon: "credit-card", action: "UPLOAD_IDENTITY" },
           { type: "wizard-navigation", currentStep: 3, totalSteps: 5, showBack: true, showNext: true, showComplete: false, onBack: "BACK_STEP", onNext: "NEXT_STEP" }
         ] })
@@ -213,9 +184,6 @@ orbital VendorOnboardingOrbital {
       NEXT_STEP { data : object! }
       BACK_STEP { }
       SUBMIT { submittedAt : string! }
-      EDIT_BUSINESS { }
-      EDIT_TAX { }
-      EDIT_BANK { }
       UPLOAD_IDENTITY { url : string! }
       VendorLoadFailed { error : string, code : string }
       VendorPersistor.VendorUpdated -> INIT

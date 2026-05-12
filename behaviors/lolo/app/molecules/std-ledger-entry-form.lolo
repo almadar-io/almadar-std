@@ -32,28 +32,69 @@ orbital JournalTransactionOrbital {
         (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading transactions…" }] })
       JournalTransactionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "Journal Transactions", variant: "h2" }] }, { type: "button", label: "New Transaction", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "wizard-progress", steps: [{ id: "draft", title: "Draft" }, { id: "balance-check", title: "Balance Check" }, { id: "review", title: "Review" }, { id: "post", title: "Post" }], currentStep: 1 }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Post", event: "POST_TRANSACTION", variant: "primary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }], fields: [{ name: "transactionDate", label: "Date", variant: "caption" }, { name: "description", label: "Description", variant: "body" }, { name: "debitAccountName", label: "Debit", variant: "caption" }, { name: "creditAccountName", label: "Credit", variant: "caption" }, { name: "amount", label: "Amount", variant: "badge" }, { name: "isPosted", label: "Posted", variant: "badge" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "Journal Transactions", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total entries", value: "@payload.data.length", icon: "book-open" }, { type: "stat-display", label: "Posted", value: "84", icon: "check-circle" }, { type: "stat-display", label: "Draft", value: "12", icon: "edit" }, { type: "stat-display", label: "Net amount", value: "$248,500", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "transactionDate", label: "Date", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "debitAccountName", label: "Debit", variant: "caption" }, { name: "creditAccountName", label: "Credit", variant: "caption" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "referenceType", label: "Type", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TRANSACTION", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
       JournalTransactionLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load transactions" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      INIT -> loading
+      OPEN_TRANSACTION -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.transactionDate @payload.row.transactionDate)
+        (set @entity.description @payload.row.description)
+        (set @entity.debitAccountId @payload.row.debitAccountId)
+        (set @entity.debitAccountName @payload.row.debitAccountName)
+        (set @entity.creditAccountId @payload.row.creditAccountId)
+        (set @entity.creditAccountName @payload.row.creditAccountName)
+        (set @entity.amount @payload.row.amount)
+        (set @entity.referenceType @payload.row.referenceType)
+        (set @entity.referenceId @payload.row.referenceId)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "book-open" }, { type: "typography", content: "@entity.description", variant: "h3" }, { type: "badge", label: "@entity.referenceType", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Debit Account" }, { type: "typography", variant: "body", content: "@entity.debitAccountName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Credit Account" }, { type: "typography", variant: "body", content: "@entity.creditAccountName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reference" }, { type: "typography", variant: "body", content: "@entity.referenceId" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Amount", value: "@entity.amount", icon: "dollar-sign" }, { type: "stat-display", label: "Date", value: "@entity.transactionDate", icon: "calendar" }, { type: "stat-display", label: "Type", value: "@entity.referenceType", icon: "tag" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Post Transaction", variant: "primary", action: "POST_TRANSACTION", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Delete", variant: "danger", action: "REQUEST_DELETE", actionPayload: { id: "@entity.id", row: "@entity" } }] }] })
+      CREATE -> loading
         (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Opening new transaction…" }] })
+      POST_TRANSACTION -> loading
+        (set @entity.id @payload.id)
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Posting transaction…" }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Removing transaction…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading transactions…" }] })
+      POST_TRANSACTION -> loading
+        (set @entity.id @payload.id)
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Posting transaction…" }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
+        (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Removing transaction…" }] })
     }
     state error {
       INIT -> loading
         (fetch JournalTransaction { emit: { success: "JournalTransactionLoaded", failure: "JournalTransactionLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      CREATE
+      OPEN_TRANSACTION { id : string!, row : JournalTransaction }
+      CLOSE_VIEW       { }
+      CREATE           { }
       POST_TRANSACTION { id : string!, row : JournalTransaction }
       REQUEST_DELETE   { id : string!, row : JournalTransaction }
-      JournalTransactionLoaded
-      JournalTransactionLoadFailed
+      JournalTransactionLoaded     { data : [JournalTransaction] }
+      JournalTransactionLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_TRANSACTION { id : string!, row : JournalTransaction }
+      CLOSE_VIEW       { }
+      CREATE           { }
+      POST_TRANSACTION { id : string!, row : JournalTransaction }
+      REQUEST_DELETE   { id : string!, row : JournalTransaction }
+      JournalTransactionLoaded     { data : [JournalTransaction] }
       JournalTransactionLoadFailed { error : string, code : string }
       JournalTransactionPersistor.TRANSACTION_CREATED -> INIT
       JournalTransactionPersistor.TRANSACTION_POSTED  -> INIT

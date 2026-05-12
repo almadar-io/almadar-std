@@ -31,9 +31,9 @@ orbital ApplicationOrbital {
         (fetch Application { emit: { success: "ApplicationLoaded", failure: "ApplicationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading applications…" }] })
       ApplicationLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Applications", variant: "h2" }] }, { type: "button", label: "New Application", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Submit", event: "SUBMIT", variant: "primary" }, { label: "Accept", event: "ACCEPT", variant: "success" }, { label: "Reject", event: "REJECT", variant: "danger" }], fields: [{ name: "applicantName", label: "Applicant", variant: "h4", icon: "user" }, { name: "applicantEmail", label: "Email", variant: "caption" }, { name: "targetType", label: "Target", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "submittedAt", label: "Submitted", variant: "caption" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Applications", variant: "h3" }] }, { type: "button", label: "New Application", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total applications", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Submitted", value: "21", icon: "send" }, { type: "stat-display", label: "Under review", value: "8", icon: "search" }, { type: "stat-display", label: "Accepted", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", itemActions: [{ label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Submit", event: "SUBMIT", variant: "primary" }, { label: "Accept", event: "ACCEPT", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }], fields: [{ name: "applicantName", label: "Applicant", variant: "caption", icon: "user" }, { name: "applicantEmail", label: "Email", variant: "caption" }, { name: "targetType", label: "Target", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "submittedAt", label: "Submitted", variant: "caption" }], cols: 1, gap: "sm" }] })
       ApplicationLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load applications" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
       CREATE -> editing
@@ -45,7 +45,7 @@ orbital ApplicationOrbital {
         (set @entity.coverLetter "")
         (set @entity.attachmentsJson "")
         (set @entity.status "draft")
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-3xl mx-auto w-full", children: [{ type: "typography", content: "New Application", variant: "h2" }, { type: "form-section", entity: @entity, mode: "create", submitEvent: "CREATE_SUBMIT", cancelEvent: "CANCEL_EDIT", fields: ["applicantName", "applicantEmail", "targetId", "targetType", "coverLetter"] }, { type: "divider" }, { type: "typography", variant: "h3", content: "Attachments" }, { type: "upload-drop-zone", accept: "*/*", maxSize: 10485760, maxFiles: 10, label: "Drop attachments here", description: "Resume, portfolio, references", icon: "paperclip", action: "UPLOAD" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "New Application", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "create", submitEvent: "CREATE_SUBMIT", cancelEvent: "CANCEL_EDIT", fields: ["applicantName", "applicantEmail", "targetId", "targetType", "coverLetter"] }] })
       EDIT -> editing
         (set @entity.id @payload.row.id)
         (set @entity.applicantName @payload.row.applicantName)
@@ -55,7 +55,7 @@ orbital ApplicationOrbital {
         (set @entity.coverLetter @payload.row.coverLetter)
         (set @entity.attachmentsJson @payload.row.attachmentsJson)
         (set @entity.status @payload.row.status)
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-3xl mx-auto w-full", children: [{ type: "typography", content: "Edit Application", variant: "h2" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "UPDATE_SUBMIT", cancelEvent: "CANCEL_EDIT", fields: ["applicantName", "applicantEmail", "targetId", "targetType", "coverLetter"] }, { type: "divider" }, { type: "typography", variant: "h3", content: "Attachments" }, { type: "upload-drop-zone", accept: "*/*", maxSize: 10485760, maxFiles: 10, label: "Drop attachments here", description: "Resume, portfolio, references", icon: "paperclip", action: "UPLOAD" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "pencil" }, { type: "typography", content: "Edit Application", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "UPDATE_SUBMIT", cancelEvent: "CANCEL_EDIT", fields: ["applicantName", "applicantEmail", "targetId", "targetType", "coverLetter"] }] })
       SUBMIT -> submitting
         (set @entity.id @payload.row.id)
         (set @entity.status "submitted")
@@ -86,8 +86,6 @@ orbital ApplicationOrbital {
       UPDATE_SUBMIT -> submitting
         (persist update Application @payload.data { emit: { success: "ApplicationUpdated", failure: "ApplicationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating…" }] })
-      UPLOAD -> editing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-3xl mx-auto w-full", children: [{ type: "typography", content: "Application", variant: "h2" }, { type: "form-section", entity: @entity, mode: "edit", submitEvent: "UPDATE_SUBMIT", cancelEvent: "CANCEL_EDIT", fields: ["applicantName", "applicantEmail", "targetId", "targetType", "coverLetter"] }, { type: "divider" }, { type: "typography", variant: "h3", content: "Attachments" }, { type: "alert", variant: "info", message: "Attachment uploaded." }, { type: "upload-drop-zone", accept: "*/*", maxSize: 10485760, maxFiles: 10, label: "Drop more attachments", description: "Resume, portfolio, references", icon: "paperclip", action: "UPLOAD" }] })
       CANCEL_EDIT -> loading
         (fetch Application { emit: { success: "ApplicationLoaded", failure: "ApplicationLoadFailed" } })
         (render-ui main { type: "spinner" })
@@ -125,7 +123,6 @@ orbital ApplicationOrbital {
       CREATE_SUBMIT { data : Application! }
       UPDATE_SUBMIT { data : Application! }
       CANCEL_EDIT
-      UPLOAD { files : object! }
       ApplicationLoaded
       ApplicationLoadFailed
       ApplicationCreated
@@ -143,14 +140,12 @@ orbital ApplicationOrbital {
       CREATE_SUBMIT { data : object! }
       UPDATE_SUBMIT { data : object! }
       CANCEL_EDIT { }
-      UPLOAD { files : object! }
       ApplicationLoadFailed { error : string!, code : string }
       ApplicationPersistor.ITEM_CREATED   -> INIT
       ApplicationPersistor.ITEM_UPDATED   -> INIT
     }
   }
 
-  ;; Coordinator trait: owns persist side-effects emitted by ApplicationManage.
   trait ApplicationPersistor -> Application [lifecycle, instance] {
     initial: idle
     state idle {

@@ -1,5 +1,5 @@
 app std-recurring-charge "1.0.0"
-"std-recurring-charge — subscription cycle clock with retry policy and inline proration math. Owns a Subscription entity; CHARGE invokes the stripe-charge service, PRORATE adjusts amount inline by daysIntoPeriod, CANCEL flips status. Persists results back to the row and emits SubscriptionUpdated for downstream listeners."
+"std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions."
 
 orbital SubscriptionOrbital {
   entity Subscription [persistent: subscriptions] {
@@ -21,9 +21,6 @@ orbital SubscriptionOrbital {
 
   type SubscriptionLoaded     = Event { data : [Subscription] }            "Fired when the subscription collection finishes loading"
   type SubscriptionLoadFailed = Event { error : string, code : string }    "Fired when the subscription collection fails to load"
-  type ChargeSucceeded        = Event { row : Subscription }               "Fired after a successful billing-service charge persists"
-  type ChargeFailed           = Event { error : string, code : string }    "Fired when the billing-service charge fails"
-  type SubscriptionUpdated    = Event { row : Subscription }               "Fired after a subscription row persists (proration / cancel / charge)"
 
   trait SubscriptionManage -> Subscription [interaction, collection] {
     config {
@@ -36,65 +33,12 @@ orbital SubscriptionOrbital {
         (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading subscriptions…" }] })
       SubscriptionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "breadcrumb", items: [{ label: "Billing", href: "/billing" }, { label: "Plans", href: "/plans" }, { label: "@config.title" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "repeat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "pricing-grid", plans: [{ name: "Starter", price: "$9", description: "For solo accounts getting started", features: ["Ten thousand events", "Email support", "One seat"], action: { label: "Choose Starter", href: "#" } }, { name: "Team", price: "$29", description: "For growing teams who need headroom", features: ["Hundred thousand events", "Priority support", "Ten seats"], action: { label: "Choose Team", href: "#" }, highlighted: true }, { name: "Scale", price: "$99", description: "High-volume usage with SLA", features: ["One million events", "Round the clock support", "Unlimited seats"], action: { label: "Choose Scale", href: "#" } }] }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "meter", value: 68, min: 0, max: 100, label: "Usage this period", unit: "%", variant: "linear", showValue: true }, { type: "meter", value: 4, min: 0, max: 4, label: "Retries", variant: "segmented", segments: 4, showValue: true }] }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "customerId", label: "Customer", variant: "caption" }, { name: "planId", label: "Plan", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "currency", label: "Currency", variant: "caption" }, { name: "interval", label: "Interval", variant: "badge" }, { name: "nextBillingAt", label: "Next Bill", variant: "caption" }, { name: "attemptCount", label: "Retries", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Charge", event: "CHARGE", variant: "primary", icon: "credit-card" }, { label: "Prorate", event: "PRORATE", variant: "secondary", icon: "calculator" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total subscriptions", value: "@payload.data.length", icon: "repeat" }, { type: "stat-display", label: "Active", value: "248", icon: "check-circle" }, { type: "stat-display", label: "MRR", value: "$18,400", icon: "dollar-sign" }, { type: "stat-display", label: "Past due", value: "7", icon: "alert-triangle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "customerId", label: "Customer", variant: "caption" }, { name: "planId", label: "Plan", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "interval", label: "Interval", variant: "badge" }, { name: "nextBillingAt", label: "Next Bill", variant: "caption" }, { name: "attemptCount", label: "Retries", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_SUBSCRIPTION", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL", variant: "danger" }] }] })
       SubscriptionLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      CHARGE -> charging
-        (set @entity.id @payload.subscriptionId)
-        (set @entity.customerId @payload.row.customerId)
-        (set @entity.planId @payload.row.planId)
-        (set @entity.status @payload.row.status)
-        (set @entity.amount @payload.row.amount)
-        (set @entity.currency @payload.row.currency)
-        (set @entity.interval @payload.row.interval)
-        (set @entity.currentPeriodStart @payload.row.currentPeriodStart)
-        (set @entity.currentPeriodEnd @payload.row.currentPeriodEnd)
-        (set @entity.nextBillingAt @payload.row.nextBillingAt)
-        (set @entity.attemptCount @payload.row.attemptCount)
-        (set @entity.lastChargeAt @payload.row.lastChargeAt)
-        (set @entity.cancelledAt @payload.row.cancelledAt)
-        (set @entity.createdAt @payload.row.createdAt)
-        (call-service stripe-charge "charge" { subscriptionId: "@payload.subscriptionId", amount: "@entity.amount", currency: "@entity.currency" } { emit: { success: "ChargeSucceeded", failure: "ChargeFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Charging subscription…" }] })
-      PRORATE -> browsing
-        (set @entity.id @payload.subscriptionId)
-        (set @entity.customerId @payload.row.customerId)
-        (set @entity.planId @payload.newPlanId)
-        (set @entity.status @payload.row.status)
-        (set @entity.amount (* @payload.row.amount (- 1 (/ @payload.daysIntoPeriod 30))))
-        (set @entity.currency @payload.row.currency)
-        (set @entity.interval @payload.row.interval)
-        (set @entity.currentPeriodStart @payload.row.currentPeriodStart)
-        (set @entity.currentPeriodEnd @payload.row.currentPeriodEnd)
-        (set @entity.nextBillingAt @payload.row.nextBillingAt)
-        (set @entity.attemptCount @payload.row.attemptCount)
-        (set @entity.lastChargeAt @payload.row.lastChargeAt)
-        (set @entity.cancelledAt @payload.row.cancelledAt)
-        (set @entity.createdAt @payload.row.createdAt)
-        (persist update Subscription @entity { emit: { success: "SubscriptionUpdated", failure: "ChargeFailed" } })
-      CANCEL -> browsing
-        (set @entity.id @payload.subscriptionId)
-        (set @entity.customerId @payload.row.customerId)
-        (set @entity.planId @payload.row.planId)
-        (set @entity.status "cancelled")
-        (set @entity.amount @payload.row.amount)
-        (set @entity.currency @payload.row.currency)
-        (set @entity.interval @payload.row.interval)
-        (set @entity.currentPeriodStart @payload.row.currentPeriodStart)
-        (set @entity.currentPeriodEnd @payload.row.currentPeriodEnd)
-        (set @entity.nextBillingAt @payload.row.nextBillingAt)
-        (set @entity.attemptCount @payload.row.attemptCount)
-        (set @entity.lastChargeAt @payload.row.lastChargeAt)
-        (set @entity.cancelledAt @payload.cancelledAt)
-        (set @entity.createdAt @payload.row.createdAt)
-        (persist update Subscription @entity { emit: { success: "SubscriptionUpdated", failure: "ChargeFailed" } })
-      SubscriptionUpdated -> browsing
-        (render-ui main { type: "alert", variant: "success", message: "Subscription updated" })
-    }
-    state charging {
-      ChargeSucceeded -> loading
+      OPEN_SUBSCRIPTION -> viewing_single
         (set @entity.id @payload.row.id)
         (set @entity.customerId @payload.row.customerId)
         (set @entity.planId @payload.row.planId)
@@ -105,16 +49,32 @@ orbital SubscriptionOrbital {
         (set @entity.currentPeriodStart @payload.row.currentPeriodStart)
         (set @entity.currentPeriodEnd @payload.row.currentPeriodEnd)
         (set @entity.nextBillingAt @payload.row.nextBillingAt)
-        (set @entity.attemptCount 0)
+        (set @entity.attemptCount @payload.row.attemptCount)
         (set @entity.lastChargeAt @payload.row.lastChargeAt)
         (set @entity.cancelledAt @payload.row.cancelledAt)
         (set @entity.createdAt @payload.row.createdAt)
-        (persist update Subscription @entity { emit: { success: "SubscriptionUpdated", failure: "ChargeFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "repeat" }, { type: "typography", content: "@entity.customerId", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }, { type: "badge", label: "@entity.interval", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Plan" }, { type: "typography", variant: "body", content: "@entity.planId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Currency" }, { type: "typography", variant: "body", content: "@entity.currency" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Amount", value: "@entity.amount", icon: "dollar-sign" }, { type: "stat-display", label: "Retries", value: "@entity.attemptCount", icon: "rotate-cw" }, { type: "stat-display", label: "Next bill", value: "@entity.nextBillingAt", icon: "calendar" }, { type: "stat-display", label: "Last charge", value: "@entity.lastChargeAt", icon: "credit-card" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Charge", variant: "primary", action: "CHARGE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Cancel", variant: "danger", action: "CANCEL", actionPayload: { id: "@entity.id" } }] }] })
+      CHARGE -> loading
+        (set @entity.id @payload.id)
         (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
-      ChargeFailed -> browsing
-        (set @entity.attemptCount (+ @entity.attemptCount 1))
-        (persist update Subscription @entity { emit: { success: "SubscriptionUpdated", failure: "ChargeFailed" } })
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Charging subscription…" }] })
+      CANCEL -> loading
+        (set @entity.id @payload.id)
+        (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling subscription…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading subscriptions…" }] })
+      CHARGE -> loading
+        (set @entity.id @payload.id)
+        (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Charging subscription…" }] })
+      CANCEL -> loading
+        (set @entity.id @payload.id)
+        (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling subscription…" }] })
     }
     state error {
       INIT -> loading
@@ -122,24 +82,20 @@ orbital SubscriptionOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      CHARGE   { subscriptionId : string!, row : Subscription }
-      PRORATE  { subscriptionId : string!, newPlanId : string!, daysIntoPeriod : number!, row : Subscription }
-      CANCEL   { subscriptionId : string!, cancelledAt : string!, row : Subscription }
+      OPEN_SUBSCRIPTION      { id : string!, row : Subscription }
+      CLOSE_VIEW             { }
+      CHARGE                 { id : string! }
+      CANCEL                 { id : string! }
       SubscriptionLoaded     { data : [Subscription] }
       SubscriptionLoadFailed { error : string, code : string }
-      ChargeSucceeded        { row : Subscription }
-      ChargeFailed           { error : string, code : string }
-      SubscriptionUpdated    { row : Subscription }
     }
     listens {
-      CHARGE   { subscriptionId : string!, row : Subscription }
-      PRORATE  { subscriptionId : string!, newPlanId : string!, daysIntoPeriod : number!, row : Subscription }
-      CANCEL   { subscriptionId : string!, cancelledAt : string!, row : Subscription }
+      OPEN_SUBSCRIPTION      { id : string!, row : Subscription }
+      CLOSE_VIEW             { }
+      CHARGE                 { id : string! }
+      CANCEL                 { id : string! }
       SubscriptionLoaded     { data : [Subscription] }
       SubscriptionLoadFailed { error : string, code : string }
-      ChargeSucceeded        { row : Subscription }
-      ChargeFailed           { error : string, code : string }
-      SubscriptionUpdated    { row : Subscription }
     }
   }
   page "/subscriptions/manage" as SubscriptionManagePage -> SubscriptionManage

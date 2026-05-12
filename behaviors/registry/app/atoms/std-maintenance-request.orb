@@ -92,6 +92,70 @@
           "linkedEntity": "MaintenanceRequest",
           "emits": [
             {
+              "event": "OPEN_REQUEST",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.unitId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.tenantId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.requesterName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.description",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.priority",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.scheduledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.completedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
               "event": "SCHEDULE_REQUEST",
               "payloadSchema": [
                 {
@@ -389,6 +453,9 @@
                 "name": "browsing"
               },
               {
+                "name": "viewing_single"
+              },
+              {
                 "name": "error"
               }
             ],
@@ -422,37 +489,13 @@
                 ]
               },
               {
-                "key": "SCHEDULE_REQUEST",
-                "name": "Schedule Request",
+                "key": "OPEN_REQUEST",
+                "name": "Open Request",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  {
-                    "name": "scheduledAt",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "MaintenanceRequest"
-                  }
-                ]
-              },
-              {
-                "key": "COMPLETE_REQUEST",
-                "name": "Complete Request",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "completedAt",
-                    "type": "string"
                   },
                   {
                     "name": "row",
@@ -502,6 +545,49 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "SCHEDULE_REQUEST",
+                "name": "Schedule Request",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "scheduledAt",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MaintenanceRequest"
+                  }
+                ]
+              },
+              {
+                "key": "COMPLETE_REQUEST",
+                "name": "Complete Request",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "completedAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "MaintenanceRequest"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -515,8 +601,8 @@
                     "MaintenanceRequest",
                     {
                       "emit": {
-                        "failure": "MaintenanceRequestLoadFailed",
-                        "success": "MaintenanceRequestLoaded"
+                        "success": "MaintenanceRequestLoaded",
+                        "failure": "MaintenanceRequestLoadFailed"
                       }
                     }
                   ],
@@ -524,21 +610,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading maintenance requests…",
+                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "type": "typography"
+                          "content": "Loading maintenance requests…",
+                          "variant": "caption"
                         }
                       ],
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "type": "stack"
                     }
                   ]
@@ -553,61 +639,53 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
                           "gap": "sm",
-                          "justify": "between",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "align": "center",
-                              "type": "stack",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "wrench",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h3",
-                                  "content": "@config.title"
-                                }
-                              ],
-                              "direction": "horizontal"
+                              "type": "icon",
+                              "name": "wrench"
                             },
                             {
-                              "type": "popover",
-                              "content": {
-                                "children": [
-                                  {
-                                    "content": "Quick filters",
-                                    "type": "typography",
-                                    "variant": "caption"
-                                  },
-                                  {
-                                    "type": "button",
-                                    "action": "INIT",
-                                    "label": "Refresh",
-                                    "variant": "ghost"
-                                  }
-                                ],
-                                "type": "stack",
-                                "direction": "vertical",
-                                "gap": "sm"
-                              },
-                              "position": "bottom",
-                              "trigger": "click",
-                              "children": {
-                                "type": "button",
-                                "action": "INIT",
-                                "variant": "secondary",
-                                "label": "Filters",
-                                "icon": "filter"
-                              }
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "label": "Open requests",
+                              "type": "stat-display",
+                              "icon": "wrench"
+                            },
+                            {
+                              "value": "5",
+                              "type": "stat-display",
+                              "icon": "alert-triangle",
+                              "label": "Urgent"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Scheduled",
+                              "value": "18",
+                              "icon": "calendar"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "32",
+                              "icon": "clock",
+                              "label": "Avg resolve (hr)"
                             }
                           ]
                         },
@@ -615,56 +693,37 @@
                           "type": "divider"
                         },
                         {
-                          "rightActions": [
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": [
                             {
-                              "event": "CANCEL_REQUEST",
+                              "variant": "primary",
+                              "icon": "arrow-right",
+                              "event": "OPEN_REQUEST",
+                              "label": "Open"
+                            },
+                            {
+                              "label": "Cancel",
                               "variant": "danger",
-                              "label": "Cancel"
+                              "icon": "x",
+                              "event": "CANCEL_REQUEST"
                             }
                           ],
-                          "threshold": 80.0,
-                          "children": {
-                            "type": "stack",
-                            "direction": "horizontal",
-                            "align": "center",
-                            "children": [
-                              {
-                                "type": "icon",
-                                "name": "wrench"
-                              },
-                              {
-                                "type": "typography",
-                                "content": "Swipe a request row for quick actions",
-                                "variant": "body"
-                              }
-                            ],
-                            "gap": "md"
-                          },
-                          "leftActions": [
-                            {
-                              "label": "Schedule",
-                              "event": "SCHEDULE_REQUEST",
-                              "variant": "primary"
-                            }
-                          ],
-                          "type": "swipeable-row"
-                        },
-                        {
                           "fields": [
                             {
-                              "label": "Unit",
                               "variant": "caption",
+                              "label": "Unit",
                               "name": "unitId"
                             },
                             {
-                              "variant": "caption",
+                              "name": "requesterName",
                               "label": "Requester",
-                              "name": "requesterName"
+                              "variant": "caption"
                             },
                             {
                               "label": "Description",
-                              "name": "description",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "description"
                             },
                             {
                               "name": "priority",
@@ -672,49 +731,21 @@
                               "label": "Priority"
                             },
                             {
-                              "name": "status",
                               "label": "Status",
+                              "name": "status",
                               "variant": "badge"
                             },
                             {
                               "name": "requestedAt",
-                              "label": "Requested",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Requested"
                             }
                           ],
-                          "type": "data-grid",
-                          "gap": "sm",
-                          "entity": "@payload.data",
                           "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "label": "Schedule",
-                              "event": "SCHEDULE_REQUEST",
-                              "icon": "calendar",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Complete",
-                              "event": "COMPLETE_REQUEST",
-                              "variant": "primary",
-                              "icon": "check"
-                            },
-                            {
-                              "icon": "x",
-                              "label": "Cancel",
-                              "variant": "danger",
-                              "event": "CANCEL_REQUEST"
-                            }
-                          ]
-                        },
-                        {
-                          "action": "INIT",
-                          "type": "floating-action-button",
-                          "icon": "plus"
+                          "entity": "@payload.data"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -728,84 +759,274 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "SCHEDULE_REQUEST",
+                "to": "viewing_single",
+                "event": "OPEN_REQUEST",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.unitId",
+                    "@payload.row.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.tenantId",
+                    "@payload.row.tenantId"
+                  ],
+                  [
+                    "set",
+                    "@entity.requesterName",
+                    "@payload.row.requesterName"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.priority",
+                    "@payload.row.priority"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.assignedTo",
+                    "@payload.row.assignedTo"
+                  ],
+                  [
+                    "set",
+                    "@entity.requestedAt",
+                    "@payload.row.requestedAt"
                   ],
                   [
                     "set",
                     "@entity.scheduledAt",
-                    "@payload.scheduledAt"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "scheduled"
-                  ],
-                  [
-                    "persist",
-                    "update",
-                    "MaintenanceRequest",
-                    "@entity",
-                    {
-                      "emit": {
-                        "failure": "MaintenanceRequestUpdateFailed",
-                        "success": "MaintenanceRequestUpdated"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "COMPLETE_REQUEST",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
+                    "@payload.row.scheduledAt"
                   ],
                   [
                     "set",
                     "@entity.completedAt",
-                    "@payload.completedAt"
+                    "@payload.row.completedAt"
                   ],
                   [
                     "set",
-                    "@entity.status",
-                    "completed"
+                    "@entity.notes",
+                    "@payload.row.notes"
                   ],
                   [
-                    "persist",
-                    "update",
-                    "MaintenanceRequest",
-                    "@entity",
+                    "render-ui",
+                    "main",
                     {
-                      "emit": {
-                        "success": "MaintenanceRequestUpdated",
-                        "failure": "MaintenanceRequestUpdateFailed"
-                      }
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost",
+                              "label": "Back",
+                              "type": "button"
+                            },
+                            {
+                              "name": "wrench",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.unitId"
+                            },
+                            {
+                              "label": "@entity.priority",
+                              "variant": "primary",
+                              "type": "badge"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "content": "Requester",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.requesterName",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Description"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.description"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Assigned to",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.assignedTo"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Notes",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.notes",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.requestedAt",
+                              "label": "Requested",
+                              "icon": "calendar"
+                            },
+                            {
+                              "label": "Scheduled",
+                              "value": "@entity.scheduledAt",
+                              "type": "stat-display",
+                              "icon": "calendar-clock"
+                            },
+                            {
+                              "value": "@entity.completedAt",
+                              "icon": "calendar-check",
+                              "type": "stat-display",
+                              "label": "Completed"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "SCHEDULE_REQUEST",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "scheduledAt": "now"
+                              },
+                              "label": "Schedule",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "Complete",
+                              "type": "button",
+                              "variant": "primary",
+                              "action": "COMPLETE_REQUEST",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "completedAt": "now"
+                              }
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "notes": "cancelled by user"
+                              },
+                              "variant": "danger",
+                              "label": "Cancel",
+                              "action": "CANCEL_REQUEST",
+                              "type": "button"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        }
+                      ]
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "CANCEL_REQUEST",
                 "effects": [
                   [
@@ -830,9 +1051,31 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "MaintenanceRequestUpdated",
-                        "failure": "MaintenanceRequestUpdateFailed"
+                        "failure": "MaintenanceRequestUpdateFailed",
+                        "success": "MaintenanceRequestUpdated"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Cancelling request…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -864,8 +1107,215 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "MaintenanceRequest",
+                    {
+                      "emit": {
+                        "success": "MaintenanceRequestLoaded",
+                        "failure": "MaintenanceRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading maintenance requests…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "SCHEDULE_REQUEST",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.scheduledAt",
+                    "@payload.scheduledAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "scheduled"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "MaintenanceRequest",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "MaintenanceRequestUpdated",
+                        "failure": "MaintenanceRequestUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Scheduling request…",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "COMPLETE_REQUEST",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.completedAt",
+                    "@payload.completedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "MaintenanceRequest",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "MaintenanceRequestUpdated",
+                        "failure": "MaintenanceRequestUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Completing request…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CANCEL_REQUEST",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.notes"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "cancelled"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "MaintenanceRequest",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "MaintenanceRequestUpdateFailed",
+                        "success": "MaintenanceRequestUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Cancelling request…",
+                          "color": "muted"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -880,8 +1330,8 @@
                     "MaintenanceRequest",
                     {
                       "emit": {
-                        "success": "MaintenanceRequestLoaded",
-                        "failure": "MaintenanceRequestLoadFailed"
+                        "failure": "MaintenanceRequestLoadFailed",
+                        "success": "MaintenanceRequestLoaded"
                       }
                     }
                   ],

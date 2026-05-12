@@ -31,27 +31,59 @@ orbital StockAdjustmentOrbital {
         (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading adjustments…" }] })
       StockAdjustmentLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sliders" }, { type: "typography", content: "Stock Adjustments", variant: "h2" }] }, { type: "button", label: "New Adjustment", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "upload-drop-zone", accept: ".csv,text/csv", maxSize: 10485760, maxFiles: 1, label: "Drop CSV here for bulk import", description: "or click to browse", icon: "file-spreadsheet", action: "CREATE" }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "typography", variant: "caption", color: "muted", content: "Quick quantity adjust" }, { type: "number-stepper", value: 0, min: -100, max: 100, step: 1, size: "md", action: "CREATE" }] }, { type: "divider" }, { type: "data-grid", entity: @payload.data, itemActions: [{ label: "Delete", event: "REQUEST_DELETE", variant: "danger" }], fields: [{ name: "sku", label: "SKU", variant: "h4", icon: "tag" }, { name: "warehouseName", label: "Warehouse", variant: "body" }, { name: "quantityDelta", label: "Delta", variant: "badge" }, { name: "reason", label: "Reason", variant: "badge" }, { name: "adjustedAt", label: "Adjusted At", variant: "caption" }, { name: "adjustedBy", label: "Adjusted By", variant: "caption" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "sliders" }, { type: "typography", content: "Stock Adjustments", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total adjustments", value: "@payload.data.length", icon: "sliders" }, { type: "stat-display", label: "Net delta", value: "+184", icon: "trending-up" }, { type: "stat-display", label: "This week", value: "26", icon: "calendar" }, { type: "stat-display", label: "Shrinkage flags", value: "4", icon: "alert-triangle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "sku", label: "SKU", variant: "caption" }, { name: "warehouseName", label: "Warehouse", variant: "caption" }, { name: "quantityDelta", label: "Delta", variant: "caption" }, { name: "reason", label: "Reason", variant: "badge" }, { name: "adjustedAt", label: "Adjusted At", variant: "caption" }, { name: "adjustedBy", label: "By", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ADJUSTMENT", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
       StockAdjustmentLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load adjustments" }, { type: "typography", variant: "body", color: "muted", content: "@payload.error" }, { type: "button", label: "Retry", action: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      INIT -> loading
+      OPEN_ADJUSTMENT -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.stockLevelId @payload.row.stockLevelId)
+        (set @entity.sku @payload.row.sku)
+        (set @entity.warehouseId @payload.row.warehouseId)
+        (set @entity.warehouseName @payload.row.warehouseName)
+        (set @entity.quantityDelta @payload.row.quantityDelta)
+        (set @entity.reason @payload.row.reason)
+        (set @entity.adjustedBy @payload.row.adjustedBy)
+        (set @entity.adjustedAt @payload.row.adjustedAt)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "sliders" }, { type: "typography", content: "@entity.sku", variant: "h3" }, { type: "badge", label: "@entity.reason", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Warehouse" }, { type: "typography", variant: "body", content: "@entity.warehouseName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Adjusted by" }, { type: "typography", variant: "body", content: "@entity.adjustedBy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Delta", value: "@entity.quantityDelta", icon: "trending-up" }, { type: "stat-display", label: "Adjusted at", value: "@entity.adjustedAt", icon: "calendar" }, { type: "stat-display", label: "Reason", value: "@entity.reason", icon: "tag" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "REQUEST_DELETE", actionPayload: { id: "@entity.id", row: "@entity" } }] }] })
+      CREATE -> loading
         (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Opening new adjustment…" }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
+        (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Removing adjustment…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading adjustments…" }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
+        (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Removing adjustment…" }] })
     }
     state error {
       INIT -> loading
         (fetch StockAdjustment { emit: { success: "StockAdjustmentLoaded", failure: "StockAdjustmentLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      CREATE
-      REQUEST_DELETE { id : string!, row : StockAdjustment }
-      StockAdjustmentLoaded
-      StockAdjustmentLoadFailed
+      OPEN_ADJUSTMENT { id : string!, row : StockAdjustment }
+      CLOSE_VIEW      { }
+      CREATE          { }
+      REQUEST_DELETE  { id : string!, row : StockAdjustment }
+      StockAdjustmentLoaded     { data : [StockAdjustment] }
+      StockAdjustmentLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_ADJUSTMENT { id : string!, row : StockAdjustment }
+      CLOSE_VIEW      { }
+      CREATE          { }
+      REQUEST_DELETE  { id : string!, row : StockAdjustment }
+      StockAdjustmentLoaded     { data : [StockAdjustment] }
       StockAdjustmentLoadFailed { error : string, code : string }
       StockAdjustmentPersistor.ADJUSTMENT_CREATED -> INIT
       StockAdjustmentPersistor.ADJUSTMENT_DELETED -> INIT

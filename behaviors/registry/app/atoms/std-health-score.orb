@@ -1,7 +1,7 @@
 {
   "name": "std-health-score",
   "version": "1.0.0",
-  "description": "std-health-score — Customer success health score primitive surfacing churn risk via composite usage/support/engagement signals.",
+  "description": "std-health-score — customer success health score primitive surfacing churn risk via composite usage/support/engagement signals. Lists health scores in `browsing`; opens detail in `viewing_single` with Recalculate / Assign CSM actions.",
   "orbitals": [
     {
       "name": "HealthScoreOrbital",
@@ -89,7 +89,7 @@
           "linkedEntity": "HealthScore",
           "emits": [
             {
-              "event": "VIEW",
+              "event": "OPEN_SCORE",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -97,24 +97,59 @@
                   "required": true
                 },
                 {
-                  "name": "source",
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.score",
+                  "type": "number"
+                },
+                {
+                  "name": "row.tier",
+                  "type": "string"
+                },
+                {
+                  "name": "row.usageScore",
+                  "type": "number"
+                },
+                {
+                  "name": "row.supportScore",
+                  "type": "number"
+                },
+                {
+                  "name": "row.engagementScore",
+                  "type": "number"
+                },
+                {
+                  "name": "row.trend",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCalculatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedCsm",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
                   "type": "string"
                 }
               ]
             },
             {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
+              "event": "CLOSE_VIEW"
             },
             {
               "event": "RECALCULATE",
@@ -123,10 +158,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
                 }
               ]
             },
@@ -137,10 +168,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
                 }
               ]
             },
@@ -174,7 +201,10 @@
                 "isInitial": true
               },
               {
-                "name": "viewing"
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -210,64 +240,17 @@
                 ]
               },
               {
-                "key": "REFRESH",
-                "name": "Refresh",
-                "payloadSchema": [
-                  {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SEARCH",
-                "name": "Search",
-                "payloadSchema": [
-                  {
-                    "name": "query",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "FILTER_TIER",
-                "name": "Filter Tier",
-                "payloadSchema": [
-                  {
-                    "name": "tier",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "FILTER_TREND",
-                "name": "Filter Trend",
-                "payloadSchema": [
-                  {
-                    "name": "trend",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
+                "key": "OPEN_SCORE",
+                "name": "Open Score",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string",
                     "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
+                  },
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
+                    "name": "row",
+                    "type": "HealthScore"
                   }
                 ]
               },
@@ -281,6 +264,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               },
               {
                 "key": "ASSIGN_CSM",
@@ -314,40 +301,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading health scores…",
                           "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "Loading health scores…",
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
                 "from": "loading",
-                "to": "viewing",
+                "to": "browsing",
                 "event": "HealthScoreLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "name": "activity",
@@ -361,202 +348,72 @@
                           ],
                           "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "type": "stack"
                         },
                         {
-                          "title": "Customer Health Overview",
-                          "type": "section-header",
-                          "align": "left",
-                          "level": 2.0,
-                          "subtitle": "Composite signals across usage, support, and engagement"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "max": 100.0,
-                              "size": "md",
-                              "showValue": true,
-                              "type": "meter",
-                              "variant": "radial",
-                              "min": 0.0,
-                              "value": 78.0,
-                              "unit": "%",
-                              "label": "Composite Health",
-                              "thresholds": [
-                                {
-                                  "value": 40.0,
-                                  "color": "danger"
-                                },
-                                {
-                                  "value": 70.0,
-                                  "color": "warning"
-                                }
-                              ]
+                              "icon": "users",
+                              "label": "Total customers",
+                              "value": "@payload.data.length",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "health-bar",
-                              "current": 78.0,
-                              "animated": true,
-                              "format": "bar",
-                              "max": 100.0,
-                              "size": "md"
+                              "type": "stat-display",
+                              "value": "62%",
+                              "icon": "smile",
+                              "label": "Green tier"
                             },
                             {
-                              "type": "trend-indicator",
-                              "value": 4.2,
-                              "label": "30d trend",
-                              "size": "md",
-                              "direction": "up",
-                              "showValue": true
-                            },
-                            {
-                              "type": "combo-counter",
-                              "size": "md",
-                              "streak": 4.0,
-                              "combo": 6.0,
-                              "multiplier": 2.0
-                            }
-                          ]
-                        },
-                        {
-                          "items": [
-                            {
-                              "label": "Engagement",
-                              "id": "engagement"
-                            },
-                            {
-                              "id": "usage",
-                              "label": "Usage"
-                            },
-                            {
-                              "label": "Health",
-                              "id": "health"
-                            }
-                          ],
-                          "orientation": "horizontal",
-                          "type": "tabs",
-                          "variant": "default",
-                          "activeTab": "health"
-                        },
-                        {
-                          "type": "sidebar",
-                          "brandName": "Health Detail",
-                          "hideCollapseButton": true,
-                          "items": [
-                            {
-                              "label": "Summary",
-                              "id": "summary"
-                            },
-                            {
-                              "id": "history",
-                              "label": "History"
-                            },
-                            {
-                              "label": "Playbook",
-                              "id": "playbook"
-                            },
-                            {
-                              "label": "CSM Notes",
-                              "id": "csm"
-                            }
-                          ],
-                          "showCloseButton": false
-                        },
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "elevated",
-                              "size": "md",
-                              "description": "Identifies subscribers trending toward renewal vs churn",
-                              "type": "feature-card",
-                              "icon": "refresh-cw",
-                              "title": "Auto-Renewal Insights"
-                            },
-                            {
-                              "variant": "bordered",
-                              "size": "md",
-                              "type": "feature-card",
-                              "description": "Triggers CSM workflows when health drops below threshold",
-                              "title": "Risk Escalation",
+                              "value": "8",
+                              "type": "stat-display",
+                              "label": "At risk (red)",
                               "icon": "alert-triangle"
                             },
                             {
-                              "avatar": "https://i.pravatar.cc/120?u=priya",
-                              "role": "Senior CSM",
-                              "name": "Priya Sharma",
-                              "bio": "Owns enterprise accounts across NA West",
-                              "type": "team-card"
+                              "label": "30d trend",
+                              "value": "+4.2%",
+                              "type": "stat-display",
+                              "icon": "trending-up"
                             }
-                          ]
-                        },
-                        {
-                          "subtitle": "Top contributors to composite score",
-                          "type": "feature-grid-organism",
-                          "columns": 3.0,
-                          "heading": "Health Signal Drivers"
-                        },
-                        {
-                          "type": "team-organism",
-                          "heading": "Customer Success Team",
-                          "subtitle": "CSMs supporting this segment"
-                        },
-                        {
-                          "type": "stats-organism",
-                          "columns": 4.0
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "type": "data-grid",
                           "gap": "sm",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "View",
-                              "event": "VIEW",
-                              "variant": "secondary"
-                            },
-                            {
-                              "event": "EDIT",
-                              "label": "Edit",
-                              "variant": "secondary"
-                            },
-                            {
-                              "event": "RECALCULATE",
+                              "label": "Open",
                               "variant": "primary",
-                              "label": "Recalculate"
+                              "icon": "arrow-right",
+                              "event": "OPEN_SCORE"
                             },
                             {
-                              "event": "ASSIGN_CSM",
-                              "variant": "ghost",
-                              "label": "Assign CSM"
+                              "variant": "secondary",
+                              "event": "RECALCULATE",
+                              "label": "Recalculate"
                             }
                           ],
                           "fields": [
                             {
-                              "variant": "caption",
                               "label": "Customer",
+                              "variant": "caption",
                               "name": "customerName"
                             },
                             {
+                              "label": "Score",
                               "variant": "badge",
-                              "name": "score",
-                              "label": "Score"
+                              "name": "score"
                             },
                             {
                               "variant": "badge",
-                              "label": "Tier",
-                              "name": "tier"
+                              "name": "tier",
+                              "label": "Tier"
                             },
                             {
                               "name": "usageScore",
@@ -565,27 +422,25 @@
                             },
                             {
                               "label": "Support",
-                              "name": "supportScore",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "supportScore"
                             },
                             {
-                              "name": "trend",
+                              "variant": "badge",
                               "label": "Trend",
-                              "variant": "badge"
+                              "name": "trend"
                             },
                             {
                               "name": "assignedCsm",
-                              "variant": "caption",
-                              "label": "CSM"
-                            },
-                            {
-                              "label": "Updated",
-                              "name": "lastCalculatedAt",
+                              "label": "CSM",
                               "variant": "caption"
                             }
-                          ]
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -599,57 +454,234 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.message",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "loading",
-                "event": "REFRESH",
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_SCORE",
                 "effects": [
                   [
-                    "fetch",
-                    "HealthScore",
-                    {
-                      "emit": {
-                        "failure": "HealthScoreLoadFailed",
-                        "success": "HealthScoreLoaded"
-                      }
-                    }
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.customerId",
+                    "@payload.row.customerId"
+                  ],
+                  [
+                    "set",
+                    "@entity.customerName",
+                    "@payload.row.customerName"
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    "@payload.row.score"
+                  ],
+                  [
+                    "set",
+                    "@entity.tier",
+                    "@payload.row.tier"
+                  ],
+                  [
+                    "set",
+                    "@entity.usageScore",
+                    "@payload.row.usageScore"
+                  ],
+                  [
+                    "set",
+                    "@entity.supportScore",
+                    "@payload.row.supportScore"
+                  ],
+                  [
+                    "set",
+                    "@entity.engagementScore",
+                    "@payload.row.engagementScore"
+                  ],
+                  [
+                    "set",
+                    "@entity.trend",
+                    "@payload.row.trend"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastCalculatedAt",
+                    "@payload.row.lastCalculatedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.assignedCsm",
+                    "@payload.row.assignedCsm"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "spinner"
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "label": "Back"
+                            },
+                            {
+                              "name": "activity",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@entity.customerName",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "primary",
+                              "label": "@entity.tier",
+                              "type": "badge"
+                            },
+                            {
+                              "label": "@entity.trend",
+                              "variant": "default",
+                              "type": "badge"
+                            }
+                          ],
+                          "direction": "horizontal"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Refreshing health scores…",
-                          "type": "typography"
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Customer ID",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.customerId",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Assigned CSM"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.assignedCsm"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "label": "Composite",
+                              "value": "@entity.score",
+                              "type": "stat-display",
+                              "icon": "activity"
+                            },
+                            {
+                              "label": "Usage",
+                              "value": "@entity.usageScore",
+                              "type": "stat-display",
+                              "icon": "bar-chart"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Support",
+                              "value": "@entity.supportScore",
+                              "icon": "life-buoy"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Engagement",
+                              "value": "@entity.engagementScore",
+                              "icon": "users"
+                            }
+                          ],
+                          "cols": 4.0
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Recalculate",
+                              "action": "RECALCULATE"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Assign CSM",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "action": "ASSIGN_CSM"
+                            }
+                          ]
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
+                "from": "browsing",
                 "to": "loading",
-                "event": "SEARCH",
+                "event": "RECALCULATE",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "HealthScore",
@@ -664,69 +696,30 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Searching health scores…",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "loading",
-                "event": "FILTER_TIER",
-                "effects": [
-                  [
-                    "fetch",
-                    "HealthScore",
-                    {
-                      "emit": {
-                        "failure": "HealthScoreLoadFailed",
-                        "success": "HealthScoreLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "py-12",
-                      "type": "stack",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Filtering by tier…",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
+                          "content": "Recalculating health score…",
                           "variant": "caption"
                         }
                       ],
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
+                      "className": "py-12",
                       "align": "center"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "FILTER_TREND",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -742,71 +735,29 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Filtering by trend…",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "content": "Loading health scores…"
                         }
-                      ]
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "Viewing health score",
-                      "type": "alert",
-                      "variant": "info"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "EDIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "info",
-                      "message": "Editing health score",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "RECALCULATE",
                 "effects": [
                   [
@@ -815,19 +766,42 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "HealthScore",
+                    {
+                      "emit": {
+                        "success": "HealthScoreLoaded",
+                        "failure": "HealthScoreLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "message": "Recalculation triggered",
-                      "variant": "success"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Recalculating health score…"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "viewing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "ASSIGN_CSM",
                 "effects": [
                   [
@@ -836,12 +810,35 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "HealthScore",
+                    {
+                      "emit": {
+                        "failure": "HealthScoreLoadFailed",
+                        "success": "HealthScoreLoaded"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "message": "Assigning CSM",
-                      "type": "alert",
-                      "variant": "info"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Assigning CSM…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -856,8 +853,8 @@
                     "HealthScore",
                     {
                       "emit": {
-                        "failure": "HealthScoreLoadFailed",
-                        "success": "HealthScoreLoaded"
+                        "success": "HealthScoreLoaded",
+                        "failure": "HealthScoreLoadFailed"
                       }
                     }
                   ],

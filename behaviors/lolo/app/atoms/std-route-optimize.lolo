@@ -1,5 +1,5 @@
 app std-route-optimize "1.0.0"
-"std-route-optimize — multi-stop route ordering for technician dispatch. Owns a Route entity (origin coords + ordered stops + totals); OPTIMIZE invokes the route-optimize service to reorder stops, then persists the updated row and emits RouteUpdated for downstream listeners."
+"std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions."
 
 orbital RouteOptimizeOrbital {
   entity Route [persistent: routes] {
@@ -13,11 +13,8 @@ orbital RouteOptimizeOrbital {
     optimizedAt          : string
   }
 
-  type RouteLoaded            = Event { data : [Route] }                    "Fired when the route collection finishes loading"
-  type RouteLoadFailed        = Event { error : string, code : string }     "Fired when the route collection fails to load"
-  type RouteOptimized         = Event { row : Route }                       "Fired after the route-optimize service returns a reordered route"
-  type RouteOptimizeFailed    = Event { error : string, code : string }     "Fired when the route-optimize service call fails"
-  type RouteUpdated           = Event { row : Route }                       "Fired after a route row persists (post-optimize)"
+  type RouteLoaded     = Event { data : [Route] }                "Fired when the route collection finishes loading"
+  type RouteLoadFailed = Event { error : string, code : string } "Fired when the route collection fails to load"
 
   trait RouteOptimize -> Route [interaction, collection] {
     config {
@@ -29,23 +26,41 @@ orbital RouteOptimizeOrbital {
         (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading routes…" }] })
       RouteLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "map" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "technicianId", label: "Technician", variant: "caption" }, { name: "stops", label: "Stops", variant: "caption" }, { name: "totalDistanceKm", label: "Distance (km)", variant: "caption" }, { name: "totalDurationMinutes", label: "Duration (min)", variant: "caption" }, { name: "optimizedAt", label: "Optimized", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Optimize", event: "OPTIMIZE", variant: "primary", icon: "route" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total routes", value: "@payload.data.length", icon: "map" }, { type: "stat-display", label: "Optimized today", value: "14", icon: "check-circle" }, { type: "stat-display", label: "Total distance", value: "1,284 km", icon: "navigation" }, { type: "stat-display", label: "Avg duration", value: "92 min", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "technicianId", label: "Technician", variant: "caption" }, { name: "totalDistanceKm", label: "Distance (km)", variant: "caption" }, { name: "totalDurationMinutes", label: "Duration (min)", variant: "caption" }, { name: "optimizedAt", label: "Optimized", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ROUTE", variant: "primary", icon: "arrow-right" }, { label: "Optimize", event: "OPTIMIZE", variant: "danger" }] }] })
       RouteLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      OPTIMIZE -> optimizing
-        (set @entity.id @payload.routeId)
-        (call-service route-optimize "optimize" { routeId: @entity.id } { emit: { success: "RouteOptimized", failure: "RouteOptimizeFailed" } })
+      OPEN_ROUTE -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.technicianId @payload.row.technicianId)
+        (set @entity.originLat @payload.row.originLat)
+        (set @entity.originLng @payload.row.originLng)
+        (set @entity.totalDistanceKm @payload.row.totalDistanceKm)
+        (set @entity.totalDurationMinutes @payload.row.totalDurationMinutes)
+        (set @entity.optimizedAt @payload.row.optimizedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "map" }, { type: "typography", content: "@entity.technicianId", variant: "h3" }, { type: "badge", label: "Optimized", variant: "success" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Origin lat" }, { type: "typography", variant: "body", content: "@entity.originLat" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Origin lng" }, { type: "typography", variant: "body", content: "@entity.originLng" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Distance (km)", value: "@entity.totalDistanceKm", icon: "navigation" }, { type: "stat-display", label: "Duration (min)", value: "@entity.totalDurationMinutes", icon: "clock" }, { type: "stat-display", label: "Last optimized", value: "@entity.optimizedAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Optimize", variant: "primary", action: "OPTIMIZE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Reset", variant: "danger", action: "RESET_ROUTE", actionPayload: { id: "@entity.id" } }] }] })
+      OPTIMIZE -> loading
+        (set @entity.id @payload.id)
+        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Optimizing route…" }] })
-      RouteUpdated -> browsing
-        (render-ui main { type: "alert", variant: "success", message: "Route updated" })
+      RESET_ROUTE -> loading
+        (set @entity.id @payload.id)
+        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resetting route…" }] })
     }
-    state optimizing {
-      RouteOptimized -> browsing
-        (persist update Route @payload.row { emit: { success: "RouteUpdated", failure: "RouteOptimizeFailed" } })
-      RouteOptimizeFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading routes…" }] })
+      OPTIMIZE -> loading
+        (set @entity.id @payload.id)
+        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Optimizing route…" }] })
+      RESET_ROUTE -> loading
+        (set @entity.id @payload.id)
+        (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resetting route…" }] })
     }
     state error {
       INIT -> loading
@@ -53,20 +68,20 @@ orbital RouteOptimizeOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPTIMIZE             { routeId : string! }
-      RouteLoaded          { data : [Route] }
-      RouteLoadFailed      { error : string, code : string }
-      RouteOptimized       { row : Route }
-      RouteOptimizeFailed  { error : string, code : string }
-      RouteUpdated         { row : Route }
+      OPEN_ROUTE       { id : string!, row : Route }
+      CLOSE_VIEW       { }
+      OPTIMIZE         { id : string! }
+      RESET_ROUTE      { id : string! }
+      RouteLoaded      { data : [Route] }
+      RouteLoadFailed  { error : string, code : string }
     }
     listens {
-      OPTIMIZE             { routeId : string! }
-      RouteLoaded          { data : [Route] }
-      RouteLoadFailed      { error : string, code : string }
-      RouteOptimized       { row : Route }
-      RouteOptimizeFailed  { error : string, code : string }
-      RouteUpdated         { row : Route }
+      OPEN_ROUTE       { id : string!, row : Route }
+      CLOSE_VIEW       { }
+      OPTIMIZE         { id : string! }
+      RESET_ROUTE      { id : string! }
+      RouteLoaded      { data : [Route] }
+      RouteLoadFailed  { error : string, code : string }
     }
   }
   page "/routes/optimize" as RouteOptimizePage -> RouteOptimize

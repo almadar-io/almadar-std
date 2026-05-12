@@ -1,5 +1,5 @@
 app std-change-order "1.0.0"
-"std-change-order — construction change-order primitive tracking contract scope/cost/schedule modifications with owner approval."
+"std-change-order — construction change-order primitive tracking contract scope/cost/schedule modifications with owner approval. Lists orders in `browsing`; opens detail in `viewing_single` with Approve / Reject / Execute / Delete actions."
 
 orbital ChangeOrderOrbital {
   entity ChangeOrder [persistent: changeorders] {
@@ -29,42 +29,54 @@ orbital ChangeOrderOrbital {
       INIT -> loading
         (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading change orders…" }] })
-      ChangeOrderLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "New Change Order", variant: "primary", action: "CREATE", actionPayload: { source: "header" } }] }, { type: "wizard-progress", steps: [{ id: "draft", title: "Draft" }, { id: "pending-approval", title: "Pending Approval" }, { id: "approved", title: "Approved" }, { id: "executed", title: "Executed" }], currentStep: 1 }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "coNumber", label: "CO #", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "costImpact", label: "Cost Impact", variant: "caption" }, { name: "scheduleImpactDays", label: "Days", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "requestedBy", label: "Requested By", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Submit", event: "SUBMIT_FOR_APPROVAL", variant: "primary" }, { label: "Approve", event: "APPROVE", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }, { label: "Delete", event: "REQUEST_DELETE", variant: "ghost" }] }] })
+      ChangeOrderLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total orders", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Pending approval", value: "11", icon: "clock" }, { type: "stat-display", label: "Cost impact", value: "$184,500", icon: "dollar-sign" }, { type: "stat-display", label: "Days added", value: "47", icon: "calendar" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "coNumber", label: "CO #", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "costImpact", label: "Cost Impact", variant: "caption" }, { name: "scheduleImpactDays", label: "Days", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "requestedBy", label: "Requested By", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CHANGE_ORDER", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
       ChangeOrderLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      SUBMIT_FOR_APPROVAL -> viewing
+    state browsing {
+      OPEN_CHANGE_ORDER -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.coNumber @payload.row.coNumber)
+        (set @entity.description @payload.row.description)
+        (set @entity.reason @payload.row.reason)
+        (set @entity.costImpact @payload.row.costImpact)
+        (set @entity.scheduleImpactDays @payload.row.scheduleImpactDays)
+        (set @entity.status @payload.row.status)
+        (set @entity.requestedBy @payload.row.requestedBy)
+        (set @entity.approvedBy @payload.row.approvedBy)
+        (set @entity.requestedAt @payload.row.requestedAt)
+        (set @entity.approvedAt @payload.row.approvedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.coNumber", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.reason" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Requested by" }, { type: "typography", variant: "body", content: "@entity.requestedBy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Approved by" }, { type: "typography", variant: "body", content: "@entity.approvedBy" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Cost impact", value: "@entity.costImpact", icon: "dollar-sign" }, { type: "stat-display", label: "Schedule days", value: "@entity.scheduleImpactDays", icon: "calendar" }, { type: "stat-display", label: "Requested", value: "@entity.requestedAt", icon: "clock" }, { type: "stat-display", label: "Approved", value: "@entity.approvedAt", icon: "check-circle" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Submit", variant: "primary", action: "SUBMIT_FOR_APPROVAL", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Approve", variant: "primary", action: "APPROVE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Execute", variant: "primary", action: "EXECUTE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Delete", variant: "danger", action: "REQUEST_DELETE", actionPayload: { id: "@entity.id" } }] }] })
+      REQUEST_DELETE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Change order submitted for approval" })
-      APPROVE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Change order approved" })
-      REJECT -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "error", message: "Change order rejected" })
-      EXECUTE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Change order executed" })
-      CREATE -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Creating new change order" })
-      REFRESH -> loading
         (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      SEARCH -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Searching change orders" })
-      FILTER_STATUS -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Filtering by status" })
-      VIEW -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting change order…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading change orders…" }] })
+      SUBMIT_FOR_APPROVAL -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing change order" })
-      EDIT -> viewing
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting for approval…" }] })
+      APPROVE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Editing change order" })
-      REQUEST_DELETE -> viewing
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Approving change order…" }] })
+      REJECT -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rejecting change order…" }] })
+      EXECUTE -> loading
+        (set @entity.id @payload.id)
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Executing change order…" }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting change order…" }] })
     }
     state error {
       INIT -> loading
@@ -72,25 +84,24 @@ orbital ChangeOrderOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW                  { id : string!, row : ChangeOrder }
-      EDIT                  { id : string!, row : ChangeOrder }
-      CREATE                { source : string! }
+      OPEN_CHANGE_ORDER     { id : string!, row : ChangeOrder }
+      CLOSE_VIEW            { }
       REQUEST_DELETE        { id : string!, row : ChangeOrder }
+      SUBMIT_FOR_APPROVAL   { id : string! }
+      APPROVE               { id : string! }
+      REJECT                { id : string! }
+      EXECUTE               { id : string! }
       ChangeOrderLoaded     { data : [ChangeOrder], totalCount : number }
       ChangeOrderLoadFailed { error : string, code : string }
     }
     listens {
-      VIEW                  { id : string! }
-      EDIT                  { id : string! }
-      CREATE                { source : string! }
+      OPEN_CHANGE_ORDER     { id : string!, row : ChangeOrder }
+      CLOSE_VIEW            { }
       REQUEST_DELETE        { id : string! }
       SUBMIT_FOR_APPROVAL   { id : string! }
       APPROVE               { id : string! }
       REJECT                { id : string! }
       EXECUTE               { id : string! }
-      REFRESH               {  }
-      SEARCH                { query : string! }
-      FILTER_STATUS         { status : string! }
       ChangeOrderLoaded     { data : [ChangeOrder], totalCount : number }
       ChangeOrderLoadFailed { error : string, code : string }
     }

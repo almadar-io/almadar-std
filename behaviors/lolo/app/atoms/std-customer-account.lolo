@@ -1,5 +1,5 @@
 app std-customer-account "1.0.0"
-"Retail customer profile primitive with purchase history reference, store credit, and loyalty points."
+"std-customer-account — retail customer profile primitive with loyalty points, store credit, and spend history. Lists customers in `browsing`; opens detail in `viewing_single` with Grant Points / Issue Credit / Ban actions."
 
 orbital CustomerAccountOrbital {
   entity CustomerAccount [persistent: customeraccounts] {
@@ -25,35 +25,68 @@ orbital CustomerAccountOrbital {
     state loading {
       INIT -> loading
         (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading customers…" }] })
       CustomerAccountLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "media-gallery", items: [{ id: "r1", src: "https://picsum.photos/seed/receipt1/400/300", alt: "Receipt #1024" }, { id: "r2", src: "https://picsum.photos/seed/receipt2/400/300", alt: "Receipt #1025" }, { id: "r3", src: "https://picsum.photos/seed/receipt3/400/300", alt: "Receipt #1026" }, { id: "r4", src: "https://picsum.photos/seed/receipt4/400/300", alt: "Receipt #1027" }] }, { type: "flip-card", front: { type: "stack", direction: "vertical", gap: "sm", align: "center", children: [{ type: "icon", name: "award" }, { type: "typography", variant: "h4", content: "Loyalty Tier: Gold" }, { type: "typography", variant: "caption", color: "muted", content: "Tap to view points" }] }, back: { type: "stack", direction: "vertical", gap: "sm", align: "center", children: [{ type: "typography", variant: "h4", content: "2,450 points" }, { type: "typography", variant: "body", content: "Next reward at 3,000 points" }] }, height: "h-48" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name", variant: "h4" }, { name: "email", label: "Email", variant: "body" }, { name: "phone", label: "Phone", variant: "caption" }, { name: "loyaltyPoints", label: "Points", variant: "caption" }, { name: "totalSpent", label: "Total Spent", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], itemActions: [{ label: "Add Points", event: "GRANT_POINTS", variant: "primary" }, { label: "Issue Credit", event: "GRANT_CREDIT", variant: "ghost" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total customers", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Active", value: "1,284", icon: "check-circle" }, { type: "stat-display", label: "Loyalty members", value: "76%", icon: "award" }, { type: "stat-display", label: "Avg lifetime value", value: "$412", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "email", label: "Email", variant: "caption" }, { name: "phone", label: "Phone", variant: "caption" }, { name: "loyaltyPoints", label: "Points", variant: "caption" }, { name: "totalSpent", label: "Total Spent", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CUSTOMER", variant: "primary", icon: "arrow-right" }, { label: "Ban", event: "BAN_CUSTOMER", variant: "danger" }] }] })
       CustomerAccountLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      GRANT_POINTS -> browsing
+      OPEN_CUSTOMER -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.email @payload.row.email)
+        (set @entity.phone @payload.row.phone)
+        (set @entity.loyaltyPoints @payload.row.loyaltyPoints)
+        (set @entity.storeCreditAmount @payload.row.storeCreditAmount)
+        (set @entity.totalSpent @payload.row.totalSpent)
+        (set @entity.joinedAt @payload.row.joinedAt)
+        (set @entity.lastVisitAt @payload.row.lastVisitAt)
+        (set @entity.status @payload.row.status)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "user" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Loyalty points", value: "@entity.loyaltyPoints", icon: "award" }, { type: "stat-display", label: "Store credit", value: "@entity.storeCreditAmount", icon: "credit-card" }, { type: "stat-display", label: "Total spent", value: "@entity.totalSpent", icon: "dollar-sign" }, { type: "stat-display", label: "Last visit", value: "@entity.lastVisitAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Grant Points", variant: "primary", action: "GRANT_POINTS", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Issue Credit", variant: "secondary", action: "GRANT_CREDIT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Ban", variant: "danger", action: "BAN_CUSTOMER", actionPayload: { id: "@entity.id" } }] }] })
+      BAN_CUSTOMER -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Points granted" })
-      GRANT_CREDIT -> browsing
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Banning customer…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading customers…" }] })
+      GRANT_POINTS -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Store credit issued" })
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Granting points…" }] })
+      GRANT_CREDIT -> loading
+        (set @entity.id @payload.id)
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Issuing store credit…" }] })
+      BAN_CUSTOMER -> loading
+        (set @entity.id @payload.id)
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Banning customer…" }] })
     }
     state error {
       INIT -> loading
         (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
-        (render-ui main { type: "spinner" })
+        (render-ui main { type: "spinner", size: "sm" })
     }
 
     emits {
-      GRANT_POINTS { id : string! }
-      GRANT_CREDIT { id : string! }
+      OPEN_CUSTOMER { id : string!, row : CustomerAccount }
+      CLOSE_VIEW    { }
+      GRANT_POINTS  { id : string! }
+      GRANT_CREDIT  { id : string! }
+      BAN_CUSTOMER  { id : string! }
       CustomerAccountLoaded { data : [CustomerAccount] }
       CustomerAccountLoadFailed { error : string, code : string }
     }
     listens {
-      GRANT_POINTS { id : string! }
-      GRANT_CREDIT { id : string! }
+      OPEN_CUSTOMER { id : string!, row : CustomerAccount }
+      CLOSE_VIEW    { }
+      GRANT_POINTS  { id : string! }
+      GRANT_CREDIT  { id : string! }
+      BAN_CUSTOMER  { id : string! }
       CustomerAccountLoaded { data : [CustomerAccount] }
       CustomerAccountLoadFailed { error : string, code : string }
     }

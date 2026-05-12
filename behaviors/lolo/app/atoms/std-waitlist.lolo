@@ -1,5 +1,5 @@
 app std-waitlist "1.0.0"
-"std-waitlist — sorted queue with auto-promote-on-cancel. Owns a WaitlistEntry entity (one row per (targetId, userId)); JOIN appends a waiting entry, PROMOTE flips status to promoted, CANCEL flips status to cancelled and emits WaitlistEntryCancelled so a parent molecule can promote the next waiting entry."
+"std-waitlist — sorted queue with auto-promote-on-cancel. Lists waitlist entries in `browsing`; opens detail in `viewing_single` with Promote / Cancel actions."
 
 orbital WaitlistOrbital {
   entity WaitlistEntry [persistent: waitlistentries] {
@@ -16,10 +16,6 @@ orbital WaitlistOrbital {
 
   type WaitlistEntryLoaded     = Event { data : [WaitlistEntry] }            "Fired when the waitlist collection finishes loading"
   type WaitlistEntryLoadFailed = Event { error : string, code : string }     "Fired when the waitlist collection fails to load"
-  type WaitlistEntryJoined     = Event { row : WaitlistEntry }               "Fired after a new waitlist entry persists successfully"
-  type WaitlistEntryPromoted   = Event { row : WaitlistEntry }               "Fired after a waitlist entry is promoted (status -> promoted)"
-  type WaitlistEntryCancelled  = Event { row : WaitlistEntry }               "Fired after a waitlist entry is cancelled; parent molecules can listen and promote the next waiting entry"
-  type WaitlistEntryFailed     = Event { error : string, code : string }     "Fired when a waitlist entry write fails to persist"
 
   trait WaitlistManage -> WaitlistEntry [interaction, collection] {
     config {
@@ -31,31 +27,39 @@ orbital WaitlistOrbital {
         (fetch WaitlistEntry { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading waitlist…" }] })
       WaitlistEntryLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "position", label: "#", variant: "badge" }, { name: "userId", label: "User", variant: "caption" }, { name: "targetType", label: "Type", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "joinedAt", label: "Joined", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Promote", event: "PROMOTE", variant: "primary", icon: "arrow-up" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }] }, { type: "button", label: "Join Waitlist", action: "JOIN", variant: "secondary", icon: "user-plus" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total entries", value: "@payload.data.length", icon: "users" }, { type: "stat-display", label: "Waiting", value: "126", icon: "hourglass" }, { type: "stat-display", label: "Promoted 7d", value: "24", icon: "arrow-up" }, { type: "stat-display", label: "Avg wait time", value: "3d", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "position", label: "#", variant: "badge" }, { name: "userId", label: "User", variant: "caption" }, { name: "targetType", label: "Type", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "joinedAt", label: "Joined", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ENTRY", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }] }] })
       WaitlistEntryLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      JOIN -> loading
-        (set @entity.targetId @payload.targetId)
-        (set @entity.userId @payload.userId)
-        (persist create WaitlistEntry @entity { emit: { success: "WaitlistEntryJoined", failure: "WaitlistEntryFailed" } })
-      PROMOTE -> loading
-        (set @entity.id @payload.entryId)
-        (set @entity.status "promoted")
-        (persist update WaitlistEntry @entity { emit: { success: "WaitlistEntryPromoted", failure: "WaitlistEntryFailed" } })
+      OPEN_ENTRY -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.targetId @payload.row.targetId)
+        (set @entity.targetType @payload.row.targetType)
+        (set @entity.userId @payload.row.userId)
+        (set @entity.position @payload.row.position)
+        (set @entity.status @payload.row.status)
+        (set @entity.joinedAt @payload.row.joinedAt)
+        (set @entity.promotedAt @payload.row.promotedAt)
+        (set @entity.notifiedAt @payload.row.notifiedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "users" }, { type: "typography", content: "@entity.userId", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Target" }, { type: "typography", variant: "body", content: "@entity.targetId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Target type" }, { type: "typography", variant: "body", content: "@entity.targetType" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Position", value: "@entity.position", icon: "hash" }, { type: "stat-display", label: "Joined", value: "@entity.joinedAt", icon: "calendar" }, { type: "stat-display", label: "Promoted", value: "@entity.promotedAt", icon: "arrow-up" }, { type: "stat-display", label: "Notified", value: "@entity.notifiedAt", icon: "bell" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Promote", variant: "primary", action: "PROMOTE", actionPayload: { entryId: "@entity.id", row: "@entity" } }, { type: "button", label: "Cancel", variant: "danger", action: "CANCEL", actionPayload: { entryId: "@entity.id", row: "@entity" } }] }] })
       CANCEL -> loading
         (set @entity.id @payload.entryId)
-        (set @entity.status "cancelled")
-        (persist update WaitlistEntry @entity { emit: { success: "WaitlistEntryCancelled", failure: "WaitlistEntryFailed" } })
-      WaitlistEntryJoined -> loading
         (fetch WaitlistEntry { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
-      WaitlistEntryPromoted -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling entry…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
         (fetch WaitlistEntry { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
-      WaitlistEntryCancelled -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading waitlist…" }] })
+      PROMOTE -> loading
+        (set @entity.id @payload.entryId)
         (fetch WaitlistEntry { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
-      WaitlistEntryFailed -> browsing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Promoting entry…" }] })
+      CANCEL -> loading
+        (set @entity.id @payload.entryId)
+        (fetch WaitlistEntry { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling entry…" }] })
     }
     state error {
       INIT -> loading
@@ -63,26 +67,20 @@ orbital WaitlistOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      JOIN     { targetId : string!, userId : string! }
-      PROMOTE  { entryId : string!, row : WaitlistEntry }
-      CANCEL   { entryId : string!, row : WaitlistEntry }
+      OPEN_ENTRY { id : string!, row : WaitlistEntry }
+      CLOSE_VIEW { }
+      PROMOTE    { entryId : string!, row : WaitlistEntry }
+      CANCEL     { entryId : string!, row : WaitlistEntry }
       WaitlistEntryLoaded     { data : [WaitlistEntry] }
       WaitlistEntryLoadFailed { error : string, code : string }
-      WaitlistEntryJoined     { row : WaitlistEntry }
-      WaitlistEntryPromoted   { row : WaitlistEntry }
-      WaitlistEntryCancelled  { row : WaitlistEntry }
-      WaitlistEntryFailed     { error : string, code : string }
     }
     listens {
-      JOIN     { targetId : string!, userId : string! }
-      PROMOTE  { entryId : string!, row : WaitlistEntry }
-      CANCEL   { entryId : string!, row : WaitlistEntry }
+      OPEN_ENTRY { id : string!, row : WaitlistEntry }
+      CLOSE_VIEW { }
+      PROMOTE    { entryId : string!, row : WaitlistEntry }
+      CANCEL     { entryId : string!, row : WaitlistEntry }
       WaitlistEntryLoaded     { data : [WaitlistEntry] }
       WaitlistEntryLoadFailed { error : string, code : string }
-      WaitlistEntryJoined     { row : WaitlistEntry }
-      WaitlistEntryPromoted   { row : WaitlistEntry }
-      WaitlistEntryCancelled  { row : WaitlistEntry }
-      WaitlistEntryFailed     { error : string, code : string }
     }
   }
   page "/waitlistentries/manage" as WaitlistManagePage -> WaitlistManage

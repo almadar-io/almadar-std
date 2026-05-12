@@ -1,5 +1,5 @@
 app std-donation-receipt "1.0.0"
-"std-donation-receipt — tax-deductible donation receipt atom. Owns a DonationReceipt entity with IRS-compliance fields (taxYear, taxDeductible, nonprofitEin). Browses receipts in a data-grid with Email / Void actions."
+"std-donation-receipt — tax-deductible donation receipt with IRS-compliance fields (taxYear, taxDeductible, nonprofitEin). Lists receipts in `browsing`; opens detail in `viewing_single` with Email / Void actions."
 
 orbital DonationReceiptOrbital {
   entity DonationReceipt [persistent: donationreceipts] {
@@ -29,17 +29,39 @@ orbital DonationReceiptOrbital {
         (fetch DonationReceipt { emit: { success: "DonationReceiptLoaded", failure: "DonationReceiptLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading donation receipts…" }] })
       DonationReceiptLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "stats-grid", columns: 4, stats: [{ label: "Receipts issued", value: "1,248" }, { label: "Total deductible", value: "$482,300" }, { label: "Tax year", value: "2025" }, { label: "Emailed", value: "94%" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "receiptNumber", label: "Receipt #", variant: "caption" }, { name: "donorName", label: "Donor", variant: "caption" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "donationDate", label: "Date", variant: "caption" }, { name: "taxYear", label: "Tax Year", variant: "caption" }, { name: "isEmailed", label: "Emailed", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Email", event: "EMAIL_RECEIPT", variant: "primary" }, { label: "Void", event: "VOID_RECEIPT", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Receipts", value: "@payload.data.length", icon: "receipt" }, { type: "stat-display", label: "Total deductible", value: "$482,300", icon: "dollar-sign" }, { type: "stat-display", label: "Tax year", value: "2025", icon: "calendar" }, { type: "stat-display", label: "Emailed", value: "94%", icon: "send" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "receiptNumber", label: "Receipt #", variant: "caption" }, { name: "donorName", label: "Donor", variant: "caption" }, { name: "amount", label: "Amount", variant: "caption" }, { name: "donationDate", label: "Date", variant: "caption" }, { name: "taxYear", label: "Tax Year", variant: "caption" }, { name: "isEmailed", label: "Emailed", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RECEIPT", variant: "primary", icon: "arrow-right" }, { label: "Void", event: "VOID_RECEIPT", variant: "danger" }] }] })
       DonationReceiptLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
-      EMAIL_RECEIPT -> browsing
+      OPEN_RECEIPT -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.receiptNumber @payload.row.receiptNumber)
+        (set @entity.donorId @payload.row.donorId)
+        (set @entity.donorName @payload.row.donorName)
+        (set @entity.campaignId @payload.row.campaignId)
+        (set @entity.amount @payload.row.amount)
+        (set @entity.donationDate @payload.row.donationDate)
+        (set @entity.taxYear @payload.row.taxYear)
+        (set @entity.nonprofitEin @payload.row.nonprofitEin)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "receipt" }, { type: "typography", content: "@entity.receiptNumber", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Donor" }, { type: "typography", variant: "body", content: "@entity.donorName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Donor ID" }, { type: "typography", variant: "body", content: "@entity.donorId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Campaign" }, { type: "typography", variant: "body", content: "@entity.campaignId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Nonprofit EIN" }, { type: "typography", variant: "body", content: "@entity.nonprofitEin" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Amount", value: "@entity.amount", icon: "dollar-sign" }, { type: "stat-display", label: "Date", value: "@entity.donationDate", icon: "calendar" }, { type: "stat-display", label: "Tax year", value: "@entity.taxYear", icon: "file-text" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Email Receipt", variant: "primary", action: "EMAIL_RECEIPT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Void", variant: "danger", action: "VOID_RECEIPT", actionPayload: { id: "@entity.id" } }] }] })
+      VOID_RECEIPT -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Receipt emailed" })
-      VOID_RECEIPT -> browsing
+        (fetch DonationReceipt { emit: { success: "DonationReceiptLoaded", failure: "DonationReceiptLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding receipt…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch DonationReceipt { emit: { success: "DonationReceiptLoaded", failure: "DonationReceiptLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading receipts…" }] })
+      EMAIL_RECEIPT -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Receipt voided" })
+        (fetch DonationReceipt { emit: { success: "DonationReceiptLoaded", failure: "DonationReceiptLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Emailing receipt…" }] })
+      VOID_RECEIPT -> loading
+        (set @entity.id @payload.id)
+        (fetch DonationReceipt { emit: { success: "DonationReceiptLoaded", failure: "DonationReceiptLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding receipt…" }] })
     }
     state error {
       INIT -> loading
@@ -47,12 +69,16 @@ orbital DonationReceiptOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
+      OPEN_RECEIPT              { id : string!, row : DonationReceipt }
+      CLOSE_VIEW                { }
       EMAIL_RECEIPT             { id : string! }
       VOID_RECEIPT              { id : string! }
       DonationReceiptLoaded     { data : [DonationReceipt] }
       DonationReceiptLoadFailed { error : string, code : string }
     }
     listens {
+      OPEN_RECEIPT              { id : string!, row : DonationReceipt }
+      CLOSE_VIEW                { }
       EMAIL_RECEIPT             { id : string! }
       VOID_RECEIPT              { id : string! }
       DonationReceiptLoaded     { data : [DonationReceipt] }

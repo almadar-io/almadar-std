@@ -1,5 +1,5 @@
 app std-time-entry "1.0.0"
-"std-time-entry — Time tracking line within a timesheet: project/task, hours, date, billable flag, and rate."
+"std-time-entry — time tracking line within a timesheet: project/task, hours, date, billable flag, rate. Lists entries in `browsing`; opens entry detail in `viewing_single` with Delete action."
 
 orbital TimeEntryOrbital {
   entity TimeEntry [persistent: timeentries] {
@@ -29,35 +29,37 @@ orbital TimeEntryOrbital {
       INIT -> loading
         (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
-      TimeEntryLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log Time", variant: "primary", action: "CREATE" }] }, { type: "tabs", tabs: [{ id: "active", label: "Active" }, { id: "logged", label: "Logged" }, { id: "approved", label: "Approved" }], defaultActiveTab: "active", variant: "underline" }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "timer-display", seconds: 1845, running: true, format: "mm:ss", size: "lg" }, { type: "meter", value: 32, min: 0, max: 40, label: "Weekly Utilization", unit: "h", variant: "linear", thresholds: [{ value: 20, color: "warning" }, { value: 35, color: "success" }] }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "projectName", label: "Project", variant: "caption" }, { name: "taskDescription", label: "Task", variant: "caption" }, { name: "workDate", label: "Date", variant: "caption" }, { name: "hours", label: "Hours", variant: "caption" }, { name: "billable", label: "Billable", variant: "badge" }, { name: "hourlyRate", label: "Rate", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "secondary" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+      TimeEntryLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total entries", value: "@payload.data.length", icon: "list" }, { type: "stat-display", label: "Hours this week", value: "32", icon: "clock" }, { type: "stat-display", label: "Billable %", value: "78%", icon: "dollar-sign" }, { type: "stat-display", label: "Avg per day", value: "6.4h", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "projectName", label: "Project", variant: "caption" }, { name: "taskDescription", label: "Task", variant: "caption" }, { name: "workDate", label: "Date", variant: "caption" }, { name: "hours", label: "Hours", variant: "caption" }, { name: "billable", label: "Billable", variant: "badge" }, { name: "hourlyRate", label: "Rate", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ENTRY", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
       TimeEntryLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      REFRESH -> loading
-        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Refreshing time entries…" }] })
-      SEARCH -> loading
-        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Searching time entries…" }] })
-      FILTER_BILLABLE -> loading
-        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering time entries…" }] })
-      FILTER_STATUS -> loading
-        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filtering time entries…" }] })
-      CREATE -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Logging new time entry" })
-      VIEW -> viewing
+    state browsing {
+      OPEN_ENTRY -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.timesheetId @payload.row.timesheetId)
+        (set @entity.projectId @payload.row.projectId)
+        (set @entity.projectName @payload.row.projectName)
+        (set @entity.taskDescription @payload.row.taskDescription)
+        (set @entity.workDate @payload.row.workDate)
+        (set @entity.hours @payload.row.hours)
+        (set @entity.hourlyRate @payload.row.hourlyRate)
+        (set @entity.status @payload.row.status)
+        (set @entity.notes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "clock" }, { type: "typography", content: "@entity.projectName", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Task" }, { type: "typography", variant: "body", content: "@entity.taskDescription" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Timesheet" }, { type: "typography", variant: "body", content: "@entity.timesheetId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.notes" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Hours", value: "@entity.hours", icon: "clock" }, { type: "stat-display", label: "Rate", value: "@entity.hourlyRate", icon: "dollar-sign" }, { type: "stat-display", label: "Date", value: "@entity.workDate", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "REQUEST_DELETE", actionPayload: { id: "@entity.id" } }] }] })
+      REQUEST_DELETE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing time entry" })
-      EDIT -> viewing
+        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting time entry…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading time entries…" }] })
+      REQUEST_DELETE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Editing time entry" })
-      REQUEST_DELETE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+        (fetch TimeEntry { emit: { success: "TimeEntryLoaded", failure: "TimeEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting time entry…" }] })
     }
     state error {
       INIT -> loading
@@ -65,22 +67,16 @@ orbital TimeEntryOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW                 { id : string!, source : string }
-      EDIT                 { id : string!, source : string }
-      CREATE               { source : string }
-      REQUEST_DELETE       { id : string!, source : string }
+      OPEN_ENTRY           { id : string!, row : TimeEntry }
+      CLOSE_VIEW           { }
+      REQUEST_DELETE       { id : string! }
       TimeEntryLoaded      { data : [TimeEntry], totalCount : number }
       TimeEntryLoadFailed  { error : string, code : string }
     }
     listens {
-      VIEW                 { id : string! }
-      EDIT                 { id : string! }
-      CREATE               { source : string }
+      OPEN_ENTRY           { id : string!, row : TimeEntry }
+      CLOSE_VIEW           { }
       REQUEST_DELETE       { id : string! }
-      REFRESH              { source : string }
-      SEARCH               { query : string }
-      FILTER_BILLABLE      { billable : boolean }
-      FILTER_STATUS        { status : string }
       TimeEntryLoaded      { data : [TimeEntry], totalCount : number }
       TimeEntryLoadFailed  { error : string, code : string }
     }

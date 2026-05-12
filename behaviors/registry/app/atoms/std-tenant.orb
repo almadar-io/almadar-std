@@ -1,7 +1,7 @@
 {
   "name": "std-tenant",
   "version": "1.0.0",
-  "description": "Tenant primitive: person/company occupying a leased unit.",
+  "description": "std-tenant — person/company occupying a leased unit. Lists tenants in `browsing`; opens tenant detail (name, contact, lease, move-in/out dates, status) in `viewing_single` with Activate / Move Out actions.",
   "orbitals": [
     {
       "name": "TenantOrbital",
@@ -69,6 +69,57 @@
           "linkedEntity": "Tenant",
           "emits": [
             {
+              "event": "OPEN_TENANT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.leaseId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.moveInDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.moveOutDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_TENANT"
+            },
+            {
               "event": "ACTIVATE_TENANT",
               "payloadSchema": [
                 {
@@ -90,7 +141,6 @@
             },
             {
               "event": "TenantLoaded",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -100,7 +150,6 @@
             },
             {
               "event": "TenantLoadFailed",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -121,6 +170,9 @@
               },
               {
                 "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -156,8 +208,23 @@
                 ]
               },
               {
-                "key": "ACTIVATE_TENANT",
-                "name": "Activate Tenant",
+                "key": "OPEN_TENANT",
+                "name": "Open Tenant",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Tenant"
+                  }
+                ]
+              },
+              {
+                "key": "MOVE_OUT",
+                "name": "Move Out",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -167,8 +234,12 @@
                 ]
               },
               {
-                "key": "MOVE_OUT",
-                "name": "Move Out",
+                "key": "CLOSE_TENANT",
+                "name": "Close Tenant"
+              },
+              {
+                "key": "ACTIVATE_TENANT",
+                "name": "Activate Tenant",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -198,7 +269,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading tenants…"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -212,97 +298,105 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "width": 120.0,
-                              "units": [],
-                              "mapWidth": 1000.0,
-                              "mapHeight": 1000.0,
-                              "tiles": [],
-                              "type": "mini-map",
-                              "height": 80.0
+                              "type": "icon",
+                              "name": "users"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "users"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h3",
-                                  "content": "@config.title"
-                                }
-                              ]
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
-                          "height": "240px",
-                          "markers": [],
-                          "type": "map-view",
-                          "zoom": 10.0
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
+                              "icon": "users",
+                              "label": "Total tenants"
+                            },
+                            {
+                              "value": "42",
+                              "type": "stat-display",
+                              "label": "Current",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "icon": "user-plus",
+                              "value": "8",
+                              "type": "stat-display",
+                              "label": "Prospective"
+                            },
+                            {
+                              "icon": "user-minus",
+                              "label": "Former",
+                              "type": "stat-display",
+                              "value": "120"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "label": "Name",
+                              "variant": "h4",
                               "name": "name",
-                              "variant": "h4"
+                              "label": "Name"
                             },
                             {
-                              "label": "Email",
+                              "variant": "body",
                               "name": "email",
-                              "variant": "body"
+                              "label": "Email"
                             },
                             {
+                              "name": "phone",
                               "label": "Phone",
-                              "variant": "caption",
-                              "name": "phone"
+                              "variant": "caption"
                             },
                             {
+                              "label": "Status",
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "name": "status"
                             },
                             {
-                              "label": "Move-In",
                               "variant": "caption",
-                              "name": "moveInDate"
+                              "name": "moveInDate",
+                              "label": "Move-In"
                             }
                           ],
                           "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Activate",
-                              "event": "ACTIVATE_TENANT",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Open",
+                              "icon": "arrow-right",
+                              "event": "OPEN_TENANT"
                             },
                             {
-                              "variant": "danger",
+                              "label": "Move Out",
                               "event": "MOVE_OUT",
-                              "label": "Move Out"
+                              "variant": "danger"
                             }
-                          ]
+                          ],
+                          "type": "data-grid"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -318,32 +412,235 @@
                     {
                       "variant": "error",
                       "title": "Failed to load tenants",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
-                "event": "ACTIVATE_TENANT",
+                "to": "viewing_single",
+                "event": "OPEN_TENANT",
                 "effects": [
                   [
                     "set",
                     "@entity.id",
-                    "@payload.id"
+                    "@payload.row.id"
                   ],
                   [
-                    "notify",
-                    "Tenant activated",
-                    "success"
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.email",
+                    "@payload.row.email"
+                  ],
+                  [
+                    "set",
+                    "@entity.phone",
+                    "@payload.row.phone"
+                  ],
+                  [
+                    "set",
+                    "@entity.leaseId",
+                    "@payload.row.leaseId"
+                  ],
+                  [
+                    "set",
+                    "@entity.moveInDate",
+                    "@payload.row.moveInDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.moveOutDate",
+                    "@payload.row.moveOutDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.notes",
+                    "@payload.row.notes"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLOSE_TENANT",
+                              "type": "button",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "type": "badge",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Email",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.email",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Phone",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.phone"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Lease",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.leaseId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Notes",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.notes",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "label": "Move-In",
+                              "icon": "calendar",
+                              "value": "@entity.moveInDate",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Move-Out",
+                              "value": "@entity.moveOutDate",
+                              "icon": "calendar"
+                            }
+                          ],
+                          "cols": 2.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "ACTIVATE_TENANT",
+                              "label": "Activate",
+                              "variant": "primary",
+                              "type": "button"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "danger",
+                              "type": "button",
+                              "label": "Move Out",
+                              "action": "MOVE_OUT"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ]
+                    }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "browsing",
+                "to": "loading",
                 "event": "MOVE_OUT",
                 "effects": [
                   [
@@ -352,9 +649,163 @@
                     "@payload.id"
                   ],
                   [
-                    "notify",
-                    "Tenant move-out recorded",
-                    "info"
+                    "fetch",
+                    "Tenant",
+                    {
+                      "emit": {
+                        "success": "TenantLoaded",
+                        "failure": "TenantLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Recording move-out…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_TENANT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Tenant",
+                    {
+                      "emit": {
+                        "failure": "TenantLoadFailed",
+                        "success": "TenantLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading tenants…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ACTIVATE_TENANT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Tenant",
+                    {
+                      "emit": {
+                        "failure": "TenantLoadFailed",
+                        "success": "TenantLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Activating tenant…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MOVE_OUT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Tenant",
+                    {
+                      "emit": {
+                        "success": "TenantLoaded",
+                        "failure": "TenantLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Recording move-out…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
                   ]
                 ]
               },
@@ -371,6 +822,14 @@
                         "success": "TenantLoaded",
                         "failure": "TenantLoadFailed"
                       }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]

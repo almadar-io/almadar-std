@@ -1,5 +1,5 @@
 app std-rich-editor "1.0.0"
-"std-rich-editor — wiki / CMS Notion-style block editor. Owns a Document entity (page / doc / post) with a serialized RichBlock[] payload, browses documents in a data-grid, opens the rich-block-editor on a selected row, and persists block edits + publish status back to the row."
+"std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status."
 
 orbital DocumentOrbital {
   entity Document [persistent: documents] {
@@ -31,13 +31,19 @@ orbital DocumentOrbital {
         (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
       DocumentLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "book-cover-page", title: "@config.title", subtitle: "Wiki / CMS Notion-style Docs", author: "Team Knowledge Base", coverImageUrl: "https://picsum.photos/seed/notes-cover/1200/400" }, { type: "book-nav-bar", currentPage: 1, totalPages: 24, chapterTitle: "Getting Started" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "doc-toc", items: [{ id: "intro", label: "Introduction", level: 1 }, { id: "blocks", label: "Block Types", level: 1 }, { id: "publish", label: "Publishing Workflow", level: 1 }, { id: "archive", label: "Archived Docs", level: 2 }], activeId: "blocks" }, { type: "tag-cloud", tags: [{ label: "Engineering" }, { label: "Product" }, { label: "Design" }, { label: "Operations" }, { label: "Onboarding" }, { label: "Runbooks" }], variant: "primary" }, { type: "accordion", items: [{ id: "drafts", title: "Drafts", content: "All in-progress documents that have not yet been published." }, { id: "published", title: "Published", content: "Documents visible to readers across the workspace." }, { id: "archived", title: "Archived", content: "Read-only legacy documents preserved for historical reference." }] }, { type: "pull-quote", children: "Documents are the long-term memory of the organization." }, { type: "markdown-content", content: "Welcome to the wiki workspace.", direction: "ltr" }, { type: "book-chapter-view", chapter: { id: "intro", title: "Introduction", content: "This chapter walks through composing your first document and publishing it to the workspace." } }, { type: "code-block", code: "const greet = name => 'Hello ' + name", language: "javascript", showCopyButton: true, showLanguageBadge: true, foldable: true }, { type: "doc-code-block", code: "title: Release Notes, version: 1.2.0, status: published", language: "json", title: "Sample document payload", showLineNumbers: true }, { type: "code-view", data: { kind: "document", status: "published", version: 12, blocks: 7 }, label: "Inspect document JSON", defaultExpanded: false }, { type: "text-highlight", highlightType: "note", annotationId: "tip-1", children: [{ type: "typography", content: "Pro tip: pin the most-edited document to the workspace home for one-click access.", variant: "body" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "kind", label: "Kind", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "version", label: "v", variant: "caption" }, { name: "updatedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN", variant: "primary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "secondary", icon: "send" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total docs", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Drafts", value: "12", icon: "edit-3" }, { type: "stat-display", label: "Published", value: "84", icon: "check-circle" }, { type: "stat-display", label: "Archived", value: "9", icon: "archive" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "kind", label: "Kind", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "version", label: "v", variant: "caption" }, { name: "updatedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN", variant: "primary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "secondary", icon: "send" }] }] })
+      DocumentSaved -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+      DocumentPublished -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+      DocumentSaveFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
       DocumentLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state browsing {
       OPEN -> editing
-        (set @entity.id @payload.documentId)
+        (set @entity.id @payload.row.id)
         (set @entity.title @payload.row.title)
         (set @entity.blocksJson @payload.row.blocksJson)
         (set @entity.authorId @payload.row.authorId)
@@ -47,45 +53,27 @@ orbital DocumentOrbital {
         (set @entity.version @payload.row.version)
         (set @entity.createdAt @payload.row.createdAt)
         (set @entity.updatedAt @payload.row.updatedAt)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: @entity.title, variant: "h3" }, { type: "badge", label: @entity.status, variant: "secondary" }] }, { type: "divider" }, { type: "rich-block-editor", initialBlocks: @entity.blocksJson, changeEvent: "BLOCKS_CHANGE", placeholder: "Start writing…", showToolbar: true }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Save", action: "SAVE", variant: "primary", icon: "save" }, { type: "button", label: "Publish", action: "PUBLISH", variant: "secondary", icon: "send" }] }] })
-      PUBLISH -> browsing
-        (set @entity.id @payload.documentId)
-        (set @entity.title @payload.row.title)
-        (set @entity.blocksJson @payload.row.blocksJson)
-        (set @entity.authorId @payload.row.authorId)
-        (set @entity.parentId @payload.row.parentId)
-        (set @entity.kind @payload.row.kind)
-        (set @entity.status "published")
-        (set @entity.version @payload.row.version)
-        (set @entity.createdAt @payload.row.createdAt)
-        (set @entity.updatedAt @payload.row.updatedAt)
-        (persist update Document @entity { emit: { success: "DocumentPublished", failure: "DocumentSaveFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "secondary" }] }, { type: "divider" }, { type: "rich-block-editor", initialBlocks: @entity.blocksJson, changeEvent: "BLOCKS_CHANGE", placeholder: "Start writing…", showToolbar: true }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Save", variant: "primary", action: "SAVE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Publish", variant: "secondary", action: "PUBLISH", actionPayload: { id: "@entity.id" } }] }] })
+      PUBLISH -> loading
+        (set @entity.id @payload.id)
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Publishing document…" }] })
     }
     state editing {
       BLOCKS_CHANGE -> editing
         (set @entity.blocksJson @payload.blocks)
-      SAVE -> editing
-        (set @entity.id @payload.documentId)
-        (set @entity.blocksJson @payload.blocks)
-        (persist update Document @entity { emit: { success: "DocumentSaved", failure: "DocumentSaveFailed" } })
-      PUBLISH -> editing
-        (set @entity.id @payload.documentId)
-        (set @entity.title @payload.row.title)
-        (set @entity.blocksJson @payload.row.blocksJson)
-        (set @entity.authorId @payload.row.authorId)
-        (set @entity.parentId @payload.row.parentId)
-        (set @entity.kind @payload.row.kind)
-        (set @entity.status "published")
-        (set @entity.version @payload.row.version)
-        (set @entity.createdAt @payload.row.createdAt)
-        (set @entity.updatedAt @payload.row.updatedAt)
-        (persist update Document @entity { emit: { success: "DocumentPublished", failure: "DocumentSaveFailed" } })
-      DocumentSaved -> editing
-        (render-ui main { type: "alert", variant: "success", message: "Saved" })
-      DocumentPublished -> loading
+      CLOSE_VIEW -> loading
         (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
-      DocumentSaveFailed -> editing
-        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
+      SAVE -> loading
+        (set @entity.id @payload.id)
+        (persist update Document @entity { emit: { success: "DocumentSaved", failure: "DocumentSaveFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Saving document…" }] })
+      PUBLISH -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "published")
+        (persist update Document @entity { emit: { success: "DocumentPublished", failure: "DocumentSaveFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Publishing document…" }] })
     }
     state error {
       INIT -> loading
@@ -93,10 +81,11 @@ orbital DocumentOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN          { documentId : string!, row : Document }
+      OPEN          { id : string!, row : Document }
+      CLOSE_VIEW    { }
       BLOCKS_CHANGE { blocks : [object] }
-      SAVE          { documentId : string!, blocks : [object] }
-      PUBLISH       { documentId : string!, row : Document }
+      SAVE          { id : string! }
+      PUBLISH       { id : string! }
       DocumentLoaded     { data : [Document] }
       DocumentLoadFailed { error : string, code : string }
       DocumentSaved      { row : Document }
@@ -104,10 +93,11 @@ orbital DocumentOrbital {
       DocumentSaveFailed { error : string, code : string }
     }
     listens {
-      OPEN          { documentId : string!, row : Document }
+      OPEN          { id : string!, row : Document }
+      CLOSE_VIEW    { }
       BLOCKS_CHANGE { blocks : [object] }
-      SAVE          { documentId : string!, blocks : [object] }
-      PUBLISH       { documentId : string!, row : Document }
+      SAVE          { id : string! }
+      PUBLISH       { id : string! }
       DocumentLoaded     { data : [Document] }
       DocumentLoadFailed { error : string, code : string }
       DocumentSaved      { row : Document }

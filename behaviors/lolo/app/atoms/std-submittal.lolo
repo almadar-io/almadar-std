@@ -1,5 +1,5 @@
 app std-submittal "1.0.0"
-"std-submittal — construction submittal primitive tracking material/equipment samples reviewed and approved before installation."
+"std-submittal — construction submittal primitive tracking material/equipment samples reviewed and approved before installation. Lists submittals in `browsing`; opens detail in `viewing_single` with Approve / Reject / Revise / Delete actions."
 
 orbital SubmittalOrbital {
   entity Submittal [persistent: submittals] {
@@ -29,42 +29,50 @@ orbital SubmittalOrbital {
       INIT -> loading
         (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading submittals…" }] })
-      SubmittalLoaded -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "button", label: "New Submittal", variant: "primary", action: "CREATE", actionPayload: { source: "header" } }] }, { type: "divider" }, { type: "split-pane", left: { type: "file-tree", tree: [{ name: "01 - General", path: "01 - General", type: "dir", children: [{ name: "Cover Sheet.pdf", path: "Cover Sheet.pdf", type: "file" }, { name: "Schedule.pdf", path: "Schedule.pdf", type: "file" }] }, { name: "03 - Concrete", path: "03 - Concrete", type: "dir", children: [{ name: "Mix Design.pdf", path: "03 - Concrete/Mix Design.pdf", type: "file" }, { name: "Rebar Shop Drawings.pdf", path: "03 - Concrete/Rebar Shop Drawings.pdf", type: "file" }] }, { name: "05 - Metals", path: "05 - Metals", type: "dir", children: [{ name: "Structural Steel.pdf", path: "05 - Metals/Structural Steel.pdf", type: "file" }] }] }, right: { type: "stack", direction: "vertical", gap: "md", children: [{ type: "split", ratio: "1:1", gap: "md", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "WBS hierarchy" }] }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Review status" }] }] }, { type: "spacer", size: "sm" }, { type: "upload-drop-zone", accept: "application/pdf,image/*", maxSize: 20971520, maxFiles: 8, label: "Drop submittal attachments here", description: "Shop drawings, product data, samples", icon: "paperclip" }] } }, { type: "divider" }, { type: "typography", variant: "h4", content: "Engineering Diagram" }, { type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "svg-mesh", cx: 80, cy: 60, nodes: 5, radius: 30, color: "primary", connectionDensity: 0.5 }, { type: "svg-branch", x: 200, y: 60, branches: 4, color: "secondary" }, { type: "svg-connection", x1: 40, y1: 60, x2: 200, y2: 60, color: "muted" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "submittalNumber", label: "Number", variant: "caption" }, { name: "specSection", label: "Spec Section", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "contractor", label: "Contractor", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "revisionNumber", label: "Rev", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "View", event: "VIEW", variant: "ghost" }, { label: "Edit", event: "EDIT", variant: "secondary" }, { label: "Approve", event: "APPROVE", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }, { label: "Revise", event: "REQUEST_REVISION", variant: "secondary" }, { label: "Delete", event: "REQUEST_DELETE", variant: "ghost" }] }] }] })
+      SubmittalLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total submittals", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "In review", value: "18", icon: "search" }, { type: "stat-display", label: "Approved", value: "62", icon: "check-circle" }, { type: "stat-display", label: "Revise & resubmit", value: "7", icon: "rotate-cw" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "submittalNumber", label: "Number", variant: "caption" }, { name: "specSection", label: "Spec Section", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "contractor", label: "Contractor", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "revisionNumber", label: "Rev", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_SUBMITTAL", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
       SubmittalLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
-    state viewing {
-      SUBMIT -> viewing
+    state browsing {
+      OPEN_SUBMITTAL -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.submittalNumber @payload.row.submittalNumber)
+        (set @entity.specSection @payload.row.specSection)
+        (set @entity.title @payload.row.title)
+        (set @entity.contractor @payload.row.contractor)
+        (set @entity.reviewer @payload.row.reviewer)
+        (set @entity.status @payload.row.status)
+        (set @entity.revisionNumber @payload.row.revisionNumber)
+        (set @entity.submittedAt @payload.row.submittedAt)
+        (set @entity.reviewedAt @payload.row.reviewedAt)
+        (set @entity.comments @payload.row.comments)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Number" }, { type: "typography", variant: "body", content: "@entity.submittalNumber" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Spec section" }, { type: "typography", variant: "body", content: "@entity.specSection" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Contractor" }, { type: "typography", variant: "body", content: "@entity.contractor" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reviewer" }, { type: "typography", variant: "body", content: "@entity.reviewer" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Comments" }, { type: "typography", variant: "body", content: "@entity.comments" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Revision", value: "@entity.revisionNumber", icon: "rotate-cw" }, { type: "stat-display", label: "Submitted", value: "@entity.submittedAt", icon: "calendar" }, { type: "stat-display", label: "Reviewed", value: "@entity.reviewedAt", icon: "calendar-check" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Approve", variant: "primary", action: "APPROVE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Revise", variant: "secondary", action: "REQUEST_REVISION", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Delete", variant: "danger", action: "REQUEST_DELETE", actionPayload: { id: "@entity.id" } }] }] })
+      REQUEST_DELETE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Submittal submitted for review" })
-      APPROVE -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "success", message: "Submittal approved" })
-      REJECT -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "error", message: "Submittal rejected" })
-      REQUEST_REVISION -> viewing
-        (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Revision requested" })
-      CREATE -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Creating new submittal" })
-      REFRESH -> loading
         (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
-        (render-ui main { type: "spinner", size: "sm" })
-      SEARCH -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Searching submittals" })
-      FILTER_STATUS -> viewing
-        (render-ui main { type: "alert", variant: "info", message: "Filtering by status" })
-      VIEW -> viewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting submittal…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading submittals…" }] })
+      APPROVE -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Viewing submittal" })
-      EDIT -> viewing
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Approving submittal…" }] })
+      REJECT -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "info", message: "Editing submittal" })
-      REQUEST_DELETE -> viewing
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Rejecting submittal…" }] })
+      REQUEST_REVISION -> loading
         (set @entity.id @payload.id)
-        (render-ui main { type: "alert", variant: "warning", message: "Delete requested" })
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Requesting revision…" }] })
+      REQUEST_DELETE -> loading
+        (set @entity.id @payload.id)
+        (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting submittal…" }] })
     }
     state error {
       INIT -> loading
@@ -72,25 +80,22 @@ orbital SubmittalOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      VIEW                { id : string!, row : Submittal }
-      EDIT                { id : string!, row : Submittal }
-      CREATE              { source : string! }
-      REQUEST_DELETE      { id : string!, row : Submittal }
+      OPEN_SUBMITTAL      { id : string!, row : Submittal }
+      CLOSE_VIEW          { }
+      APPROVE             { id : string! }
+      REJECT              { id : string! }
+      REQUEST_REVISION    { id : string! }
+      REQUEST_DELETE      { id : string! }
       SubmittalLoaded     { data : [Submittal], totalCount : number }
       SubmittalLoadFailed { error : string, code : string }
     }
     listens {
-      VIEW                { id : string! }
-      EDIT                { id : string! }
-      CREATE              { source : string! }
-      REQUEST_DELETE      { id : string! }
-      SUBMIT              { id : string! }
+      OPEN_SUBMITTAL      { id : string!, row : Submittal }
+      CLOSE_VIEW          { }
       APPROVE             { id : string! }
       REJECT              { id : string! }
       REQUEST_REVISION    { id : string! }
-      REFRESH             {  }
-      SEARCH              { query : string! }
-      FILTER_STATUS       { status : string! }
+      REQUEST_DELETE      { id : string! }
       SubmittalLoaded     { data : [Submittal], totalCount : number }
       SubmittalLoadFailed { error : string, code : string }
     }

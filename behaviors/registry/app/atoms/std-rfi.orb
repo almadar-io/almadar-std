@@ -1,7 +1,7 @@
 {
   "name": "std-rfi",
   "version": "1.0.0",
-  "description": "std-rfi — Request For Information primitive tracking formal questions raised during construction with response and deadline.",
+  "description": "std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions.",
   "orbitals": [
     {
       "name": "RfiOrbital",
@@ -85,58 +85,7 @@
           "linkedEntity": "Rfi",
           "emits": [
             {
-              "event": "VIEW",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CREATE",
-              "payloadSchema": [
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "REQUEST_DELETE",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "source",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SUBMIT",
+              "event": "OPEN_RFI",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -193,6 +142,19 @@
                 {
                   "name": "row.pendingId",
                   "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 }
               ]
             },
@@ -203,57 +165,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.rfiNumber",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subject",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.question",
-                  "type": "string"
-                },
-                {
-                  "name": "row.response",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.raisedBy",
-                  "type": "string"
-                },
-                {
-                  "name": "row.assignedTo",
-                  "type": "string"
-                },
-                {
-                  "name": "row.raisedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.dueAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.answeredAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
                 }
               ]
             },
@@ -264,57 +175,6 @@
                   "name": "id",
                   "type": "string",
                   "required": true
-                },
-                {
-                  "name": "row.id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.rfiNumber",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.subject",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row.question",
-                  "type": "string"
-                },
-                {
-                  "name": "row.response",
-                  "type": "string"
-                },
-                {
-                  "name": "row.status",
-                  "type": "string"
-                },
-                {
-                  "name": "row.raisedBy",
-                  "type": "string"
-                },
-                {
-                  "name": "row.assignedTo",
-                  "type": "string"
-                },
-                {
-                  "name": "row.raisedAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.dueAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.answeredAt",
-                  "type": "string"
-                },
-                {
-                  "name": "row.pendingId",
-                  "type": "string"
                 }
               ]
             },
@@ -352,7 +212,10 @@
                 "isInitial": true
               },
               {
-                "name": "viewing"
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
               },
               {
                 "name": "error"
@@ -392,32 +255,17 @@
                 ]
               },
               {
-                "key": "REFRESH",
-                "name": "Refresh",
+                "key": "OPEN_RFI",
+                "name": "Open Rfi",
                 "payloadSchema": [
                   {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SEARCH",
-                "name": "Search",
-                "payloadSchema": [
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
                   {
-                    "name": "query",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "FILTER_STATUS",
-                "name": "Filter Status",
-                "payloadSchema": [
-                  {
-                    "name": "status",
-                    "type": "string"
+                    "name": "row",
+                    "type": "Rfi"
                   }
                 ]
               },
@@ -455,47 +303,8 @@
                 ]
               },
               {
-                "key": "CREATE",
-                "name": "Create",
-                "payloadSchema": [
-                  {
-                    "name": "source",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REQUEST_DELETE",
-                "name": "Request Delete",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
               }
             ],
             "transitions": [
@@ -518,6 +327,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
@@ -525,179 +337,131 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Loading RFIs…"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
               },
               {
                 "from": "loading",
-                "to": "viewing",
+                "to": "browsing",
                 "event": "RfiLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "help-circle"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "help-circle",
+                              "value": "@payload.data.length",
+                              "label": "Total RFIs"
                             },
                             {
-                              "type": "badge",
+                              "value": "18",
+                              "type": "stat-display",
                               "label": "Open",
-                              "variant": "warning"
+                              "icon": "mail"
                             },
                             {
-                              "type": "button",
-                              "label": "New RFI",
-                              "action": "CREATE",
+                              "icon": "alert-triangle",
+                              "label": "Overdue",
+                              "value": "5",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Avg response",
+                              "icon": "clock",
+                              "value": "3.2d",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": [
+                            {
+                              "label": "Open",
+                              "icon": "arrow-right",
+                              "event": "OPEN_RFI",
                               "variant": "primary"
+                            },
+                            {
+                              "event": "CLOSE",
+                              "variant": "danger",
+                              "label": "Close"
                             }
                           ],
                           "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "master-detail-layout",
-                          "master": {
-                            "entity": "@payload.data",
-                            "type": "data-grid",
-                            "fields": [
-                              {
-                                "label": "RFI #",
-                                "name": "rfiNumber",
-                                "variant": "caption"
-                              },
-                              {
-                                "variant": "caption",
-                                "name": "subject",
-                                "label": "Subject"
-                              },
-                              {
-                                "variant": "badge",
-                                "label": "Status",
-                                "name": "status"
-                              },
-                              {
-                                "name": "raisedBy",
-                                "label": "Raised By",
-                                "variant": "caption"
-                              },
-                              {
-                                "variant": "caption",
-                                "label": "Due",
-                                "name": "dueAt"
-                              }
-                            ],
-                            "gap": "sm",
-                            "cols": 1.0,
-                            "itemActions": [
-                              {
-                                "label": "View",
-                                "variant": "secondary",
-                                "event": "VIEW"
-                              },
-                              {
-                                "event": "EDIT",
-                                "variant": "secondary",
-                                "label": "Edit"
-                              },
-                              {
-                                "label": "Submit",
-                                "event": "SUBMIT",
-                                "variant": "primary"
-                              },
-                              {
-                                "variant": "primary",
-                                "event": "ANSWER",
-                                "label": "Answer"
-                              },
-                              {
-                                "event": "CLOSE",
-                                "variant": "ghost",
-                                "label": "Close"
-                              },
-                              {
-                                "label": "Delete",
-                                "event": "REQUEST_DELETE",
-                                "variant": "danger"
-                              }
-                            ]
-                          },
-                          "detail": {
-                            "direction": "vertical",
-                            "children": [
-                              {
-                                "variant": "h4",
-                                "content": "RFI Detail",
-                                "type": "typography"
-                              },
-                              {
-                                "type": "stack",
-                                "direction": "horizontal",
-                                "children": [
-                                  {
-                                    "label": "Closed",
-                                    "variant": "success",
-                                    "type": "badge"
-                                  },
-                                  {
-                                    "label": "Resolved",
-                                    "variant": "primary",
-                                    "type": "badge"
-                                  }
-                                ],
-                                "gap": "sm",
-                                "align": "center"
-                              },
-                              {
-                                "color": "muted",
-                                "content": "Select an RFI to view question, response, and audit trail.",
-                                "variant": "caption",
-                                "type": "typography"
-                              }
-                            ],
-                            "type": "stack",
-                            "gap": "sm"
-                          }
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "h4",
-                          "type": "typography",
-                          "content": "Deadline Calendar"
-                        },
-                        {
-                          "type": "calendar-grid"
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "name": "rfiNumber",
+                              "variant": "caption",
+                              "label": "RFI #"
+                            },
+                            {
+                              "label": "Subject",
+                              "name": "subject",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            },
+                            {
+                              "name": "raisedBy",
+                              "label": "Raised By",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Assigned",
+                              "variant": "caption",
+                              "name": "assignedTo"
+                            },
+                            {
+                              "variant": "caption",
+                              "label": "Due",
+                              "name": "dueAt"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -711,18 +475,256 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "loading",
-                "event": "REFRESH",
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_RFI",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.rfiNumber",
+                    "@payload.row.rfiNumber"
+                  ],
+                  [
+                    "set",
+                    "@entity.subject",
+                    "@payload.row.subject"
+                  ],
+                  [
+                    "set",
+                    "@entity.question",
+                    "@payload.row.question"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.row.response"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.raisedBy",
+                    "@payload.row.raisedBy"
+                  ],
+                  [
+                    "set",
+                    "@entity.assignedTo",
+                    "@payload.row.assignedTo"
+                  ],
+                  [
+                    "set",
+                    "@entity.raisedAt",
+                    "@payload.row.raisedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.dueAt",
+                    "@payload.row.dueAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.answeredAt",
+                    "@payload.row.answeredAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
+                            },
+                            {
+                              "name": "help-circle",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@entity.subject",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "default",
+                              "label": "@entity.status",
+                              "type": "badge"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "RFI #",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.rfiNumber",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Question",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.question"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Response",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.response",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.raisedBy",
+                              "icon": "user",
+                              "label": "Raised by"
+                            },
+                            {
+                              "label": "Assigned",
+                              "type": "stat-display",
+                              "icon": "user-check",
+                              "value": "@entity.assignedTo"
+                            },
+                            {
+                              "icon": "calendar",
+                              "type": "stat-display",
+                              "label": "Due",
+                              "value": "@entity.dueAt"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.answeredAt",
+                              "label": "Answered",
+                              "icon": "check-circle"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
+                        },
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "action": "SUBMIT",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "label": "Submit"
+                            },
+                            {
+                              "type": "button",
+                              "action": "ANSWER",
+                              "label": "Answer",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "secondary"
+                            },
+                            {
+                              "variant": "danger",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Close",
+                              "action": "CLOSE",
+                              "type": "button"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Rfi",
@@ -737,31 +739,80 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Submitting RFI…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ANSWER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "content": "Refreshing RFIs…",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "content": "Answering RFI…"
                         }
                       ],
                       "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
+                "from": "browsing",
                 "to": "loading",
-                "event": "SEARCH",
+                "event": "CLOSE",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "Rfi",
@@ -776,30 +827,30 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "variant": "caption",
-                          "content": "Searching RFIs…",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "Closing RFI…",
+                          "type": "typography"
                         }
                       ],
                       "align": "center",
                       "className": "py-12",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
+                "from": "viewing_single",
                 "to": "loading",
-                "event": "FILTER_STATUS",
+                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -816,28 +867,28 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Filtering RFIs…",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading RFIs…"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center"
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "viewing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "SUBMIT",
                 "effects": [
                   [
@@ -846,19 +897,42 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "message": "RFI submitted",
-                      "type": "alert",
-                      "variant": "success"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Submitting RFI…",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "viewing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "ANSWER",
                 "effects": [
                   [
@@ -867,19 +941,42 @@
                     "@payload.id"
                   ],
                   [
+                    "fetch",
+                    "Rfi",
+                    {
+                      "emit": {
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "success",
-                      "message": "RFI answered"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Answering RFI…",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
               },
               {
-                "from": "viewing",
-                "to": "viewing",
+                "from": "viewing_single",
+                "to": "loading",
                 "event": "CLOSE",
                 "effects": [
                   [
@@ -888,91 +985,35 @@
                     "@payload.id"
                   ],
                   [
-                    "render-ui",
-                    "main",
+                    "fetch",
+                    "Rfi",
                     {
-                      "variant": "info",
-                      "type": "alert",
-                      "message": "RFI closed"
+                      "emit": {
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
+                      }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "CREATE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "info",
-                      "type": "alert",
-                      "message": "Creating new RFI"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
-                      "variant": "info",
-                      "message": "Viewing RFI"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "EDIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "variant": "info",
-                      "message": "Editing RFI"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "REQUEST_DELETE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "Delete requested",
-                      "type": "alert",
-                      "variant": "warning"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Closing RFI…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
