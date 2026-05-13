@@ -1,0 +1,108 @@
+{
+  "name": "std-timeline",
+  "version": "1.0.0",
+  "description": "std-timeline — domain-specific chronological audit/activity feed. Composes std-event-log with persisted TimelineEntry entity carrying actor/action/target/metadata. Lights up std-document-mgmt (revision history), std-project-manager (activity), std-customer-success (touchpoint log), audit views in any app organism.",
+  "orbitals": [
+    {
+      "name": "TimelineOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-event-log",
+          "as": "Log"
+        }
+      ],
+      "entity": {
+        "name": "TimelineEntry",
+        "collection": "timeline_entries",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "default": "update",
+            "values": [
+              "create",
+              "update",
+              "delete",
+              "view",
+              "comment",
+              "approval",
+              "milestone"
+            ]
+          },
+          {
+            "name": "actor",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "target",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Log.traits.EventLogTimeline",
+          "name": "TimelineFeed",
+          "linkedEntity": "TimelineEntry",
+          "config": {
+            "itemIcon": "clock",
+            "bodyField": "description",
+            "kindField": "kind",
+            "title": "Activity Timeline",
+            "itemStatus": "info",
+            "dateField": "createdAt",
+            "formFields": [
+              "title",
+              "description",
+              "kind",
+              "actor",
+              "target",
+              "metadata",
+              "createdAt"
+            ],
+            "titleField": "title"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "TimelinePage",
+          "path": "/timeline",
+          "traits": [
+            {
+              "ref": "TimelineFeed"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

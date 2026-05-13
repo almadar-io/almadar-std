@@ -1,0 +1,115 @@
+{
+  "name": "std-multi-party-transaction",
+  "version": "1.0.0",
+  "description": "std-multi-party-transaction — domain-specific buyer/seller escrow flow. Composes std-two-sided-flow with persisted MarketTransaction entity (amount, currency, buyerId, sellerId, listingId). Lights up std-marketplace, std-ecommerce checkout, std-listings offer+accept.",
+  "orbitals": [
+    {
+      "name": "MultiPartyTransactionOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-two-sided-flow",
+          "as": "Flow"
+        }
+      ],
+      "entity": {
+        "name": "MarketTransaction",
+        "collection": "market_transactions",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "amount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "currency",
+            "type": "string",
+            "default": "USD",
+            "values": [
+              "USD",
+              "EUR",
+              "GBP",
+              "SAR",
+              "AED"
+            ]
+          },
+          {
+            "name": "buyerId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "sellerId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "listingId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Flow.traits.TwoSidedTransaction",
+          "name": "MarketEscrow",
+          "linkedEntity": "MarketTransaction",
+          "config": {
+            "title": "Marketplace Transaction",
+            "partyBIcon": "package",
+            "releaseLabel": "Release Funds",
+            "releaseIcon": "unlock",
+            "cancelLabel": "Cancel Transaction",
+            "cancelIcon": "x",
+            "disputeIcon": "alert-triangle",
+            "partyALabel": "Buyer",
+            "partyAIcon": "shopping-cart",
+            "partyBActionIcon": "truck",
+            "partyAAction": "Fund Escrow",
+            "partyAActionIcon": "credit-card",
+            "partyBLabel": "Seller",
+            "disputeLabel": "Open Dispute",
+            "partyBAction": "Ship Item"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "MultiPartyTransactionPage",
+          "path": "/multi-party-transaction",
+          "traits": [
+            {
+              "ref": "MarketEscrow"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

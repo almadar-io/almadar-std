@@ -1,0 +1,153 @@
+app std-step-flow "1.0.0"
+"std-step-flow — generic 3-step sequential decision chain (approval/review/sign-off). Config labels each step; per-state APPROVE advances, REJECT/ESCALATE terminate. Topology = loading / awaiting_step_1 / awaiting_step_2 / awaiting_step_3 / approved / rejected / escalated / error — fixed 3 levels is the most common shape and sidesteps dynamic-state-machine N."
+
+orbital StepFlowOrbital {
+  type StepView = {
+    key         : string!
+    label       : string!
+    description : string
+    icon        : string
+    number      : number
+    status      : "pending" | "current" | "approved"
+  }
+
+  entity StepFlowView [runtime] {
+    id                  : string!
+    steps               : [StepView] = []
+    finalStatus         : "approved" | "rejected" | "escalated" | "" = ""
+    rejectionReason     : string = ""
+    errorMessage        : string = ""
+  }
+
+  type StepItemsLoaded     = Event { data : [object] }                "Fired when the source item finishes loading"
+  type StepItemsLoadFailed = Event { error : string, code : string }  "Fired when source fetch fails"
+  type StepItemsSaved      = Event { row : object }                   "Fired when a decision has been persisted"
+  type StepItemsSaveFailed = Event { error : string, code : string }  "Fired when a persist intent fails"
+
+  trait StepFlowReview -> StepFlowView [interaction, instance] {
+    config {
+      title       : string = "Review"
+      step1Key    : string = "manager"
+      step1Label  : string = "Manager Review"
+      step1Desc   : string = "Initial review by direct manager"
+      step1Icon   : string = "user"
+      step2Key    : string = "director"
+      step2Label  : string = "Director Approval"
+      step2Desc   : string = "Department director sign-off"
+      step2Icon   : string = "users"
+      step3Key    : string = "executive"
+      step3Label  : string = "Executive Sign-off"
+      step3Desc   : string = "Final executive approval"
+      step3Icon   : string = "shield"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading review…" })
+      StepItemsLoaded -> awaiting_step_1
+        (set @entity.steps [
+          { key: "@config.step1Key", label: "@config.step1Label", description: "@config.step1Desc", icon: "@config.step1Icon", number: 1, status: "current" },
+          { key: "@config.step2Key", label: "@config.step2Label", description: "@config.step2Desc", icon: "@config.step2Icon", number: 2, status: "pending" },
+          { key: "@config.step3Key", label: "@config.step3Label", description: "@config.step3Desc", icon: "@config.step3Icon", number: 3, status: "pending" }
+        ])
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Approve", variant: "primary", action: "APPROVE", icon: "check" }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "secondary", action: "ESCALATE", icon: "alert-triangle" }] }] })
+      StepItemsLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
+      StepItemsSaved -> awaiting_step_1
+        (render-ui main { type: "loading-state", title: "Refreshing…" })
+      StepItemsSaveFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+    }
+    state awaiting_step_1 {
+      APPROVE -> awaiting_step_2
+        (set @entity.steps [
+          { key: "@config.step1Key", label: "@config.step1Label", description: "@config.step1Desc", icon: "@config.step1Icon", number: 1, status: "approved" },
+          { key: "@config.step2Key", label: "@config.step2Label", description: "@config.step2Desc", icon: "@config.step2Icon", number: 2, status: "current" },
+          { key: "@config.step3Key", label: "@config.step3Label", description: "@config.step3Desc", icon: "@config.step3Icon", number: 3, status: "pending" }
+        ])
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Approve", variant: "primary", action: "APPROVE", icon: "check" }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "secondary", action: "ESCALATE", icon: "alert-triangle" }] }] })
+      REJECT -> rejected
+        (set @entity.finalStatus "rejected")
+        (set @entity.rejectionReason @payload.reason)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Rejected", variant: "h3" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.rejectionReason" }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      ESCALATE -> escalated
+        (set @entity.finalStatus "escalated")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Escalated", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "This item has been escalated for further review." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+    }
+    state awaiting_step_2 {
+      APPROVE -> awaiting_step_3
+        (set @entity.steps [
+          { key: "@config.step1Key", label: "@config.step1Label", description: "@config.step1Desc", icon: "@config.step1Icon", number: 1, status: "approved" },
+          { key: "@config.step2Key", label: "@config.step2Label", description: "@config.step2Desc", icon: "@config.step2Icon", number: 2, status: "approved" },
+          { key: "@config.step3Key", label: "@config.step3Label", description: "@config.step3Desc", icon: "@config.step3Icon", number: 3, status: "current" }
+        ])
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Approve", variant: "primary", action: "APPROVE", icon: "check" }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "secondary", action: "ESCALATE", icon: "alert-triangle" }] }] })
+      REJECT -> rejected
+        (set @entity.finalStatus "rejected")
+        (set @entity.rejectionReason @payload.reason)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Rejected", variant: "h3" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.rejectionReason" }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      ESCALATE -> escalated
+        (set @entity.finalStatus "escalated")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Escalated", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "This item has been escalated for further review." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+    }
+    state awaiting_step_3 {
+      APPROVE -> approved
+        (set @entity.finalStatus "approved")
+        (set @entity.steps [
+          { key: "@config.step1Key", label: "@config.step1Label", description: "@config.step1Desc", icon: "@config.step1Icon", number: 1, status: "approved" },
+          { key: "@config.step2Key", label: "@config.step2Label", description: "@config.step2Desc", icon: "@config.step2Icon", number: 2, status: "approved" },
+          { key: "@config.step3Key", label: "@config.step3Label", description: "@config.step3Desc", icon: "@config.step3Icon", number: 3, status: "approved" }
+        ])
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Approved", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      REJECT -> rejected
+        (set @entity.finalStatus "rejected")
+        (set @entity.rejectionReason @payload.reason)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Rejected", variant: "h3" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.rejectionReason" }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      ESCALATE -> escalated
+        (set @entity.finalStatus "escalated")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Escalated", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "This item has been escalated for further review." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+    }
+    state approved {
+      RESTART -> loading
+        (set @entity.finalStatus "")
+        (render-ui main { type: "loading-state", title: "Restarting…" })
+    }
+    state rejected {
+      RESTART -> loading
+        (set @entity.finalStatus "")
+        (set @entity.rejectionReason "")
+        (render-ui main { type: "loading-state", title: "Restarting…" })
+    }
+    state escalated {
+      RESTART -> loading
+        (set @entity.finalStatus "")
+        (render-ui main { type: "loading-state", title: "Restarting…" })
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      APPROVE                { id : string, stepKey : string }
+      REJECT                 { id : string, reason : string }
+      ESCALATE               { id : string, reason : string }
+      RESTART                { id : string }
+      StepItemsLoaded        { data : [object] }
+      StepItemsLoadFailed    { error : string, code : string }
+    }
+    listens {
+      APPROVE                { id : string, stepKey : string }
+      REJECT                 { id : string, reason : string }
+      ESCALATE               { id : string, reason : string }
+      RESTART                { id : string }
+      StepItemsLoaded        { data : [object] }
+      StepItemsLoadFailed    { error : string, code : string }
+      StepItemsSaved         { row : object }
+      StepItemsSaveFailed    { error : string, code : string }
+    }
+  }
+  page "/step-flow" as StepFlowPage -> StepFlowReview
+}

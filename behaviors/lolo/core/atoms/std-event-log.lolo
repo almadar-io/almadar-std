@@ -1,0 +1,118 @@
+app std-event-log "1.0.0"
+"std-event-log — generic chronological event feed. Topology = loading / viewing / filtering / backfilling / error — adds a backfilling state for retroactive entries that pure-CRUD atoms can't express. Renders a timeline of events with filter controls and a backfill form."
+
+orbital EventLogOrbital {
+  type LogEntry = {
+    id          : string!
+    title       : string!
+    description : string
+    icon        : string
+    date        : string
+    status      : "info" | "success" | "warning" | "error"
+    kind        : string
+  }
+
+  entity EventLogView [runtime] {
+    id              : string!
+    entries         : [LogEntry] = []
+    filterKind      : string = ""
+    backfillTitle   : string = ""
+    backfillDescription : string = ""
+    backfillDate    : string = ""
+    backfillKind    : string = ""
+    errorMessage    : string = ""
+  }
+
+  type EventLogLoaded     = Event { data : [object] }                "Fired when event entries finish loading"
+  type EventLogLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
+  type EventLogSaved      = Event { row : object }                   "Fired when a retroactive entry has been persisted"
+  type EventLogSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
+
+  trait EventLogTimeline -> EventLogView [interaction, instance] {
+    config {
+      title         : string = "Activity"
+      itemIcon      : string = "activity"
+      itemStatus    : "info" | "success" | "warning" | "error" = "info"
+      titleField    : string = "title"
+      bodyField     : string = "description"
+      dateField     : string = "createdAt"
+      kindField     : string = "kind"
+      formFields    : [string] = ["title", "description", "kind", "date"]
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch EventLogView { emit: { success: "EventLogLoaded", failure: "EventLogLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading activity…" })
+      EventLogLoaded -> viewing
+        (set @entity.entries (array/map @payload.data ["fn", "row", {
+          id:          (object/get @row "id" ""),
+          title:       (object/get @row "title" ""),
+          description: (object/get @row "description" ""),
+          icon:        "@config.itemIcon",
+          date:        (object/get @row "createdAt" ""),
+          status:      "@config.itemStatus",
+          kind:        (object/get @row "kind" "")
+        }]))
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.entries", gap: "md", fields: [], renderItem: ["fn", "entry", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entry.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entry.title", variant: "h4" }, { type: "typography", content: "@entry.description", variant: "caption", color: "muted" }, { type: "typography", content: "@entry.date", variant: "caption", color: "muted" }] }, { type: "badge", label: "@entry.kind", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Filter", variant: "secondary", action: "OPEN_FILTER", icon: "filter" }, { type: "button", label: "Add Entry", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }] })
+      EventLogLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
+      EventLogSaved -> viewing
+        (render-ui main { type: "loading-state", title: "Refreshing…" })
+      EventLogSaveFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+    }
+    state viewing {
+      OPEN_FILTER -> filtering
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_FILTER", icon: "arrow-left" }, { type: "icon", name: "filter" }, { type: "typography", content: "Filter Activity", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "APPLY_FILTER", cancelEvent: "CLOSE_FILTER", fields: ["filterKind"] }] })
+      OPEN_BACKFILL -> backfilling
+        (set @entity.backfillTitle "")
+        (set @entity.backfillDescription "")
+        (set @entity.backfillDate "")
+        (set @entity.backfillKind "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Cancel", variant: "ghost", action: "CANCEL_BACKFILL", icon: "x" }, { type: "icon", name: "plus" }, { type: "typography", content: "Add Retroactive Entry", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "create", submitEvent: "SAVE_BACKFILL", cancelEvent: "CANCEL_BACKFILL", fields: "@config.formFields" }] })
+    }
+    state filtering {
+      APPLY_FILTER -> loading
+        (set @entity.filterKind @payload.filterKind)
+        (render-ui main { type: "loading-state", title: "Filtering…" })
+      CLOSE_FILTER -> viewing
+        (render-ui main { type: "loading-state", title: "Closing filter…" })
+    }
+    state backfilling {
+      SAVE_BACKFILL -> loading
+        (render-ui main { type: "loading-state", title: "Saving entry…" })
+      CANCEL_BACKFILL -> viewing
+        (render-ui main { type: "loading-state", title: "Cancelling…" })
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      OPEN_FILTER            { }
+      OPEN_BACKFILL          { }
+      APPLY_FILTER           { filterKind : string }
+      CLOSE_FILTER           { }
+      SAVE_BACKFILL          { data : object }
+      CANCEL_BACKFILL        { }
+      EventLogLoaded         { data : [object] }
+      EventLogLoadFailed     { error : string, code : string }
+    }
+    listens {
+      OPEN_FILTER            { }
+      OPEN_BACKFILL          { }
+      APPLY_FILTER           { filterKind : string }
+      CLOSE_FILTER           { }
+      SAVE_BACKFILL          { data : object }
+      CANCEL_BACKFILL        { }
+      EventLogLoaded         { data : [object] }
+      EventLogLoadFailed     { error : string, code : string }
+      EventLogSaved          { row : object }
+      EventLogSaveFailed     { error : string, code : string }
+    }
+  }
+  page "/event-log" as EventLogPage -> EventLogTimeline
+}

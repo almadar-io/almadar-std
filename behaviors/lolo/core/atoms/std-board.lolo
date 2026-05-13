@@ -1,0 +1,133 @@
+app std-board "1.0.0"
+"std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity."
+
+orbital BoardOrbital {
+  type BoardItem = {
+    id          : string!
+    title       : string
+    description : string
+    stage       : string
+    notes       : string
+  }
+
+  type BoardColumn = {
+    key     : string!
+    label   : string!
+    icon    : string
+    variant : "default" | "primary" | "success" | "warning" | "error" | "info"
+    count   : number
+    items   : [BoardItem]
+  }
+
+  entity BoardView [runtime] {
+    id                  : string!
+    boards              : [BoardColumn] = []
+    currentId           : string = ""
+    currentTitle        : string = ""
+    currentDescription  : string = ""
+    currentStage        : string = ""
+    currentNotes        : string = ""
+    errorMessage        : string = ""
+  }
+
+  type BoardItemsLoaded     = Event { data : [object] }                "Fired when board items finish loading (from an upstream fetcher / persistor)"
+  type BoardItemsLoadFailed = Event { error : string, code : string }  "Fired when the upstream fetch fails"
+  type BoardItemsSaved      = Event { row : object }                   "Fired when a board item has been persisted"
+  type BoardItemsSaveFailed = Event { error : string, code : string }  "Fired when a persist intent fails"
+
+  trait BoardItemBoard -> BoardView [interaction, instance] {
+    config {
+      title    : string   = "Board"
+      columns  : [object] = [
+        { key: "todo",  label: "To Do",       icon: "circle",       variant: "default" },
+        { key: "doing", label: "In Progress", icon: "circle-dot",   variant: "primary" },
+        { key: "done",  label: "Done",        icon: "check-circle", variant: "success" }
+      ]
+      gridCols : number   = 3
+      formFields : [string] = ["title", "description", "stage", "notes"]
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch BoardView { emit: { success: "BoardItemsLoaded", failure: "BoardItemsLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading board…" })
+      BoardItemsLoaded -> viewing_board
+        (set @entity.boards (array/map @config.columns ["fn", "col", {
+          key:     (object/get @col "key"),
+          label:   (object/get @col "label"),
+          icon:    (object/get @col "icon" "circle"),
+          variant: (object/get @col "variant" "default"),
+          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])),
+          items:   (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])
+        }]))
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "kanban-square" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "md", fields: [], renderItem: ["fn", "col", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "icon", name: "@col.icon" }, { type: "typography", content: "@col.label", variant: "h4" }, { type: "badge", label: "@col.count", variant: "@col.variant" }] }, { type: "data-list", entity: "@col.items", gap: "sm", fields: [], renderItem: ["fn", "item", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@item.title", variant: "h4" }, { type: "typography", content: "@item.description", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "button", label: "Open", variant: "ghost", action: "OPEN_CARD", actionPayload: { id: "@item.id", row: "@item" }, icon: "arrow-right" }] }] }] }] }] }] }] }, { type: "floating-action-button", label: "Add item", action: "ADD_CARD", icon: "plus", variant: "primary" }] })
+      BoardItemsLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load board", message: "@entity.errorMessage" })
+      BoardItemsSaved -> viewing_board
+        (render-ui main { type: "loading-state", title: "Refreshing board…" })
+      BoardItemsSaveFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+    }
+    state viewing_board {
+      OPEN_CARD -> viewing_card
+        (set @entity.currentId @payload.row.id)
+        (set @entity.currentTitle @payload.row.title)
+        (set @entity.currentDescription @payload.row.description)
+        (set @entity.currentStage @payload.row.stage)
+        (set @entity.currentNotes @payload.row.notes)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_CARD", icon: "arrow-left" }, { type: "icon", name: "credit-card" }, { type: "typography", content: "@entity.currentTitle", variant: "h3" }, { type: "badge", label: "@entity.currentStage", variant: "primary" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.currentDescription" }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.currentNotes" }] }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Move to stage:" }, { type: "data-list", entity: "@entity.boards", gap: "sm", variant: "default", fields: [], renderItem: ["fn", "col", { type: "button", label: "@col.label", variant: "secondary", action: "MOVE_CARD", actionPayload: { id: "@entity.currentId", targetStage: "@col.key" }, icon: "@col.icon" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "DELETE_CARD", actionPayload: { id: "@entity.currentId" }, icon: "trash-2" }] }] })
+      ADD_CARD -> adding
+        (set @entity.currentId "")
+        (set @entity.currentTitle "")
+        (set @entity.currentDescription "")
+        (set @entity.currentStage "")
+        (set @entity.currentNotes "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Cancel", variant: "ghost", action: "CANCEL_ADD", icon: "x" }, { type: "icon", name: "plus" }, { type: "typography", content: "New board item", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "create", submitEvent: "SAVE_CARD", cancelEvent: "CANCEL_ADD", fields: "@config.formFields" }] })
+    }
+    state viewing_card {
+      CLOSE_CARD -> viewing_board
+        (render-ui main { type: "loading-state", title: "Refreshing board…" })
+      MOVE_CARD -> loading
+        (render-ui main { type: "loading-state", title: "Moving item…" })
+      DELETE_CARD -> loading
+        (render-ui main { type: "loading-state", title: "Deleting item…" })
+    }
+    state adding {
+      SAVE_CARD -> loading
+        (render-ui main { type: "loading-state", title: "Saving…" })
+      CANCEL_ADD -> viewing_board
+        (render-ui main { type: "loading-state", title: "Cancelling…" })
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      OPEN_CARD              { id : string!, row : object! }
+      CLOSE_CARD             { }
+      ADD_CARD               { }
+      CANCEL_ADD             { }
+      SAVE_CARD              { data : object! }
+      MOVE_CARD              { id : string!, targetStage : string! }
+      DELETE_CARD            { id : string! }
+      BoardItemsLoaded       { data : [object] }
+      BoardItemsLoadFailed   { error : string, code : string }
+    }
+    listens {
+      OPEN_CARD              { id : string!, row : object! }
+      CLOSE_CARD             { }
+      ADD_CARD               { }
+      CANCEL_ADD             { }
+      SAVE_CARD              { data : object! }
+      MOVE_CARD              { id : string!, targetStage : string! }
+      DELETE_CARD            { id : string! }
+      BoardItemsLoaded       { data : [object] }
+      BoardItemsLoadFailed   { error : string, code : string }
+      BoardItemsSaved        { row : object }
+      BoardItemsSaveFailed   { error : string, code : string }
+    }
+  }
+  page "/board" as BoardPage -> BoardItemBoard
+}

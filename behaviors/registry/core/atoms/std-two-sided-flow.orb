@@ -1,0 +1,1357 @@
+{
+  "name": "std-two-sided-flow",
+  "version": "1.0.0",
+  "description": "std-two-sided-flow — generic two-party transactional state machine (escrow, marketplace order, listing offer). Topology = loading / awaiting_party_a / awaiting_party_b / funded / released / disputed / cancelled / error — per-party action transitions distinct from CRUD shape. Renders party cards + audit ledger + party-action buttons.",
+  "orbitals": [
+    {
+      "name": "TwoSidedFlowOrbital",
+      "entity": {
+        "name": "TwoSidedView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "audit",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "actor": {
+                  "name": "actor",
+                  "type": "string",
+                  "values": [
+                    "party_a",
+                    "party_b",
+                    "system"
+                  ]
+                },
+                "timestamp": {
+                  "name": "timestamp",
+                  "type": "string"
+                },
+                "notes": {
+                  "name": "notes",
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "action": {
+                  "name": "action",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "name": "partyAStatus",
+            "type": "string",
+            "default": "waiting",
+            "values": [
+              "waiting",
+              "ready",
+              "completed"
+            ]
+          },
+          {
+            "name": "partyBStatus",
+            "type": "string",
+            "default": "waiting",
+            "values": [
+              "waiting",
+              "ready",
+              "completed"
+            ]
+          },
+          {
+            "name": "disputeReason",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "cancelReason",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TwoSidedTransaction",
+          "category": "interaction",
+          "linkedEntity": "TwoSidedView",
+          "emits": [
+            {
+              "event": "PARTY_A_CONFIRM"
+            },
+            {
+              "event": "PARTY_B_CONFIRM"
+            },
+            {
+              "event": "RELEASE"
+            },
+            {
+              "event": "OPEN_DISPUTE",
+              "payloadSchema": [
+                {
+                  "name": "reason",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CANCEL_TRANSACTION",
+              "payloadSchema": [
+                {
+                  "name": "reason",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RESTART"
+            },
+            {
+              "event": "FlowLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "FlowLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "awaiting_party_a"
+              },
+              {
+                "name": "awaiting_party_b"
+              },
+              {
+                "name": "funded"
+              },
+              {
+                "name": "released"
+              },
+              {
+                "name": "disputed"
+              },
+              {
+                "name": "cancelled"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FlowLoaded",
+                "name": "Flow loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "FlowLoadFailed",
+                "name": "Flow load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FlowSaved",
+                "name": "Flow saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "FlowSaveFailed",
+                "name": "Flow save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PARTY_A_CONFIRM",
+                "name": "Party A Confirm"
+              },
+              {
+                "key": "OPEN_DISPUTE",
+                "name": "Open Dispute",
+                "payloadSchema": [
+                  {
+                    "name": "reason",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_TRANSACTION",
+                "name": "Cancel Transaction",
+                "payloadSchema": [
+                  {
+                    "name": "reason",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PARTY_B_CONFIRM",
+                "name": "Party B Confirm"
+              },
+              {
+                "key": "RELEASE",
+                "name": "Release"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TwoSidedView",
+                    {
+                      "emit": {
+                        "success": "FlowLoaded",
+                        "failure": "FlowLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Loading transaction…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "awaiting_party_a",
+                "event": "FlowLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.audit",
+                    [
+                      "array/map",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "row",
+                        {
+                          "id": [
+                            "object/get",
+                            "@row",
+                            "id",
+                            ""
+                          ],
+                          "actor": "system",
+                          "timestamp": [
+                            "object/get",
+                            "@row",
+                            "createdAt",
+                            ""
+                          ],
+                          "action": [
+                            "object/get",
+                            "@row",
+                            "action",
+                            ""
+                          ],
+                          "notes": [
+                            "object/get",
+                            "@row",
+                            "notes",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.partyAStatus",
+                    "ready"
+                  ],
+                  [
+                    "set",
+                    "@entity.partyBStatus",
+                    "waiting"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "git-pull-request"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "@config.partyAIcon"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@config.partyALabel"
+                                        },
+                                        {
+                                          "variant": "primary",
+                                          "type": "badge",
+                                          "label": "@entity.partyAStatus"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "icon": "@config.partyAActionIcon",
+                                      "label": "@config.partyAAction",
+                                      "variant": "primary",
+                                      "type": "button",
+                                      "action": "PARTY_A_CONFIRM"
+                                    }
+                                  ],
+                                  "direction": "vertical"
+                                }
+                              ],
+                              "type": "card"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "@config.partyBIcon"
+                                        },
+                                        {
+                                          "content": "@config.partyBLabel",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "label": "@entity.partyBStatus",
+                                          "type": "badge",
+                                          "variant": "default"
+                                        }
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "content": "Waiting for Party A",
+                                      "variant": "caption"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "vertical"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Audit Log",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "data-list",
+                          "renderItem": [
+                            "fn",
+                            "ev",
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "name": "clock",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "@ev.action",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "content": "@ev.timestamp",
+                                          "type": "typography",
+                                          "color": "muted",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs"
+                                    },
+                                    {
+                                      "variant": "primary",
+                                      "type": "badge",
+                                      "label": "@ev.actor"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "gap": "sm"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "sm",
+                          "fields": [],
+                          "entity": "@entity.audit"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "@config.disputeLabel",
+                              "action": "OPEN_DISPUTE",
+                              "icon": "@config.disputeIcon",
+                              "type": "button",
+                              "variant": "danger"
+                            },
+                            {
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "@config.cancelLabel",
+                              "action": "CANCEL_TRANSACTION",
+                              "icon": "@config.cancelIcon"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "FlowLoadFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Failed to load",
+                      "message": "@entity.errorMessage",
+                      "type": "error-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "awaiting_party_a",
+                "event": "FlowSaved",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Refreshing…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "FlowSaveFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "error-state",
+                      "title": "Save failed",
+                      "message": "@entity.errorMessage"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "awaiting_party_a",
+                "to": "awaiting_party_b",
+                "event": "PARTY_A_CONFIRM",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.partyAStatus",
+                    "completed"
+                  ],
+                  [
+                    "set",
+                    "@entity.partyBStatus",
+                    "ready"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "git-pull-request",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "name": "@config.partyAIcon",
+                                          "type": "icon"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "content": "@config.partyALabel",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "label": "@entity.partyAStatus",
+                                          "variant": "success",
+                                          "type": "badge"
+                                        }
+                                      ],
+                                      "gap": "sm",
+                                      "type": "stack",
+                                      "align": "center",
+                                      "direction": "horizontal"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Confirmed",
+                                      "variant": "caption",
+                                      "color": "muted"
+                                    }
+                                  ],
+                                  "gap": "sm",
+                                  "direction": "vertical",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "card"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "direction": "horizontal",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "@config.partyBIcon"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "content": "@config.partyBLabel",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.partyBStatus",
+                                          "variant": "primary"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "action": "PARTY_B_CONFIRM",
+                                      "variant": "primary",
+                                      "label": "@config.partyBAction",
+                                      "icon": "@config.partyBActionIcon",
+                                      "type": "button"
+                                    }
+                                  ],
+                                  "gap": "sm",
+                                  "direction": "vertical",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "action": "OPEN_DISPUTE",
+                              "label": "@config.disputeLabel",
+                              "variant": "danger",
+                              "type": "button",
+                              "icon": "@config.disputeIcon"
+                            },
+                            {
+                              "icon": "@config.cancelIcon",
+                              "action": "CANCEL_TRANSACTION",
+                              "variant": "ghost",
+                              "label": "@config.cancelLabel",
+                              "type": "button"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "awaiting_party_a",
+                "to": "disputed",
+                "event": "OPEN_DISPUTE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.disputeReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "alert-triangle",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Disputed",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "content": "Reason",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.disputeReason",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "variant": "secondary",
+                          "type": "button",
+                          "action": "RESTART",
+                          "label": "Restart"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "awaiting_party_a",
+                "to": "cancelled",
+                "event": "CANCEL_TRANSACTION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "x-circle"
+                            },
+                            {
+                              "content": "Cancelled",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Transaction cancelled.",
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Restart",
+                          "icon": "rotate-ccw",
+                          "variant": "secondary",
+                          "action": "RESTART"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "awaiting_party_b",
+                "to": "funded",
+                "event": "PARTY_B_CONFIRM",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.partyBStatus",
+                    "completed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "lock",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Funded",
+                              "variant": "h3"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "Both parties have confirmed. Awaiting release."
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "@config.releaseLabel",
+                              "icon": "@config.releaseIcon",
+                              "action": "RELEASE"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "@config.disputeLabel",
+                              "type": "button",
+                              "icon": "@config.disputeIcon",
+                              "action": "OPEN_DISPUTE"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "awaiting_party_b",
+                "to": "disputed",
+                "event": "OPEN_DISPUTE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.disputeReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "alert-triangle",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Disputed",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Reason",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.disputeReason"
+                                }
+                              ],
+                              "direction": "vertical"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "label": "Restart",
+                          "variant": "secondary",
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "RESTART"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "awaiting_party_b",
+                "to": "cancelled",
+                "event": "CANCEL_TRANSACTION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "x-circle",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Cancelled",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "Transaction cancelled."
+                        },
+                        {
+                          "action": "RESTART",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "label": "Restart",
+                          "variant": "secondary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "funded",
+                "to": "released",
+                "event": "RELEASE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "check-circle"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "Released"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "Escrow released. Transaction complete."
+                        },
+                        {
+                          "variant": "secondary",
+                          "action": "RESTART",
+                          "type": "button",
+                          "label": "Restart",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "funded",
+                "to": "disputed",
+                "event": "OPEN_DISPUTE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.disputeReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle"
+                            },
+                            {
+                              "content": "Disputed",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Reason",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.disputeReason"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "action": "RESTART",
+                          "label": "Restart",
+                          "variant": "secondary",
+                          "type": "button"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "released",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Restarting…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "disputed",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Restarting…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "cancelled",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Restarting…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Retrying…"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "partyAIcon": {
+              "type": "string",
+              "default": "user"
+            },
+            "partyAActionIcon": {
+              "type": "string",
+              "default": "check"
+            },
+            "partyBLabel": {
+              "type": "string",
+              "default": "Party B"
+            },
+            "partyBActionIcon": {
+              "type": "string",
+              "default": "check"
+            },
+            "releaseLabel": {
+              "type": "string",
+              "default": "Release Escrow"
+            },
+            "cancelIcon": {
+              "type": "string",
+              "default": "x"
+            },
+            "partyBIcon": {
+              "type": "string",
+              "default": "user-check"
+            },
+            "partyAAction": {
+              "type": "string",
+              "default": "Confirm"
+            },
+            "cancelLabel": {
+              "type": "string",
+              "default": "Cancel Transaction"
+            },
+            "disputeLabel": {
+              "type": "string",
+              "default": "Open Dispute"
+            },
+            "disputeIcon": {
+              "type": "string",
+              "default": "alert-triangle"
+            },
+            "partyBAction": {
+              "type": "string",
+              "default": "Confirm"
+            },
+            "title": {
+              "type": "string",
+              "default": "Two-Sided Transaction"
+            },
+            "partyALabel": {
+              "type": "string",
+              "default": "Party A"
+            },
+            "releaseIcon": {
+              "type": "string",
+              "default": "unlock"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TwoSidedFlowPage",
+          "path": "/two-sided-flow",
+          "traits": [
+            {
+              "ref": "TwoSidedTransaction"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

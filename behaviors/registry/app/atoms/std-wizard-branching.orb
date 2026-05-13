@@ -1,0 +1,114 @@
+{
+  "name": "std-wizard-branching",
+  "version": "1.0.0",
+  "description": "std-wizard-branching — domain-specific multi-step form wizard. Composes std-wizard with persisted WizardSubmission entity carrying form fields per step. Lights up std-applicant-form (ATS), std-application (HR), std-vendor-onboarding, intake forms in std-healthcare.",
+  "orbitals": [
+    {
+      "name": "WizardBranchingOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-wizard",
+          "as": "Wizard"
+        }
+      ],
+      "entity": {
+        "name": "WizardSubmission",
+        "collection": "wizard_submissions",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "personal",
+            "values": [
+              "personal",
+              "business",
+              "internal",
+              "external"
+            ]
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "medium",
+            "values": [
+              "low",
+              "medium",
+              "high",
+              "urgent"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "submittedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Wizard.traits.WizardForm",
+          "name": "WizardFlow",
+          "linkedEntity": "WizardSubmission",
+          "config": {
+            "step2Icon": "tag",
+            "step3Desc": "Confirm your submission",
+            "step2Key": "context",
+            "step3Label": "Review & Submit",
+            "step1Desc": "Tell us about the request",
+            "step1Icon": "file-text",
+            "step1Label": "Your Details",
+            "step2Label": "Context",
+            "step3Icon": "check-circle",
+            "step1Fields": [
+              "title",
+              "description"
+            ],
+            "step3Fields": [
+              "notes"
+            ],
+            "step2Desc": "Categorize and prioritize",
+            "step3Key": "review",
+            "step2Fields": [
+              "category",
+              "priority"
+            ],
+            "step1Key": "details",
+            "title": "Submission Wizard"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "WizardBranchingPage",
+          "path": "/wizard-branching",
+          "traits": [
+            {
+              "ref": "WizardFlow"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

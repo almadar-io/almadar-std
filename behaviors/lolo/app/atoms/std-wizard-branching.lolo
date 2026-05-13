@@ -1,0 +1,39 @@
+app std-wizard-branching "1.0.0"
+"std-wizard-branching — domain-specific multi-step form wizard. Composes std-wizard with persisted WizardSubmission entity carrying form fields per step. Lights up std-applicant-form (ATS), std-application (HR), std-vendor-onboarding, intake forms in std-healthcare."
+
+orbital WizardBranchingOrbital {
+  uses Wizard from "std/behaviors/std-wizard"
+
+  entity WizardSubmission [persistent: wizard_submissions] {
+    id          : string!
+    title       : string!
+    description : string  = ""
+    category    : "personal" | "business" | "internal" | "external" = "personal"
+    priority    : "low" | "medium" | "high" | "urgent" = "medium"
+    notes       : string  = ""
+    submittedAt : string  = ""
+  }
+
+  trait WizardFlow = Wizard.traits.WizardForm -> WizardSubmission {
+    config: {
+      title:        "Submission Wizard",
+      step1Key:     "details",
+      step1Label:   "Your Details",
+      step1Desc:    "Tell us about the request",
+      step1Icon:    "file-text",
+      step1Fields:  ["title", "description"],
+      step2Key:     "context",
+      step2Label:   "Context",
+      step2Desc:    "Categorize and prioritize",
+      step2Icon:    "tag",
+      step2Fields:  ["category", "priority"],
+      step3Key:     "review",
+      step3Label:   "Review & Submit",
+      step3Desc:    "Confirm your submission",
+      step3Icon:    "check-circle",
+      step3Fields:  ["notes"]
+    }
+  }
+
+  page "/wizard-branching" as WizardBranchingPage -> WizardFlow
+}

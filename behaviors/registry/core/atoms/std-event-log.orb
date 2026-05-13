@@ -1,0 +1,777 @@
+{
+  "name": "std-event-log",
+  "version": "1.0.0",
+  "description": "std-event-log — generic chronological event feed. Topology = loading / viewing / filtering / backfilling / error — adds a backfilling state for retroactive entries that pure-CRUD atoms can't express. Renders a timeline of events with filter controls and a backfill form.",
+  "orbitals": [
+    {
+      "name": "EventLogOrbital",
+      "entity": {
+        "name": "EventLogView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "entries",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "name": "kind",
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "type": "string",
+                  "values": [
+                    "info",
+                    "success",
+                    "warning",
+                    "error"
+                  ]
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string"
+                },
+                "date": {
+                  "name": "date",
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "name": "filterKind",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "backfillTitle",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "backfillDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "backfillDate",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "backfillKind",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EventLogTimeline",
+          "category": "interaction",
+          "linkedEntity": "EventLogView",
+          "emits": [
+            {
+              "event": "OPEN_FILTER"
+            },
+            {
+              "event": "OPEN_BACKFILL"
+            },
+            {
+              "event": "APPLY_FILTER",
+              "payloadSchema": [
+                {
+                  "name": "filterKind",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_FILTER"
+            },
+            {
+              "event": "SAVE_BACKFILL",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "CANCEL_BACKFILL"
+            },
+            {
+              "event": "EventLogLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "EventLogLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "viewing"
+              },
+              {
+                "name": "filtering"
+              },
+              {
+                "name": "backfilling"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EventLogLoaded",
+                "name": "Event log loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "EventLogLoadFailed",
+                "name": "Event log load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "EventLogSaved",
+                "name": "Event log saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "EventLogSaveFailed",
+                "name": "Event log save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_FILTER",
+                "name": "Open Filter"
+              },
+              {
+                "key": "OPEN_BACKFILL",
+                "name": "Open Backfill"
+              },
+              {
+                "key": "APPLY_FILTER",
+                "name": "Apply Filter",
+                "payloadSchema": [
+                  {
+                    "name": "filterKind",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_FILTER",
+                "name": "Close Filter"
+              },
+              {
+                "key": "SAVE_BACKFILL",
+                "name": "Save Backfill",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_BACKFILL",
+                "name": "Cancel Backfill"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "EventLogView",
+                    {
+                      "emit": {
+                        "success": "EventLogLoaded",
+                        "failure": "EventLogLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Loading activity…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "EventLogLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/map",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "row",
+                        {
+                          "status": "@config.itemStatus",
+                          "icon": "@config.itemIcon",
+                          "kind": [
+                            "object/get",
+                            "@row",
+                            "kind",
+                            ""
+                          ],
+                          "title": [
+                            "object/get",
+                            "@row",
+                            "title",
+                            ""
+                          ],
+                          "id": [
+                            "object/get",
+                            "@row",
+                            "id",
+                            ""
+                          ],
+                          "description": [
+                            "object/get",
+                            "@row",
+                            "description",
+                            ""
+                          ],
+                          "date": [
+                            "object/get",
+                            "@row",
+                            "createdAt",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "history"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@entity.entries",
+                          "fields": [],
+                          "renderItem": [
+                            "fn",
+                            "entry",
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "@entry.icon"
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@entry.title",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "content": "@entry.description",
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted"
+                                        },
+                                        {
+                                          "variant": "caption",
+                                          "content": "@entry.date",
+                                          "color": "muted",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs"
+                                    },
+                                    {
+                                      "label": "@entry.kind",
+                                      "type": "badge",
+                                      "variant": "primary"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "horizontal"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "data-list",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Filter",
+                              "action": "OPEN_FILTER",
+                              "variant": "secondary",
+                              "icon": "filter",
+                              "type": "button"
+                            },
+                            {
+                              "icon": "plus",
+                              "label": "Add Entry",
+                              "type": "button",
+                              "variant": "primary",
+                              "action": "OPEN_BACKFILL"
+                            }
+                          ]
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "EventLogLoadFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@entity.errorMessage",
+                      "type": "error-state",
+                      "title": "Failed to load"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "viewing",
+                "event": "EventLogSaved",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Refreshing…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "EventLogSaveFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Save failed",
+                      "message": "@entity.errorMessage",
+                      "type": "error-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "filtering",
+                "event": "OPEN_FILTER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLOSE_FILTER",
+                              "label": "Back",
+                              "type": "button",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "filter"
+                            },
+                            {
+                              "content": "Filter Activity",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cancelEvent": "CLOSE_FILTER",
+                          "fields": [
+                            "filterKind"
+                          ],
+                          "mode": "edit",
+                          "submitEvent": "APPLY_FILTER",
+                          "type": "form-section",
+                          "entity": "@entity"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing",
+                "to": "backfilling",
+                "event": "OPEN_BACKFILL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.backfillTitle",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.backfillDescription",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.backfillDate",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.backfillKind",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "action": "CANCEL_BACKFILL",
+                              "variant": "ghost",
+                              "icon": "x",
+                              "type": "button",
+                              "label": "Cancel"
+                            },
+                            {
+                              "name": "plus",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Add Retroactive Entry",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "submitEvent": "SAVE_BACKFILL",
+                          "fields": "@config.formFields",
+                          "mode": "create",
+                          "entity": "@entity",
+                          "cancelEvent": "CANCEL_BACKFILL"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "filtering",
+                "to": "loading",
+                "event": "APPLY_FILTER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.filterKind",
+                    "@payload.filterKind"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Filtering…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "filtering",
+                "to": "viewing",
+                "event": "CLOSE_FILTER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Closing filter…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "backfilling",
+                "to": "loading",
+                "event": "SAVE_BACKFILL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Saving entry…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "backfilling",
+                "to": "viewing",
+                "event": "CANCEL_BACKFILL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Cancelling…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Retrying…"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Activity"
+            },
+            "kindField": {
+              "type": "string",
+              "default": "kind"
+            },
+            "dateField": {
+              "type": "string",
+              "default": "createdAt"
+            },
+            "bodyField": {
+              "type": "string",
+              "default": "description"
+            },
+            "itemStatus": {
+              "type": "string",
+              "default": "info",
+              "values": [
+                "info",
+                "success",
+                "warning",
+                "error"
+              ]
+            },
+            "itemIcon": {
+              "type": "string",
+              "default": "activity"
+            },
+            "titleField": {
+              "type": "string",
+              "default": "title"
+            },
+            "formFields": {
+              "type": "[string]",
+              "default": [
+                "title",
+                "description",
+                "kind",
+                "date"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "EventLogPage",
+          "path": "/event-log",
+          "traits": [
+            {
+              "ref": "EventLogTimeline"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1292 @@
+{
+  "name": "std-wizard",
+  "version": "1.0.0",
+  "description": "std-wizard — generic 3-step branching wizard. Topology = loading / step_1 / step_2 / step_3 / completed / cancelled / error — each step has NEXT/BACK/SKIP transitions. The 3-step shape is the most common form-wizard topology and sidesteps dynamic-state-machine N; consumers compose with extra logic for longer flows.",
+  "orbitals": [
+    {
+      "name": "WizardOrbital",
+      "entity": {
+        "name": "WizardView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "steps",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "type": "string",
+                  "values": [
+                    "pending",
+                    "current",
+                    "completed"
+                  ]
+                },
+                "number": {
+                  "name": "number",
+                  "type": "number"
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "name": "completionMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "cancelReason",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WizardForm",
+          "category": "interaction",
+          "linkedEntity": "WizardView",
+          "emits": [
+            {
+              "event": "NEXT",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "BACK"
+            },
+            {
+              "event": "SKIP"
+            },
+            {
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "reason",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RESTART"
+            },
+            {
+              "event": "WizardLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "WizardLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "step_1"
+              },
+              {
+                "name": "step_2"
+              },
+              {
+                "name": "step_3"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "cancelled"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "WizardLoaded",
+                "name": "Wizard loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "WizardLoadFailed",
+                "name": "Wizard load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "WizardSaved",
+                "name": "Wizard saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "WizardSaveFailed",
+                "name": "Wizard save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "NEXT",
+                "name": "Next",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "SKIP",
+                "name": "Skip"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "reason",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "BACK",
+                "name": "Back"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Loading wizard…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "step_1",
+                "event": "WizardLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.steps",
+                    [
+                      {
+                        "key": "@config.step1Key",
+                        "number": 1.0,
+                        "label": "@config.step1Label",
+                        "description": "@config.step1Desc",
+                        "icon": "@config.step1Icon",
+                        "status": "current"
+                      },
+                      {
+                        "key": "@config.step2Key",
+                        "label": "@config.step2Label",
+                        "description": "@config.step2Desc",
+                        "number": 2.0,
+                        "status": "pending",
+                        "icon": "@config.step2Icon"
+                      },
+                      {
+                        "icon": "@config.step3Icon",
+                        "key": "@config.step3Key",
+                        "number": 3.0,
+                        "description": "@config.step3Desc",
+                        "status": "pending",
+                        "label": "@config.step3Label"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-checks"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-list",
+                          "gap": "sm",
+                          "entity": "@entity.steps",
+                          "fields": [],
+                          "renderItem": [
+                            "fn",
+                            "step",
+                            {
+                              "children": [
+                                {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "@step.icon"
+                                    },
+                                    {
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "@step.label",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "content": "@step.description",
+                                          "color": "muted",
+                                          "variant": "caption",
+                                          "type": "typography"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "label": "@step.status",
+                                      "variant": "primary",
+                                      "type": "badge"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "submitEvent": "NEXT",
+                          "fields": "@config.step1Fields",
+                          "entity": "@entity",
+                          "mode": "edit",
+                          "cancelEvent": "CANCEL"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "secondary",
+                              "label": "Skip",
+                              "action": "SKIP",
+                              "icon": "skip-forward"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "action": "CANCEL",
+                              "icon": "x",
+                              "label": "Cancel"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "WizardLoadFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "error-state",
+                      "message": "@entity.errorMessage",
+                      "title": "Failed to load"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "step_1",
+                "event": "WizardSaved",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Refreshing…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "WizardSaveFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Save failed",
+                      "type": "error-state",
+                      "message": "@entity.errorMessage"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_1",
+                "to": "step_2",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.steps",
+                    [
+                      {
+                        "label": "@config.step1Label",
+                        "key": "@config.step1Key",
+                        "icon": "@config.step1Icon",
+                        "number": 1.0,
+                        "status": "completed",
+                        "description": "@config.step1Desc"
+                      },
+                      {
+                        "key": "@config.step2Key",
+                        "status": "current",
+                        "number": 2.0,
+                        "icon": "@config.step2Icon",
+                        "description": "@config.step2Desc",
+                        "label": "@config.step2Label"
+                      },
+                      {
+                        "icon": "@config.step3Icon",
+                        "status": "pending",
+                        "description": "@config.step3Desc",
+                        "key": "@config.step3Key",
+                        "label": "@config.step3Label",
+                        "number": 3.0
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "list-checks",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@entity.steps",
+                          "renderItem": [
+                            "fn",
+                            "step",
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "name": "@step.icon",
+                                      "type": "icon"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "content": "@step.label",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "content": "@step.description",
+                                          "variant": "caption",
+                                          "color": "muted"
+                                        }
+                                      ],
+                                      "gap": "xs",
+                                      "direction": "vertical"
+                                    },
+                                    {
+                                      "variant": "primary",
+                                      "type": "badge",
+                                      "label": "@step.status"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "fields": [],
+                          "gap": "sm",
+                          "type": "data-list"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cancelEvent": "BACK",
+                          "mode": "edit",
+                          "fields": "@config.step2Fields",
+                          "submitEvent": "NEXT",
+                          "entity": "@entity",
+                          "type": "form-section"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "icon": "arrow-left",
+                              "action": "BACK"
+                            },
+                            {
+                              "action": "SKIP",
+                              "icon": "skip-forward",
+                              "variant": "secondary",
+                              "type": "button",
+                              "label": "Skip"
+                            },
+                            {
+                              "variant": "ghost",
+                              "action": "CANCEL",
+                              "label": "Cancel",
+                              "type": "button",
+                              "icon": "x"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_1",
+                "to": "step_2",
+                "event": "SKIP",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Skipping…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_1",
+                "to": "cancelled",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "x-circle",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Cancelled",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "Wizard cancelled."
+                        },
+                        {
+                          "type": "button",
+                          "action": "RESTART",
+                          "label": "Restart",
+                          "icon": "rotate-ccw",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_2",
+                "to": "step_3",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.steps",
+                    [
+                      {
+                        "number": 1.0,
+                        "status": "completed",
+                        "key": "@config.step1Key",
+                        "description": "@config.step1Desc",
+                        "label": "@config.step1Label",
+                        "icon": "@config.step1Icon"
+                      },
+                      {
+                        "key": "@config.step2Key",
+                        "status": "completed",
+                        "description": "@config.step2Desc",
+                        "number": 2.0,
+                        "icon": "@config.step2Icon",
+                        "label": "@config.step2Label"
+                      },
+                      {
+                        "description": "@config.step3Desc",
+                        "status": "current",
+                        "number": 3.0,
+                        "key": "@config.step3Key",
+                        "label": "@config.step3Label",
+                        "icon": "@config.step3Icon"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-checks"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [],
+                          "renderItem": [
+                            "fn",
+                            "step",
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "@step.icon"
+                                    },
+                                    {
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "@step.label",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "content": "@step.description",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "label": "@step.status",
+                                      "variant": "primary",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "sm"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "gap": "sm",
+                          "entity": "@entity.steps",
+                          "type": "data-list"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "mode": "edit",
+                          "cancelEvent": "BACK",
+                          "fields": "@config.step3Fields",
+                          "type": "form-section",
+                          "submitEvent": "NEXT",
+                          "entity": "@entity"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "icon": "arrow-left",
+                              "action": "BACK",
+                              "variant": "ghost",
+                              "label": "Back"
+                            },
+                            {
+                              "label": "Skip",
+                              "type": "button",
+                              "variant": "secondary",
+                              "action": "SKIP",
+                              "icon": "skip-forward"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "label": "Cancel",
+                              "action": "CANCEL",
+                              "icon": "x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_2",
+                "to": "step_1",
+                "event": "BACK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Going back…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_2",
+                "to": "step_3",
+                "event": "SKIP",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Skipping…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_2",
+                "to": "cancelled",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "x-circle"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "Cancelled",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "Wizard cancelled."
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "label": "Restart",
+                          "action": "RESTART",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_3",
+                "to": "completed",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.completionMessage",
+                    "All steps completed"
+                  ],
+                  [
+                    "set",
+                    "@entity.steps",
+                    [
+                      {
+                        "number": 1.0,
+                        "status": "completed",
+                        "label": "@config.step1Label",
+                        "key": "@config.step1Key",
+                        "description": "@config.step1Desc",
+                        "icon": "@config.step1Icon"
+                      },
+                      {
+                        "description": "@config.step2Desc",
+                        "label": "@config.step2Label",
+                        "number": 2.0,
+                        "status": "completed",
+                        "key": "@config.step2Key",
+                        "icon": "@config.step2Icon"
+                      },
+                      {
+                        "label": "@config.step3Label",
+                        "key": "@config.step3Key",
+                        "icon": "@config.step3Icon",
+                        "description": "@config.step3Desc",
+                        "status": "completed",
+                        "number": 3.0
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "check-circle"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "Complete"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": [],
+                          "renderItem": [
+                            "fn",
+                            "step",
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "@step.icon"
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@step.label",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        },
+                                        {
+                                          "color": "muted",
+                                          "variant": "caption",
+                                          "content": "@step.description",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "type": "stack",
+                                      "gap": "xs",
+                                      "direction": "vertical"
+                                    },
+                                    {
+                                      "variant": "success",
+                                      "type": "badge",
+                                      "label": "@step.status"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "data-list",
+                          "entity": "@entity.steps",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "variant": "body",
+                              "content": "@entity.completionMessage",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "Restart",
+                          "action": "RESTART",
+                          "icon": "rotate-ccw",
+                          "variant": "secondary",
+                          "type": "button"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_3",
+                "to": "step_2",
+                "event": "BACK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Going back…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step_3",
+                "to": "cancelled",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "x-circle"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "Cancelled"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "Wizard cancelled."
+                        },
+                        {
+                          "type": "button",
+                          "variant": "secondary",
+                          "label": "Restart",
+                          "icon": "rotate-ccw",
+                          "action": "RESTART"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Restarting…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "cancelled",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Restarting…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Retrying…"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "step3Icon": {
+              "type": "string",
+              "default": "check-circle"
+            },
+            "step3Fields": {
+              "type": "[string]",
+              "default": [
+                "notes"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Wizard"
+            },
+            "step1Desc": {
+              "type": "string",
+              "default": "Basic information"
+            },
+            "step1Label": {
+              "type": "string",
+              "default": "Details"
+            },
+            "step2Fields": {
+              "type": "[string]",
+              "default": [
+                "category",
+                "priority"
+              ]
+            },
+            "step2Label": {
+              "type": "string",
+              "default": "Options"
+            },
+            "step1Fields": {
+              "type": "[string]",
+              "default": [
+                "title",
+                "description"
+              ]
+            },
+            "step2Key": {
+              "type": "string",
+              "default": "options"
+            },
+            "step3Desc": {
+              "type": "string",
+              "default": "Confirm and submit"
+            },
+            "step1Key": {
+              "type": "string",
+              "default": "details"
+            },
+            "step2Icon": {
+              "type": "string",
+              "default": "settings"
+            },
+            "step2Desc": {
+              "type": "string",
+              "default": "Configure preferences"
+            },
+            "step3Label": {
+              "type": "string",
+              "default": "Review"
+            },
+            "step3Key": {
+              "type": "string",
+              "default": "review"
+            },
+            "step1Icon": {
+              "type": "string",
+              "default": "file-text"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WizardPage",
+          "path": "/wizard",
+          "traits": [
+            {
+              "ref": "WizardForm"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
