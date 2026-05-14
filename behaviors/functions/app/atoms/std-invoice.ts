@@ -29,13 +29,13 @@ const ALIAS = 'Invoice';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdInvoiceEventKey = 'INIT' | 'InvoiceLoadFailed' | 'InvoiceLoaded' | 'InvoiceRefundFailed' | 'InvoiceRefunded' | 'InvoiceUpdateFailed' | 'InvoiceUpdated' | 'MARK_PAID' | 'REFUND' | 'SEND' | 'VIEW' | 'VOID';
+export type StdInvoiceEventKey = 'CLOSE_VIEW' | 'INIT' | 'InvoiceLoadFailed' | 'InvoiceLoaded' | 'InvoiceRefundFailed' | 'InvoiceRefunded' | 'InvoiceUpdateFailed' | 'InvoiceUpdated' | 'MARK_PAID' | 'OPEN_INVOICE' | 'REFUND' | 'SEND' | 'VOID';
 
 /**
- * Payload shape for the `VIEW` event.
+ * Payload shape for the `OPEN_INVOICE` event.
  */
-export interface StdInvoiceViewPayload {
-  invoiceId: string;
+export interface StdInvoiceOpenInvoicePayload {
+  id: string;
   row?: {
     id: string;
     invoiceNumber: string;

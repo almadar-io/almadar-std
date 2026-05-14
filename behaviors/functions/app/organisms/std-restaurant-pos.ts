@@ -37,20 +37,23 @@ export interface StdRestaurantPosConfig {
 /**
  * Tunable params for the MenuOrbital orbital.
  *
- * Canonical entity: MenuRecord (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: MenuRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRestaurantPosMenuOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdRestaurantPosMenuOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'MenuAppLayout' | 'MenuSearch' | 'MenuFilter' | 'MenuCategoryTree' | 'MenuBrowseList' | 'MenuModifierGroups' | 'MenuImageUpload' | 'MenuCreate' | 'MenuEdit' | 'MenuDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the MenuOrbital orbital with consumer params. */
 export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'MenuRecord';
+  const canonicalName = params.entityName ?? 'MenuRecord';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'menurecords');
   const built = makeOrbitalWithUses({
     name: 'MenuOrbital',
     uses: [
@@ -121,7 +130,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'menurecords',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -172,26 +181,26 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MenuAppLayout',
         'config': {
-          'notificationClickEvent': 'MENU_NOTIFICATIONS_OPEN',
-          'searchEvent': 'MENU_SEARCH',
           'appName': 'Restaurant POS',
           'notifications': [],
+          'searchEvent': 'MENU_SEARCH',
+          'notificationClickEvent': 'MENU_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.MenuCatalog',
           'navItems': [
             {
+              'icon': 'utensils',
               'href': '/menu',
               'label': 'Menu',
-              'icon': 'utensils',
             },
             {
-              'label': 'Floor',
               'href': '/floor',
+              'label': 'Floor',
               'icon': 'layout-grid',
             },
             {
+              'icon': 'receipt',
               'href': '/orders',
               'label': 'Orders',
-              'icon': 'receipt',
             },
             {
               'label': 'Kitchen',
@@ -201,8 +210,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           ],
         },
         'events': {
-          'SEARCH': 'MENU_SEARCH',
           'NOTIFY_CLICK': 'MENU_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MENU_SEARCH',
         },
       }),
       {
@@ -286,61 +295,61 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                   'main',
                   {
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'justify': 'between',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'align': 'center',
+                        'gap': 'md',
                         'children': [
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'name': 'utensils',
-                                'type': 'icon',
-                              },
-                              {
-                                'variant': 'h2',
-                                'type': 'typography',
-                                'content': 'Menu',
-                              },
-                            ],
                             'align': 'center',
                             'gap': 'sm',
-                          },
-                          {
-                            'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'icon': 'plus',
-                                'type': 'button',
-                                'action': 'CREATE',
-                                'label': 'New Item',
+                                'type': 'icon',
+                                'name': 'utensils',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Menu',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
+                          },
+                          {
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'label': 'New Item',
+                                'variant': 'primary',
+                              },
+                            ],
                           },
                         ],
-                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'md',
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
                         'children': [
                           '@trait.MenuSearch',
                           '@trait.MenuFilter',
                         ],
+                        'type': 'stack',
                       },
                       '@trait.MenuCategoryTree',
                       {
@@ -360,9 +369,9 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                         'type': 'divider',
                       },
                       {
-                        'content': 'Item images',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Item images',
                       },
                       '@trait.MenuImageUpload',
                     ],
@@ -384,28 +393,28 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
                         'label': 'Back to menu',
-                        'variant': 'ghost',
-                        'type': 'button',
                         'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
                     'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
                     'align': 'center',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -418,69 +427,69 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MenuSearch',
         'config': {
-          'event': 'MENU_SEARCH',
           'placeholder': 'Search menu…',
+          'event': 'MENU_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'MenuFilter',
         'config': {
+          'event': 'MENU_FILTER',
           'filters': [
             {
-              'field': 'category',
               'options': [
                 'appetizer',
                 'entree',
                 'dessert',
                 'drink',
               ],
-              'label': 'Category',
               'filterType': 'select',
+              'field': 'category',
+              'label': 'Category',
             },
             {
               'field': 'available',
               'label': 'Available',
-              'filterType': 'select',
               'options': [
                 'true',
                 'false',
               ],
+              'filterType': 'select',
             },
           ],
-          'event': 'MENU_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'TagTaxonomy.traits.TagBrowse',
         'name': 'MenuCategoryTree',
         'config': {
-          'allowEdit': false,
           'title': 'Categories',
+          'allowEdit': false,
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'MenuBrowseList',
-        'linkedEntity': 'MenuRecord',
+        'linkedEntity': canonicalName,
         'config': {
           'itemActions': [
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'label': 'Delete',
-              'variant': 'danger',
               'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
             },
           ],
           'fields': [
             {
-              'variant': 'h4',
               'name': 'name',
               'icon': 'utensils',
+              'variant': 'h4',
             },
             {
               'variant': 'badge',
@@ -499,8 +508,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
               'variant': 'caption',
             },
           ],
-          'gap': 'sm',
           'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -556,20 +565,18 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'ref': 'ImageUpload.traits.UploadedImageUpload',
         'name': 'MenuImageUpload',
         'config': {
-          'maxBytesPerImage': 5242880,
+          'accept': 'image/*',
           'title': 'Item Images',
           'maxImages': 12,
-          'accept': 'image/*',
+          'maxBytesPerImage': 5242880,
         },
       }),
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MenuCreate',
-        'linkedEntity': 'MenuRecord',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
-          'title': 'New Menu Item',
-          'mode': 'create',
           'fields': [
             'name',
             'description',
@@ -577,6 +584,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
             'category',
             'available',
           ],
+          'title': 'New Menu Item',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -595,10 +604,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MenuEdit',
-        'linkedEntity': 'MenuRecord',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'title': 'Edit Menu Item',
           'fields': [
             'name',
             'description',
@@ -607,6 +614,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
             'available',
           ],
           'icon': 'edit',
+          'title': 'Edit Menu Item',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -625,16 +634,16 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'MenuDelete',
-        'linkedEntity': 'MenuRecord',
+        'linkedEntity': canonicalName,
         'config': {
           'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
           'title': 'Delete Menu Item',
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -878,7 +887,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -890,6 +899,10 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -913,7 +926,9 @@ export const StdRestaurantPosMenuOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'MenuAppLayout',
@@ -950,20 +965,23 @@ export function isStdRestaurantPosMenuOrbitalParams(p: object): p is StdRestaura
 /**
  * Tunable params for the TableOrbital orbital.
  *
- * Canonical entity: TableRecord (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: TableRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRestaurantPosTableOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -972,22 +990,28 @@ export interface StdRestaurantPosTableOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TableFloorPlan' | 'TableRoster' | 'TableEdit',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TableOrbital orbital with consumer params. */
 export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'TableRecord';
+  const canonicalName = params.entityName ?? 'TableRecord';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'tablerecords');
   const built = makeOrbitalWithUses({
     name: 'TableOrbital',
     uses: [
@@ -1006,7 +1030,7 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'tablerecords',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1047,32 +1071,16 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
         'ref': 'TableMap.traits.TableManage',
         'name': 'TableFloorPlan',
         'config': {
-          'canvasHeight': 640,
           'title': 'Floor Plan',
+          'canvasHeight': 640,
           'canvasWidth': 960,
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TableRoster',
-        'linkedEntity': 'TableRecord',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'fields': [
-            {
-              'variant': 'h4',
-              'name': 'label',
-              'icon': 'layout-grid',
-            },
-            {
-              'variant': 'badge',
-              'name': 'capacity',
-            },
-            {
-              'name': 'section',
-              'variant': 'caption',
-            },
-          ],
           'itemActions': [
             {
               'variant': 'ghost',
@@ -1080,7 +1088,23 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
               'event': 'EDIT',
             },
           ],
+          'fields': [
+            {
+              'name': 'label',
+              'variant': 'h4',
+              'icon': 'layout-grid',
+            },
+            {
+              'variant': 'badge',
+              'name': 'capacity',
+            },
+            {
+              'variant': 'caption',
+              'name': 'section',
+            },
+          ],
           'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -1096,16 +1120,16 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TableEdit',
-        'linkedEntity': 'TableRecord',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'icon': 'edit',
+          'title': 'Edit Table',
+          'mode': 'edit',
           'fields': [
             'label',
             'capacity',
             'section',
           ],
-          'title': 'Edit Table',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1227,7 +1251,7 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1239,6 +1263,10 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1262,7 +1290,9 @@ export const StdRestaurantPosTableOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TableFloorPlan',
@@ -1291,20 +1321,23 @@ export function isStdRestaurantPosTableOrbitalParams(p: object): p is StdRestaur
 /**
  * Tunable params for the OrderOrbital orbital.
  *
- * Canonical entity: OrderTicket (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: OrderTicket — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRestaurantPosOrderOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1313,22 +1346,28 @@ export interface StdRestaurantPosOrderOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'OrderCart' | 'OrderCartAddItem' | 'OrderCartRemoveConfirm' | 'OrderCartPersistor',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the OrderOrbital orbital with consumer params. */
 export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'OrderTicket';
+  const canonicalName = params.entityName ?? 'OrderTicket';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'orderTickets');
   const built = makeOrbitalWithUses({
     name: 'OrderOrbital',
     uses: [
@@ -1347,7 +1386,7 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'orderTickets',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1421,13 +1460,13 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
         'name': 'OrderCartAddItem',
         'config': {
           'icon': 'plus-circle',
+          'openButtonLabel': 'Add Item',
           'fields': [
             'name',
             'description',
             'status',
           ],
           'title': 'Add to Order',
-          'openButtonLabel': 'Add Item',
           'mode': 'create',
         },
       }),
@@ -1435,10 +1474,10 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
         'ref': 'Cart.traits.CartItemRemoveConfirm',
         'name': 'OrderCartRemoveConfirm',
         'config': {
-          'alertMessage': 'Remove this item from the order?',
           'icon': 'alert-triangle',
-          'confirmLabel': 'Remove',
+          'alertMessage': 'Remove this item from the order?',
           'title': 'Remove From Order',
+          'confirmLabel': 'Remove',
         },
       }),
       makeTraitRef({
@@ -1635,22 +1674,22 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-12',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'type': 'typography',
                         'content': 'Loading order…',
                         'variant': 'caption',
-                        'type': 'typography',
                         'color': 'muted',
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1666,17 +1705,17 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   {
                     'children': [
                       {
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'receipt',
+                            'type': 'icon',
                           },
                           {
+                            'variant': 'h3',
                             'type': 'typography',
                             'content': 'Close & Tip Split',
-                            'variant': 'h3',
                           },
                         ],
                         'gap': 'sm',
@@ -1686,17 +1725,18 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
                         'entity': '@payload.data',
+                        'cols': 1,
+                        'gap': 'sm',
                         'type': 'data-grid',
                         'fields': [
                           {
-                            'name': 'tableId',
                             'variant': 'caption',
+                            'name': 'tableId',
                           },
                           {
-                            'name': 'subtotal',
                             'variant': 'caption',
+                            'name': 'subtotal',
                           },
                           {
                             'name': 'taxAmount',
@@ -1711,38 +1751,37 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                             'variant': 'h4',
                           },
                           {
-                            'name': 'status',
                             'variant': 'badge',
+                            'name': 'status',
                           },
                         ],
-                        'cols': 1,
                       },
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'justify': 'end',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'icon': 'send',
-                            'type': 'button',
-                            'action': 'SUBMIT',
                             'label': 'Submit to Kitchen',
                             'variant': 'secondary',
+                            'type': 'button',
+                            'action': 'SUBMIT',
+                            'icon': 'send',
                           },
                           {
-                            'label': 'Close & Split Tip',
-                            'action': 'CLOSE_TICKET',
-                            'type': 'button',
-                            'icon': 'split',
                             'variant': 'primary',
+                            'label': 'Close & Split Tip',
+                            'icon': 'split',
+                            'type': 'button',
+                            'action': 'CLOSE_TICKET',
                           },
                         ],
-                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1756,9 +1795,9 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'alert',
                     'variant': 'error',
                     'message': '@payload.error',
+                    'type': 'alert',
                   },
                 ],
               ],
@@ -1782,8 +1821,8 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'spinner',
                     'size': 'sm',
+                    'type': 'spinner',
                   },
                 ],
               ],
@@ -1885,7 +1924,7 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1897,6 +1936,10 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1920,7 +1963,9 @@ export const StdRestaurantPosOrderOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'OrderCart',
@@ -1950,20 +1995,23 @@ export function isStdRestaurantPosOrderOrbitalParams(p: object): p is StdRestaur
 /**
  * Tunable params for the KitchenOrbital orbital.
  *
- * Canonical entity: KitchenLog (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: KitchenLog — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRestaurantPosKitchenOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1972,22 +2020,28 @@ export interface StdRestaurantPosKitchenOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'KitchenBoard' | 'KitchenLogList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the KitchenOrbital orbital with consumer params. */
 export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'KitchenLog';
+  const canonicalName = params.entityName ?? 'KitchenLog';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'kitchenlogs');
   const built = makeOrbitalWithUses({
     name: 'KitchenOrbital',
     uses: [
@@ -2002,7 +2056,7 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
     ],
     entity: {
       name: canonicalName,
-      collection: 'kitchenlogs',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2045,8 +2099,9 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'KitchenLogList',
-        'linkedEntity': 'KitchenLog',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'cols': 1,
           'fields': [
             {
@@ -2062,7 +2117,6 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
               'name': 'createdAt',
             },
           ],
-          'gap': 'sm',
         },
       }),
     ],
@@ -2083,7 +2137,7 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2095,6 +2149,10 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2118,7 +2176,9 @@ export const StdRestaurantPosKitchenOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'KitchenBoard',

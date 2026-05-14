@@ -35,252 +35,2341 @@ export interface StdInventoryConfig {
 }
 
 /**
- * Params for the std-inventory descriptor helpers.
+ * Tunable params for the InventoryItemOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: InventoryItem — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdInventoryParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdInventoryInventoryItemOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdInventoryConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'InventoryAppLayout' | 'InventorySearch' | 'InventoryFilter' | 'InventoryStats' | 'InventoryGraphs' | 'InventoryBrowseList' | 'InventoryCreate' | 'InventoryEdit' | 'InventoryView' | 'InventoryDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `Inventory.traits.InventoryAppLayout`. */
-export function stdInventoryInventoryAppLayoutTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryCatalog`. */
-export function stdInventoryInventoryCatalogTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventorySearch`. */
-export function stdInventoryInventorySearchTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventorySearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryFilter`. */
-export function stdInventoryInventoryFilterTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryStats`. */
-export function stdInventoryInventoryStatsTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryGraphs`. */
-export function stdInventoryInventoryGraphsTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryBrowseList`. */
-export function stdInventoryInventoryBrowseListTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryCreate`. */
-export function stdInventoryInventoryCreateTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryEdit`. */
-export function stdInventoryInventoryEditTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryView`. */
-export function stdInventoryInventoryViewTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryDelete`. */
-export function stdInventoryInventoryDeleteTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Inventory.traits.InventoryPersistor`. */
-export function stdInventoryInventoryPersistorTrait(params: StdInventoryParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.InventoryPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Inventory.pages.InventoryPage`. */
-export function stdInventoryPage(params: StdInventoryParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.InventoryPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the InventoryItemOrbital orbital with consumer params. */
+export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryItemOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'InventoryItem';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'inventoryitems');
+  const built = makeOrbitalWithUses({
     name: 'InventoryItemOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-stock-adjustment',
+        'as': 'StockAdjustment',
+      },
+      {
+        'from': 'std/behaviors/std-stock-level',
+        'as': 'StockLevel',
+      },
+      {
+        'from': 'std/behaviors/std-warehouse',
+        'as': 'Warehouse',
+      },
+      {
+        'from': 'std/behaviors/std-reorder-rule',
+        'as': 'ReorderRule',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'category',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'defaultUnitCost',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'discontinued',
+              'draft',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdInventoryInventoryAppLayoutTrait(params),
-      stdInventoryInventoryCatalogTrait(params),
-      stdInventoryInventorySearchTrait(params),
-      stdInventoryInventoryFilterTrait(params),
-      stdInventoryInventoryStatsTrait(params),
-      stdInventoryInventoryGraphsTrait(params),
-      stdInventoryInventoryBrowseListTrait(params),
-      stdInventoryInventoryCreateTrait(params),
-      stdInventoryInventoryEditTrait(params),
-      stdInventoryInventoryViewTrait(params),
-      stdInventoryInventoryDeleteTrait(params),
-      stdInventoryInventoryPersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'InventoryAppLayout',
+        'config': {
+          'notificationClickEvent': 'INVENTORY_NOTIFICATIONS_OPEN',
+          'appName': 'Inventory Management',
+          'navItems': [
+            {
+              'label': 'Items',
+              'href': '/inventory',
+              'icon': 'package',
+            },
+            {
+              'label': 'Stock Levels',
+              'href': '/stock-levels',
+              'icon': 'package',
+            },
+            {
+              'icon': 'warehouse',
+              'label': 'Warehouses',
+              'href': '/warehouses',
+            },
+            {
+              'icon': 'refresh-ccw',
+              'href': '/reorder-rules',
+              'label': 'Reorder Rules',
+            },
+            {
+              'href': '/adjustments',
+              'label': 'Adjustments',
+              'icon': 'edit',
+            },
+          ],
+          'contentTrait': '@trait.InventoryCatalog',
+          'searchEvent': 'INVENTORY_SEARCH',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'INVENTORY_SEARCH',
+          'NOTIFY_CLICK': 'INVENTORY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'InventoryCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'INVENTORY_SEARCH',
+            'triggers': 'INVENTORY_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryAppLayout',
+            },
+          },
+          {
+            'event': 'INVENTORY_NOTIFICATIONS_OPEN',
+            'triggers': 'INVENTORY_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'INVENTORY_SEARCH',
+              'name': 'Inventory Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'INVENTORY_NOTIFICATIONS_OPEN',
+              'name': 'Inventory Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'package',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Inventory Items',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'label': 'New Item',
+                                'type': 'button',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'gap': 'sm',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'align': 'center',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.InventorySearch',
+                          '@trait.InventoryFilter',
+                        ],
+                        'type': 'stack',
+                      },
+                      '@trait.InventoryStats',
+                      '@trait.InventoryGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.InventoryBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INVENTORY_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INVENTORY_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'gap': 'md',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                      },
+                      {
+                        'label': 'Back to inventory',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'InventorySearch',
+        'config': {
+          'placeholder': 'Search SKUs, names, categories…',
+          'event': 'INVENTORY_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'InventoryFilter',
+        'config': {
+          'filters': [
+            {
+              'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
+              'options': [
+                'active',
+                'discontinued',
+                'draft',
+              ],
+            },
+          ],
+          'event': 'INVENTORY_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'InventoryStats',
+        'config': {
+          'title': 'Inventory',
+          'metrics': [
+            {
+              'variant': 'primary',
+              'aggregation': 'count',
+              'icon': 'package',
+              'label': 'Total SKUs',
+              'format': 'number',
+            },
+            {
+              'variant': 'success',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'label': 'Active',
+              'aggregation': 'count',
+              'icon': 'check-circle',
+            },
+            {
+              'variant': 'warning',
+              'label': 'Discontinued',
+              'format': 'number',
+              'aggregation': 'count',
+              'icon': 'circle-off',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'discontinued',
+                ],
+              ],
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'InventoryGraphs',
+        'config': {
+          'subtitle': 'SKU distribution across categories',
+          'chartType': 'bar',
+          'height': 240,
+          'showLegend': false,
+          'categoryField': 'category',
+          'aggregation': 'count',
+          'title': 'Items by Category',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'InventoryBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            {
+              'name': 'sku',
+              'variant': 'h4',
+              'icon': 'tag',
+            },
+            {
+              'variant': 'body',
+              'name': 'name',
+            },
+            {
+              'variant': 'caption',
+              'name': 'category',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'defaultUnitCost',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventorySearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryFilter',
+            },
+          },
+          {
+            'event': 'INVENTORY_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryPersistor',
+            },
+          },
+          {
+            'event': 'INVENTORY_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryPersistor',
+            },
+          },
+          {
+            'event': 'INVENTORY_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'InventoryCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'sku',
+            'name',
+            'category',
+            'defaultUnitCost',
+            'status',
+          ],
+          'title': 'New Item',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'InventoryEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'sku',
+            'name',
+            'category',
+            'defaultUnitCost',
+            'status',
+          ],
+          'title': 'Edit Item',
+          'icon': 'edit',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'InventoryView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'sku',
+            'name',
+            'category',
+            'defaultUnitCost',
+            'status',
+          ],
+          'mode': 'edit',
+          'icon': 'eye',
+          'title': 'View Item',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'InventoryDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'title': 'Delete Item',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'InventoryPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'InventoryItem',
+        'emits': [
+          {
+            'event': 'INVENTORY_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'INVENTORY_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'INVENTORY_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'InventoryDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'INVENTORY_CREATED',
+              'name': 'Inventory Created',
+            },
+            {
+              'key': 'INVENTORY_UPDATED',
+              'name': 'Inventory Updated',
+            },
+            {
+              'key': 'INVENTORY_DELETED',
+              'name': 'Inventory Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'InventoryItem',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'INVENTORY_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'InventoryItem',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'INVENTORY_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'InventoryItem',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'INVENTORY_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdInventoryPage(params),
+      {
+        'name': 'InventoryPage',
+        'path': '/inventory',
+        'traits': [
+          {
+            'ref': 'InventoryAppLayout',
+          },
+          {
+            'ref': 'InventoryCatalog',
+          },
+          {
+            'ref': 'InventorySearch',
+          },
+          {
+            'ref': 'InventoryFilter',
+          },
+          {
+            'ref': 'InventoryStats',
+          },
+          {
+            'ref': 'InventoryGraphs',
+          },
+          {
+            'ref': 'InventoryBrowseList',
+          },
+          {
+            'ref': 'InventoryCreate',
+          },
+          {
+            'ref': 'InventoryEdit',
+          },
+          {
+            'ref': 'InventoryView',
+          },
+          {
+            'ref': 'InventoryDelete',
+          },
+          {
+            'ref': 'InventoryPersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdInventoryInventoryItemOrbital. */
+export const StdInventoryInventoryItemOrbitalManifest = {
+  organism: 'std-inventory',
+  orbitalName: 'InventoryItemOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'InventoryAppLayout',
+    'InventorySearch',
+    'InventoryFilter',
+    'InventoryStats',
+    'InventoryGraphs',
+    'InventoryBrowseList',
+    'InventoryCreate',
+    'InventoryEdit',
+    'InventoryView',
+    'InventoryDelete',
+  ] as const,
+  inlineTraitNames: [
+    'InventoryCatalog',
+    'InventoryPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdInventoryInventoryItemOrbitalParams keys. */
+export function isStdInventoryInventoryItemOrbitalParams(p: object): p is StdInventoryInventoryItemOrbitalParams {
+  type _OverrideRecord = NonNullable<StdInventoryInventoryItemOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdInventoryInventoryItemOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the StockLevelPanelOrbital orbital.
+ *
+ * Canonical entity: StockLevel — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdInventoryStockLevelPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'StockLevelAppLayout' | 'StockLevelView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the StockLevelPanelOrbital orbital with consumer params. */
+export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLevelPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'StockLevel';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'stocklevels');
+  const built = makeOrbitalWithUses({
+    name: 'StockLevelPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-stock-level',
+        'as': 'StockLevel',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'productName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'locationId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'onHand',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reserved',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reorderPoint',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lastCounted',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'StockLevelAppLayout',
+        'config': {
+          'notifications': [],
+          'searchEvent': 'STOCK_LEVEL_SEARCH',
+          'navItems': [
+            {
+              'label': 'Items',
+              'href': '/inventory',
+              'icon': 'package',
+            },
+            {
+              'href': '/stock-levels',
+              'label': 'Stock Levels',
+              'icon': 'package',
+            },
+            {
+              'label': 'Warehouses',
+              'href': '/warehouses',
+              'icon': 'warehouse',
+            },
+            {
+              'label': 'Reorder Rules',
+              'href': '/reorder-rules',
+              'icon': 'refresh-ccw',
+            },
+            {
+              'href': '/adjustments',
+              'icon': 'edit',
+              'label': 'Adjustments',
+            },
+          ],
+          'contentTrait': '@trait.StockLevelPanel',
+          'notificationClickEvent': 'STOCK_LEVEL_NOTIFICATIONS_OPEN',
+          'appName': 'Inventory Management',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'STOCK_LEVEL_NOTIFICATIONS_OPEN',
+          'SEARCH': 'STOCK_LEVEL_SEARCH',
+        },
+      }),
+      {
+        'name': 'StockLevelPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'package',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Stock Levels',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.StockLevelView',
+                    ],
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'StockLevel.traits.StockLevelLedger',
+        'name': 'StockLevelView',
+        'config': {
+          'title': 'Stock Levels',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'StockLevelsPage',
+        'path': '/stock-levels',
+        'traits': [
+          {
+            'ref': 'StockLevelAppLayout',
+          },
+          {
+            'ref': 'StockLevelPanel',
+          },
+          {
+            'ref': 'StockLevelView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdInventoryStockLevelPanelOrbital. */
+export const StdInventoryStockLevelPanelOrbitalManifest = {
+  organism: 'std-inventory',
+  orbitalName: 'StockLevelPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'StockLevelAppLayout',
+    'StockLevelView',
+  ] as const,
+  inlineTraitNames: [
+    'StockLevelPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdInventoryStockLevelPanelOrbitalParams keys. */
+export function isStdInventoryStockLevelPanelOrbitalParams(p: object): p is StdInventoryStockLevelPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdInventoryStockLevelPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdInventoryStockLevelPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the WarehousePanelOrbital orbital.
+ *
+ * Canonical entity: Warehouse — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdInventoryWarehousePanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'WarehouseAppLayout' | 'WarehouseView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the WarehousePanelOrbital orbital with consumer params. */
+export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehousePanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Warehouse';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'warehouses');
+  const built = makeOrbitalWithUses({
+    name: 'WarehousePanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-warehouse',
+        'as': 'Warehouse',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'code',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'address',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'type',
+            'type': 'string',
+            'default': 'warehouse',
+            'values': [
+              'warehouse',
+              'store',
+              'transit',
+            ],
+          },
+          {
+            'name': 'isActive',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'totalSkus',
+            'type': 'number',
+            'default': 0,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'WarehouseAppLayout',
+        'config': {
+          'searchEvent': 'WAREHOUSE_SEARCH',
+          'contentTrait': '@trait.WarehousePanel',
+          'navItems': [
+            {
+              'label': 'Items',
+              'href': '/inventory',
+              'icon': 'package',
+            },
+            {
+              'href': '/stock-levels',
+              'icon': 'package',
+              'label': 'Stock Levels',
+            },
+            {
+              'icon': 'warehouse',
+              'label': 'Warehouses',
+              'href': '/warehouses',
+            },
+            {
+              'icon': 'refresh-ccw',
+              'href': '/reorder-rules',
+              'label': 'Reorder Rules',
+            },
+            {
+              'href': '/adjustments',
+              'label': 'Adjustments',
+              'icon': 'edit',
+            },
+          ],
+          'notificationClickEvent': 'WAREHOUSE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'Inventory Management',
+        },
+        'events': {
+          'SEARCH': 'WAREHOUSE_SEARCH',
+          'NOTIFY_CLICK': 'WAREHOUSE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'WarehousePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'warehouse',
+                          },
+                          {
+                            'content': 'Warehouses',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.WarehouseView',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Warehouse.traits.WarehouseDirectory',
+        'name': 'WarehouseView',
+        'config': {
+          'title': 'Locations',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'WarehousesPage',
+        'path': '/warehouses',
+        'traits': [
+          {
+            'ref': 'WarehouseAppLayout',
+          },
+          {
+            'ref': 'WarehousePanel',
+          },
+          {
+            'ref': 'WarehouseView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdInventoryWarehousePanelOrbital. */
+export const StdInventoryWarehousePanelOrbitalManifest = {
+  organism: 'std-inventory',
+  orbitalName: 'WarehousePanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'WarehouseAppLayout',
+    'WarehouseView',
+  ] as const,
+  inlineTraitNames: [
+    'WarehousePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdInventoryWarehousePanelOrbitalParams keys. */
+export function isStdInventoryWarehousePanelOrbitalParams(p: object): p is StdInventoryWarehousePanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdInventoryWarehousePanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdInventoryWarehousePanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the ReorderRulePanelOrbital orbital.
+ *
+ * Canonical entity: ReorderRule — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdInventoryReorderRulePanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ReorderRuleAppLayout' | 'ReorderRuleView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ReorderRulePanelOrbital orbital with consumer params. */
+export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderRulePanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ReorderRule';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'reorderrules');
+  const built = makeOrbitalWithUses({
+    name: 'ReorderRulePanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-reorder-rule',
+        'as': 'ReorderRule',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'locationId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'thresholdQty',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reorderQty',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'vendor',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'leadTimeDays',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'isActive',
+            'type': 'boolean',
+            'default': true,
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ReorderRuleAppLayout',
+        'config': {
+          'notifications': [],
+          'searchEvent': 'REORDER_RULE_SEARCH',
+          'contentTrait': '@trait.ReorderRulePanel',
+          'appName': 'Inventory Management',
+          'notificationClickEvent': 'REORDER_RULE_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'icon': 'package',
+              'href': '/inventory',
+              'label': 'Items',
+            },
+            {
+              'href': '/stock-levels',
+              'icon': 'package',
+              'label': 'Stock Levels',
+            },
+            {
+              'icon': 'warehouse',
+              'href': '/warehouses',
+              'label': 'Warehouses',
+            },
+            {
+              'icon': 'refresh-ccw',
+              'label': 'Reorder Rules',
+              'href': '/reorder-rules',
+            },
+            {
+              'label': 'Adjustments',
+              'href': '/adjustments',
+              'icon': 'edit',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'REORDER_RULE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'REORDER_RULE_SEARCH',
+        },
+      }),
+      {
+        'name': 'ReorderRulePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'name': 'refresh-ccw',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Reorder Rules',
+                            'variant': 'h2',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ReorderRuleView',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'ReorderRule.traits.ReorderRuleManager',
+        'name': 'ReorderRuleView',
+        'config': {
+          'title': 'Reorder Rules',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ReorderRulesPage',
+        'path': '/reorder-rules',
+        'traits': [
+          {
+            'ref': 'ReorderRuleAppLayout',
+          },
+          {
+            'ref': 'ReorderRulePanel',
+          },
+          {
+            'ref': 'ReorderRuleView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdInventoryReorderRulePanelOrbital. */
+export const StdInventoryReorderRulePanelOrbitalManifest = {
+  organism: 'std-inventory',
+  orbitalName: 'ReorderRulePanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ReorderRuleAppLayout',
+    'ReorderRuleView',
+  ] as const,
+  inlineTraitNames: [
+    'ReorderRulePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdInventoryReorderRulePanelOrbitalParams keys. */
+export function isStdInventoryReorderRulePanelOrbitalParams(p: object): p is StdInventoryReorderRulePanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdInventoryReorderRulePanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdInventoryReorderRulePanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the StockAdjustmentPanelOrbital orbital.
+ *
+ * Canonical entity: StockAdjustment — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdInventoryStockAdjustmentPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'StockAdjustmentAppLayout' | 'StockAdjustmentBrowse' | 'StockAdjustmentCreate' | 'StockAdjustmentDelete' | 'StockAdjustmentPersistor',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the StockAdjustmentPanelOrbital orbital with consumer params. */
+export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStockAdjustmentPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'StockAdjustment';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'stockadjustments');
+  const built = makeOrbitalWithUses({
+    name: 'StockAdjustmentPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-stock-adjustment',
+        'as': 'StockAdjustment',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'stockLevelId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'sku',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'warehouseId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'warehouseName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'quantityDelta',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'reason',
+            'type': 'string',
+            'default': 'manual',
+            'values': [
+              'manual',
+              'damaged',
+              'transfer_in',
+              'transfer_out',
+              'shrinkage',
+              'recount',
+            ],
+          },
+          {
+            'name': 'adjustedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'adjustedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'StockAdjustmentAppLayout',
+        'config': {
+          'notificationClickEvent': 'STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.StockAdjustmentPanel',
+          'searchEvent': 'STOCK_ADJUSTMENT_SEARCH',
+          'appName': 'Inventory Management',
+          'navItems': [
+            {
+              'href': '/inventory',
+              'icon': 'package',
+              'label': 'Items',
+            },
+            {
+              'label': 'Stock Levels',
+              'icon': 'package',
+              'href': '/stock-levels',
+            },
+            {
+              'href': '/warehouses',
+              'icon': 'warehouse',
+              'label': 'Warehouses',
+            },
+            {
+              'icon': 'refresh-ccw',
+              'label': 'Reorder Rules',
+              'href': '/reorder-rules',
+            },
+            {
+              'label': 'Adjustments',
+              'href': '/adjustments',
+              'icon': 'edit',
+            },
+          ],
+          'notifications': [],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'STOCK_ADJUSTMENT_SEARCH',
+        },
+      }),
+      {
+        'name': 'StockAdjustmentPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'edit',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Stock Adjustments',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.StockAdjustmentBrowse',
+                    ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'StockAdjustment.traits.StockAdjustmentBrowse',
+        'name': 'StockAdjustmentBrowse',
+      }),
+      makeTraitRef({
+        'ref': 'StockAdjustment.traits.StockAdjustmentCreate',
+        'name': 'StockAdjustmentCreate',
+      }),
+      makeTraitRef({
+        'ref': 'StockAdjustment.traits.StockAdjustmentDelete',
+        'name': 'StockAdjustmentDelete',
+      }),
+      makeTraitRef({
+        'ref': 'StockAdjustment.traits.StockAdjustmentPersistor',
+        'name': 'StockAdjustmentPersistor',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'AdjustmentsPage',
+        'path': '/adjustments',
+        'traits': [
+          {
+            'ref': 'StockAdjustmentAppLayout',
+          },
+          {
+            'ref': 'StockAdjustmentPanel',
+          },
+          {
+            'ref': 'StockAdjustmentBrowse',
+          },
+          {
+            'ref': 'StockAdjustmentCreate',
+          },
+          {
+            'ref': 'StockAdjustmentDelete',
+          },
+          {
+            'ref': 'StockAdjustmentPersistor',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdInventoryStockAdjustmentPanelOrbital. */
+export const StdInventoryStockAdjustmentPanelOrbitalManifest = {
+  organism: 'std-inventory',
+  orbitalName: 'StockAdjustmentPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'StockAdjustmentAppLayout',
+    'StockAdjustmentBrowse',
+    'StockAdjustmentCreate',
+    'StockAdjustmentDelete',
+    'StockAdjustmentPersistor',
+  ] as const,
+  inlineTraitNames: [
+    'StockAdjustmentPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdInventoryStockAdjustmentPanelOrbitalParams keys. */
+export function isStdInventoryStockAdjustmentPanelOrbitalParams(p: object): p is StdInventoryStockAdjustmentPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdInventoryStockAdjustmentPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdInventoryStockAdjustmentPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-inventory — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdInventoryParams {
+  InventoryItem?: StdInventoryInventoryItemOrbitalParams;
+  StockLevelPanel?: StdInventoryStockLevelPanelOrbitalParams;
+  WarehousePanel?: StdInventoryWarehousePanelOrbitalParams;
+  ReorderRulePanel?: StdInventoryReorderRulePanelOrbitalParams;
+  StockAdjustmentPanel?: StdInventoryStockAdjustmentPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
+export function stdInventory(params: StdInventoryParams = {}): OrbitalDefinition[] {
+  return [
+    stdInventoryInventoryItemOrbital(params.InventoryItem ?? {}),
+    stdInventoryStockLevelPanelOrbital(params.StockLevelPanel ?? {}),
+    stdInventoryWarehousePanelOrbital(params.WarehousePanel ?? {}),
+    stdInventoryReorderRulePanelOrbital(params.ReorderRulePanel ?? {}),
+    stdInventoryStockAdjustmentPanelOrbital(params.StockAdjustmentPanel ?? {}),
+  ];
 }

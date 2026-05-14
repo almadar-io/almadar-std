@@ -37,20 +37,23 @@ export interface StdFieldServiceConfig {
 /**
  * Tunable params for the WorkOrderOrbital orbital.
  *
- * Canonical entity: WorkOrderRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: WorkOrderRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFieldServiceWorkOrderOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdFieldServiceWorkOrderOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'WorkOrderAppLayout' | 'WorkOrderSearch' | 'WorkOrderFilter' | 'WorkOrderStats' | 'WorkOrderBrowseList' | 'WorkOrderDispatch' | 'WorkOrderRoutes' | 'WorkOrderCreate' | 'WorkOrderEdit' | 'WorkOrderView' | 'WorkOrderDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the WorkOrderOrbital orbital with consumer params. */
 export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrderOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'WorkOrderRow';
+  const canonicalName = params.entityName ?? 'WorkOrderRow';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'workorders');
   const built = makeOrbitalWithUses({
     name: 'WorkOrderOrbital',
     uses: [
@@ -121,7 +130,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
     ],
     entity: {
       name: canonicalName,
-      collection: 'workorders',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -212,20 +221,19 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'name': 'WorkOrderAppLayout',
         'config': {
           'notifications': [],
-          'appName': 'Field Service',
           'notificationClickEvent': 'WORK_ORDER_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.WorkOrderCatalog',
           'searchEvent': 'WORK_ORDER_SEARCH',
           'navItems': [
             {
-              'icon': 'clipboard-list',
               'label': 'Work Orders',
               'href': '/workorders',
+              'icon': 'clipboard-list',
             },
             {
+              'href': '/technicians',
               'icon': 'hard-hat',
               'label': 'Technicians',
-              'href': '/technicians',
             },
             {
               'icon': 'map-pin',
@@ -233,6 +241,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
               'label': 'Check In',
             },
           ],
+          'appName': 'Field Service',
         },
         'events': {
           'SEARCH': 'WORK_ORDER_SEARCH',
@@ -319,19 +328,19 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'align': 'center',
-                        'gap': 'md',
-                        'type': 'stack',
                         'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
@@ -345,33 +354,35 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                             ],
                           },
                           {
-                            'children': [
-                              {
-                                'type': 'button',
-                                'label': 'New Work Order',
-                                'variant': 'primary',
-                                'icon': 'plus',
-                                'action': 'CREATE',
-                              },
-                            ],
                             'gap': 'sm',
                             'direction': 'horizontal',
                             'type': 'stack',
+                            'children': [
+                              {
+                                'label': 'New Work Order',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'type': 'button',
+                              },
+                            ],
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           '@trait.WorkOrderSearch',
                           '@trait.WorkOrderFilter',
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
+                        'align': 'center',
                       },
                       '@trait.WorkOrderStats',
                       {
@@ -397,9 +408,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                       },
                       '@trait.WorkOrderRoutes',
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -418,34 +427,34 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'align': 'center',
-                    'type': 'stack',
                     'className': 'py-8',
+                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'No notifications',
-                        'variant': 'h3',
                       },
                       {
                         'color': 'muted',
-                        'type': 'typography',
-                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'type': 'typography',
                       },
                       {
-                        'action': 'INIT',
-                        'variant': 'ghost',
                         'label': 'Back to work orders',
+                        'variant': 'ghost',
                         'type': 'button',
+                        'action': 'INIT',
                       },
                     ],
+                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -468,18 +477,17 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'config': {
           'filters': [
             {
+              'filterType': 'select',
+              'field': 'priority',
               'options': [
                 'low',
                 'normal',
                 'high',
                 'urgent',
               ],
-              'field': 'priority',
               'label': 'Priority',
-              'filterType': 'select',
             },
             {
-              'filterType': 'select',
               'label': 'Status',
               'options': [
                 'created',
@@ -489,6 +497,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                 'completed',
                 'cancelled',
               ],
+              'filterType': 'select',
               'field': 'status',
             },
           ],
@@ -499,18 +508,15 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'WorkOrderStats',
         'config': {
-          'title': 'Work Orders',
           'metrics': [
             {
               'icon': 'clipboard-list',
-              'format': 'number',
-              'variant': 'primary',
               'label': 'Total',
+              'variant': 'primary',
+              'format': 'number',
               'aggregation': 'count',
             },
             {
-              'icon': 'circle',
-              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -520,15 +526,14 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'created',
                 ],
               ],
-              'label': 'Open',
-              'variant': 'warning',
               'format': 'number',
+              'label': 'Open',
+              'icon': 'circle',
+              'aggregation': 'count',
+              'variant': 'warning',
             },
             {
               'aggregation': 'count',
-              'label': 'On Site',
-              'variant': 'info',
-              'icon': 'map-pin',
               'format': 'number',
               'filter': [
                 'fn',
@@ -539,8 +544,14 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'on-site',
                 ],
               ],
+              'variant': 'info',
+              'icon': 'map-pin',
+              'label': 'On Site',
             },
             {
+              'label': 'Completed',
+              'aggregation': 'count',
+              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -550,13 +561,11 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
                   'completed',
                 ],
               ],
-              'label': 'Completed',
-              'aggregation': 'count',
-              'variant': 'success',
-              'icon': 'check-circle',
               'format': 'number',
+              'icon': 'check-circle',
             },
           ],
+          'title': 'Work Orders',
         },
         'listens': [
           {
@@ -572,12 +581,13 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'WorkOrderBrowseList',
-        'linkedEntity': 'WorkOrderRow',
+        'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
               'label': 'View',
             },
             {
@@ -587,21 +597,19 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
             },
             {
               'variant': 'danger',
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
           'fields': [
             {
-              'variant': 'h4',
-              'icon': 'user',
               'name': 'customerName',
+              'icon': 'user',
+              'variant': 'h4',
             },
             {
-              'variant': 'body',
               'name': 'serviceType',
+              'variant': 'body',
             },
             {
               'variant': 'caption',
@@ -620,10 +628,11 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'etaMinutes',
+              'variant': 'caption',
             },
           ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -685,10 +694,10 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WorkOrderCreate',
-        'linkedEntity': 'WorkOrderRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'icon': 'plus-circle',
+          'mode': 'create',
           'title': 'New Work Order',
           'fields': [
             'customerName',
@@ -719,11 +728,9 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WorkOrderEdit',
-        'linkedEntity': 'WorkOrderRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'title': 'Edit Work Order',
-          'mode': 'edit',
           'fields': [
             'customerName',
             'serviceType',
@@ -735,6 +742,8 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
             'etaMinutes',
             'notes',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -753,9 +762,9 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WorkOrderView',
-        'linkedEntity': 'WorkOrderRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Work Order',
+          'mode': 'edit',
           'fields': [
             'customerName',
             'serviceType',
@@ -767,7 +776,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
             'etaMinutes',
             'notes',
           ],
-          'mode': 'edit',
+          'title': 'View Work Order',
           'icon': 'eye',
         },
         'events': {
@@ -787,12 +796,12 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'WorkOrderDelete',
-        'linkedEntity': 'WorkOrderRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
           'title': 'Delete Work Order',
           'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -1043,7 +1052,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1055,6 +1064,10 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1078,7 +1091,9 @@ export const StdFieldServiceWorkOrderOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'WorkOrderAppLayout',
@@ -1116,20 +1131,23 @@ export function isStdFieldServiceWorkOrderOrbitalParams(p: object): p is StdFiel
 /**
  * Tunable params for the TechnicianOrbital orbital.
  *
- * Canonical entity: TechnicianRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: TechnicianRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFieldServiceTechnicianOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1138,22 +1156,28 @@ export interface StdFieldServiceTechnicianOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TechnicianAppLayout' | 'TechnicianBrowseList' | 'TechnicianDispatchBoard' | 'TechnicianFieldCheckin' | 'TechnicianCreate' | 'TechnicianEdit' | 'TechnicianView',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TechnicianOrbital orbital with consumer params. */
 export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnicianOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'TechnicianRow';
+  const canonicalName = params.entityName ?? 'TechnicianRow';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'technicians');
   const built = makeOrbitalWithUses({
     name: 'TechnicianOrbital',
     uses: [
@@ -1180,7 +1204,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
     ],
     entity: {
       name: canonicalName,
-      collection: 'technicians',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1249,6 +1273,8 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TechnicianAppLayout',
         'config': {
+          'searchEvent': 'TECHNICIAN_SEARCH',
+          'notifications': [],
           'navItems': [
             {
               'href': '/workorders',
@@ -1256,21 +1282,19 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
               'label': 'Work Orders',
             },
             {
-              'icon': 'hard-hat',
               'label': 'Technicians',
               'href': '/technicians',
+              'icon': 'hard-hat',
             },
             {
-              'icon': 'map-pin',
               'href': '/jobs/checkin',
               'label': 'Check In',
+              'icon': 'map-pin',
             },
           ],
-          'searchEvent': 'TECHNICIAN_SEARCH',
-          'notifications': [],
+          'notificationClickEvent': 'TECHNICIAN_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.TechnicianCatalog',
           'appName': 'Field Service',
-          'notificationClickEvent': 'TECHNICIAN_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'TECHNICIAN_NOTIFICATIONS_OPEN',
@@ -1357,21 +1381,23 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'align': 'center',
-                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'hard-hat',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'Technicians',
@@ -1379,24 +1405,24 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                                 'type': 'typography',
                               },
                             ],
+                            'type': 'stack',
                           },
                           {
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'icon': 'user-plus',
                                 'type': 'button',
                                 'label': 'Add Technician',
                                 'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
+                            'type': 'stack',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'justify': 'between',
+                        'type': 'stack',
                         'gap': 'md',
                       },
                       {
@@ -1407,23 +1433,21 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Dispatch Board',
+                        'type': 'typography',
                       },
                       '@trait.TechnicianDispatchBoard',
                       {
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Field Check-In',
-                        'variant': 'h3',
                       },
                       '@trait.TechnicianFieldCheckin',
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1442,34 +1466,34 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'gap': 'md',
-                    'type': 'stack',
                     'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'No notifications',
                       },
                       {
                         'color': 'muted',
-                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
                         'type': 'typography',
                       },
                       {
-                        'variant': 'ghost',
-                        'label': 'Back to technicians',
-                        'action': 'INIT',
                         'type': 'button',
+                        'action': 'INIT',
+                        'label': 'Back to technicians',
+                        'variant': 'ghost',
                       },
                     ],
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -1481,15 +1505,31 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TechnicianBrowseList',
-        'linkedEntity': 'TechnicianRow',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
           'cols': 1,
-          'gap': 'sm',
           'fields': [
             {
-              'name': 'name',
               'variant': 'h4',
               'icon': 'hard-hat',
+              'name': 'name',
             },
             {
               'name': 'phone',
@@ -1508,27 +1548,11 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
               'name': 'currentOrderId',
             },
             {
-              'name': 'lastSeenAt',
               'variant': 'caption',
+              'name': 'lastSeenAt',
             },
           ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -1575,10 +1599,8 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TechnicianCreate',
-        'linkedEntity': 'TechnicianRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Add Technician',
-          'mode': 'create',
           'icon': 'user-plus',
           'fields': [
             'name',
@@ -1589,6 +1611,8 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
             'lat',
             'lng',
           ],
+          'title': 'Add Technician',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1607,9 +1631,8 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TechnicianEdit',
-        'linkedEntity': 'TechnicianRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'title': 'Edit Technician',
           'fields': [
             'name',
@@ -1621,6 +1644,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
             'lng',
           ],
           'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1639,7 +1663,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TechnicianView',
-        'linkedEntity': 'TechnicianRow',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'name',
@@ -1651,9 +1675,9 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
             'lng',
             'lastSeenAt',
           ],
-          'mode': 'edit',
-          'icon': 'eye',
           'title': 'View Technician',
+          'icon': 'eye',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1883,7 +1907,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1895,6 +1919,10 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1918,7 +1946,9 @@ export const StdFieldServiceTechnicianOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TechnicianAppLayout',
@@ -1952,20 +1982,23 @@ export function isStdFieldServiceTechnicianOrbitalParams(p: object): p is StdFie
 /**
  * Tunable params for the JobCheckinOrbital orbital.
  *
- * Canonical entity: JobCheckinRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: JobCheckinRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFieldServiceJobCheckinOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1974,22 +2007,26 @@ export interface StdFieldServiceJobCheckinOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'JobCheckinAppLayout' | 'JobArrivalCheckin' | 'JobCompletionSignature',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the JobCheckinOrbital orbital with consumer params. */
 export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheckinOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'JobCheckinRow';
+  const canonicalName = params.entityName ?? 'JobCheckinRow';
   const built = makeOrbitalWithUses({
     name: 'JobCheckinOrbital',
     uses: [
@@ -2028,28 +2065,28 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
         'ref': 'AppShell.traits.AppLayout',
         'name': 'JobCheckinAppLayout',
         'config': {
+          'notificationClickEvent': 'JOB_CHECKIN_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.JobCheckinComposer',
+          'searchEvent': 'JOB_CHECKIN_SEARCH',
+          'notifications': [],
+          'appName': 'Field Service',
           'navItems': [
             {
+              'label': 'Work Orders',
               'href': '/workorders',
               'icon': 'clipboard-list',
-              'label': 'Work Orders',
             },
             {
+              'icon': 'hard-hat',
               'label': 'Technicians',
               'href': '/technicians',
-              'icon': 'hard-hat',
             },
             {
-              'href': '/jobs/checkin',
-              'icon': 'map-pin',
               'label': 'Check In',
+              'icon': 'map-pin',
+              'href': '/jobs/checkin',
             },
           ],
-          'notificationClickEvent': 'JOB_CHECKIN_NOTIFICATIONS_OPEN',
-          'appName': 'Field Service',
-          'searchEvent': 'JOB_CHECKIN_SEARCH',
-          'contentTrait': '@trait.JobCheckinComposer',
-          'notifications': [],
         },
         'events': {
           'SEARCH': 'JOB_CHECKIN_SEARCH',
@@ -2082,33 +2119,31 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'className': 'max-w-3xl mx-auto w-full',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'children': [
-                          {
-                            'type': 'icon',
-                            'name': 'map-pin',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': 'Job Check-In',
-                            'variant': 'h2',
-                          },
-                        ],
-                        'gap': 'sm',
                         'direction': 'horizontal',
                         'align': 'center',
+                        'children': [
+                          {
+                            'name': 'map-pin',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Job Check-In',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
-                        'content': 'Verify your arrival, complete the job, and capture the customer\'s signature.',
-                        'type': 'typography',
                         'variant': 'caption',
                         'color': 'muted',
+                        'content': 'Verify your arrival, complete the job, and capture the customer\'s signature.',
+                        'type': 'typography',
                       },
                       {
                         'type': 'divider',
@@ -2123,12 +2158,14 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': '2. Customer signature',
                       },
                       '@trait.JobCompletionSignature',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2149,8 +2186,8 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
         'ref': 'Signature.traits.SignatureCapture',
         'name': 'JobCompletionSignature',
         'config': {
-          'title': 'Customer signature',
           'instructions': 'Customer signs to confirm the job is complete.',
+          'title': 'Customer signature',
         },
       }),
     ],
@@ -2177,7 +2214,7 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2189,6 +2226,10 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2212,7 +2253,9 @@ export const StdFieldServiceJobCheckinOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'JobCheckinAppLayout',

@@ -29,7 +29,26 @@ const ALIAS = 'KitchenDisplay';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdKitchenDisplayEventKey = 'INIT' | 'KitchenTicketLoadFailed' | 'KitchenTicketLoaded' | 'KitchenTicketUpdateFailed' | 'KitchenTicketUpdated' | 'MARK_PREPARING' | 'MARK_READY' | 'MARK_SERVED';
+export type StdKitchenDisplayEventKey = 'CLOSE_VIEW' | 'INIT' | 'KitchenTicketLoadFailed' | 'KitchenTicketLoaded' | 'KitchenTicketUpdateFailed' | 'KitchenTicketUpdated' | 'MARK_PREPARING' | 'MARK_READY' | 'MARK_SERVED' | 'OPEN_TICKET';
+
+/**
+ * Payload shape for the `OPEN_TICKET` event.
+ */
+export interface StdKitchenDisplayOpenTicketPayload {
+  id: string;
+  row?: {
+    id: string;
+    orderId: string;
+    tableLabel?: string;
+    serverName?: string;
+    itemsJson?: string;
+    status?: string;
+    aging?: string;
+    receivedAt?: string;
+    readyAt?: string;
+    servedAt?: string;
+  };
+}
 
 /**
  * Payload shape for the `MARK_PREPARING` event.
@@ -138,10 +157,10 @@ export interface StdKitchenDisplayKitchenTicketUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdKitchenDisplayConfig {
-  /** Default: `"Kitchen Display"` */
-  title?: string;
   /** Default: `20` */
   overdueMinutes?: number;
+  /** Default: `"Kitchen Display"` */
+  title?: string;
 }
 
 /**

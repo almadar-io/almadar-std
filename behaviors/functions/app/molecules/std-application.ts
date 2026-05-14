@@ -29,7 +29,7 @@ const ALIAS = 'Application';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdApplicationEventKey = 'ACCEPT' | 'ApplicationAccepted' | 'ApplicationCreated' | 'ApplicationLoadFailed' | 'ApplicationLoaded' | 'ApplicationRejected' | 'ApplicationSubmitted' | 'ApplicationUpdated' | 'CANCEL_EDIT' | 'CREATE' | 'CREATE_SUBMIT' | 'EDIT' | 'INIT' | 'REJECT' | 'SUBMIT' | 'UPDATE_SUBMIT' | 'UPLOAD';
+export type StdApplicationEventKey = 'ACCEPT' | 'ApplicationAccepted' | 'ApplicationCreated' | 'ApplicationLoadFailed' | 'ApplicationLoaded' | 'ApplicationRejected' | 'ApplicationSubmitted' | 'ApplicationUpdated' | 'CANCEL_EDIT' | 'CREATE' | 'CREATE_SUBMIT' | 'EDIT' | 'INIT' | 'REJECT' | 'SUBMIT' | 'UPDATE_SUBMIT';
 
 /**
  * Closed set of event keys this trait listens for —
@@ -154,13 +154,6 @@ export interface StdApplicationUpdateSubmitPayload {
     reviewedAt?: string;
     notes?: string;
   };
-}
-
-/**
- * Payload shape for the `UPLOAD` event.
- */
-export interface StdApplicationUploadPayload {
-  files: EntityRow;
 }
 
 /**

@@ -37,20 +37,23 @@ export interface StdWikiConfig {
 /**
  * Tunable params for the DocumentOrbital orbital.
  *
- * Canonical entity: WikiPage (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: WikiPage — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdWikiDocumentOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdWikiDocumentOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'WikiAppLayout' | 'WikiSearch' | 'WikiFilter' | 'WikiPageTree' | 'WikiBrowseList' | 'WikiBacklinks' | 'WikiCreate' | 'WikiEdit' | 'WikiView' | 'WikiDelete' | 'WikiVersionHistory' | 'WikiTagBrowse',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the DocumentOrbital orbital with consumer params. */
 export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'WikiPage';
+  const canonicalName = params.entityName ?? 'WikiPage';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'wikipages');
   const built = makeOrbitalWithUses({
     name: 'DocumentOrbital',
     uses: [
@@ -125,7 +134,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
     ],
     entity: {
       name: canonicalName,
-      collection: 'wikipages',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -220,11 +229,11 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WikiAppLayout',
         'config': {
-          'appName': 'Wiki',
+          'notificationClickEvent': 'WIKI_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'book-open',
               'label': 'Pages',
+              'icon': 'book-open',
               'href': '/wiki',
             },
             {
@@ -233,13 +242,13 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
               'label': 'History',
             },
             {
-              'icon': 'tag',
               'label': 'Tags',
               'href': '/wiki/tags',
+              'icon': 'tag',
             },
           ],
           'searchEvent': 'WIKI_SEARCH',
-          'notificationClickEvent': 'WIKI_NOTIFICATIONS_OPEN',
+          'appName': 'Wiki',
           'notifications': [],
           'contentTrait': '@trait.WikiWorkspace',
         },
@@ -328,78 +337,76 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
-                        'justify': 'between',
                         'align': 'center',
-                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'book-open',
+                                'type': 'icon',
                               },
                               {
+                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Wiki',
-                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
                             'align': 'center',
                           },
                           {
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
                                 'action': 'CREATE',
-                                'label': 'New Page',
-                                'variant': 'primary',
                                 'type': 'button',
                                 'icon': 'plus',
+                                'label': 'New Page',
+                                'variant': 'primary',
                               },
                             ],
                           },
                         ],
-                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'md',
+                        'type': 'stack',
                         'align': 'center',
-                        'direction': 'horizontal',
                         'children': [
                           '@trait.WikiSearch',
                           '@trait.WikiFilter',
                         ],
-                        'gap': 'md',
-                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'gap': 'md',
-                            'type': 'stack',
-                            'className': 'w-72 shrink-0',
-                            'direction': 'vertical',
                             'children': [
                               '@trait.WikiPageTree',
                             ],
+                            'type': 'stack',
+                            'direction': 'vertical',
+                            'gap': 'md',
+                            'className': 'w-72 shrink-0',
                           },
                           {
-                            'className': 'flex-1',
-                            'direction': 'vertical',
                             'children': [
                               '@trait.WikiBrowseList',
                               {
@@ -408,12 +415,14 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                               '@trait.WikiBacklinks',
                             ],
                             'type': 'stack',
+                            'className': 'flex-1',
                             'gap': 'md',
+                            'direction': 'vertical',
                           },
                         ],
                       },
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
                   },
                 ],
@@ -433,10 +442,6 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'type': 'stack',
                     'children': [
                       {
                         'name': 'bell',
@@ -444,23 +449,27 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                       },
                       {
                         'content': 'No notifications',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
                         'color': 'muted',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
+                        'type': 'button',
                         'action': 'INIT',
                         'label': 'Back to wiki',
                         'variant': 'ghost',
-                        'type': 'button',
                       },
                     ],
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -473,8 +482,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'WikiSearch',
         'config': {
-          'placeholder': 'Search wiki…',
           'event': 'WIKI_FULLTEXT_SEARCH',
+          'placeholder': 'Search wiki…',
         },
       }),
       makeTraitRef({
@@ -483,8 +492,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'config': {
           'filters': [
             {
-              'field': 'kind',
               'filterType': 'select',
+              'field': 'kind',
               'options': [
                 'page',
                 'doc',
@@ -493,14 +502,14 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
               'label': 'Kind',
             },
             {
-              'filterType': 'select',
-              'label': 'Status',
               'field': 'status',
+              'label': 'Status',
               'options': [
                 'draft',
                 'published',
                 'archived',
               ],
+              'filterType': 'select',
             },
           ],
           'event': 'WIKI_FILTER',
@@ -516,36 +525,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'WikiBrowseList',
-        'linkedEntity': 'WikiPage',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
-          'gap': 'sm',
-          'itemActions': [
-            {
-              'label': 'Open',
-              'event': 'VIEW',
-              'icon': 'eye',
-              'variant': 'ghost',
-            },
-            {
-              'icon': 'edit',
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'variant': 'ghost',
-              'icon': 'history',
-              'label': 'History',
-              'event': 'VIEW_HISTORY',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-              'icon': 'trash',
-            },
-          ],
           'fields': [
             {
               'name': 'title',
@@ -557,18 +538,46 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
               'variant': 'badge',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
-              'variant': 'caption',
               'label': 'v',
               'name': 'version',
+              'variant': 'caption',
             },
             {
-              'name': 'updatedAt',
               'label': 'Updated',
+              'name': 'updatedAt',
               'variant': 'caption',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'icon': 'eye',
+              'label': 'Open',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'icon': 'edit',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'VIEW_HISTORY',
+              'label': 'History',
+              'icon': 'history',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+              'icon': 'trash',
             },
           ],
         },
@@ -618,7 +627,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       makeTraitRef({
         'ref': 'Related.traits.RelatedItemList',
         'name': 'WikiBacklinks',
-        'linkedEntity': 'WikiPage',
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
@@ -633,10 +642,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WikiCreate',
-        'linkedEntity': 'WikiPage',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'mode': 'create',
           'fields': [
             'title',
             'slug',
@@ -646,6 +653,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
             'authorId',
           ],
           'title': 'New Page',
+          'icon': 'plus-circle',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -664,9 +673,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WikiEdit',
-        'linkedEntity': 'WikiPage',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'fields': [
             'title',
             'slug',
@@ -678,6 +686,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
           ],
           'icon': 'edit',
           'title': 'Edit Page',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -696,9 +705,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WikiView',
-        'linkedEntity': 'WikiPage',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
           'fields': [
             'title',
             'slug',
@@ -708,6 +716,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
             'updatedAt',
             'blocksJson',
           ],
+          'icon': 'eye',
           'mode': 'edit',
           'title': 'View Page',
         },
@@ -728,16 +737,16 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'WikiDelete',
-        'linkedEntity': 'WikiPage',
+        'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
           'title': 'Delete Page',
           'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1026,7 +1035,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1038,6 +1047,10 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1061,7 +1074,9 @@ export const StdWikiDocumentOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'WikiAppLayout',
@@ -1100,20 +1115,23 @@ export function isStdWikiDocumentOrbitalParams(p: object): p is StdWikiDocumentO
 /**
  * Tunable params for the RevisionOrbital orbital.
  *
- * Canonical entity: WikiRevision (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: WikiRevision — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdWikiRevisionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1122,22 +1140,28 @@ export interface StdWikiRevisionOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'RevisionAppLayout' | 'RevisionBrowseList' | 'RevisionCreate',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the RevisionOrbital orbital with consumer params. */
 export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'WikiRevision';
+  const canonicalName = params.entityName ?? 'WikiRevision';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'wikirevisions');
   const built = makeOrbitalWithUses({
     name: 'RevisionOrbital',
     uses: [
@@ -1156,7 +1180,7 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
     ],
     entity: {
       name: canonicalName,
-      collection: 'wikirevisions',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1222,20 +1246,19 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
         'ref': 'AppShell.traits.AppLayout',
         'name': 'RevisionAppLayout',
         'config': {
-          'appName': 'Wiki',
-          'notifications': [],
-          'notificationClickEvent': 'REVISION_NOTIFICATIONS_OPEN',
+          'searchEvent': 'REVISION_SEARCH',
           'contentTrait': '@trait.RevisionWorkspace',
+          'appName': 'Wiki',
           'navItems': [
             {
-              'href': '/wiki',
               'icon': 'book-open',
               'label': 'Pages',
+              'href': '/wiki',
             },
             {
-              'icon': 'history',
               'label': 'History',
               'href': '/revisions',
+              'icon': 'history',
             },
             {
               'label': 'Tags',
@@ -1243,11 +1266,12 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
               'icon': 'tag',
             },
           ],
-          'searchEvent': 'REVISION_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'REVISION_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'REVISION_NOTIFICATIONS_OPEN',
           'SEARCH': 'REVISION_SEARCH',
+          'NOTIFY_CLICK': 'REVISION_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -1292,60 +1316,60 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'direction': 'horizontal',
                         'type': 'stack',
                         'justify': 'between',
-                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
                         'children': [
                           {
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'name': 'history',
                                 'type': 'icon',
+                                'name': 'history',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Version History',
-                                'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
+                            'type': 'stack',
                             'children': [
                               {
                                 'icon': 'plus',
                                 'type': 'button',
                                 'label': 'New Revision',
-                                'action': 'CREATE',
                                 'variant': 'primary',
+                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'gap': 'md',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'Recent',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.RevisionBrowseList',
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1357,43 +1381,43 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'RevisionBrowseList',
-        'linkedEntity': 'WikiRevision',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'icon': 'eye',
+              'event': 'VIEW',
+              'label': 'Inspect',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
-              'variant': 'h4',
               'icon': 'history',
               'name': 'summary',
+              'variant': 'h4',
             },
             {
-              'name': 'documentType',
               'variant': 'badge',
+              'name': 'documentType',
             },
             {
-              'label': 'v',
               'name': 'versionNumber',
               'variant': 'badge',
+              'label': 'v',
             },
             {
               'variant': 'caption',
               'name': 'authorName',
             },
             {
-              'variant': 'caption',
               'name': 'createdAt',
+              'variant': 'caption',
               'label': 'Saved',
             },
           ],
-          'cols': 1,
-          'itemActions': [
-            {
-              'label': 'Inspect',
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'icon': 'eye',
-            },
-          ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -1409,9 +1433,8 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'RevisionCreate',
-        'linkedEntity': 'WikiRevision',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Revision',
           'fields': [
             'documentId',
             'documentType',
@@ -1421,6 +1444,7 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
             'summary',
             'content',
           ],
+          'title': 'New Revision',
           'icon': 'plus-circle',
           'mode': 'create',
         },
@@ -1547,7 +1571,7 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1559,6 +1583,10 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1582,7 +1610,9 @@ export const StdWikiRevisionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'RevisionAppLayout',

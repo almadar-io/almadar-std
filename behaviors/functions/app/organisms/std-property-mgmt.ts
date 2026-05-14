@@ -30,257 +30,2380 @@ const ALIAS = 'PropertyMgmt';
  * without modifying its state-machine topology.
  */
 export interface StdPropertyMgmtConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
- * Params for the std-property-mgmt descriptor helpers.
+ * Tunable params for the PropertyOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Property — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdPropertyMgmtParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdPropertyMgmtPropertyOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdPropertyMgmtConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'PropertyAppLayout' | 'PropertySearch' | 'PropertyFilter' | 'PropertyStats' | 'PropertyGraphs' | 'PropertyBrowseList' | 'PropertyCreate' | 'PropertyEdit' | 'PropertyView' | 'PropertyDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `PropertyMgmt.traits.PropertyAppLayout`. */
-export function stdPropertyMgmtPropertyAppLayoutTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyCatalog`. */
-export function stdPropertyMgmtPropertyCatalogTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertySearch`. */
-export function stdPropertyMgmtPropertySearchTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertySearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyFilter`. */
-export function stdPropertyMgmtPropertyFilterTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyStats`. */
-export function stdPropertyMgmtPropertyStatsTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyGraphs`. */
-export function stdPropertyMgmtPropertyGraphsTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyBrowseList`. */
-export function stdPropertyMgmtPropertyBrowseListTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyCreate`. */
-export function stdPropertyMgmtPropertyCreateTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyEdit`. */
-export function stdPropertyMgmtPropertyEditTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyView`. */
-export function stdPropertyMgmtPropertyViewTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyDelete`. */
-export function stdPropertyMgmtPropertyDeleteTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PropertyMgmt.traits.PropertyPersistor`. */
-export function stdPropertyMgmtPropertyPersistorTrait(params: StdPropertyMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.PropertyPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `PropertyMgmt.pages.PropertiesPage`. */
-export function stdPropertyMgmtPage(params: StdPropertyMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.PropertiesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdPropertyMgmt(params: StdPropertyMgmtParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the PropertyOrbital orbital with consumer params. */
+export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Property';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'properties');
+  const built = makeOrbitalWithUses({
     name: 'PropertyOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-lease',
+        'as': 'Lease',
+      },
+      {
+        'from': 'std/behaviors/std-tenant',
+        'as': 'Tenant',
+      },
+      {
+        'from': 'std/behaviors/std-rent-charge',
+        'as': 'RentCharge',
+      },
+      {
+        'from': 'std/behaviors/std-maintenance-request',
+        'as': 'MaintenanceRequest',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'address',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'unitCount',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'propertyType',
+            'type': 'string',
+            'default': 'single-family',
+            'values': [
+              'single-family',
+              'multi-family',
+              'commercial',
+              'mixed-use',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'vacant',
+              'under-renovation',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdPropertyMgmtPropertyAppLayoutTrait(params),
-      stdPropertyMgmtPropertyCatalogTrait(params),
-      stdPropertyMgmtPropertySearchTrait(params),
-      stdPropertyMgmtPropertyFilterTrait(params),
-      stdPropertyMgmtPropertyStatsTrait(params),
-      stdPropertyMgmtPropertyGraphsTrait(params),
-      stdPropertyMgmtPropertyBrowseListTrait(params),
-      stdPropertyMgmtPropertyCreateTrait(params),
-      stdPropertyMgmtPropertyEditTrait(params),
-      stdPropertyMgmtPropertyViewTrait(params),
-      stdPropertyMgmtPropertyDeleteTrait(params),
-      stdPropertyMgmtPropertyPersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PropertyAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'label': 'Properties',
+              'icon': 'home',
+              'href': '/properties',
+            },
+            {
+              'label': 'Leases',
+              'icon': 'file-text',
+              'href': '/leases',
+            },
+            {
+              'label': 'Tenants',
+              'href': '/tenants',
+              'icon': 'users',
+            },
+            {
+              'label': 'Rent Charges',
+              'href': '/rent-charges',
+              'icon': 'credit-card',
+            },
+            {
+              'label': 'Maintenance',
+              'href': '/maintenance',
+              'icon': 'wrench',
+            },
+          ],
+          'searchEvent': 'PROPERTY_SEARCH',
+          'appName': 'Property Management',
+          'notifications': [],
+          'notificationClickEvent': 'PROPERTY_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.PropertyCatalog',
+        },
+        'events': {
+          'SEARCH': 'PROPERTY_SEARCH',
+          'NOTIFY_CLICK': 'PROPERTY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'PropertyCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PROPERTY_SEARCH',
+            'triggers': 'PROPERTY_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyAppLayout',
+            },
+          },
+          {
+            'event': 'PROPERTY_NOTIFICATIONS_OPEN',
+            'triggers': 'PROPERTY_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PROPERTY_SEARCH',
+              'name': 'Property Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROPERTY_NOTIFICATIONS_OPEN',
+              'name': 'Property Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'home',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Properties',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'label': 'New Property',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'children': [
+                          '@trait.PropertySearch',
+                          '@trait.PropertyFilter',
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      '@trait.PropertyStats',
+                      '@trait.PropertyGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.PropertyBrowseList',
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PROPERTY_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PROPERTY_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Back to properties',
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'PropertySearch',
+        'config': {
+          'placeholder': 'Search properties…',
+          'event': 'PROPERTY_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'PropertyFilter',
+        'config': {
+          'filters': [
+            {
+              'field': 'propertyType',
+              'filterType': 'select',
+              'options': [
+                'single-family',
+                'multi-family',
+                'commercial',
+                'mixed-use',
+              ],
+              'label': 'Type',
+            },
+            {
+              'field': 'status',
+              'filterType': 'select',
+              'options': [
+                'active',
+                'vacant',
+                'under-renovation',
+              ],
+              'label': 'Status',
+            },
+          ],
+          'event': 'PROPERTY_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'PropertyStats',
+        'config': {
+          'title': 'Properties',
+          'metrics': [
+            {
+              'variant': 'primary',
+              'label': 'Total',
+              'icon': 'home',
+              'format': 'number',
+              'aggregation': 'count',
+            },
+            {
+              'label': 'Active',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'aggregation': 'count',
+              'format': 'number',
+              'icon': 'check-circle',
+            },
+            {
+              'icon': 'circle',
+              'label': 'Vacant',
+              'aggregation': 'count',
+              'variant': 'warning',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'vacant',
+                ],
+              ],
+            },
+            {
+              'icon': 'layers',
+              'label': 'Total Units',
+              'aggregation': 'sum',
+              'format': 'number',
+              'variant': 'info',
+              'field': 'unitCount',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'PropertyGraphs',
+        'config': {
+          'title': 'Properties by Type',
+          'subtitle': 'Portfolio composition across property types',
+          'height': 240,
+          'showLegend': false,
+          'chartType': 'bar',
+          'categoryField': 'propertyType',
+          'aggregation': 'count',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'PropertyBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            {
+              'icon': 'home',
+              'name': 'address',
+              'variant': 'h3',
+            },
+            {
+              'variant': 'badge',
+              'name': 'propertyType',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'name': 'unitCount',
+              'variant': 'caption',
+            },
+          ],
+          'cols': 1,
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertySearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyFilter',
+            },
+          },
+          {
+            'event': 'PROPERTY_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyPersistor',
+            },
+          },
+          {
+            'event': 'PROPERTY_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyPersistor',
+            },
+          },
+          {
+            'event': 'PROPERTY_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PropertyCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'New Property',
+          'fields': [
+            'address',
+            'unitCount',
+            'propertyType',
+            'status',
+          ],
+          'icon': 'plus-circle',
+          'mode': 'create',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PropertyEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'address',
+            'unitCount',
+            'propertyType',
+            'status',
+          ],
+          'icon': 'edit',
+          'title': 'Edit Property',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'PropertyView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'address',
+            'unitCount',
+            'propertyType',
+            'status',
+          ],
+          'icon': 'eye',
+          'title': 'View Property',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'PropertyDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Delete Property',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'PropertyPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Property',
+        'emits': [
+          {
+            'event': 'PROPERTY_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PROPERTY_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PROPERTY_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'PropertyDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROPERTY_CREATED',
+              'name': 'Property Created',
+            },
+            {
+              'key': 'PROPERTY_UPDATED',
+              'name': 'Property Updated',
+            },
+            {
+              'key': 'PROPERTY_DELETED',
+              'name': 'Property Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Property',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PROPERTY_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Property',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PROPERTY_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Property',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'PROPERTY_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdPropertyMgmtPage(params),
+      {
+        'name': 'PropertiesPage',
+        'path': '/properties',
+        'traits': [
+          {
+            'ref': 'PropertyAppLayout',
+          },
+          {
+            'ref': 'PropertyCatalog',
+          },
+          {
+            'ref': 'PropertySearch',
+          },
+          {
+            'ref': 'PropertyFilter',
+          },
+          {
+            'ref': 'PropertyStats',
+          },
+          {
+            'ref': 'PropertyGraphs',
+          },
+          {
+            'ref': 'PropertyBrowseList',
+          },
+          {
+            'ref': 'PropertyCreate',
+          },
+          {
+            'ref': 'PropertyEdit',
+          },
+          {
+            'ref': 'PropertyView',
+          },
+          {
+            'ref': 'PropertyDelete',
+          },
+          {
+            'ref': 'PropertyPersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPropertyMgmtPropertyOrbital. */
+export const StdPropertyMgmtPropertyOrbitalManifest = {
+  organism: 'std-property-mgmt',
+  orbitalName: 'PropertyOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'PropertyAppLayout',
+    'PropertySearch',
+    'PropertyFilter',
+    'PropertyStats',
+    'PropertyGraphs',
+    'PropertyBrowseList',
+    'PropertyCreate',
+    'PropertyEdit',
+    'PropertyView',
+    'PropertyDelete',
+  ] as const,
+  inlineTraitNames: [
+    'PropertyCatalog',
+    'PropertyPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPropertyMgmtPropertyOrbitalParams keys. */
+export function isStdPropertyMgmtPropertyOrbitalParams(p: object): p is StdPropertyMgmtPropertyOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPropertyMgmtPropertyOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPropertyMgmtPropertyOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the LeasePanelOrbital orbital.
+ *
+ * Canonical entity: Lease — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdPropertyMgmtLeasePanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'LeaseAppLayout' | 'LeaseView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the LeasePanelOrbital orbital with consumer params. */
+export function stdPropertyMgmtLeasePanelOrbital(params: StdPropertyMgmtLeasePanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Lease';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'leases');
+  const built = makeOrbitalWithUses({
+    name: 'LeasePanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-lease',
+        'as': 'Lease',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tenantId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tenantName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'unitId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'unitLabel',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'startDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'endDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'monthlyRent',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'active',
+              'expired',
+              'terminated',
+              'pending',
+            ],
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'LeaseAppLayout',
+        'config': {
+          'contentTrait': '@trait.LeasePanel',
+          'notificationClickEvent': 'LEASE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'LEASE_SEARCH',
+          'notifications': [],
+          'appName': 'Property Management',
+          'navItems': [
+            {
+              'label': 'Properties',
+              'href': '/properties',
+              'icon': 'home',
+            },
+            {
+              'icon': 'file-text',
+              'href': '/leases',
+              'label': 'Leases',
+            },
+            {
+              'icon': 'users',
+              'label': 'Tenants',
+              'href': '/tenants',
+            },
+            {
+              'href': '/rent-charges',
+              'label': 'Rent Charges',
+              'icon': 'credit-card',
+            },
+            {
+              'href': '/maintenance',
+              'icon': 'wrench',
+              'label': 'Maintenance',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'LEASE_SEARCH',
+          'NOTIFY_CLICK': 'LEASE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'LeasePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'name': 'file-text',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Leases',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.LeaseView',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Lease.traits.LeaseManager',
+        'name': 'LeaseView',
+        'config': {
+          'title': 'Leases',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'LeasesPage',
+        'path': '/leases',
+        'traits': [
+          {
+            'ref': 'LeaseAppLayout',
+          },
+          {
+            'ref': 'LeasePanel',
+          },
+          {
+            'ref': 'LeaseView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPropertyMgmtLeasePanelOrbital. */
+export const StdPropertyMgmtLeasePanelOrbitalManifest = {
+  organism: 'std-property-mgmt',
+  orbitalName: 'LeasePanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'LeaseAppLayout',
+    'LeaseView',
+  ] as const,
+  inlineTraitNames: [
+    'LeasePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPropertyMgmtLeasePanelOrbitalParams keys. */
+export function isStdPropertyMgmtLeasePanelOrbitalParams(p: object): p is StdPropertyMgmtLeasePanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPropertyMgmtLeasePanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPropertyMgmtLeasePanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the TenantPanelOrbital orbital.
+ *
+ * Canonical entity: Tenant — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdPropertyMgmtTenantPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TenantAppLayout' | 'TenantView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the TenantPanelOrbital orbital with consumer params. */
+export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Tenant';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'tenants');
+  const built = makeOrbitalWithUses({
+    name: 'TenantPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-tenant',
+        'as': 'Tenant',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'leaseId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'moveInDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'moveOutDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'prospective',
+            'values': [
+              'current',
+              'former',
+              'prospective',
+            ],
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TenantAppLayout',
+        'config': {
+          'contentTrait': '@trait.TenantPanel',
+          'notifications': [],
+          'navItems': [
+            {
+              'href': '/properties',
+              'label': 'Properties',
+              'icon': 'home',
+            },
+            {
+              'icon': 'file-text',
+              'label': 'Leases',
+              'href': '/leases',
+            },
+            {
+              'label': 'Tenants',
+              'href': '/tenants',
+              'icon': 'users',
+            },
+            {
+              'icon': 'credit-card',
+              'label': 'Rent Charges',
+              'href': '/rent-charges',
+            },
+            {
+              'href': '/maintenance',
+              'icon': 'wrench',
+              'label': 'Maintenance',
+            },
+          ],
+          'notificationClickEvent': 'TENANT_NOTIFICATIONS_OPEN',
+          'appName': 'Property Management',
+          'searchEvent': 'TENANT_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'TENANT_SEARCH',
+          'NOTIFY_CLICK': 'TENANT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'TenantPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'users',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Tenants',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TenantView',
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Tenant.traits.TenantDirectory',
+        'name': 'TenantView',
+        'config': {
+          'title': 'Tenants',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'TenantsPage',
+        'path': '/tenants',
+        'traits': [
+          {
+            'ref': 'TenantAppLayout',
+          },
+          {
+            'ref': 'TenantPanel',
+          },
+          {
+            'ref': 'TenantView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPropertyMgmtTenantPanelOrbital. */
+export const StdPropertyMgmtTenantPanelOrbitalManifest = {
+  organism: 'std-property-mgmt',
+  orbitalName: 'TenantPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'TenantAppLayout',
+    'TenantView',
+  ] as const,
+  inlineTraitNames: [
+    'TenantPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPropertyMgmtTenantPanelOrbitalParams keys. */
+export function isStdPropertyMgmtTenantPanelOrbitalParams(p: object): p is StdPropertyMgmtTenantPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPropertyMgmtTenantPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPropertyMgmtTenantPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the RentChargePanelOrbital orbital.
+ *
+ * Canonical entity: RentCharge — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdPropertyMgmtRentChargePanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'RentChargeAppLayout' | 'RentChargeView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the RentChargePanelOrbital orbital with consumer params. */
+export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRentChargePanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'RentCharge';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'rentcharges');
+  const built = makeOrbitalWithUses({
+    name: 'RentChargePanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-rent-charge',
+        'as': 'RentCharge',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tenantId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'leaseId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'amount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'dueDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'paidAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'unpaid',
+            'values': [
+              'unpaid',
+              'paid',
+              'overdue',
+              'waived',
+            ],
+          },
+          {
+            'name': 'lateFee',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'RentChargeAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'href': '/properties',
+              'icon': 'home',
+              'label': 'Properties',
+            },
+            {
+              'href': '/leases',
+              'icon': 'file-text',
+              'label': 'Leases',
+            },
+            {
+              'icon': 'users',
+              'label': 'Tenants',
+              'href': '/tenants',
+            },
+            {
+              'icon': 'credit-card',
+              'href': '/rent-charges',
+              'label': 'Rent Charges',
+            },
+            {
+              'label': 'Maintenance',
+              'href': '/maintenance',
+              'icon': 'wrench',
+            },
+          ],
+          'searchEvent': 'RENT_CHARGE_SEARCH',
+          'appName': 'Property Management',
+          'notifications': [],
+          'notificationClickEvent': 'RENT_CHARGE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.RentChargePanel',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'RENT_CHARGE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'RENT_CHARGE_SEARCH',
+        },
+      }),
+      {
+        'name': 'RentChargePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'credit-card',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Rent Charges',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.RentChargeView',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'RentCharge.traits.RentChargeLedger',
+        'name': 'RentChargeView',
+        'config': {
+          'title': 'Rent Charges',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'RentChargesPage',
+        'path': '/rent-charges',
+        'traits': [
+          {
+            'ref': 'RentChargeAppLayout',
+          },
+          {
+            'ref': 'RentChargePanel',
+          },
+          {
+            'ref': 'RentChargeView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPropertyMgmtRentChargePanelOrbital. */
+export const StdPropertyMgmtRentChargePanelOrbitalManifest = {
+  organism: 'std-property-mgmt',
+  orbitalName: 'RentChargePanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'RentChargeAppLayout',
+    'RentChargeView',
+  ] as const,
+  inlineTraitNames: [
+    'RentChargePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPropertyMgmtRentChargePanelOrbitalParams keys. */
+export function isStdPropertyMgmtRentChargePanelOrbitalParams(p: object): p is StdPropertyMgmtRentChargePanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPropertyMgmtRentChargePanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPropertyMgmtRentChargePanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the MaintenanceRequestPanelOrbital orbital.
+ *
+ * Canonical entity: MaintenanceRequest — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdPropertyMgmtMaintenanceRequestPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'MaintenanceRequestAppLayout' | 'MaintenanceRequestView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the MaintenanceRequestPanelOrbital orbital with consumer params. */
+export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropertyMgmtMaintenanceRequestPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'MaintenanceRequest';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'maintenancerequests');
+  const built = makeOrbitalWithUses({
+    name: 'MaintenanceRequestPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-maintenance-request',
+        'as': 'MaintenanceRequest',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'unitId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'tenantId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'requesterName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'priority',
+            'type': 'string',
+            'default': 'medium',
+            'values': [
+              'low',
+              'medium',
+              'high',
+              'urgent',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'scheduled',
+              'in_progress',
+              'completed',
+              'cancelled',
+            ],
+          },
+          {
+            'name': 'assignedTo',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'requestedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'completedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'MaintenanceRequestAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'icon': 'home',
+              'label': 'Properties',
+              'href': '/properties',
+            },
+            {
+              'icon': 'file-text',
+              'href': '/leases',
+              'label': 'Leases',
+            },
+            {
+              'icon': 'users',
+              'label': 'Tenants',
+              'href': '/tenants',
+            },
+            {
+              'href': '/rent-charges',
+              'label': 'Rent Charges',
+              'icon': 'credit-card',
+            },
+            {
+              'label': 'Maintenance',
+              'icon': 'wrench',
+              'href': '/maintenance',
+            },
+          ],
+          'searchEvent': 'MAINTENANCE_REQUEST_SEARCH',
+          'contentTrait': '@trait.MaintenanceRequestPanel',
+          'notificationClickEvent': 'MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'Property Management',
+        },
+        'events': {
+          'SEARCH': 'MAINTENANCE_REQUEST_SEARCH',
+          'NOTIFY_CLICK': 'MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'MaintenanceRequestPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'tool',
+                          },
+                          {
+                            'content': 'Maintenance Requests',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.MaintenanceRequestView',
+                    ],
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'MaintenanceRequest.traits.MaintenanceRequestQueue',
+        'name': 'MaintenanceRequestView',
+        'config': {
+          'title': 'Maintenance Requests',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'MaintenancePage',
+        'path': '/maintenance',
+        'traits': [
+          {
+            'ref': 'MaintenanceRequestAppLayout',
+          },
+          {
+            'ref': 'MaintenanceRequestPanel',
+          },
+          {
+            'ref': 'MaintenanceRequestView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPropertyMgmtMaintenanceRequestPanelOrbital. */
+export const StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest = {
+  organism: 'std-property-mgmt',
+  orbitalName: 'MaintenanceRequestPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'MaintenanceRequestAppLayout',
+    'MaintenanceRequestView',
+  ] as const,
+  inlineTraitNames: [
+    'MaintenanceRequestPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPropertyMgmtMaintenanceRequestPanelOrbitalParams keys. */
+export function isStdPropertyMgmtMaintenanceRequestPanelOrbitalParams(p: object): p is StdPropertyMgmtMaintenanceRequestPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPropertyMgmtMaintenanceRequestPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-property-mgmt — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdPropertyMgmtParams {
+  Property?: StdPropertyMgmtPropertyOrbitalParams;
+  LeasePanel?: StdPropertyMgmtLeasePanelOrbitalParams;
+  TenantPanel?: StdPropertyMgmtTenantPanelOrbitalParams;
+  RentChargePanel?: StdPropertyMgmtRentChargePanelOrbitalParams;
+  MaintenanceRequestPanel?: StdPropertyMgmtMaintenanceRequestPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
+export function stdPropertyMgmt(params: StdPropertyMgmtParams = {}): OrbitalDefinition[] {
+  return [
+    stdPropertyMgmtPropertyOrbital(params.Property ?? {}),
+    stdPropertyMgmtLeasePanelOrbital(params.LeasePanel ?? {}),
+    stdPropertyMgmtTenantPanelOrbital(params.TenantPanel ?? {}),
+    stdPropertyMgmtRentChargePanelOrbital(params.RentChargePanel ?? {}),
+    stdPropertyMgmtMaintenanceRequestPanelOrbital(params.MaintenanceRequestPanel ?? {}),
+  ];
 }

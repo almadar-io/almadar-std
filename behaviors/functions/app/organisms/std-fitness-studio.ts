@@ -30,27 +30,30 @@ const ALIAS = 'FitnessStudio';
  * without modifying its state-machine topology.
  */
 export interface StdFitnessStudioConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
  * Tunable params for the MemberOrbital orbital.
  *
- * Canonical entity: Member (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Member — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFitnessStudioMemberOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdFitnessStudioMemberOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'MemberAppLayout' | 'MemberSearch' | 'MemberFilter' | 'MemberStats' | 'MemberGraphs' | 'MemberBrowseList' | 'MemberCreate' | 'MemberEdit' | 'MemberView' | 'MemberDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the MemberOrbital orbital with consumer params. */
 export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Member';
+  const canonicalName = params.entityName ?? 'Member';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'members');
   const built = makeOrbitalWithUses({
     name: 'MemberOrbital',
     uses: [
@@ -113,7 +122,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
     ],
     entity: {
       name: canonicalName,
-      collection: 'members',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -174,16 +183,12 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MemberAppLayout',
         'config': {
-          'appName': 'Fitness Studio',
-          'notifications': [],
           'notificationClickEvent': 'MEMBER_NOTIFICATIONS_OPEN',
-          'searchEvent': 'MEMBER_SEARCH',
-          'contentTrait': '@trait.MemberCatalog',
           'navItems': [
             {
+              'icon': 'users',
               'label': 'Members',
               'href': '/members',
-              'icon': 'users',
             },
             {
               'icon': 'calendar',
@@ -191,20 +196,24 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
               'label': 'Classes',
             },
             {
-              'href': '/memberships',
               'icon': 'credit-card',
               'label': 'Memberships',
+              'href': '/memberships',
             },
             {
-              'label': 'Rosters',
               'icon': 'clipboard-list',
+              'label': 'Rosters',
               'href': '/rosters',
             },
           ],
+          'notifications': [],
+          'searchEvent': 'MEMBER_SEARCH',
+          'contentTrait': '@trait.MemberCatalog',
+          'appName': 'Fitness Studio',
         },
         'events': {
-          'SEARCH': 'MEMBER_SEARCH',
           'NOTIFY_CLICK': 'MEMBER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MEMBER_SEARCH',
         },
       }),
       {
@@ -287,20 +296,19 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'md',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'md',
                         'children': [
                           {
-                            'type': 'stack',
                             'gap': 'sm',
-                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'users',
@@ -308,40 +316,40 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                               },
                               {
                                 'type': 'typography',
-                                'content': 'Members',
                                 'variant': 'h2',
+                                'content': 'Members',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
-                            'children': [
-                              {
-                                'icon': 'user-plus',
-                                'label': 'New Member',
-                                'variant': 'primary',
-                                'type': 'button',
-                                'action': 'CREATE',
-                              },
-                            ],
                             'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'label': 'New Member',
+                                'icon': 'user-plus',
+                              },
+                            ],
                           },
                         ],
-                        'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
-                        'direction': 'horizontal',
                         'children': [
                           '@trait.MemberSearch',
                           '@trait.MemberFilter',
                         ],
+                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'md',
                       },
                       '@trait.MemberStats',
@@ -351,6 +359,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                       },
                       '@trait.MemberBrowseList',
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -370,33 +379,33 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'main',
                   {
                     'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'No notifications',
                       },
                       {
+                        'variant': 'caption',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
-                        'type': 'typography',
-                        'variant': 'caption',
                       },
                       {
-                        'type': 'button',
-                        'variant': 'ghost',
-                        'action': 'INIT',
                         'label': 'Back to members',
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'action': 'INIT',
                       },
                     ],
-                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -409,8 +418,8 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MemberSearch',
         'config': {
-          'event': 'MEMBER_SEARCH',
           'placeholder': 'Search members…',
+          'event': 'MEMBER_SEARCH',
         },
       }),
       makeTraitRef({
@@ -419,14 +428,14 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'config': {
           'filters': [
             {
-              'label': 'Tier',
-              'filterType': 'select',
               'field': 'membershipTier',
               'options': [
                 'basic',
                 'premium',
                 'unlimited',
               ],
+              'filterType': 'select',
+              'label': 'Tier',
             },
             {
               'label': 'Status',
@@ -448,16 +457,15 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'config': {
           'metrics': [
             {
-              'icon': 'users',
               'variant': 'primary',
-              'aggregation': 'count',
               'format': 'number',
+              'aggregation': 'count',
               'label': 'Total',
+              'icon': 'users',
             },
             {
-              'label': 'Active',
+              'icon': 'user-check',
               'aggregation': 'count',
-              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -468,10 +476,11 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                 ],
               ],
               'format': 'number',
-              'icon': 'user-check',
+              'variant': 'success',
+              'label': 'Active',
             },
             {
-              'format': 'number',
+              'aggregation': 'count',
               'variant': 'warning',
               'filter': [
                 'fn',
@@ -482,7 +491,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'paused',
                 ],
               ],
-              'aggregation': 'count',
+              'format': 'number',
               'label': 'Paused',
               'icon': 'pause-circle',
             },
@@ -496,11 +505,11 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'cancelled',
                 ],
               ],
-              'variant': 'danger',
               'icon': 'user-x',
-              'label': 'Cancelled',
-              'format': 'number',
               'aggregation': 'count',
+              'label': 'Cancelled',
+              'variant': 'danger',
+              'format': 'number',
             },
           ],
           'title': 'Members',
@@ -520,13 +529,13 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'MemberGraphs',
         'config': {
+          'title': 'Members by Tier',
           'chartType': 'bar',
           'height': 240,
           'showLegend': false,
-          'title': 'Members by Tier',
-          'categoryField': 'membershipTier',
           'subtitle': 'Distribution across membership tiers',
           'aggregation': 'count',
+          'categoryField': 'membershipTier',
         },
         'listens': [
           {
@@ -542,7 +551,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'MemberBrowseList',
-        'linkedEntity': 'Member',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             {
@@ -551,27 +560,29 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
               'variant': 'h4',
             },
             {
-              'variant': 'body',
               'name': 'email',
+              'variant': 'body',
             },
             {
-              'variant': 'badge',
               'name': 'membershipTier',
+              'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'variant': 'caption',
               'name': 'joinedAt',
             },
           ],
+          'cols': 1,
+          'gap': 'sm',
           'itemActions': [
             {
+              'event': 'VIEW',
               'variant': 'ghost',
               'label': 'View',
-              'event': 'VIEW',
             },
             {
               'label': 'Edit',
@@ -579,13 +590,11 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
               'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
               'label': 'Delete',
+              'event': 'DELETE',
               'variant': 'danger',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -633,7 +642,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MemberCreate',
-        'linkedEntity': 'Member',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'name',
@@ -663,7 +672,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MemberEdit',
-        'linkedEntity': 'Member',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
           'fields': [
@@ -693,11 +702,11 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MemberView',
-        'linkedEntity': 'Member',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'eye',
           'title': 'View Member',
+          'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -723,11 +732,11 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'MemberDelete',
-        'linkedEntity': 'Member',
+        'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
           'title': 'Cancel Membership',
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
         },
         'events': {
@@ -976,7 +985,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -988,6 +997,10 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1011,7 +1024,9 @@ export const StdFitnessStudioMemberOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'MemberAppLayout',
@@ -1048,20 +1063,23 @@ export function isStdFitnessStudioMemberOrbitalParams(p: object): p is StdFitnes
 /**
  * Tunable params for the ClassSessionOrbital orbital.
  *
- * Canonical entity: ClassSessionRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ClassSessionRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFitnessStudioClassSessionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1070,22 +1088,26 @@ export interface StdFitnessStudioClassSessionOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ClassSessionAppLayout' | 'ClassSessionSchedule',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ClassSessionOrbital orbital with consumer params. */
 export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClassSessionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ClassSessionRow';
+  const canonicalName = params.entityName ?? 'ClassSessionRow';
   const built = makeOrbitalWithUses({
     name: 'ClassSessionOrbital',
     uses: [
@@ -1120,7 +1142,7 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ClassSessionAppLayout',
         'config': {
-          'notifications': [],
+          'contentTrait': '@trait.ClassSessionDisplay',
           'navItems': [
             {
               'label': 'Members',
@@ -1128,24 +1150,24 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
               'icon': 'users',
             },
             {
-              'icon': 'calendar',
               'href': '/classes',
+              'icon': 'calendar',
               'label': 'Classes',
             },
             {
-              'href': '/memberships',
               'icon': 'credit-card',
+              'href': '/memberships',
               'label': 'Memberships',
             },
             {
               'label': 'Rosters',
-              'icon': 'clipboard-list',
               'href': '/rosters',
+              'icon': 'clipboard-list',
             },
           ],
-          'appName': 'Fitness Studio',
           'notificationClickEvent': 'CLASS_SESSION_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ClassSessionDisplay',
+          'appName': 'Fitness Studio',
+          'notifications': [],
           'searchEvent': 'CLASS_SESSION_SEARCH',
         },
         'events': {
@@ -1179,39 +1201,39 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
                   'render-ui',
                   'main',
                   {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'calendar',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
-                            'variant': 'h2',
                             'content': 'Class Schedule',
+                            'variant': 'h2',
                           },
                         ],
-                        'type': 'stack',
-                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'color': 'muted',
-                        'type': 'typography',
                         'variant': 'caption',
                         'content': 'Group classes for the week. Start a class to open its roster; cancel to notify enrolled members.',
+                        'type': 'typography',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ClassSessionSchedule',
                     ],
-                    'gap': 'lg',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1248,7 +1270,7 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1260,6 +1282,10 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1283,7 +1309,9 @@ export const StdFitnessStudioClassSessionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ClassSessionAppLayout',
@@ -1311,20 +1339,23 @@ export function isStdFitnessStudioClassSessionOrbitalParams(p: object): p is Std
 /**
  * Tunable params for the MembershipOrbital orbital.
  *
- * Canonical entity: MembershipRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: MembershipRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFitnessStudioMembershipOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1333,22 +1364,26 @@ export interface StdFitnessStudioMembershipOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'MembershipAppLayout' | 'MembershipDirectory',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the MembershipOrbital orbital with consumer params. */
 export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMembershipOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'MembershipRow';
+  const canonicalName = params.entityName ?? 'MembershipRow';
   const built = makeOrbitalWithUses({
     name: 'MembershipOrbital',
     uses: [
@@ -1383,14 +1418,16 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MembershipAppLayout',
         'config': {
-          'searchEvent': 'MEMBERSHIP_SEARCH',
           'notifications': [],
+          'searchEvent': 'MEMBERSHIP_SEARCH',
+          'appName': 'Fitness Studio',
+          'notificationClickEvent': 'MEMBERSHIP_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.MembershipDisplay',
           'navItems': [
             {
-              'label': 'Members',
-              'href': '/members',
               'icon': 'users',
+              'href': '/members',
+              'label': 'Members',
             },
             {
               'label': 'Classes',
@@ -1398,22 +1435,20 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
               'icon': 'calendar',
             },
             {
+              'href': '/memberships',
               'label': 'Memberships',
               'icon': 'credit-card',
-              'href': '/memberships',
             },
             {
-              'icon': 'clipboard-list',
-              'label': 'Rosters',
               'href': '/rosters',
+              'label': 'Rosters',
+              'icon': 'clipboard-list',
             },
           ],
-          'appName': 'Fitness Studio',
-          'notificationClickEvent': 'MEMBERSHIP_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'MEMBERSHIP_SEARCH',
           'NOTIFY_CLICK': 'MEMBERSHIP_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MEMBERSHIP_SEARCH',
         },
       }),
       {
@@ -1444,29 +1479,30 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
                   {
                     'type': 'stack',
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'id-card',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Memberships',
+                            'type': 'typography',
                             'variant': 'h2',
                           },
                         ],
-                        'gap': 'sm',
                         'type': 'stack',
-                        'direction': 'horizontal',
-                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
-                        'color': 'muted',
                         'type': 'typography',
-                        'content': 'Recurring subscriptions per member. Upgrade tiers, freeze, or cancel from the row actions.',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'Recurring subscriptions per member. Upgrade tiers, freeze, or cancel from the row actions.',
                       },
                       {
                         'type': 'divider',
@@ -1474,7 +1510,6 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
                       '@trait.MembershipDirectory',
                     ],
                     'direction': 'vertical',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -1511,7 +1546,7 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1523,6 +1558,10 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1546,7 +1585,9 @@ export const StdFitnessStudioMembershipOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'MembershipAppLayout',
@@ -1574,20 +1615,23 @@ export function isStdFitnessStudioMembershipOrbitalParams(p: object): p is StdFi
 /**
  * Tunable params for the ClassRosterOrbital orbital.
  *
- * Canonical entity: ClassRosterRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ClassRosterRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFitnessStudioClassRosterOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1596,22 +1640,26 @@ export interface StdFitnessStudioClassRosterOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ClassRosterAppLayout' | 'ClassRosterEntries',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ClassRosterOrbital orbital with consumer params. */
 export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClassRosterOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ClassRosterRow';
+  const canonicalName = params.entityName ?? 'ClassRosterRow';
   const built = makeOrbitalWithUses({
     name: 'ClassRosterOrbital',
     uses: [
@@ -1646,23 +1694,23 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ClassRosterAppLayout',
         'config': {
-          'searchEvent': 'CLASS_ROSTER_SEARCH',
+          'contentTrait': '@trait.ClassRosterDisplay',
           'appName': 'Fitness Studio',
           'navItems': [
             {
               'label': 'Members',
-              'href': '/members',
               'icon': 'users',
+              'href': '/members',
             },
             {
-              'icon': 'calendar',
               'label': 'Classes',
               'href': '/classes',
+              'icon': 'calendar',
             },
             {
-              'icon': 'credit-card',
-              'href': '/memberships',
               'label': 'Memberships',
+              'href': '/memberships',
+              'icon': 'credit-card',
             },
             {
               'label': 'Rosters',
@@ -1670,13 +1718,13 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
               'icon': 'clipboard-list',
             },
           ],
-          'notifications': [],
+          'searchEvent': 'CLASS_ROSTER_SEARCH',
           'notificationClickEvent': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ClassRosterDisplay',
+          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
           'SEARCH': 'CLASS_ROSTER_SEARCH',
+          'NOTIFY_CLICK': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -1705,9 +1753,11 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'clipboard-list',
@@ -1715,19 +1765,16 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
                           },
                           {
                             'content': 'Class Rosters',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
-                        'align': 'center',
                         'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'sm',
                       },
                       {
-                        'color': 'muted',
                         'content': 'Enrolled members per session. Check in arrivals or mark no-shows from the row actions.',
                         'variant': 'caption',
+                        'color': 'muted',
                         'type': 'typography',
                       },
                       {
@@ -1735,9 +1782,10 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
                       },
                       '@trait.ClassRosterEntries',
                     ],
-                    'gap': 'lg',
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1774,7 +1822,7 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1786,6 +1834,10 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1809,7 +1861,9 @@ export const StdFitnessStudioClassRosterOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ClassRosterAppLayout',

@@ -29,7 +29,25 @@ const ALIAS = 'OfferLetter';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdOfferLetterEventKey = 'INIT' | 'OfferLetterLoadFailed' | 'OfferLetterLoaded' | 'REVOKE_OFFER' | 'SEND_OFFER';
+export type StdOfferLetterEventKey = 'CLOSE_VIEW' | 'INIT' | 'OPEN_OFFER' | 'OfferLetterLoadFailed' | 'OfferLetterLoaded' | 'REVOKE_OFFER' | 'SEND_OFFER';
+
+/**
+ * Payload shape for the `OPEN_OFFER` event.
+ */
+export interface StdOfferLetterOpenOfferPayload {
+  id: string;
+  row?: {
+    id: string;
+    applicantId: string;
+    applicantName?: string;
+    position?: string;
+    salary?: number;
+    startDate?: string;
+    status?: string;
+    expiresAt?: string;
+    notes?: string;
+  };
+}
 
 /**
  * Payload shape for the `SEND_OFFER` event.

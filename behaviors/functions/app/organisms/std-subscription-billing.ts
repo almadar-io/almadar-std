@@ -37,20 +37,23 @@ export interface StdSubscriptionBillingConfig {
 /**
  * Tunable params for the SubscriptionOrbital orbital.
  *
- * Canonical entity: Plan (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Plan — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSubscriptionBillingSubscriptionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdSubscriptionBillingSubscriptionOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'PlanAppLayout' | 'PlanSearch' | 'PlanFilter' | 'PlanStats' | 'PlanGraphs' | 'PlanBrowseList' | 'PlanCreate' | 'PlanEdit' | 'PlanView' | 'PlanDelete' | 'PlanSubscriptionManage' | 'PlanTrialManage',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the SubscriptionOrbital orbital with consumer params. */
 export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptionBillingSubscriptionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Plan';
+  const canonicalName = params.entityName ?? 'Plan';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'plans');
   const built = makeOrbitalWithUses({
     name: 'SubscriptionOrbital',
     uses: [
@@ -121,7 +130,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
     ],
     entity: {
       name: canonicalName,
-      collection: 'plans',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -190,27 +199,27 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PlanAppLayout',
         'config': {
-          'appName': 'Subscription Billing',
-          'notifications': [],
+          'searchEvent': 'PLAN_SEARCH',
           'contentTrait': '@trait.PlanCatalog',
+          'notifications': [],
+          'appName': 'Subscription Billing',
           'navItems': [
             {
-              'label': 'Plans',
               'href': '/plans',
+              'label': 'Plans',
               'icon': 'credit-card',
             },
             {
-              'icon': 'receipt',
-              'label': 'Invoices',
               'href': '/invoices',
+              'label': 'Invoices',
+              'icon': 'receipt',
             },
             {
-              'label': 'Dunning',
               'href': '/dunning',
+              'label': 'Dunning',
               'icon': 'alert-triangle',
             },
           ],
-          'searchEvent': 'PLAN_SEARCH',
           'notificationClickEvent': 'PLAN_NOTIFICATIONS_OPEN',
         },
         'events': {
@@ -298,60 +307,61 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'direction': 'horizontal',
+                        'justify': 'between',
                         'type': 'stack',
-                        'gap': 'md',
                         'align': 'center',
                         'children': [
                           {
                             'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'credit-card',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Plans',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
                           },
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'button',
                                 'icon': 'plus',
-                                'variant': 'primary',
                                 'label': 'New Plan',
                                 'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
                           },
                         ],
-                        'justify': 'between',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
-                        'type': 'stack',
                         'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.PlanSearch',
                           '@trait.PlanFilter',
                         ],
-                        'direction': 'horizontal',
                       },
                       '@trait.PlanStats',
                       '@trait.PlanGraphs',
@@ -363,23 +373,22 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                         'type': 'divider',
                       },
                       {
+                        'content': 'Active Subscriptions',
                         'variant': 'h3',
                         'type': 'typography',
-                        'content': 'Active Subscriptions',
                       },
                       '@trait.PlanSubscriptionManage',
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Trials',
-                        'type': 'typography',
                       },
                       '@trait.PlanTrialManage',
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -399,33 +408,33 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'main',
                   {
                     'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
+                    'className': 'py-8',
                     'direction': 'vertical',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
-                        'color': 'muted',
+                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                       },
                       {
                         'type': 'button',
                         'label': 'Back to plans',
-                        'variant': 'ghost',
                         'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'className': 'py-8',
-                    'align': 'center',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -446,47 +455,48 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'PlanFilter',
         'config': {
+          'event': 'PLAN_FILTER',
           'filters': [
             {
-              'label': 'Interval',
-              'filterType': 'select',
-              'field': 'interval',
               'options': [
                 'monthly',
                 'yearly',
               ],
+              'field': 'interval',
+              'label': 'Interval',
+              'filterType': 'select',
             },
             {
+              'field': 'status',
               'label': 'Status',
               'filterType': 'select',
               'options': [
                 'active',
                 'archived',
               ],
-              'field': 'status',
             },
           ],
-          'event': 'PLAN_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'PlanStats',
         'config': {
+          'title': 'Plans',
           'metrics': [
             {
               'label': 'Total',
               'variant': 'primary',
               'format': 'number',
-              'aggregation': 'count',
               'icon': 'credit-card',
+              'aggregation': 'count',
             },
             {
-              'label': 'Active',
               'aggregation': 'count',
-              'format': 'number',
-              'icon': 'check-circle',
               'variant': 'success',
+              'format': 'number',
+              'label': 'Active',
+              'icon': 'check-circle',
               'filter': [
                 'fn',
                 'row',
@@ -499,8 +509,6 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
             },
             {
               'label': 'Archived',
-              'variant': 'warning',
-              'icon': 'archive',
               'filter': [
                 'fn',
                 'row',
@@ -510,11 +518,12 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'archived',
                 ],
               ],
-              'aggregation': 'count',
+              'icon': 'archive',
+              'variant': 'warning',
               'format': 'number',
+              'aggregation': 'count',
             },
           ],
-          'title': 'Plans',
         },
         'listens': [
           {
@@ -531,13 +540,13 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'PlanGraphs',
         'config': {
-          'chartType': 'bar',
-          'categoryField': 'interval',
           'height': 240,
-          'showLegend': false,
-          'subtitle': 'Monthly vs yearly distribution',
           'aggregation': 'count',
+          'chartType': 'bar',
+          'subtitle': 'Monthly vs yearly distribution',
           'title': 'Plans by Interval',
+          'showLegend': false,
+          'categoryField': 'interval',
         },
         'listens': [
           {
@@ -553,32 +562,14 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'PlanBrowseList',
-        'linkedEntity': 'Plan',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
-            },
-          ],
           'cols': 1,
           'fields': [
             {
+              'name': 'name',
               'variant': 'h3',
               'icon': 'credit-card',
-              'name': 'name',
             },
             {
               'name': 'description',
@@ -589,16 +580,34 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
               'name': 'interval',
             },
             {
-              'variant': 'body',
               'name': 'amount',
+              'variant': 'body',
             },
             {
               'name': 'currency',
               'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
+            },
+          ],
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
         },
@@ -648,10 +657,9 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'PlanCreate',
-        'linkedEntity': 'Plan',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'New Plan',
-          'icon': 'plus-circle',
           'mode': 'create',
           'fields': [
             'name',
@@ -662,6 +670,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
             'trialDays',
             'status',
           ],
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -680,11 +689,10 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'PlanEdit',
-        'linkedEntity': 'Plan',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Plan',
           'mode': 'edit',
+          'title': 'Edit Plan',
           'fields': [
             'name',
             'description',
@@ -694,6 +702,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
             'trialDays',
             'status',
           ],
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -712,9 +721,8 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'PlanView',
-        'linkedEntity': 'Plan',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
           'fields': [
             'name',
             'description',
@@ -724,6 +732,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
             'trialDays',
             'status',
           ],
+          'icon': 'eye',
           'title': 'View Plan',
           'mode': 'edit',
         },
@@ -744,16 +753,16 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'PlanDelete',
-        'linkedEntity': 'Plan',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Plan',
           'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Plan',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -770,8 +779,8 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'Recurring.traits.SubscriptionManage',
         'name': 'PlanSubscriptionManage',
         'config': {
-          'title': 'Active Subscriptions',
           'maxRetries': 4,
+          'title': 'Active Subscriptions',
         },
       }),
       makeTraitRef({
@@ -1018,7 +1027,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1030,6 +1039,10 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1053,7 +1066,9 @@ export const StdSubscriptionBillingSubscriptionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'PlanAppLayout',
@@ -1092,20 +1107,23 @@ export function isStdSubscriptionBillingSubscriptionOrbitalParams(p: object): p 
 /**
  * Tunable params for the InvoiceOrbital orbital.
  *
- * Canonical entity: InvoiceNote (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: InvoiceNote — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSubscriptionBillingInvoiceOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1114,22 +1132,28 @@ export interface StdSubscriptionBillingInvoiceOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'InvoiceAppLayout' | 'InvoiceManageBlock' | 'InvoiceNoteBrowseList' | 'InvoiceNoteCreate',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the InvoiceOrbital orbital with consumer params. */
 export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBillingInvoiceOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'InvoiceNote';
+  const canonicalName = params.entityName ?? 'InvoiceNote';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'invoicenotes');
   const built = makeOrbitalWithUses({
     name: 'InvoiceOrbital',
     uses: [
@@ -1152,7 +1176,7 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
     ],
     entity: {
       name: canonicalName,
-      collection: 'invoicenotes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1200,9 +1224,9 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'config': {
           'navItems': [
             {
-              'label': 'Plans',
-              'icon': 'credit-card',
               'href': '/plans',
+              'icon': 'credit-card',
+              'label': 'Plans',
             },
             {
               'href': '/invoices',
@@ -1211,19 +1235,19 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
             },
             {
               'href': '/dunning',
-              'label': 'Dunning',
               'icon': 'alert-triangle',
+              'label': 'Dunning',
             },
           ],
+          'searchEvent': 'INVOICE_SEARCH',
           'notifications': [],
           'notificationClickEvent': 'INVOICE_NOTIFICATIONS_OPEN',
           'appName': 'Subscription Billing',
-          'searchEvent': 'INVOICE_SEARCH',
           'contentTrait': '@trait.InvoiceCatalog',
         },
         'events': {
-          'SEARCH': 'INVOICE_SEARCH',
           'NOTIFY_CLICK': 'INVOICE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'INVOICE_SEARCH',
         },
       }),
       {
@@ -1306,49 +1330,49 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'md',
-                        'type': 'stack',
                         'align': 'center',
-                        'justify': 'between',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'receipt',
                               },
                               {
+                                'content': 'Invoices',
                                 'type': 'typography',
                                 'variant': 'h2',
-                                'content': 'Invoices',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'variant': 'primary',
-                                'type': 'button',
-                                'icon': 'plus',
-                                'action': 'CREATE',
                                 'label': 'Add Note',
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'icon': 'plus',
                               },
                             ],
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
@@ -1383,33 +1407,33 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                   'main',
                   {
                     'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'No notifications',
-                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
                       },
                       {
-                        'action': 'INIT',
                         'type': 'button',
+                        'action': 'INIT',
                         'variant': 'ghost',
                         'label': 'Back to invoices',
                       },
                     ],
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1422,28 +1446,29 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'ref': 'Inv.traits.InvoiceManage',
         'name': 'InvoiceManageBlock',
         'config': {
-          'title': 'Invoices',
           'refundTiersJson': '[]',
+          'title': 'Invoices',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'InvoiceNoteBrowseList',
-        'linkedEntity': 'InvoiceNote',
+        'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
           'fields': [
             {
-              'icon': 'receipt',
               'name': 'invoiceId',
               'variant': 'h4',
+              'icon': 'receipt',
             },
             {
-              'name': 'body',
               'variant': 'body',
+              'name': 'body',
             },
             {
-              'name': 'author',
               'variant': 'caption',
+              'name': 'author',
             },
             {
               'variant': 'caption',
@@ -1452,12 +1477,11 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
           ],
           'itemActions': [
             {
-              'variant': 'danger',
-              'event': 'DELETE',
               'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
             },
           ],
-          'cols': 1,
           'gap': 'sm',
         },
         'listens': [
@@ -1482,16 +1506,16 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'InvoiceNoteCreate',
-        'linkedEntity': 'InvoiceNote',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
+          'title': 'New Note',
           'fields': [
             'invoiceId',
             'body',
             'author',
           ],
           'mode': 'create',
-          'title': 'New Note',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1669,7 +1693,7 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1681,6 +1705,10 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1704,7 +1732,9 @@ export const StdSubscriptionBillingInvoiceOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'InvoiceAppLayout',
@@ -1735,20 +1765,23 @@ export function isStdSubscriptionBillingInvoiceOrbitalParams(p: object): p is St
 /**
  * Tunable params for the DunningOrbital orbital.
  *
- * Canonical entity: DunningNote (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: DunningNote — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSubscriptionBillingDunningOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1757,22 +1790,28 @@ export interface StdSubscriptionBillingDunningOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'DunningAppLayout' | 'DunningEscalateBlock' | 'DunningNoteBrowseList' | 'DunningNoteCreate',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the DunningOrbital orbital with consumer params. */
 export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBillingDunningOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'DunningNote';
+  const canonicalName = params.entityName ?? 'DunningNote';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'dunningnotes');
   const built = makeOrbitalWithUses({
     name: 'DunningOrbital',
     uses: [
@@ -1795,7 +1834,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
     ],
     entity: {
       name: canonicalName,
-      collection: 'dunningnotes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1841,28 +1880,28 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
         'ref': 'AppShell.traits.AppLayout',
         'name': 'DunningAppLayout',
         'config': {
-          'searchEvent': 'DUNNING_SEARCH',
+          'appName': 'Subscription Billing',
           'navItems': [
             {
-              'icon': 'credit-card',
               'label': 'Plans',
+              'icon': 'credit-card',
               'href': '/plans',
             },
             {
+              'icon': 'receipt',
               'label': 'Invoices',
               'href': '/invoices',
-              'icon': 'receipt',
             },
             {
               'icon': 'alert-triangle',
-              'label': 'Dunning',
               'href': '/dunning',
+              'label': 'Dunning',
             },
           ],
-          'notificationClickEvent': 'DUNNING_NOTIFICATIONS_OPEN',
-          'appName': 'Subscription Billing',
+          'searchEvent': 'DUNNING_SEARCH',
           'notifications': [],
           'contentTrait': '@trait.DunningCatalog',
+          'notificationClickEvent': 'DUNNING_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'DUNNING_NOTIFICATIONS_OPEN',
@@ -1949,48 +1988,47 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
-                        'gap': 'md',
                         'type': 'stack',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                         'children': [
                           {
-                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'alert-triangle',
                                 'type': 'icon',
+                                'name': 'alert-triangle',
                               },
                               {
                                 'content': 'Dunning',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'sm',
-                          },
-                          {
                             'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'stack',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'label': 'Log Note',
-                                'action': 'CREATE',
-                                'icon': 'plus',
                                 'type': 'button',
+                                'action': 'CREATE',
+                                'label': 'Log Note',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -2000,13 +2038,14 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'Case Notes',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       '@trait.DunningNoteBrowseList',
                     ],
-                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2036,23 +2075,23 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                         'variant': 'h3',
                       },
                       {
-                        'variant': 'caption',
-                        'content': 'You\'re all caught up.',
-                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'color': 'muted',
                       },
                       {
                         'label': 'Back to dunning',
+                        'action': 'INIT',
                         'type': 'button',
                         'variant': 'ghost',
-                        'action': 'INIT',
                       },
                     ],
                     'direction': 'vertical',
-                    'align': 'center',
-                    'type': 'stack',
                     'className': 'py-8',
+                    'align': 'center',
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2071,17 +2110,25 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'DunningNoteBrowseList',
-        'linkedEntity': 'DunningNote',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'gap': 'sm',
           'fields': [
             {
-              'name': 'caseId',
               'icon': 'alert-triangle',
               'variant': 'h4',
+              'name': 'caseId',
             },
             {
-              'name': 'body',
               'variant': 'body',
+              'name': 'body',
             },
             {
               'name': 'author',
@@ -2093,14 +2140,6 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
             },
           ],
           'cols': 1,
-          'itemActions': [
-            {
-              'variant': 'danger',
-              'event': 'DELETE',
-              'label': 'Delete',
-            },
-          ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -2124,10 +2163,10 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'DunningNoteCreate',
-        'linkedEntity': 'DunningNote',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'icon': 'plus-circle',
+          'mode': 'create',
           'title': 'New Note',
           'fields': [
             'caseId',
@@ -2311,7 +2350,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2323,6 +2362,10 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2346,7 +2389,9 @@ export const StdSubscriptionBillingDunningOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'DunningAppLayout',

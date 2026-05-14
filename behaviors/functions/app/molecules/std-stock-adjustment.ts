@@ -29,13 +29,33 @@ const ALIAS = 'StockAdjustment';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdStockAdjustmentEventKey = 'CREATE' | 'INIT' | 'REQUEST_DELETE' | 'StockAdjustmentLoadFailed' | 'StockAdjustmentLoaded';
+export type StdStockAdjustmentEventKey = 'CLOSE_VIEW' | 'CREATE' | 'INIT' | 'OPEN_ADJUSTMENT' | 'REQUEST_DELETE' | 'StockAdjustmentLoadFailed' | 'StockAdjustmentLoaded';
 
 /**
  * Closed set of event keys this trait listens for —
  * derived from the .orb's `listens[]` block.
  */
 export type StdStockAdjustmentListenKey = 'ADJUSTMENT_CREATED' | 'ADJUSTMENT_DELETED';
+
+/**
+ * Payload shape for the `OPEN_ADJUSTMENT` event.
+ */
+export interface StdStockAdjustmentOpenAdjustmentPayload {
+  id: string;
+  row?: {
+    id: string;
+    stockLevelId: string;
+    sku?: string;
+    warehouseId?: string;
+    warehouseName?: string;
+    quantityDelta?: number;
+    reason?: string;
+    adjustedBy?: string;
+    adjustedAt?: string;
+    notes?: string;
+    pendingId?: string;
+  };
+}
 
 /**
  * Payload shape for the `REQUEST_DELETE` event.

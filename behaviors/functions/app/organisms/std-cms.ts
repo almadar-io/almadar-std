@@ -30,27 +30,30 @@ const ALIAS = 'Cms';
  * without modifying its state-machine topology.
  */
 export interface StdCmsConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
  * Tunable params for the ArticleOrbital orbital.
  *
- * Canonical entity: Article (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Article — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCmsArticleOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdCmsArticleOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ArticleAppLayout' | 'ArticleBrowseList' | 'ArticleSearch' | 'ArticleFilter' | 'ArticleStats' | 'ArticleGraphs' | 'ArticleCreate' | 'ArticleEdit' | 'ArticleView' | 'ArticleDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ArticleOrbital orbital with consumer params. */
 export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Article';
+  const canonicalName = params.entityName ?? 'Article';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'articles');
   const built = makeOrbitalWithUses({
     name: 'ArticleOrbital',
     uses: [
@@ -117,7 +126,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
     ],
     entity: {
       name: canonicalName,
-      collection: 'articles',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -185,37 +194,37 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ArticleAppLayout',
         'config': {
-          'searchEvent': 'ARTICLE_SEARCH',
-          'notifications': [],
-          'appName': 'CmsApp',
-          'contentTrait': '@trait.ArticleCatalog',
           'navItems': [
             {
+              'icon': 'layout-grid',
               'label': 'CMS Hub',
               'href': '/cms-hub',
-              'icon': 'layout-grid',
             },
             {
               'icon': 'file-text',
-              'href': '/articles',
               'label': 'Articles',
+              'href': '/articles',
             },
             {
-              'label': 'Media',
               'href': '/media',
+              'label': 'Media',
               'icon': 'image',
             },
             {
-              'label': 'Categories',
               'href': '/categories',
               'icon': 'folder',
+              'label': 'Categories',
             },
           ],
+          'notifications': [],
+          'searchEvent': 'ARTICLE_SEARCH',
+          'appName': 'CmsApp',
+          'contentTrait': '@trait.ArticleCatalog',
           'notificationClickEvent': 'ARTICLE_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'ARTICLE_SEARCH',
           'NOTIFY_CLICK': 'ARTICLE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ARTICLE_SEARCH',
         },
       }),
       {
@@ -298,46 +307,46 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'file-text',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                                 'content': 'Articles',
                               },
                             ],
                             'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'icon': 'plus',
-                                'variant': 'primary',
                                 'label': 'Create Article',
-                                'action': 'CREATE',
+                                'icon': 'plus',
                                 'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
-                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
                         'gap': 'md',
                         'type': 'stack',
                       },
@@ -345,13 +354,13 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           '@trait.ArticleSearch',
                           '@trait.ArticleFilter',
                         ],
-                        'type': 'stack',
                       },
                       '@trait.ArticleStats',
                       '@trait.ArticleGraphs',
@@ -382,26 +391,26 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                         'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                         'color': 'muted',
                         'variant': 'caption',
-                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'ghost',
                         'label': 'Back to articles',
+                        'variant': 'ghost',
                         'action': 'INIT',
                         'type': 'button',
                       },
                     ],
-                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                     'align': 'center',
                     'className': 'py-8',
                   },
@@ -415,33 +424,16 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ArticleBrowseList',
-        'linkedEntity': 'Article',
+        'linkedEntity': canonicalName,
         'config': {
-          'imageField': 'heroImage',
+          'cols': 1,
           'gap': 'sm',
           'variant': 'card',
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'variant': 'ghost',
-              'label': 'View',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
           'fields': [
             {
-              'icon': 'file-text',
               'name': 'title',
               'variant': 'h3',
+              'icon': 'file-text',
             },
             {
               'name': 'status',
@@ -452,15 +444,32 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
               'variant': 'caption',
             },
             {
-              'name': 'category',
               'variant': 'badge',
+              'name': 'category',
             },
             {
               'name': 'publishedAt',
               'variant': 'caption',
             },
           ],
-          'cols': 1,
+          'imageField': 'heroImage',
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+            },
+          ],
         },
         'listens': [
           {
@@ -493,8 +502,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ArticleSearch',
         'config': {
-          'searchEvent': 'ARTICLE_SEARCH',
           'placeholder': 'Search articles...',
+          'searchEvent': 'ARTICLE_SEARCH',
         },
       }),
       makeTraitRef({
@@ -503,8 +512,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'config': {
           'facets': [
             {
-              'label': 'Status',
               'field': 'status',
+              'label': 'Status',
               'values': [
                 'draft',
                 'published',
@@ -512,9 +521,9 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
               ],
             },
             {
+              'values': [],
               'label': 'Category',
               'field': 'category',
-              'values': [],
             },
           ],
         },
@@ -529,18 +538,18 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
               'label': 'Total',
             },
             {
-              'aggregation': 'count',
               'filter': {
                 'status': 'published',
               },
+              'aggregation': 'count',
               'label': 'Published',
             },
             {
               'aggregation': 'count',
+              'label': 'Drafts',
               'filter': {
                 'status': 'draft',
               },
-              'label': 'Drafts',
             },
           ],
         },
@@ -559,9 +568,9 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ArticleGraphs',
         'config': {
-          'chartType': 'pie',
           'categoryField': 'status',
           'title': 'Articles by Status',
+          'chartType': 'pie',
         },
         'listens': [
           {
@@ -577,11 +586,10 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ArticleCreate',
-        'linkedEntity': 'Article',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Create Article',
-          'mode': 'create',
           'icon': 'plus-circle',
+          'title': 'Create Article',
           'fields': [
             'title',
             'slug',
@@ -592,6 +600,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
             'publishedAt',
             'heroImage',
           ],
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -610,8 +619,9 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ArticleEdit',
-        'linkedEntity': 'Article',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'Edit Article',
           'fields': [
             'title',
             'slug',
@@ -624,7 +634,6 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           ],
           'mode': 'edit',
           'icon': 'edit',
-          'title': 'Edit Article',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -643,9 +652,11 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ArticleView',
-        'linkedEntity': 'Article',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'eye',
+          'mode': 'view',
+          'title': 'View Article',
           'fields': [
             'title',
             'slug',
@@ -656,8 +667,6 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
             'publishedAt',
             'heroImage',
           ],
-          'title': 'View Article',
-          'mode': 'view',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -676,12 +685,12 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ArticleDelete',
-        'linkedEntity': 'Article',
+        'linkedEntity': canonicalName,
         'config': {
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
           'title': 'Delete Article',
           'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -794,23 +803,23 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'sm',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'placeholder': 'Paste hero image URL...',
-                        'inputType': 'text',
                         'type': 'input',
+                        'inputType': 'text',
+                        'placeholder': 'Paste hero image URL...',
                       },
                       {
-                        'type': 'button',
-                        'variant': 'secondary',
-                        'icon': 'upload',
                         'label': 'Upload Hero',
+                        'variant': 'secondary',
+                        'type': 'button',
+                        'icon': 'upload',
                         'action': 'UPLOAD',
                       },
                     ],
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -825,8 +834,8 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
                   'storage',
                   'upload',
                   {
-                    'acl': 'public',
                     'bucket': 'articles',
+                    'acl': 'public',
                     'file': '@payload.file',
                   },
                   {
@@ -1092,7 +1101,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1104,6 +1113,10 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1127,7 +1140,9 @@ export const StdCmsArticleOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ArticleAppLayout',
@@ -1165,20 +1180,23 @@ export function isStdCmsArticleOrbitalParams(p: object): p is StdCmsArticleOrbit
 /**
  * Tunable params for the MediaAssetOrbital orbital.
  *
- * Canonical entity: MediaAsset (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: MediaAsset — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCmsMediaAssetOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1187,22 +1205,28 @@ export interface StdCmsMediaAssetOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'MediaAssetAppLayout' | 'MediaAssetGallery' | 'MediaAssetCreate' | 'MediaAssetView',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the MediaAssetOrbital orbital with consumer params. */
 export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'MediaAsset';
+  const canonicalName = params.entityName ?? 'MediaAsset';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'mediaassets');
   const built = makeOrbitalWithUses({
     name: 'MediaAssetOrbital',
     uses: [
@@ -1225,7 +1249,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
     ],
     entity: {
       name: canonicalName,
-      collection: 'mediaassets',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1268,8 +1292,12 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MediaAssetAppLayout',
-        'linkedEntity': 'MediaAsset',
+        'linkedEntity': canonicalName,
         'config': {
+          'notifications': [],
+          'notificationClickEvent': 'MEDIA_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.MediaCatalog',
+          'appName': 'CmsApp',
           'navItems': [
             {
               'label': 'CMS Hub',
@@ -1277,26 +1305,22 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
               'icon': 'layout-grid',
             },
             {
-              'icon': 'file-text',
               'label': 'Articles',
               'href': '/articles',
+              'icon': 'file-text',
             },
             {
-              'icon': 'image',
               'label': 'Media',
               'href': '/media',
+              'icon': 'image',
             },
             {
-              'href': '/categories',
               'label': 'Categories',
+              'href': '/categories',
               'icon': 'folder',
             },
           ],
           'searchEvent': 'MEDIA_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'MEDIA_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.MediaCatalog',
-          'appName': 'CmsApp',
         },
         'events': {
           'SEARCH': 'MEDIA_SEARCH',
@@ -1345,49 +1369,72 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'render-ui',
                   'main',
                   {
+                    'appName': 'CmsApp',
+                    'navItems': [
+                      {
+                        'icon': 'layout-grid',
+                        'label': 'CMS Hub',
+                        'href': '/cms-hub',
+                      },
+                      {
+                        'href': '/articles',
+                        'icon': 'file-text',
+                        'label': 'Articles',
+                      },
+                      {
+                        'label': 'Media',
+                        'href': '/media',
+                        'icon': 'image',
+                      },
+                      {
+                        'href': '/categories',
+                        'icon': 'folder',
+                        'label': 'Categories',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
                         'children': [
                           {
-                            'gap': 'md',
-                            'justify': 'between',
+                            'align': 'center',
                             'children': [
                               {
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'gap': 'sm',
+                                'direction': 'horizontal',
+                                'align': 'center',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'image',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'type': 'typography',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                     'content': 'Media Library',
                                   },
                                 ],
-                                'align': 'center',
+                                'type': 'stack',
                               },
                               {
                                 'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'icon': 'plus',
+                                    'action': 'CREATE',
+                                    'variant': 'secondary',
                                     'type': 'button',
                                     'label': 'Create MediaAsset',
-                                    'variant': 'secondary',
-                                    'action': 'CREATE',
+                                    'icon': 'plus',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'type': 'stack',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'align': 'center',
+                            'justify': 'between',
+                            'gap': 'md',
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -1396,32 +1443,9 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                           '@trait.MediaAssetGallery',
                         ],
                         'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'className': 'max-w-5xl mx-auto w-full',
-                      },
-                    ],
-                    'appName': 'CmsApp',
-                    'navItems': [
-                      {
-                        'href': '/cms-hub',
-                        'label': 'CMS Hub',
-                        'icon': 'layout-grid',
-                      },
-                      {
-                        'label': 'Articles',
-                        'href': '/articles',
-                        'icon': 'file-text',
-                      },
-                      {
-                        'href': '/media',
-                        'icon': 'image',
-                        'label': 'Media',
-                      },
-                      {
-                        'icon': 'folder',
-                        'label': 'Categories',
-                        'href': '/categories',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -1435,11 +1459,11 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
       makeTraitRef({
         'ref': 'Gallery.traits.GalleryItemGallery',
         'name': 'MediaAssetGallery',
-        'linkedEntity': 'MediaAsset',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'md',
           'titleField': 'name',
           'cols': 4,
-          'gap': 'md',
           'imageField': 'url',
         },
         'listens': [
@@ -1604,24 +1628,24 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'align': 'center',
                     'direction': 'vertical',
                     'gap': 'sm',
                     'children': [
                       {
-                        'type': 'input',
                         'inputType': 'text',
                         'placeholder': 'Paste file URL...',
+                        'type': 'input',
                       },
                       {
-                        'variant': 'primary',
+                        'label': 'Upload File',
                         'type': 'button',
+                        'variant': 'primary',
                         'action': 'UPLOAD',
                         'icon': 'upload',
-                        'label': 'Upload File',
                       },
                     ],
-                    'type': 'stack',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -1636,9 +1660,9 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'storage',
                   'upload',
                   {
+                    'bucket': 'media',
                     'acl': 'public',
                     'file': '@payload.file',
-                    'bucket': 'media',
                   },
                   {
                     'emit': {
@@ -1651,9 +1675,9 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'type': 'loading-state',
                     'title': 'Uploading...',
                     'message': 'Uploading file to storage.',
+                    'type': 'loading-state',
                   },
                 ],
               ],
@@ -1668,14 +1692,14 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'create',
                   'MediaAsset',
                   {
+                    'type': 'image',
                     'name': '@payload.id',
                     'url': '@payload.url',
-                    'type': 'image',
                   },
                   {
                     'emit': {
-                      'failure': 'MediaUploadFailed',
                       'success': 'MediaSaved',
+                      'failure': 'MediaUploadFailed',
                     },
                   },
                 ],
@@ -1691,7 +1715,8 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'type': 'stack',
+                    'gap': 'sm',
                     'children': [
                       {
                         'type': 'icon',
@@ -1703,15 +1728,14 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                         'variant': 'success',
                       },
                       {
-                        'type': 'button',
+                        'label': 'Upload Another',
                         'action': 'INIT',
                         'variant': 'ghost',
-                        'label': 'Upload Another',
+                        'type': 'button',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'sm',
                     'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -1725,10 +1749,10 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'type': 'error-state',
-                    'title': 'Upload Failed',
-                    'onRetry': 'INIT',
                     'message': '@payload.error',
+                    'type': 'error-state',
+                    'onRetry': 'INIT',
+                    'title': 'Upload Failed',
                   },
                 ],
               ],
@@ -1740,17 +1764,17 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MediaAssetCreate',
-        'linkedEntity': 'MediaAsset',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
-          'icon': 'plus-circle',
+          'title': 'Add Media Asset',
           'fields': [
             'name',
             'altText',
             'type',
             'url',
           ],
-          'title': 'Add Media Asset',
+          'icon': 'plus-circle',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1769,10 +1793,9 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MediaAssetView',
-        'linkedEntity': 'MediaAsset',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'View Media Asset',
-          'mode': 'view',
           'icon': 'eye',
           'fields': [
             'name',
@@ -1780,6 +1803,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
             'type',
             'url',
           ],
+          'mode': 'view',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1923,7 +1947,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1935,6 +1959,10 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1958,7 +1986,9 @@ export const StdCmsMediaAssetOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'MediaAssetAppLayout',
@@ -1990,20 +2020,23 @@ export function isStdCmsMediaAssetOrbitalParams(p: object): p is StdCmsMediaAsse
 /**
  * Tunable params for the CategoryOrbital orbital.
  *
- * Canonical entity: Category (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Category — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCmsCategoryOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2012,22 +2045,28 @@ export interface StdCmsCategoryOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CategoryAppLayout' | 'CategoryBrowseList' | 'CategoryCreate' | 'CategoryEdit' | 'CategoryView' | 'CategoryDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CategoryOrbital orbital with consumer params. */
 export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Category';
+  const canonicalName = params.entityName ?? 'Category';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'categorys');
   const built = makeOrbitalWithUses({
     name: 'CategoryOrbital',
     uses: [
@@ -2050,7 +2089,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
     ],
     entity: {
       name: canonicalName,
-      collection: 'categorys',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2097,16 +2136,16 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CategoryAppLayout',
-        'linkedEntity': 'Category',
+        'linkedEntity': canonicalName,
         'config': {
-          'searchEvent': 'CATEGORY_SEARCH',
           'notifications': [],
-          'notificationClickEvent': 'CATEGORY_NOTIFICATIONS_OPEN',
+          'searchEvent': 'CATEGORY_SEARCH',
+          'contentTrait': '@trait.CategoryCatalog',
           'navItems': [
             {
-              'label': 'CMS Hub',
-              'href': '/cms-hub',
               'icon': 'layout-grid',
+              'href': '/cms-hub',
+              'label': 'CMS Hub',
             },
             {
               'href': '/articles',
@@ -2120,16 +2159,16 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             },
             {
               'href': '/categories',
-              'icon': 'folder',
               'label': 'Categories',
+              'icon': 'folder',
             },
           ],
-          'contentTrait': '@trait.CategoryCatalog',
           'appName': 'CmsApp',
+          'notificationClickEvent': 'CATEGORY_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'CATEGORY_SEARCH',
           'NOTIFY_CLICK': 'CATEGORY_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CATEGORY_SEARCH',
         },
       }),
       {
@@ -2174,8 +2213,62 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
                   'render-ui',
                   'main',
                   {
-                    'appName': 'CmsApp',
                     'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'folder',
+                                  },
+                                  {
+                                    'content': 'Categories',
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                  },
+                                ],
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'label': 'Create Category',
+                                    'variant': 'primary',
+                                    'icon': 'plus',
+                                    'type': 'button',
+                                    'action': 'CREATE',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'gap': 'sm',
+                              },
+                            ],
+                            'gap': 'md',
+                            'align': 'center',
+                            'justify': 'between',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          '@trait.CategoryBrowseList',
+                        ],
+                        'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'type': 'stack',
+                      },
+                    ],
+                    'appName': 'CmsApp',
                     'navItems': [
                       {
                         'href': '/cms-hub',
@@ -2183,8 +2276,8 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
                         'label': 'CMS Hub',
                       },
                       {
-                        'icon': 'file-text',
                         'label': 'Articles',
+                        'icon': 'file-text',
                         'href': '/articles',
                       },
                       {
@@ -2193,63 +2286,9 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
                         'label': 'Media',
                       },
                       {
-                        'icon': 'folder',
-                        'label': 'Categories',
                         'href': '/categories',
-                      },
-                    ],
-                    'children': [
-                      {
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'children': [
-                          {
-                            'gap': 'md',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'children': [
-                              {
-                                'align': 'center',
-                                'children': [
-                                  {
-                                    'name': 'folder',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'content': 'Categories',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                                'gap': 'sm',
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                              },
-                              {
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'sm',
-                                'children': [
-                                  {
-                                    'label': 'Create Category',
-                                    'type': 'button',
-                                    'variant': 'primary',
-                                    'action': 'CREATE',
-                                    'icon': 'plus',
-                                  },
-                                ],
-                              },
-                            ],
-                            'align': 'center',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          '@trait.CategoryBrowseList',
-                        ],
-                        'type': 'stack',
+                        'label': 'Categories',
+                        'icon': 'folder',
                       },
                     ],
                   },
@@ -2263,8 +2302,9 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'CategoryBrowseList',
-        'linkedEntity': 'Category',
+        'linkedEntity': canonicalName,
         'config': {
+          'variant': 'card',
           'itemActions': [
             {
               'event': 'VIEW',
@@ -2272,17 +2312,17 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
               'variant': 'ghost',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'variant': 'danger',
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
-          'variant': 'card',
+          'cols': 1,
           'fields': [
             {
               'name': 'name',
@@ -2290,10 +2330,10 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
               'variant': 'h3',
             },
             {
-              'variant': 'badge',
-              'label': 'Articles',
               'name': 'articleCount',
+              'variant': 'badge',
               'format': 'number',
+              'label': 'Articles',
             },
             {
               'name': 'description',
@@ -2304,7 +2344,6 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
               'name': 'slug',
             },
           ],
-          'cols': 1,
           'gap': 'sm',
         },
         'listens': [
@@ -2337,8 +2376,11 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CategoryCreate',
-        'linkedEntity': 'Category',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'title': 'Create Category',
+          'mode': 'create',
           'fields': [
             'name',
             'slug',
@@ -2346,9 +2388,6 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             'parentCategory',
             'articleCount',
           ],
-          'mode': 'create',
-          'title': 'Create Category',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2367,10 +2406,9 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CategoryEdit',
-        'linkedEntity': 'Category',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'icon': 'edit',
           'title': 'Edit Category',
           'fields': [
             'name',
@@ -2379,6 +2417,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             'parentCategory',
             'articleCount',
           ],
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2397,9 +2436,10 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CategoryView',
-        'linkedEntity': 'Category',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'view',
+          'title': 'View Category',
+          'icon': 'eye',
           'fields': [
             'name',
             'slug',
@@ -2407,8 +2447,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
             'parentCategory',
             'articleCount',
           ],
-          'icon': 'eye',
-          'title': 'View Category',
+          'mode': 'view',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2427,12 +2466,12 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'CategoryDelete',
-        'linkedEntity': 'Category',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Category',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'title': 'Delete Category',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -2668,7 +2707,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2680,6 +2719,10 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2703,7 +2746,9 @@ export const StdCmsCategoryOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CategoryAppLayout',
@@ -2736,20 +2781,23 @@ export function isStdCmsCategoryOrbitalParams(p: object): p is StdCmsCategoryOrb
 /**
  * Tunable params for the CmsHubOrbital orbital.
  *
- * Canonical entity: HubArticle (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: HubArticle — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCmsCmsHubOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2758,22 +2806,28 @@ export interface StdCmsCmsHubOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CmsHubAppLayout' | 'HubBrowseList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CmsHubOrbital orbital with consumer params. */
 export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'HubArticle';
+  const canonicalName = params.entityName ?? 'HubArticle';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'articles');
   const built = makeOrbitalWithUses({
     name: 'CmsHubOrbital',
     uses: [
@@ -2788,7 +2842,7 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
     ],
     entity: {
       name: canonicalName,
-      collection: 'articles',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2846,39 +2900,39 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CmsHubAppLayout',
-        'linkedEntity': 'HubArticle',
+        'linkedEntity': canonicalName,
         'config': {
-          'notifications': [],
           'notificationClickEvent': 'CMS_HUB_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.CmsHubDisplay',
           'appName': 'CmsApp',
+          'searchEvent': 'CMS_HUB_SEARCH',
+          'contentTrait': '@trait.CmsHubDisplay',
           'navItems': [
             {
-              'label': 'CMS Hub',
-              'icon': 'layout-grid',
               'href': '/cms-hub',
+              'icon': 'layout-grid',
+              'label': 'CMS Hub',
             },
             {
-              'href': '/articles',
               'icon': 'file-text',
+              'href': '/articles',
               'label': 'Articles',
             },
             {
-              'icon': 'image',
-              'label': 'Media',
               'href': '/media',
+              'label': 'Media',
+              'icon': 'image',
             },
             {
               'label': 'Categories',
-              'href': '/categories',
               'icon': 'folder',
+              'href': '/categories',
             },
           ],
-          'searchEvent': 'CMS_HUB_SEARCH',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'CMS_HUB_SEARCH',
           'NOTIFY_CLICK': 'CMS_HUB_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CMS_HUB_SEARCH',
         },
       }),
       {
@@ -2907,21 +2961,60 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'CmsApp',
+                    'children': [
+                      {
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'layout-grid',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'CMS Hub',
+                                'variant': 'h2',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'color': 'muted',
+                            'variant': 'caption',
+                            'content': 'Recent articles across the platform',
+                            'type': 'typography',
+                          },
+                          '@trait.HubBrowseList',
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
                     'navItems': [
                       {
-                        'icon': 'layout-grid',
                         'label': 'CMS Hub',
+                        'icon': 'layout-grid',
                         'href': '/cms-hub',
                       },
                       {
                         'href': '/articles',
-                        'label': 'Articles',
                         'icon': 'file-text',
+                        'label': 'Articles',
                       },
                       {
                         'href': '/media',
-                        'label': 'Media',
                         'icon': 'image',
+                        'label': 'Media',
                       },
                       {
                         'icon': 'folder',
@@ -2929,45 +3022,6 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
                         'href': '/categories',
                       },
                     ],
-                    'appName': 'CmsApp',
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'children': [
-                          {
-                            'gap': 'sm',
-                            'align': 'center',
-                            'children': [
-                              {
-                                'name': 'layout-grid',
-                                'type': 'icon',
-                              },
-                              {
-                                'content': 'CMS Hub',
-                                'type': 'typography',
-                                'variant': 'h2',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': 'Recent articles across the platform',
-                            'variant': 'caption',
-                            'color': 'muted',
-                          },
-                          '@trait.HubBrowseList',
-                        ],
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -2979,13 +3033,13 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'HubBrowseList',
-        'linkedEntity': 'HubArticle',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             {
-              'icon': 'file-text',
               'name': 'title',
               'variant': 'h3',
+              'icon': 'file-text',
             },
             {
               'name': 'status',
@@ -2996,15 +3050,15 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
               'name': 'author',
             },
             {
-              'name': 'category',
               'variant': 'badge',
+              'name': 'category',
             },
           ],
           'variant': 'card',
-          'cols': 1,
+          'gap': 'sm',
           'imageField': 'heroImage',
           'itemActions': [],
-          'gap': 'sm',
+          'cols': 1,
         },
       }),
     ],
@@ -3028,7 +3082,7 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3040,6 +3094,10 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3063,7 +3121,9 @@ export const StdCmsCmsHubOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CmsHubAppLayout',

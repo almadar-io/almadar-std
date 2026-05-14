@@ -30,8 +30,8 @@ const ALIAS = 'CustomerSuccess';
  * without modifying its state-machine topology.
  */
 export interface StdCustomerSuccessConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**

@@ -30,27 +30,30 @@ const ALIAS = 'Crm';
  * without modifying its state-machine topology.
  */
 export interface StdCrmConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
  * Tunable params for the ContactOrbital orbital.
  *
- * Canonical entity: Contact (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Contact — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCrmContactOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdCrmContactOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactStats' | 'ContactGraphs' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ContactOrbital orbital with consumer params. */
 export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Contact';
+  const canonicalName = params.entityName ?? 'Contact';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'contacts');
   const built = makeOrbitalWithUses({
     name: 'ContactOrbital',
     uses: [
@@ -117,7 +126,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
     ],
     entity: {
       name: canonicalName,
-      collection: 'contacts',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -179,37 +188,37 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ContactAppLayout',
         'config': {
+          'searchEvent': 'CONTACT_SEARCH',
+          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.ContactCatalog',
+          'notifications': [],
+          'appName': 'CRM',
           'navItems': [
             {
-              'href': '/contacts',
-              'label': 'Contacts',
               'icon': 'users',
+              'label': 'Contacts',
+              'href': '/contacts',
             },
             {
               'href': '/deals',
-              'label': 'Deals',
               'icon': 'briefcase',
+              'label': 'Deals',
             },
             {
-              'icon': 'bar-chart-2',
               'label': 'Pipeline',
               'href': '/pipeline',
+              'icon': 'bar-chart-2',
             },
             {
+              'label': 'Notes',
               'icon': 'file-text',
               'href': '/notes',
-              'label': 'Notes',
             },
           ],
-          'searchEvent': 'CONTACT_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
-          'appName': 'CRM',
         },
         'events': {
-          'SEARCH': 'CONTACT_SEARCH',
           'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CONTACT_SEARCH',
         },
       }),
       {
@@ -308,62 +317,59 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'gap': 'md',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'user',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'content': 'Contacts',
                                 'type': 'typography',
+                                'content': 'Contacts',
+                                'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'label': 'New Contact',
-                                'type': 'button',
                                 'action': 'CREATE',
                                 'icon': 'plus',
+                                'type': 'button',
                                 'variant': 'primary',
                               },
                             ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'type': 'stack',
+                        'align': 'center',
                         'direction': 'horizontal',
                         'justify': 'between',
-                        'align': 'center',
-                        'type': 'stack',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'md',
                         'children': [
                           '@trait.ContactSearch',
                           '@trait.ContactFilter',
                         ],
-                        'align': 'center',
-                        'direction': 'horizontal',
                       },
                       '@trait.ContactStats',
                       '@trait.ContactGraphs',
@@ -372,6 +378,9 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                       },
                       '@trait.ContactBrowseList',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -390,34 +399,34 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
                     'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'No notifications',
-                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
                       },
                       {
-                        'label': 'Back to contacts',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'variant': 'ghost',
+                        'label': 'Back to contacts',
                         'action': 'INIT',
                       },
                     ],
                     'gap': 'md',
-                    'direction': 'vertical',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -430,19 +439,19 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ContactSearch',
         'config': {
-          'placeholder': 'Search contacts…',
           'event': 'CONTACT_SEARCH',
+          'placeholder': 'Search contacts…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ContactFilter',
         'config': {
+          'event': 'CONTACT_FILTER',
           'filters': [
             {
-              'filterType': 'select',
-              'label': 'Industry',
               'field': 'industry',
+              'label': 'Industry',
               'options': [
                 'technology',
                 'finance',
@@ -451,38 +460,40 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                 'manufacturing',
                 'other',
               ],
+              'filterType': 'select',
             },
             {
               'field': 'lifecycleStage',
-              'label': 'Lifecycle Stage',
-              'filterType': 'select',
               'options': [
                 'lead',
                 'mql',
                 'sql',
                 'customer',
               ],
+              'label': 'Lifecycle Stage',
+              'filterType': 'select',
             },
           ],
-          'event': 'CONTACT_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'ContactStats',
         'config': {
+          'title': 'Contacts',
           'metrics': [
             {
+              'icon': 'users',
+              'variant': 'primary',
               'aggregation': 'count',
               'format': 'number',
-              'icon': 'users',
               'label': 'Total',
-              'variant': 'primary',
             },
             {
-              'aggregation': 'count',
-              'format': 'number',
               'variant': 'warning',
+              'label': 'Hot Leads',
+              'format': 'number',
+              'aggregation': 'count',
               'icon': 'flame',
               'filter': [
                 'fn',
@@ -493,11 +504,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'sql',
                 ],
               ],
-              'label': 'Hot Leads',
             },
             {
-              'aggregation': 'count',
-              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -508,11 +516,12 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                 ],
               ],
               'label': 'Customers',
-              'format': 'number',
+              'variant': 'success',
               'icon': 'check-circle',
+              'aggregation': 'count',
+              'format': 'number',
             },
           ],
-          'title': 'Contacts',
         },
         'listens': [
           {
@@ -529,13 +538,13 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ContactGraphs',
         'config': {
-          'aggregation': 'count',
           'height': 240,
           'showLegend': true,
-          'title': 'Contacts by Lifecycle Stage',
           'subtitle': 'Funnel breakdown',
+          'title': 'Contacts by Lifecycle Stage',
           'chartType': 'pie',
           'categoryField': 'lifecycleStage',
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -551,32 +560,33 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ContactBrowseList',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
+          'variant': 'card',
           'itemActions': [
             {
               'variant': 'ghost',
-              'event': 'VIEW',
               'label': 'View',
+              'event': 'VIEW',
             },
             {
+              'variant': 'ghost',
               'label': 'Edit',
               'event': 'EDIT',
-              'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
-              'variant': 'danger',
               'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
             },
           ],
-          'variant': 'card',
           'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
-              'variant': 'h3',
               'icon': 'user',
               'name': 'name',
+              'variant': 'h3',
             },
             {
               'name': 'industry',
@@ -591,11 +601,10 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
               'variant': 'caption',
             },
             {
-              'name': 'phone',
               'variant': 'caption',
+              'name': 'phone',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -643,11 +652,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ContactCreate',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Contact',
-          'icon': 'plus-circle',
-          'mode': 'create',
           'fields': [
             'name',
             'company',
@@ -656,6 +662,9 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             'email',
             'phone',
           ],
+          'title': 'New Contact',
+          'icon': 'plus-circle',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -674,8 +683,9 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ContactEdit',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
           'title': 'Edit Contact',
           'fields': [
             'name',
@@ -685,7 +695,6 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             'email',
             'phone',
           ],
-          'mode': 'edit',
           'icon': 'edit',
         },
         'events': {
@@ -705,10 +714,11 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ContactView',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
           'icon': 'eye',
+          'title': 'View Contact',
           'fields': [
             'name',
             'company',
@@ -717,7 +727,6 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             'email',
             'phone',
           ],
-          'title': 'View Contact',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -736,16 +745,16 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ContactDelete',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Delete',
           'title': 'Delete Contact',
           'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1025,18 +1034,18 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'direction': 'horizontal',
-                    'type': 'stack',
                     'gap': 'sm',
+                    'direction': 'horizontal',
                     'children': [
                       {
-                        'action': 'SEND_EMAIL',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'action': 'SEND_EMAIL',
                         'label': 'Email Contact',
+                        'variant': 'ghost',
                         'icon': 'mail',
                       },
                     ],
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1051,8 +1060,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'email',
                   'send',
                   {
-                    'subject': 'Hello from CRM',
                     'body': 'Reaching out from your account team.',
+                    'subject': 'Hello from CRM',
                     'recipient': 'contact@example.com',
                     'sender': 'noreply@crm.example',
                   },
@@ -1125,7 +1134,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1137,6 +1146,10 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1160,7 +1173,9 @@ export const StdCrmContactOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ContactAppLayout',
@@ -1198,20 +1213,23 @@ export function isStdCrmContactOrbitalParams(p: object): p is StdCrmContactOrbit
 /**
  * Tunable params for the DealOrbital orbital.
  *
- * Canonical entity: Deal (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Deal — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCrmDealOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1220,22 +1238,28 @@ export interface StdCrmDealOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'DealAppLayout' | 'DealBrowseList' | 'DealCreate' | 'DealEdit' | 'DealView' | 'DealDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the DealOrbital orbital with consumer params. */
 export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Deal';
+  const canonicalName = params.entityName ?? 'Deal';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'deals');
   const built = makeOrbitalWithUses({
     name: 'DealOrbital',
     uses: [
@@ -1258,7 +1282,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
     ],
     entity: {
       name: canonicalName,
-      collection: 'deals',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1316,24 +1340,22 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'DealAppLayout',
-        'linkedEntity': 'Deal',
+        'linkedEntity': canonicalName,
         'config': {
-          'appName': 'CRM',
-          'topBarActions': [],
           'navItems': [
             {
-              'icon': 'users',
               'label': 'Contacts',
+              'icon': 'users',
               'href': '/contacts',
             },
             {
-              'icon': 'briefcase',
               'label': 'Deals',
+              'icon': 'briefcase',
               'href': '/deals',
             },
             {
-              'label': 'Pipeline',
               'icon': 'bar-chart-2',
+              'label': 'Pipeline',
               'href': '/pipeline',
             },
             {
@@ -1343,8 +1365,10 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             },
           ],
           'contentTrait': '@trait.DealCatalog',
-          'notifications': [],
           'searchEvent': 'DEAL_SEARCH',
+          'topBarActions': [],
+          'appName': 'CRM',
+          'notifications': [],
           'notificationClickEvent': 'DEAL_NOTIFICATIONS_OPEN',
         },
         'events': {
@@ -1394,47 +1418,46 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
+                        'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'name': 'briefcase',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Deals',
+                                'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
                             'type': 'stack',
                           },
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'action': 'CREATE',
+                                'type': 'button',
                                 'icon': 'plus',
                                 'label': 'New Deal',
-                                'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'gap': 'md',
-                        'justify': 'between',
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'gap': 'md',
                         'type': 'stack',
                       },
                       {
@@ -1443,6 +1466,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
                       '@trait.DealBrowseList',
                     ],
                     'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1454,55 +1478,55 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'DealBrowseList',
-        'linkedEntity': 'Deal',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 2,
+          'variant': 'card',
+          'gap': 'md',
           'itemActions': [
             {
-              'label': 'View',
               'variant': 'ghost',
               'event': 'VIEW',
+              'label': 'View',
             },
             {
+              'variant': 'ghost',
               'label': 'Edit',
               'event': 'EDIT',
-              'variant': 'ghost',
             },
             {
+              'label': 'Delete',
               'variant': 'danger',
               'event': 'DELETE',
-              'label': 'Delete',
             },
           ],
           'fields': [
             {
-              'name': 'title',
-              'icon': 'briefcase',
               'variant': 'h3',
+              'icon': 'briefcase',
+              'name': 'title',
             },
             {
-              'variant': 'badge',
               'name': 'stage',
+              'variant': 'badge',
             },
             {
-              'variant': 'h4',
               'name': 'amount',
               'format': 'currency',
+              'variant': 'h4',
             },
             {
-              'variant': 'caption',
               'name': 'contactId',
               'label': 'Contact',
+              'variant': 'caption',
             },
             {
               'variant': 'caption',
-              'format': 'date',
               'name': 'closedAt',
+              'format': 'date',
               'label': 'Closed At',
             },
           ],
-          'gap': 'md',
-          'variant': 'card',
+          'cols': 2,
         },
         'listens': [
           {
@@ -1534,9 +1558,11 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'DealCreate',
-        'linkedEntity': 'Deal',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Deal',
           'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'contactId',
@@ -1544,8 +1570,6 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             'stage',
             'closedAt',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Deal',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1564,10 +1588,11 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'DealEdit',
-        'linkedEntity': 'Deal',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'edit',
           'title': 'Edit Deal',
+          'mode': 'edit',
           'fields': [
             'title',
             'contactId',
@@ -1575,7 +1600,6 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             'stage',
             'closedAt',
           ],
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1594,8 +1618,11 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'DealView',
-        'linkedEntity': 'Deal',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
+          'title': 'View Deal',
+          'mode': 'edit',
           'fields': [
             'title',
             'contactId',
@@ -1603,9 +1630,6 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             'stage',
             'closedAt',
           ],
-          'icon': 'eye',
-          'title': 'View Deal',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1624,12 +1648,12 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'DealDelete',
-        'linkedEntity': 'Deal',
+        'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
-          'title': 'Delete Deal',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Deal',
+          'icon': 'alert-triangle',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -1865,7 +1889,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1877,6 +1901,10 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1900,7 +1928,9 @@ export const StdCrmDealOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'DealAppLayout',
@@ -1933,20 +1963,23 @@ export function isStdCrmDealOrbitalParams(p: object): p is StdCrmDealOrbitalPara
 /**
  * Tunable params for the PipelineOrbital orbital.
  *
- * Canonical entity: Pipeline (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Pipeline — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCrmPipelineOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1955,22 +1988,26 @@ export interface StdCrmPipelineOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'PipelineAppLayout',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the PipelineOrbital orbital with consumer params. */
 export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Pipeline';
+  const canonicalName = params.entityName ?? 'Pipeline';
   const built = makeOrbitalWithUses({
     name: 'PipelineOrbital',
     uses: [
@@ -2025,24 +2062,25 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PipelineAppLayout',
-        'linkedEntity': 'Pipeline',
+        'linkedEntity': canonicalName,
         'config': {
-          'appName': 'CRM',
+          'topBarActions': [],
+          'notifications': [],
           'navItems': [
             {
-              'label': 'Contacts',
               'icon': 'users',
+              'label': 'Contacts',
               'href': '/contacts',
             },
             {
+              'href': '/deals',
               'label': 'Deals',
               'icon': 'briefcase',
-              'href': '/deals',
             },
             {
+              'label': 'Pipeline',
               'href': '/pipeline',
               'icon': 'bar-chart-2',
-              'label': 'Pipeline',
             },
             {
               'icon': 'file-text',
@@ -2050,10 +2088,9 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
               'href': '/notes',
             },
           ],
-          'topBarActions': [],
           'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
-          'notifications': [],
           'contentTrait': '@trait.PipelineDisplay',
+          'appName': 'CRM',
           'searchEvent': 'PIPELINE_SEARCH',
         },
         'events': {
@@ -2173,8 +2210,8 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
                   'Pipeline',
                   {
                     'emit': {
-                      'success': 'PipelineLoaded',
                       'failure': 'PipelineLoadFailed',
+                      'success': 'PipelineLoaded',
                     },
                   },
                 ],
@@ -2184,51 +2221,53 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
                   {
                     'children': [
                       {
+                        'align': 'center',
+                        'direction': 'horizontal',
                         'gap': 'md',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'name': 'bar-chart-2',
-                                'type': 'icon',
-                              },
-                              {
-                                'content': 'Pipeline',
-                                'variant': 'h2',
-                                'type': 'typography',
-                              },
-                            ],
+                            'align': 'center',
                             'type': 'stack',
                             'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'bar-chart-2',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Pipeline',
+                              },
+                            ],
                             'gap': 'sm',
-                            'align': 'center',
                           },
                           {
-                            'variant': 'secondary',
-                            'type': 'button',
-                            'icon': 'rotate-ccw',
-                            'action': 'REFRESH',
                             'label': 'Refresh',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'action': 'REFRESH',
+                            'variant': 'secondary',
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'horizontal',
                         'justify': 'between',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'simple-grid',
+                        'cols': 4,
                         'children': [
                           {
-                            'type': 'stat-display',
                             'value': '@entity.totalDeals',
+                            'type': 'stat-display',
                             'label': 'Total Deals',
                           },
                           {
-                            'label': 'Pipeline Value',
                             'value': '@entity.totalValue',
+                            'label': 'Pipeline Value',
                             'type': 'stat-display',
                             'format': 'currency',
                           },
@@ -2244,12 +2283,10 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
                             'label': 'Conversion Rate',
                           },
                         ],
-                        'type': 'simple-grid',
-                        'cols': 4,
                       },
                     ],
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -2265,8 +2302,8 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
                   'Pipeline',
                   {
                     'emit': {
-                      'success': 'PipelineLoaded',
                       'failure': 'PipelineLoadFailed',
+                      'success': 'PipelineLoaded',
                     },
                   },
                 ],
@@ -2294,7 +2331,7 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2306,6 +2343,10 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2329,7 +2370,9 @@ export const StdCrmPipelineOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'PipelineAppLayout',
@@ -2356,20 +2399,23 @@ export function isStdCrmPipelineOrbitalParams(p: object): p is StdCrmPipelineOrb
 /**
  * Tunable params for the NoteOrbital orbital.
  *
- * Canonical entity: Note (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Note — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdCrmNoteOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2378,22 +2424,28 @@ export interface StdCrmNoteOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'NoteAppLayout' | 'NoteBrowseList' | 'NoteCalendar' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the NoteOrbital orbital with consumer params. */
 export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Note';
+  const canonicalName = params.entityName ?? 'Note';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'notes');
   const built = makeOrbitalWithUses({
     name: 'NoteOrbital',
     uses: [
@@ -2420,7 +2472,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
     ],
     entity: {
       name: canonicalName,
-      collection: 'notes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2480,40 +2532,40 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'NoteAppLayout',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
-          'topBarActions': [],
           'notifications': [],
-          'appName': 'CRM',
           'contentTrait': '@trait.NoteCatalog',
-          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'label': 'Contacts',
               'href': '/contacts',
               'icon': 'users',
-              'label': 'Contacts',
             },
             {
-              'href': '/deals',
               'icon': 'briefcase',
+              'href': '/deals',
               'label': 'Deals',
             },
             {
-              'icon': 'bar-chart-2',
               'href': '/pipeline',
               'label': 'Pipeline',
+              'icon': 'bar-chart-2',
             },
             {
               'href': '/notes',
-              'icon': 'file-text',
               'label': 'Notes',
+              'icon': 'file-text',
             },
           ],
           'searchEvent': 'NOTE_SEARCH',
+          'appName': 'CRM',
+          'topBarActions': [],
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'NOTE_SEARCH',
           'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'NOTE_SEARCH',
         },
       }),
       {
@@ -2558,56 +2610,57 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'file-text',
                                 'type': 'icon',
+                                'name': 'file-text',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Notes',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
+                                'icon': 'edit',
                                 'label': 'New Note',
                                 'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'edit',
                                 'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
-                            'type': 'stack',
                             'direction': 'horizontal',
                           },
                         ],
                         'gap': 'md',
+                        'align': 'center',
+                        'direction': 'horizontal',
                         'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'content': 'Follow-Up Calendar',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'Follow-Up Calendar',
                       },
                       '@trait.NoteCalendar',
                       {
@@ -2615,7 +2668,6 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
                       },
                       '@trait.NoteBrowseList',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -2627,23 +2679,25 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'NoteBrowseList',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
+          'gap': 'sm',
           'itemActions': [
             {
-              'variant': 'ghost',
-              'event': 'VIEW',
               'label': 'View',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
+              'event': 'VIEW',
               'variant': 'ghost',
             },
             {
-              'label': 'Delete',
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
           'fields': [
@@ -2657,25 +2711,23 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'author',
+              'variant': 'caption',
             },
             {
-              'format': 'date',
+              'name': 'followUpAt',
               'label': 'Follow-Up',
               'variant': 'caption',
-              'name': 'followUpAt',
+              'format': 'date',
             },
             {
-              'label': 'Created',
-              'variant': 'caption',
-              'format': 'date',
               'name': 'createdAt',
+              'label': 'Created',
+              'format': 'date',
+              'variant': 'caption',
             },
           ],
-          'cols': 1,
           'variant': 'card',
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -2707,19 +2759,18 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'NoteCalendar',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
-          'colorField': 'priority',
-          'dateField': 'followUpAt',
           'titleField': 'subject',
+          'dateField': 'followUpAt',
+          'colorField': 'priority',
         },
       }),
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'NoteCreate',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'mode': 'create',
           'title': 'New Note',
           'fields': [
@@ -2729,6 +2780,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
             'priority',
             'followUpAt',
           ],
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2747,8 +2799,9 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'NoteEdit',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
           'fields': [
             'subject',
             'body',
@@ -2756,9 +2809,8 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
             'priority',
             'followUpAt',
           ],
-          'icon': 'edit',
-          'mode': 'edit',
           'title': 'Edit Note',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2777,8 +2829,11 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'NoteView',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Note',
+          'mode': 'edit',
+          'icon': 'eye',
           'fields': [
             'subject',
             'body',
@@ -2786,9 +2841,6 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
             'priority',
             'followUpAt',
           ],
-          'icon': 'eye',
-          'title': 'View Note',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2807,16 +2859,16 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'NoteDelete',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Note',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Note',
           'icon': 'alert-triangle',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -3051,7 +3103,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3063,6 +3115,10 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3086,7 +3142,9 @@ export const StdCrmNoteOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'NoteAppLayout',

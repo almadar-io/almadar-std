@@ -39,12 +39,12 @@ export type StdDashboardGridLayoutEventKey = 'INIT';
  */
 export interface StdDashboardGridLayoutConfig {
   graphsTrait?: TraitFieldRef;
-  statsTrait?: TraitFieldRef;
   /** Default: `"Dashboard"` */
   appName?: string;
+  feedTrait?: TraitFieldRef;
   /** Default: `[{"icon":"bar-chart-3","href":"/dashboard","label":"Dashboard"}]` */
   navItems?: TraitConfig[];
-  feedTrait?: TraitFieldRef;
+  statsTrait?: TraitFieldRef;
 }
 
 /**

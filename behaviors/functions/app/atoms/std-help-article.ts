@@ -29,37 +29,30 @@ const ALIAS = 'HelpArticle';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdHelpArticleEventKey = 'ARCHIVE' | 'CREATE' | 'EDIT' | 'FILTER_CATEGORY' | 'FILTER_STATUS' | 'HelpArticleLoadFailed' | 'HelpArticleLoaded' | 'INIT' | 'PUBLISH' | 'REFRESH' | 'REQUEST_DELETE' | 'SEARCH' | 'VIEW';
+export type StdHelpArticleEventKey = 'ARCHIVE' | 'CLOSE_VIEW' | 'HelpArticleLoadFailed' | 'HelpArticleLoaded' | 'INIT' | 'OPEN_ARTICLE' | 'PUBLISH';
 
 /**
- * Payload shape for the `VIEW` event.
+ * Payload shape for the `OPEN_ARTICLE` event.
  */
-export interface StdHelpArticleViewPayload {
+export interface StdHelpArticleOpenArticlePayload {
   id: string;
-  source?: string;
-}
-
-/**
- * Payload shape for the `EDIT` event.
- */
-export interface StdHelpArticleEditPayload {
-  id: string;
-  source?: string;
-}
-
-/**
- * Payload shape for the `CREATE` event.
- */
-export interface StdHelpArticleCreatePayload {
-  source?: string;
-}
-
-/**
- * Payload shape for the `REQUEST_DELETE` event.
- */
-export interface StdHelpArticleRequestDeletePayload {
-  id: string;
-  source?: string;
+  row?: {
+    id: string;
+    title: string;
+    slug: string;
+    body?: string;
+    summary?: string;
+    categoryId?: string;
+    categoryName?: string;
+    author?: string;
+    status?: string;
+    viewCount?: number;
+    helpfulCount?: number;
+    notHelpfulCount?: number;
+    publishedAt?: string;
+    updatedAt?: string;
+    pendingId?: string;
+  };
 }
 
 /**
@@ -67,23 +60,6 @@ export interface StdHelpArticleRequestDeletePayload {
  */
 export interface StdHelpArticlePublishPayload {
   id: string;
-  row?: {
-    id: string;
-    title: string;
-    slug: string;
-    body?: string;
-    summary?: string;
-    categoryId?: string;
-    categoryName?: string;
-    author?: string;
-    status?: string;
-    viewCount?: number;
-    helpfulCount?: number;
-    notHelpfulCount?: number;
-    publishedAt?: string;
-    updatedAt?: string;
-    pendingId?: string;
-  };
 }
 
 /**
@@ -91,23 +67,6 @@ export interface StdHelpArticlePublishPayload {
  */
 export interface StdHelpArticleArchivePayload {
   id: string;
-  row?: {
-    id: string;
-    title: string;
-    slug: string;
-    body?: string;
-    summary?: string;
-    categoryId?: string;
-    categoryName?: string;
-    author?: string;
-    status?: string;
-    viewCount?: number;
-    helpfulCount?: number;
-    notHelpfulCount?: number;
-    publishedAt?: string;
-    updatedAt?: string;
-    pendingId?: string;
-  };
 }
 
 /**

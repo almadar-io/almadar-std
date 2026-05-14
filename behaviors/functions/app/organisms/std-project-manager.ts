@@ -37,20 +37,23 @@ export interface StdProjectManagerConfig {
 /**
  * Tunable params for the TaskOrbital orbital.
  *
- * Canonical entity: Task (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Task — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdProjectManagerTaskOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdProjectManagerTaskOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TaskAppLayout' | 'TaskSearch' | 'TaskFilter' | 'TaskStats' | 'TaskGraphs' | 'TaskCalendar' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TaskOrbital orbital with consumer params. */
 export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Task';
+  const canonicalName = params.entityName ?? 'Task';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'tasks');
   const built = makeOrbitalWithUses({
     name: 'TaskOrbital',
     uses: [
@@ -121,7 +130,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'tasks',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -199,28 +208,28 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TaskAppLayout',
         'config': {
-          'searchEvent': 'TASK_SEARCH',
           'notifications': [],
+          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.TaskCatalog',
+          'appName': 'ProjectManagerApp',
           'navItems': [
             {
+              'label': 'Tasks',
               'href': '/tasks',
               'icon': 'list-todo',
-              'label': 'Tasks',
             },
             {
               'icon': 'zap',
-              'href': '/sprints',
               'label': 'Sprints',
+              'href': '/sprints',
             },
             {
-              'icon': 'trending-down',
-              'href': '/burndown',
               'label': 'Burndown',
+              'href': '/burndown',
+              'icon': 'trending-down',
             },
           ],
-          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
-          'appName': 'ProjectManagerApp',
+          'searchEvent': 'TASK_SEARCH',
         },
         'events': {
           'SEARCH': 'TASK_SEARCH',
@@ -307,62 +316,61 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'gap': 'lg',
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
                         'align': 'center',
+                        'gap': 'md',
                         'children': [
                           {
                             'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'name': 'list-todo',
                                 'type': 'icon',
                               },
                               {
+                                'content': 'Tasks',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Tasks',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'type': 'stack',
                           },
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'icon': 'plus',
-                                'variant': 'primary',
-                                'action': 'CREATE',
                                 'label': 'New Task',
+                                'variant': 'primary',
                                 'type': 'button',
+                                'icon': 'plus',
+                                'action': 'CREATE',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'md',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           '@trait.TaskSearch',
                           '@trait.TaskFilter',
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'align': 'center',
                       },
                       '@trait.TaskStats',
                       '@trait.TaskGraphs',
@@ -372,6 +380,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                       },
                       '@trait.TaskBrowseList',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -390,33 +399,33 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-8',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
-                        'color': 'muted',
                         'content': 'You\'re all caught up.',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                       {
-                        'action': 'INIT',
                         'type': 'button',
-                        'label': 'Back to tasks',
                         'variant': 'ghost',
+                        'action': 'INIT',
+                        'label': 'Back to tasks',
                       },
                     ],
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'className': 'py-8',
                     'type': 'stack',
                   },
                 ],
@@ -430,68 +439,67 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'TaskSearch',
         'config': {
-          'event': 'TASK_SEARCH',
           'placeholder': 'Search tasks…',
+          'event': 'TASK_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'TaskFilter',
         'config': {
+          'event': 'TASK_FILTER',
           'filters': [
             {
-              'field': 'status',
-              'label': 'Status',
               'options': [
                 'todo',
                 'in-progress',
                 'review',
                 'done',
               ],
+              'field': 'status',
               'filterType': 'select',
+              'label': 'Status',
             },
             {
               'filterType': 'text',
-              'label': 'Assignee',
               'field': 'assignee',
+              'label': 'Assignee',
             },
             {
-              'filterType': 'select',
+              'field': 'priority',
               'label': 'Priority',
+              'filterType': 'select',
               'options': [
                 'low',
                 'medium',
                 'high',
                 'critical',
               ],
-              'field': 'priority',
             },
             {
               'filterType': 'text',
-              'field': 'sprint',
               'label': 'Sprint',
+              'field': 'sprint',
             },
           ],
-          'event': 'TASK_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'TaskStats',
         'config': {
-          'title': 'Tasks',
           'metrics': [
             {
-              'aggregation': 'count',
               'format': 'number',
+              'aggregation': 'count',
+              'icon': 'list-todo',
               'variant': 'primary',
               'label': 'Total',
-              'icon': 'list-todo',
             },
             {
-              'format': 'number',
-              'label': 'Todo',
               'variant': 'muted',
+              'format': 'number',
+              'icon': 'circle',
               'filter': [
                 'fn',
                 'row',
@@ -501,15 +509,11 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'todo',
                 ],
               ],
-              'icon': 'circle',
               'aggregation': 'count',
+              'label': 'Todo',
             },
             {
-              'aggregation': 'count',
-              'icon': 'loader',
               'label': 'In Progress',
-              'variant': 'warning',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -519,8 +523,13 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'in-progress',
                 ],
               ],
+              'aggregation': 'count',
+              'icon': 'loader',
+              'format': 'number',
+              'variant': 'warning',
             },
             {
+              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -530,14 +539,16 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'done',
                 ],
               ],
+              'variant': 'success',
               'format': 'number',
               'icon': 'check-circle',
               'label': 'Done',
-              'aggregation': 'count',
-              'variant': 'success',
             },
             {
               'aggregation': 'count',
+              'icon': 'alert-octagon',
+              'label': 'Critical',
+              'variant': 'danger',
               'format': 'number',
               'filter': [
                 'fn',
@@ -548,11 +559,9 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'critical',
                 ],
               ],
-              'variant': 'danger',
-              'icon': 'alert-octagon',
-              'label': 'Critical',
             },
           ],
+          'title': 'Tasks',
         },
         'listens': [
           {
@@ -569,13 +578,13 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'TaskGraphs',
         'config': {
-          'aggregation': 'count',
-          'chartType': 'bar',
           'categoryField': 'status',
-          'height': 240,
-          'showLegend': false,
-          'subtitle': 'Workload distribution across status buckets',
+          'chartType': 'bar',
           'title': 'Tasks by Status',
+          'aggregation': 'count',
+          'showLegend': false,
+          'height': 240,
+          'subtitle': 'Workload distribution across status buckets',
         },
         'listens': [
           {
@@ -591,17 +600,17 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'TaskCalendar',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
+          'titleField': 'title',
           'dateField': 'dueDate',
           'colorField': 'priority',
-          'titleField': 'title',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TaskBrowseList',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
           'gap': 'sm',
           'fields': [
@@ -623,26 +632,26 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
               'variant': 'badge',
             },
             {
-              'name': 'dueDate',
               'variant': 'caption',
               'format': 'date',
+              'name': 'dueDate',
               'label': 'Due',
             },
           ],
           'itemActions': [
             {
               'label': 'View',
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
               'event': 'EDIT',
-              'label': 'Edit',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'label': 'Delete',
               'variant': 'danger',
+              'label': 'Delete',
               'event': 'DELETE',
             },
           ],
@@ -694,11 +703,11 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TaskCreate',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Task',
-          'mode': 'create',
           'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Task',
           'fields': [
             'title',
             'description',
@@ -727,7 +736,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TaskEdit',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -739,9 +748,9 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
             'storyPoints',
             'dueDate',
           ],
-          'mode': 'edit',
-          'title': 'Edit Task',
           'icon': 'edit',
+          'title': 'Edit Task',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -760,8 +769,11 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TaskView',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Task',
+          'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'title',
             'description',
@@ -772,9 +784,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
             'storyPoints',
             'dueDate',
           ],
-          'icon': 'eye',
-          'mode': 'edit',
-          'title': 'View Task',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -793,16 +802,16 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'TaskDelete',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'title': 'Delete Task',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1049,7 +1058,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1061,6 +1070,10 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1084,7 +1097,9 @@ export const StdProjectManagerTaskOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TaskAppLayout',
@@ -1122,20 +1137,23 @@ export function isStdProjectManagerTaskOrbitalParams(p: object): p is StdProject
 /**
  * Tunable params for the SprintOrbital orbital.
  *
- * Canonical entity: Sprint (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Sprint — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdProjectManagerSprintOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1144,22 +1162,28 @@ export interface StdProjectManagerSprintOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'SprintAppLayout' | 'SprintBrowseList' | 'SprintCreate' | 'SprintEdit' | 'SprintView' | 'SprintDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the SprintOrbital orbital with consumer params. */
 export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Sprint';
+  const canonicalName = params.entityName ?? 'Sprint';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'sprints');
   const built = makeOrbitalWithUses({
     name: 'SprintOrbital',
     uses: [
@@ -1182,7 +1206,7 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
     ],
     entity: {
       name: canonicalName,
-      collection: 'sprints',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1242,30 +1266,30 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'SprintAppLayout',
-        'linkedEntity': 'Sprint',
+        'linkedEntity': canonicalName,
         'config': {
-          'notifications': [],
-          'searchEvent': 'SPRINT_SEARCH',
           'appName': 'ProjectManagerApp',
+          'searchEvent': 'SPRINT_SEARCH',
           'notificationClickEvent': 'SPRINT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.SprintCatalog',
           'navItems': [
             {
-              'href': '/tasks',
               'label': 'Tasks',
+              'href': '/tasks',
               'icon': 'list-todo',
             },
             {
               'href': '/sprints',
-              'label': 'Sprints',
               'icon': 'zap',
+              'label': 'Sprints',
             },
             {
+              'icon': 'trending-down',
               'label': 'Burndown',
               'href': '/burndown',
-              'icon': 'trending-down',
             },
           ],
-          'contentTrait': '@trait.SprintCatalog',
+          'notifications': [],
         },
         'events': {
           'NOTIFY_CLICK': 'SPRINT_NOTIFICATIONS_OPEN',
@@ -1314,13 +1338,13 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
                   'render-ui',
                   'main',
                   {
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'type': 'stack',
+                    'gap': 'lg',
                     'direction': 'vertical',
                     'children': [
                       {
-                        'justify': 'between',
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
                             'direction': 'horizontal',
@@ -1328,42 +1352,42 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
                             'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'zap',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                                 'content': 'Sprints',
                               },
                             ],
                             'type': 'stack',
                           },
                           {
+                            'type': 'stack',
                             'gap': 'sm',
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'button',
-                                'label': 'New Sprint',
-                                'icon': 'plus',
                                 'variant': 'primary',
                                 'action': 'CREATE',
+                                'label': 'New Sprint',
+                                'icon': 'plus',
+                                'type': 'button',
                               },
                             ],
                           },
                         ],
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.SprintBrowseList',
                     ],
-                    'type': 'stack',
-                    'className': 'max-w-5xl mx-auto w-full',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1375,23 +1399,23 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'SprintBrowseList',
-        'linkedEntity': 'Sprint',
+        'linkedEntity': canonicalName,
         'config': {
           'itemActions': [
             {
-              'event': 'VIEW',
               'variant': 'ghost',
+              'event': 'VIEW',
               'label': 'View',
             },
             {
+              'variant': 'ghost',
               'label': 'Edit',
               'event': 'EDIT',
-              'variant': 'ghost',
             },
             {
+              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
-              'label': 'Delete',
             },
           ],
           'cols': 1,
@@ -1399,8 +1423,8 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
           'fields': [
             {
               'icon': 'zap',
-              'variant': 'h3',
               'name': 'name',
+              'variant': 'h3',
             },
             {
               'name': 'status',
@@ -1411,22 +1435,22 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
               'name': 'goal',
             },
             {
-              'name': 'startDate',
-              'format': 'date',
               'label': 'Start',
-              'variant': 'caption',
-            },
-            {
               'format': 'date',
-              'name': 'endDate',
-              'label': 'End',
               'variant': 'caption',
+              'name': 'startDate',
             },
             {
+              'variant': 'caption',
+              'name': 'endDate',
+              'format': 'date',
+              'label': 'End',
+            },
+            {
+              'format': 'number',
               'variant': 'body',
               'name': 'taskCount',
               'label': 'Tasks',
-              'format': 'number',
             },
           ],
         },
@@ -1460,10 +1484,8 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SprintCreate',
-        'linkedEntity': 'Sprint',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'mode': 'create',
           'fields': [
             'name',
             'startDate',
@@ -1473,6 +1495,8 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
             'taskCount',
           ],
           'title': 'New Sprint',
+          'icon': 'plus-circle',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1491,10 +1515,9 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SprintEdit',
-        'linkedEntity': 'Sprint',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'title': 'Edit Sprint',
+          'icon': 'edit',
           'fields': [
             'name',
             'startDate',
@@ -1503,7 +1526,8 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
             'status',
             'taskCount',
           ],
-          'icon': 'edit',
+          'title': 'Edit Sprint',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1522,8 +1546,10 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SprintView',
-        'linkedEntity': 'Sprint',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Sprint',
+          'icon': 'eye',
           'mode': 'edit',
           'fields': [
             'name',
@@ -1533,8 +1559,6 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
             'status',
             'taskCount',
           ],
-          'title': 'View Sprint',
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1553,11 +1577,11 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'SprintDelete',
-        'linkedEntity': 'Sprint',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'Delete Sprint',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
@@ -1794,7 +1818,7 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1806,6 +1830,10 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1829,7 +1857,9 @@ export const StdProjectManagerSprintOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'SprintAppLayout',
@@ -1862,20 +1892,23 @@ export function isStdProjectManagerSprintOrbitalParams(p: object): p is StdProje
 /**
  * Tunable params for the BurndownOrbital orbital.
  *
- * Canonical entity: Burndown (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Burndown — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdProjectManagerBurndownOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1884,22 +1917,26 @@ export interface StdProjectManagerBurndownOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'BurndownAppLayout',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BurndownOrbital orbital with consumer params. */
 export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndownOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Burndown';
+  const canonicalName = params.entityName ?? 'Burndown';
   const built = makeOrbitalWithUses({
     name: 'BurndownOrbital',
     uses: [
@@ -1954,34 +1991,34 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BurndownAppLayout',
-        'linkedEntity': 'Burndown',
+        'linkedEntity': canonicalName,
         'config': {
-          'appName': 'ProjectManagerApp',
-          'notifications': [],
           'notificationClickEvent': 'BURNDOWN_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.BurndownDisplay',
+          'searchEvent': 'BURNDOWN_SEARCH',
+          'appName': 'ProjectManagerApp',
           'navItems': [
             {
+              'label': 'Tasks',
               'href': '/tasks',
               'icon': 'list-todo',
-              'label': 'Tasks',
             },
             {
-              'label': 'Sprints',
               'href': '/sprints',
+              'label': 'Sprints',
               'icon': 'zap',
             },
             {
+              'label': 'Burndown',
               'href': '/burndown',
               'icon': 'trending-down',
-              'label': 'Burndown',
             },
           ],
-          'searchEvent': 'BURNDOWN_SEARCH',
-          'contentTrait': '@trait.BurndownDisplay',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'BURNDOWN_SEARCH',
           'NOTIFY_CLICK': 'BURNDOWN_NOTIFICATIONS_OPEN',
+          'SEARCH': 'BURNDOWN_SEARCH',
         },
       }),
       {
@@ -2116,38 +2153,37 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'className': 'max-w-6xl mx-auto w-full',
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full',
+                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'align': 'center',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'trending-down',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Burndown',
                             'variant': 'h2',
+                            'type': 'typography',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cols': 5,
                         'children': [
                           {
-                            'value': '@entity.totalPoints',
-                            'type': 'stat-display',
                             'label': 'Total Points',
+                            'type': 'stat-display',
+                            'value': '@entity.totalPoints',
                             'icon': 'target',
                           },
                           {
@@ -2157,35 +2193,35 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                             'icon': 'check-circle',
                           },
                           {
+                            'type': 'stat-display',
+                            'icon': 'circle',
                             'label': 'Remaining',
                             'value': '@entity.remainingPoints',
-                            'icon': 'circle',
-                            'type': 'stat-display',
                           },
                           {
-                            'value': '@entity.velocity',
-                            'label': 'Velocity',
-                            'type': 'stat-display',
                             'icon': 'zap',
+                            'type': 'stat-display',
+                            'label': 'Velocity',
+                            'value': '@entity.velocity',
                           },
                           {
+                            'type': 'stat-display',
                             'value': '@entity.daysRemaining',
                             'icon': 'calendar',
-                            'type': 'stat-display',
                             'label': 'Days Remaining',
                           },
                         ],
+                        'cols': 5,
                         'type': 'simple-grid',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'line-chart',
                         'data': [
                           {
-                            'value': 100,
                             'date': 'Day 1',
+                            'value': 100,
                           },
                           {
                             'date': 'Day 2',
@@ -2196,16 +2232,16 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                             'value': 85,
                           },
                           {
-                            'date': 'Day 4',
                             'value': 70,
+                            'date': 'Day 4',
                           },
                           {
                             'date': 'Day 5',
                             'value': 60,
                           },
                           {
-                            'value': 45,
                             'date': 'Day 6',
+                            'value': 45,
                           },
                           {
                             'date': 'Day 7',
@@ -2216,34 +2252,35 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                             'date': 'Day 8',
                           },
                         ],
+                        'type': 'line-chart',
                       },
                       {
+                        'type': 'chart-legend',
                         'items': [
                           {
                             'label': 'Remaining points',
                             'color': 'primary',
                           },
                           {
-                            'label': 'Ideal burndown',
                             'color': 'muted',
+                            'label': 'Ideal burndown',
                           },
                         ],
-                        'type': 'chart-legend',
                       },
                       {
-                        'direction': 'horizontal',
-                        'justify': 'end',
+                        'type': 'stack',
                         'children': [
                           {
-                            'action': 'REFRESH',
+                            'type': 'button',
                             'icon': 'refresh-cw',
                             'label': 'Refresh',
                             'variant': 'secondary',
-                            'type': 'button',
+                            'action': 'REFRESH',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'justify': 'end',
                       },
                     ],
                   },
@@ -2294,7 +2331,7 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2306,6 +2343,10 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2329,7 +2370,9 @@ export const StdProjectManagerBurndownOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'BurndownAppLayout',

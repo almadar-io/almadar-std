@@ -29,37 +29,26 @@ const ALIAS = 'NpsSurvey';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdNpsSurveyEventKey = 'CREATE' | 'EDIT' | 'FILTER_CATEGORY' | 'FILTER_STATUS' | 'INIT' | 'MARK_FOLLOWED_UP' | 'NpsSurveyLoadFailed' | 'NpsSurveyLoaded' | 'REFRESH' | 'REQUEST_DELETE' | 'SEARCH' | 'VIEW';
+export type StdNpsSurveyEventKey = 'CLOSE_VIEW' | 'INIT' | 'MARK_FOLLOWED_UP' | 'NpsSurveyLoadFailed' | 'NpsSurveyLoaded' | 'OPEN_SURVEY';
 
 /**
- * Payload shape for the `VIEW` event.
+ * Payload shape for the `OPEN_SURVEY` event.
  */
-export interface StdNpsSurveyViewPayload {
+export interface StdNpsSurveyOpenSurveyPayload {
   id: string;
-  source?: string;
-}
-
-/**
- * Payload shape for the `EDIT` event.
- */
-export interface StdNpsSurveyEditPayload {
-  id: string;
-  source?: string;
-}
-
-/**
- * Payload shape for the `CREATE` event.
- */
-export interface StdNpsSurveyCreatePayload {
-  source?: string;
-}
-
-/**
- * Payload shape for the `REQUEST_DELETE` event.
- */
-export interface StdNpsSurveyRequestDeletePayload {
-  id: string;
-  source?: string;
+  row?: {
+    id: string;
+    customerId: string;
+    customerName?: string;
+    score?: number;
+    category?: string;
+    comment?: string;
+    surveyedAt: string;
+    channel?: string;
+    status?: string;
+    followedUp?: boolean;
+    pendingId?: string;
+  };
 }
 
 /**
@@ -67,7 +56,6 @@ export interface StdNpsSurveyRequestDeletePayload {
  */
 export interface StdNpsSurveyMarkFollowedUpPayload {
   id: string;
-  source?: string;
 }
 
 /**

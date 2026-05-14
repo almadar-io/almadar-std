@@ -100,10 +100,10 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `""` */
-  threadRootId?: string;
   /** Default: `false` */
   flat?: boolean;
+  /** Default: `""` */
+  threadRootId?: string;
 }
 
 /**

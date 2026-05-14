@@ -30,257 +30,2453 @@ const ALIAS = 'TimeTracking';
  * without modifying its state-machine topology.
  */
 export interface StdTimeTrackingConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
- * Params for the std-time-tracking descriptor helpers.
+ * Tunable params for the EmployeeOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Employee — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdTimeTrackingParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdTimeTrackingEmployeeOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdTimeTrackingConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'EmployeeAppLayout' | 'EmployeeSearch' | 'EmployeeFilter' | 'EmployeeStats' | 'EmployeeGraphs' | 'EmployeeBrowseList' | 'EmployeeCreate' | 'EmployeeEdit' | 'EmployeeView' | 'EmployeeDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `TimeTracking.traits.EmployeeAppLayout`. */
-export function stdTimeTrackingEmployeeAppLayoutTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeCatalog`. */
-export function stdTimeTrackingEmployeeCatalogTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeSearch`. */
-export function stdTimeTrackingEmployeeSearchTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeFilter`. */
-export function stdTimeTrackingEmployeeFilterTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeStats`. */
-export function stdTimeTrackingEmployeeStatsTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeGraphs`. */
-export function stdTimeTrackingEmployeeGraphsTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeBrowseList`. */
-export function stdTimeTrackingEmployeeBrowseListTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeCreate`. */
-export function stdTimeTrackingEmployeeCreateTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeEdit`. */
-export function stdTimeTrackingEmployeeEditTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeView`. */
-export function stdTimeTrackingEmployeeViewTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeeDelete`. */
-export function stdTimeTrackingEmployeeDeleteTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeeDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `TimeTracking.traits.EmployeePersistor`. */
-export function stdTimeTrackingEmployeePersistorTrait(params: StdTimeTrackingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.EmployeePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `TimeTracking.pages.EmployeesPage`. */
-export function stdTimeTrackingPage(params: StdTimeTrackingParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.EmployeesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdTimeTracking(params: StdTimeTrackingParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the EmployeeOrbital orbital with consumer params. */
+export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Employee';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'employees');
+  const built = makeOrbitalWithUses({
     name: 'EmployeeOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-timesheet',
+        'as': 'Timesheet',
+      },
+      {
+        'from': 'std/behaviors/std-time-entry',
+        'as': 'TimeEntry',
+      },
+      {
+        'from': 'std/behaviors/std-billable-hour',
+        'as': 'BillableHour',
+      },
+      {
+        'from': 'std/behaviors/std-approval-request',
+        'as': 'ApprovalRequest',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'department',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'role',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'on-leave',
+              'terminated',
+            ],
+          },
+          {
+            'name': 'hireDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'defaultHourlyRate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdTimeTrackingEmployeeAppLayoutTrait(params),
-      stdTimeTrackingEmployeeCatalogTrait(params),
-      stdTimeTrackingEmployeeSearchTrait(params),
-      stdTimeTrackingEmployeeFilterTrait(params),
-      stdTimeTrackingEmployeeStatsTrait(params),
-      stdTimeTrackingEmployeeGraphsTrait(params),
-      stdTimeTrackingEmployeeBrowseListTrait(params),
-      stdTimeTrackingEmployeeCreateTrait(params),
-      stdTimeTrackingEmployeeEditTrait(params),
-      stdTimeTrackingEmployeeViewTrait(params),
-      stdTimeTrackingEmployeeDeleteTrait(params),
-      stdTimeTrackingEmployeePersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'EmployeeAppLayout',
+        'config': {
+          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.EmployeeCatalog',
+          'notifications': [],
+          'appName': 'Time Tracking',
+          'navItems': [
+            {
+              'href': '/employees',
+              'label': 'Employees',
+              'icon': 'users',
+            },
+            {
+              'href': '/timesheets',
+              'label': 'Timesheets',
+              'icon': 'clipboard',
+            },
+            {
+              'label': 'Time Entries',
+              'icon': 'clock',
+              'href': '/time-entries',
+            },
+            {
+              'label': 'Billable Hours',
+              'href': '/billable',
+              'icon': 'dollar-sign',
+            },
+            {
+              'label': 'Approvals',
+              'href': '/approvals',
+              'icon': 'check-circle',
+            },
+          ],
+          'searchEvent': 'EMPLOYEE_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'EMPLOYEE_SEARCH',
+          'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'EmployeeCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'EMPLOYEE_SEARCH',
+            'triggers': 'EMPLOYEE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeAppLayout',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+            'triggers': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'EMPLOYEE_SEARCH',
+              'name': 'Employee Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+              'name': 'Employee Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'users',
+                              },
+                              {
+                                'content': 'Employees',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'icon': 'plus',
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'label': 'New Employee',
+                                'variant': 'primary',
+                              },
+                            ],
+                          },
+                        ],
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          '@trait.EmployeeSearch',
+                          '@trait.EmployeeFilter',
+                        ],
+                        'direction': 'horizontal',
+                      },
+                      '@trait.EmployeeStats',
+                      '@trait.EmployeeGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.EmployeeBrowseList',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'EMPLOYEE_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'label': 'Back to employees',
+                        'action': 'INIT',
+                        'type': 'button',
+                      },
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'EmployeeSearch',
+        'config': {
+          'placeholder': 'Search employees…',
+          'event': 'EMPLOYEE_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'EmployeeFilter',
+        'config': {
+          'event': 'EMPLOYEE_FILTER',
+          'filters': [
+            {
+              'label': 'Department',
+              'field': 'department',
+              'filterType': 'select',
+              'options': [
+                'engineering',
+                'sales',
+                'operations',
+                'hr',
+                'finance',
+              ],
+            },
+            {
+              'label': 'Status',
+              'field': 'status',
+              'options': [
+                'active',
+                'on-leave',
+                'terminated',
+              ],
+              'filterType': 'select',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'EmployeeStats',
+        'config': {
+          'metrics': [
+            {
+              'variant': 'primary',
+              'format': 'number',
+              'aggregation': 'count',
+              'icon': 'users',
+              'label': 'Total',
+            },
+            {
+              'aggregation': 'count',
+              'variant': 'success',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'label': 'Active',
+              'icon': 'check-circle',
+            },
+            {
+              'label': 'On Leave',
+              'icon': 'pause-circle',
+              'variant': 'warning',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'on-leave',
+                ],
+              ],
+              'aggregation': 'count',
+              'format': 'number',
+            },
+            {
+              'icon': 'dollar-sign',
+              'variant': 'info',
+              'field': 'defaultHourlyRate',
+              'label': 'Avg Rate',
+              'aggregation': 'avg',
+              'format': 'currency',
+            },
+          ],
+          'title': 'Employees',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'EmployeeGraphs',
+        'config': {
+          'chartType': 'bar',
+          'categoryField': 'department',
+          'height': 240,
+          'aggregation': 'count',
+          'showLegend': false,
+          'title': 'Employees by Department',
+          'subtitle': 'Workforce distribution across departments',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'EmployeeBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            {
+              'variant': 'h3',
+              'name': 'name',
+              'icon': 'user',
+            },
+            {
+              'variant': 'caption',
+              'name': 'role',
+            },
+            {
+              'variant': 'badge',
+              'name': 'department',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'defaultHourlyRate',
+              'variant': 'caption',
+            },
+          ],
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeFilter',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeePersistor',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeePersistor',
+            },
+          },
+          {
+            'event': 'EMPLOYEE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'EmployeeCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'name',
+            'email',
+            'department',
+            'role',
+            'status',
+            'hireDate',
+            'defaultHourlyRate',
+          ],
+          'icon': 'plus-circle',
+          'title': 'New Employee',
+          'mode': 'create',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'EmployeeEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'edit',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'email',
+            'department',
+            'role',
+            'status',
+            'hireDate',
+            'defaultHourlyRate',
+          ],
+          'title': 'Edit Employee',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'EmployeeView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'mode': 'edit',
+          'title': 'View Employee',
+          'fields': [
+            'name',
+            'email',
+            'department',
+            'role',
+            'status',
+            'hireDate',
+            'defaultHourlyRate',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'EmployeeDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Employee',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'EmployeePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Employee',
+        'emits': [
+          {
+            'event': 'EMPLOYEE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EMPLOYEE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EMPLOYEE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'EmployeeDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'EMPLOYEE_CREATED',
+              'name': 'Employee Created',
+            },
+            {
+              'key': 'EMPLOYEE_UPDATED',
+              'name': 'Employee Updated',
+            },
+            {
+              'key': 'EMPLOYEE_DELETED',
+              'name': 'Employee Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Employee',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'EMPLOYEE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Employee',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'EMPLOYEE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Employee',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'EMPLOYEE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdTimeTrackingPage(params),
+      {
+        'name': 'EmployeesPage',
+        'path': '/employees',
+        'traits': [
+          {
+            'ref': 'EmployeeAppLayout',
+          },
+          {
+            'ref': 'EmployeeCatalog',
+          },
+          {
+            'ref': 'EmployeeSearch',
+          },
+          {
+            'ref': 'EmployeeFilter',
+          },
+          {
+            'ref': 'EmployeeStats',
+          },
+          {
+            'ref': 'EmployeeGraphs',
+          },
+          {
+            'ref': 'EmployeeBrowseList',
+          },
+          {
+            'ref': 'EmployeeCreate',
+          },
+          {
+            'ref': 'EmployeeEdit',
+          },
+          {
+            'ref': 'EmployeeView',
+          },
+          {
+            'ref': 'EmployeeDelete',
+          },
+          {
+            'ref': 'EmployeePersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTimeTrackingEmployeeOrbital. */
+export const StdTimeTrackingEmployeeOrbitalManifest = {
+  organism: 'std-time-tracking',
+  orbitalName: 'EmployeeOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'EmployeeAppLayout',
+    'EmployeeSearch',
+    'EmployeeFilter',
+    'EmployeeStats',
+    'EmployeeGraphs',
+    'EmployeeBrowseList',
+    'EmployeeCreate',
+    'EmployeeEdit',
+    'EmployeeView',
+    'EmployeeDelete',
+  ] as const,
+  inlineTraitNames: [
+    'EmployeeCatalog',
+    'EmployeePersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTimeTrackingEmployeeOrbitalParams keys. */
+export function isStdTimeTrackingEmployeeOrbitalParams(p: object): p is StdTimeTrackingEmployeeOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTimeTrackingEmployeeOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdTimeTrackingEmployeeOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the TimesheetPanelOrbital orbital.
+ *
+ * Canonical entity: Timesheet — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTimeTrackingTimesheetPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TimesheetAppLayout' | 'TimesheetLedgerView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the TimesheetPanelOrbital orbital with consumer params. */
+export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTimesheetPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Timesheet';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'timesheets');
+  const built = makeOrbitalWithUses({
+    name: 'TimesheetPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-timesheet',
+        'as': 'Timesheet',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'employeeName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'periodStart',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'periodEnd',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalHours',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'billableHours',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'submitted',
+              'approved',
+              'rejected',
+              'needs-revision',
+            ],
+          },
+          {
+            'name': 'submittedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'approvedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'approvedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TimesheetAppLayout',
+        'config': {
+          'appName': 'Time Tracking',
+          'navItems': [
+            {
+              'label': 'Employees',
+              'href': '/employees',
+              'icon': 'users',
+            },
+            {
+              'icon': 'clipboard',
+              'label': 'Timesheets',
+              'href': '/timesheets',
+            },
+            {
+              'href': '/time-entries',
+              'icon': 'clock',
+              'label': 'Time Entries',
+            },
+            {
+              'href': '/billable',
+              'icon': 'dollar-sign',
+              'label': 'Billable Hours',
+            },
+            {
+              'label': 'Approvals',
+              'icon': 'check-circle',
+              'href': '/approvals',
+            },
+          ],
+          'searchEvent': 'TIMESHEET_SEARCH',
+          'contentTrait': '@trait.TimesheetPanel',
+          'notifications': [],
+          'notificationClickEvent': 'TIMESHEET_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'TIMESHEET_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TIMESHEET_SEARCH',
+        },
+      }),
+      {
+        'name': 'TimesheetPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'clipboard',
+                          },
+                          {
+                            'content': 'Timesheets',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TimesheetLedgerView',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Timesheet.traits.TimesheetLedger',
+        'name': 'TimesheetLedgerView',
+        'config': {
+          'title': 'Timesheets',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'TimesheetsPage',
+        'path': '/timesheets',
+        'traits': [
+          {
+            'ref': 'TimesheetAppLayout',
+          },
+          {
+            'ref': 'TimesheetPanel',
+          },
+          {
+            'ref': 'TimesheetLedgerView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTimeTrackingTimesheetPanelOrbital. */
+export const StdTimeTrackingTimesheetPanelOrbitalManifest = {
+  organism: 'std-time-tracking',
+  orbitalName: 'TimesheetPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'TimesheetAppLayout',
+    'TimesheetLedgerView',
+  ] as const,
+  inlineTraitNames: [
+    'TimesheetPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTimeTrackingTimesheetPanelOrbitalParams keys. */
+export function isStdTimeTrackingTimesheetPanelOrbitalParams(p: object): p is StdTimeTrackingTimesheetPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTimeTrackingTimesheetPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdTimeTrackingTimesheetPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the TimeEntryPanelOrbital orbital.
+ *
+ * Canonical entity: TimeEntry — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTimeTrackingTimeEntryPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TimeEntryAppLayout' | 'TimeEntryLogView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the TimeEntryPanelOrbital orbital with consumer params. */
+export function stdTimeTrackingTimeEntryPanelOrbital(params: StdTimeTrackingTimeEntryPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'TimeEntry';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'timeentries');
+  const built = makeOrbitalWithUses({
+    name: 'TimeEntryPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-time-entry',
+        'as': 'TimeEntry',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'timesheetId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'projectId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'projectName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'taskDescription',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'workDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'hours',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'billable',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'hourlyRate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'submitted',
+              'approved',
+              'rejected',
+            ],
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TimeEntryAppLayout',
+        'config': {
+          'searchEvent': 'TIME_ENTRY_SEARCH',
+          'contentTrait': '@trait.TimeEntryPanel',
+          'navItems': [
+            {
+              'href': '/employees',
+              'icon': 'users',
+              'label': 'Employees',
+            },
+            {
+              'href': '/timesheets',
+              'icon': 'clipboard',
+              'label': 'Timesheets',
+            },
+            {
+              'href': '/time-entries',
+              'label': 'Time Entries',
+              'icon': 'clock',
+            },
+            {
+              'icon': 'dollar-sign',
+              'label': 'Billable Hours',
+              'href': '/billable',
+            },
+            {
+              'label': 'Approvals',
+              'href': '/approvals',
+              'icon': 'check-circle',
+            },
+          ],
+          'appName': 'Time Tracking',
+          'notifications': [],
+          'notificationClickEvent': 'TIME_ENTRY_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'TIME_ENTRY_SEARCH',
+          'NOTIFY_CLICK': 'TIME_ENTRY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'TimeEntryPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'clock',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Time Entries',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TimeEntryLogView',
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'TimeEntry.traits.TimeEntryLog',
+        'name': 'TimeEntryLogView',
+        'config': {
+          'title': 'Time Entries',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'TimeEntriesPage',
+        'path': '/time-entries',
+        'traits': [
+          {
+            'ref': 'TimeEntryAppLayout',
+          },
+          {
+            'ref': 'TimeEntryPanel',
+          },
+          {
+            'ref': 'TimeEntryLogView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTimeTrackingTimeEntryPanelOrbital. */
+export const StdTimeTrackingTimeEntryPanelOrbitalManifest = {
+  organism: 'std-time-tracking',
+  orbitalName: 'TimeEntryPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'TimeEntryAppLayout',
+    'TimeEntryLogView',
+  ] as const,
+  inlineTraitNames: [
+    'TimeEntryPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTimeTrackingTimeEntryPanelOrbitalParams keys. */
+export function isStdTimeTrackingTimeEntryPanelOrbitalParams(p: object): p is StdTimeTrackingTimeEntryPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTimeTrackingTimeEntryPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdTimeTrackingTimeEntryPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the BillableHourTimeTrackingOrbital orbital.
+ *
+ * Canonical entity: BillableHour — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTimeTrackingBillableHourTimeTrackingOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'BillableHourAppLayout' | 'BillableHourTimesheetView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the BillableHourTimeTrackingOrbital orbital with consumer params. */
+export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTrackingBillableHourTimeTrackingOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'BillableHour';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'billablehours');
+  const built = makeOrbitalWithUses({
+    name: 'BillableHourTimeTrackingOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-billable-hour',
+        'as': 'BillableHour',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'workerId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'workerName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'matterId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'projectId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'workDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'hours',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'rate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'isBillable',
+            'type': 'boolean',
+            'default': true,
+          },
+          {
+            'name': 'invoiceStatus',
+            'type': 'string',
+            'default': 'unbilled',
+            'values': [
+              'unbilled',
+              'invoiced',
+              'paid',
+              'written_off',
+            ],
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'BillableHourAppLayout',
+        'config': {
+          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
+          'appName': 'Time Tracking',
+          'searchEvent': 'BILLABLE_HOUR_SEARCH',
+          'contentTrait': '@trait.BillableHourPanel',
+          'navItems': [
+            {
+              'label': 'Employees',
+              'href': '/employees',
+              'icon': 'users',
+            },
+            {
+              'label': 'Timesheets',
+              'href': '/timesheets',
+              'icon': 'clipboard',
+            },
+            {
+              'icon': 'clock',
+              'href': '/time-entries',
+              'label': 'Time Entries',
+            },
+            {
+              'label': 'Billable Hours',
+              'icon': 'dollar-sign',
+              'href': '/billable',
+            },
+            {
+              'href': '/approvals',
+              'label': 'Approvals',
+              'icon': 'check-circle',
+            },
+          ],
+          'notifications': [],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
+          'SEARCH': 'BILLABLE_HOUR_SEARCH',
+        },
+      }),
+      {
+        'name': 'BillableHourPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'dollar-sign',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Billable Hours',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.BillableHourTimesheetView',
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'BillableHour.traits.BillableHourTimesheet',
+        'name': 'BillableHourTimesheetView',
+        'config': {
+          'title': 'Billable Hours',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'BillablePage',
+        'path': '/billable',
+        'traits': [
+          {
+            'ref': 'BillableHourAppLayout',
+          },
+          {
+            'ref': 'BillableHourPanel',
+          },
+          {
+            'ref': 'BillableHourTimesheetView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTimeTrackingBillableHourTimeTrackingOrbital. */
+export const StdTimeTrackingBillableHourTimeTrackingOrbitalManifest = {
+  organism: 'std-time-tracking',
+  orbitalName: 'BillableHourTimeTrackingOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'BillableHourAppLayout',
+    'BillableHourTimesheetView',
+  ] as const,
+  inlineTraitNames: [
+    'BillableHourPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTimeTrackingBillableHourTimeTrackingOrbitalParams keys. */
+export function isStdTimeTrackingBillableHourTimeTrackingOrbitalParams(p: object): p is StdTimeTrackingBillableHourTimeTrackingOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTimeTrackingBillableHourTimeTrackingOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdTimeTrackingBillableHourTimeTrackingOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the ApprovalRequestPanelOrbital orbital.
+ *
+ * Canonical entity: ApprovalRequest — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTimeTrackingApprovalRequestPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ApprovalRequestAppLayout' | 'ApprovalRequestPipelineView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ApprovalRequestPanelOrbital orbital with consumer params. */
+export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTrackingApprovalRequestPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ApprovalRequest';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'approvalrequests');
+  const built = makeOrbitalWithUses({
+    name: 'ApprovalRequestPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-approval-request',
+        'as': 'ApprovalRequest',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'targetType',
+            'type': 'string',
+            'default': 'timesheet',
+            'values': [
+              'timesheet',
+              'expense-report',
+              'pto-request',
+              'purchase-order',
+              'change-order',
+              'other',
+            ],
+          },
+          {
+            'name': 'targetId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'requestedBy',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'requestedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'assignedApprover',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'approverDecision',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'approved',
+              'rejected',
+              'needs-info',
+            ],
+          },
+          {
+            'name': 'decidedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'comment',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'submitted',
+              'approved',
+              'rejected',
+              'withdrawn',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ApprovalRequestAppLayout',
+        'config': {
+          'notificationClickEvent': 'APPROVAL_REQUEST_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.ApprovalRequestPanel',
+          'appName': 'Time Tracking',
+          'navItems': [
+            {
+              'icon': 'users',
+              'href': '/employees',
+              'label': 'Employees',
+            },
+            {
+              'label': 'Timesheets',
+              'href': '/timesheets',
+              'icon': 'clipboard',
+            },
+            {
+              'href': '/time-entries',
+              'icon': 'clock',
+              'label': 'Time Entries',
+            },
+            {
+              'icon': 'dollar-sign',
+              'label': 'Billable Hours',
+              'href': '/billable',
+            },
+            {
+              'icon': 'check-circle',
+              'label': 'Approvals',
+              'href': '/approvals',
+            },
+          ],
+          'searchEvent': 'APPROVAL_REQUEST_SEARCH',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'APPROVAL_REQUEST_SEARCH',
+          'NOTIFY_CLICK': 'APPROVAL_REQUEST_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'ApprovalRequestPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Approvals',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ApprovalRequestPipelineView',
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'ApprovalRequest.traits.ApprovalRequestPipeline',
+        'name': 'ApprovalRequestPipelineView',
+        'config': {
+          'title': 'Approval Requests',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ApprovalsPage',
+        'path': '/approvals',
+        'traits': [
+          {
+            'ref': 'ApprovalRequestAppLayout',
+          },
+          {
+            'ref': 'ApprovalRequestPanel',
+          },
+          {
+            'ref': 'ApprovalRequestPipelineView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTimeTrackingApprovalRequestPanelOrbital. */
+export const StdTimeTrackingApprovalRequestPanelOrbitalManifest = {
+  organism: 'std-time-tracking',
+  orbitalName: 'ApprovalRequestPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ApprovalRequestAppLayout',
+    'ApprovalRequestPipelineView',
+  ] as const,
+  inlineTraitNames: [
+    'ApprovalRequestPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTimeTrackingApprovalRequestPanelOrbitalParams keys. */
+export function isStdTimeTrackingApprovalRequestPanelOrbitalParams(p: object): p is StdTimeTrackingApprovalRequestPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTimeTrackingApprovalRequestPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdTimeTrackingApprovalRequestPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-time-tracking — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdTimeTrackingParams {
+  Employee?: StdTimeTrackingEmployeeOrbitalParams;
+  TimesheetPanel?: StdTimeTrackingTimesheetPanelOrbitalParams;
+  TimeEntryPanel?: StdTimeTrackingTimeEntryPanelOrbitalParams;
+  BillableHourTimeTracking?: StdTimeTrackingBillableHourTimeTrackingOrbitalParams;
+  ApprovalRequestPanel?: StdTimeTrackingApprovalRequestPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
+export function stdTimeTracking(params: StdTimeTrackingParams = {}): OrbitalDefinition[] {
+  return [
+    stdTimeTrackingEmployeeOrbital(params.Employee ?? {}),
+    stdTimeTrackingTimesheetPanelOrbital(params.TimesheetPanel ?? {}),
+    stdTimeTrackingTimeEntryPanelOrbital(params.TimeEntryPanel ?? {}),
+    stdTimeTrackingBillableHourTimeTrackingOrbital(params.BillableHourTimeTracking ?? {}),
+    stdTimeTrackingApprovalRequestPanelOrbital(params.ApprovalRequestPanel ?? {}),
+  ];
 }

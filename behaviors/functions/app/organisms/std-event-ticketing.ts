@@ -30,27 +30,30 @@ const ALIAS = 'EventTicketing';
  * without modifying its state-machine topology.
  */
 export interface StdEventTicketingConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
  * Tunable params for the EventOrbital orbital.
  *
- * Canonical entity: EventRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: EventRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdEventTicketingEventOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdEventTicketingEventOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'EventAppLayout' | 'EventSearch' | 'EventFilter' | 'EventStats' | 'EventBrowseList' | 'EventCalendarView' | 'EventAdvancedAdmin' | 'EventCreate' | 'EventEdit' | 'EventView' | 'EventDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the EventOrbital orbital with consumer params. */
 export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'EventRow';
+  const canonicalName = params.entityName ?? 'EventRow';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'events');
   const built = makeOrbitalWithUses({
     name: 'EventOrbital',
     uses: [
@@ -117,7 +126,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
     ],
     entity: {
       name: canonicalName,
-      collection: 'events',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -189,12 +198,16 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'ref': 'AppShell.traits.AppLayout',
         'name': 'EventAppLayout',
         'config': {
+          'searchEvent': 'EVENT_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'EVENT_NOTIFICATIONS_OPEN',
+          'appName': 'EventTicketing',
           'contentTrait': '@trait.EventCatalog',
           'navItems': [
             {
-              'label': 'Events',
               'href': '/events',
               'icon': 'calendar',
+              'label': 'Events',
             },
             {
               'label': 'Tickets',
@@ -202,9 +215,9 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
               'icon': 'ticket',
             },
             {
+              'icon': 'qr-code',
               'label': 'Check-in',
               'href': '/checkin',
-              'icon': 'qr-code',
             },
             {
               'href': '/waitlist',
@@ -212,14 +225,10 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
               'icon': 'users',
             },
           ],
-          'searchEvent': 'EVENT_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'EVENT_NOTIFICATIONS_OPEN',
-          'appName': 'EventTicketing',
         },
         'events': {
-          'SEARCH': 'EVENT_SEARCH',
           'NOTIFY_CLICK': 'EVENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'EVENT_SEARCH',
         },
       }),
       {
@@ -302,46 +311,44 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
-                        'gap': 'md',
-                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'calendar',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Events',
+                                'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
                             'align': 'center',
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                           {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
+                                'action': 'CREATE',
                                 'type': 'button',
+                                'icon': 'plus',
                                 'label': 'New Event',
                                 'variant': 'primary',
-                                'icon': 'plus',
-                                'action': 'CREATE',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                         ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                         'direction': 'horizontal',
                         'justify': 'between',
                       },
@@ -349,14 +356,14 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
-                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           '@trait.EventSearch',
                           '@trait.EventFilter',
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       '@trait.EventStats',
                       {
@@ -371,13 +378,15 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                         'type': 'divider',
                       },
                       {
+                        'type': 'typography',
                         'content': 'Advanced Event Admin',
                         'variant': 'h3',
-                        'type': 'typography',
                       },
                       '@trait.EventAdvancedAdmin',
                     ],
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -396,11 +405,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'direction': 'vertical',
                     'type': 'stack',
-                    'gap': 'md',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'icon',
@@ -408,20 +417,20 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
                         'variant': 'caption',
-                        'type': 'typography',
                         'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'ghost',
+                        'type': 'button',
                         'label': 'Back to events',
                         'action': 'INIT',
-                        'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
                   },
@@ -444,7 +453,6 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'EventFilter',
         'config': {
-          'event': 'EVENT_FILTER',
           'filters': [
             {
               'options': [
@@ -453,29 +461,30 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                 'sold-out',
                 'cancelled',
               ],
+              'label': 'Status',
               'field': 'status',
               'filterType': 'select',
-              'label': 'Status',
             },
           ],
+          'event': 'EVENT_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'EventStats',
         'config': {
+          'title': 'Events',
           'metrics': [
             {
               'label': 'Total',
-              'variant': 'primary',
-              'aggregation': 'count',
-              'format': 'number',
               'icon': 'calendar',
+              'format': 'number',
+              'aggregation': 'count',
+              'variant': 'primary',
             },
             {
-              'icon': 'send',
-              'aggregation': 'count',
-              'label': 'Published',
+              'variant': 'success',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -485,12 +494,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'published',
                 ],
               ],
-              'format': 'number',
-              'variant': 'success',
+              'label': 'Published',
+              'aggregation': 'count',
+              'icon': 'send',
             },
             {
-              'variant': 'warning',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -501,19 +509,20 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                 ],
               ],
               'icon': 'check-circle',
-              'aggregation': 'count',
               'label': 'Sold Out',
-            },
-            {
-              'aggregation': 'sum',
-              'label': 'Capacity',
-              'icon': 'users',
-              'variant': 'info',
-              'field': 'capacity',
+              'variant': 'warning',
+              'aggregation': 'count',
               'format': 'number',
             },
+            {
+              'field': 'capacity',
+              'icon': 'users',
+              'variant': 'info',
+              'format': 'number',
+              'label': 'Capacity',
+              'aggregation': 'sum',
+            },
           ],
-          'title': 'Events',
         },
         'listens': [
           {
@@ -529,50 +538,18 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'EventBrowseList',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'fields': [
-            {
-              'icon': 'calendar',
-              'name': 'name',
-              'variant': 'h3',
-            },
-            {
-              'name': 'venue',
-              'variant': 'body',
-            },
-            {
-              'name': 'startsAt',
-              'variant': 'caption',
-              'format': 'date',
-            },
-            {
-              'name': 'endsAt',
-              'variant': 'caption',
-              'format': 'date',
-            },
-            {
-              'format': 'number',
-              'variant': 'body',
-              'name': 'capacity',
-            },
-            {
-              'name': 'status',
-              'variant': 'badge',
-            },
-          ],
-          'cols': 1,
-          'gap': 'sm',
           'itemActions': [
             {
+              'label': 'View',
               'event': 'VIEW',
               'variant': 'ghost',
-              'label': 'View',
             },
             {
               'event': 'EDIT',
-              'variant': 'ghost',
               'label': 'Edit',
+              'variant': 'ghost',
             },
             {
               'label': 'Delete',
@@ -580,6 +557,38 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
               'variant': 'danger',
             },
           ],
+          'fields': [
+            {
+              'variant': 'h3',
+              'icon': 'calendar',
+              'name': 'name',
+            },
+            {
+              'variant': 'body',
+              'name': 'venue',
+            },
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'startsAt',
+            },
+            {
+              'name': 'endsAt',
+              'format': 'date',
+              'variant': 'caption',
+            },
+            {
+              'name': 'capacity',
+              'format': 'number',
+              'variant': 'body',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -627,7 +636,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'EventCalendarView',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'Event Calendar',
         },
@@ -661,7 +670,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Event.traits.EventManage',
         'name': 'EventAdvancedAdmin',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'Lifecycle Admin',
         },
@@ -669,10 +678,8 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'EventCreate',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Event',
-          'icon': 'plus-circle',
           'fields': [
             'name',
             'description',
@@ -683,6 +690,8 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
             'status',
             'organizerId',
           ],
+          'title': 'New Event',
+          'icon': 'plus-circle',
           'mode': 'create',
         },
         'events': {
@@ -702,10 +711,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'EventEdit',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
           'title': 'Edit Event',
+          'icon': 'edit',
           'fields': [
             'name',
             'description',
@@ -716,7 +726,6 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
             'status',
             'organizerId',
           ],
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -735,11 +744,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'EventView',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'eye',
           'title': 'View Event',
+          'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'name',
             'description',
@@ -768,16 +777,16 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'EventDelete',
-        'linkedEntity': 'EventRow',
+        'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Event',
           'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1024,7 +1033,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1036,6 +1045,10 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1059,7 +1072,9 @@ export const StdEventTicketingEventOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'EventAppLayout',
@@ -1097,20 +1112,23 @@ export function isStdEventTicketingEventOrbitalParams(p: object): p is StdEventT
 /**
  * Tunable params for the TicketOrbital orbital.
  *
- * Canonical entity: Ticket (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Ticket — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdEventTicketingTicketOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1119,22 +1137,28 @@ export interface StdEventTicketingTicketOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TicketAppLayout' | 'TicketTierShop' | 'TicketCart' | 'TicketCartAddItem' | 'TicketCartRemoveItem' | 'TicketCartPersistor' | 'TicketBrowseList' | 'TicketIssueModal',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TicketOrbital orbital with consumer params. */
 export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Ticket';
+  const canonicalName = params.entityName ?? 'Ticket';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'tickets');
   const built = makeOrbitalWithUses({
     name: 'TicketOrbital',
     uses: [
@@ -1165,7 +1189,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
     ],
     entity: {
       name: canonicalName,
-      collection: 'tickets',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1237,8 +1261,8 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
           'appName': 'EventTicketing',
           'navItems': [
             {
-              'href': '/events',
               'icon': 'calendar',
+              'href': '/events',
               'label': 'Events',
             },
             {
@@ -1247,23 +1271,23 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
               'icon': 'ticket',
             },
             {
-              'icon': 'qr-code',
               'label': 'Check-in',
               'href': '/checkin',
+              'icon': 'qr-code',
             },
             {
               'icon': 'users',
-              'href': '/waitlist',
               'label': 'Waitlist',
+              'href': '/waitlist',
             },
           ],
-          'notifications': [],
           'searchEvent': 'TICKET_SEARCH',
           'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'TICKET_SEARCH',
           'NOTIFY_CLICK': 'TICKET_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TICKET_SEARCH',
         },
       }),
       {
@@ -1347,47 +1371,45 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
                   'main',
                   {
                     'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'justify': 'between',
+                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
+                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'ticket',
                                 'type': 'icon',
+                                'name': 'ticket',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Tickets',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
                             'align': 'center',
-                            'gap': 'sm',
                           },
                           {
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'type': 'button',
                                 'icon': 'plus',
-                                'label': 'Issue Ticket',
+                                'type': 'button',
+                                'variant': 'primary',
                                 'action': 'ISSUE',
+                                'label': 'Issue Ticket',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
                       },
                       {
@@ -1395,17 +1417,17 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Available Tiers',
+                        'type': 'typography',
                       },
                       '@trait.TicketTierShop',
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Your Cart',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.TicketCart',
                       {
@@ -1413,11 +1435,13 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
                       },
                       {
                         'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Tickets Issued',
+                        'variant': 'h3',
                       },
                       '@trait.TicketBrowseList',
                     ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1462,44 +1486,44 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TicketBrowseList',
-        'linkedEntity': 'Ticket',
+        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-          ],
-          'gap': 'sm',
           'fields': [
             {
-              'variant': 'h4',
               'name': 'holderName',
+              'variant': 'h4',
               'icon': 'ticket',
             },
             {
-              'name': 'holderEmail',
               'variant': 'caption',
+              'name': 'holderEmail',
             },
             {
-              'variant': 'badge',
               'name': 'tierId',
+              'variant': 'badge',
             },
             {
               'name': 'qrCode',
               'variant': 'body',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
-              'format': 'date',
               'name': 'purchasedAt',
               'variant': 'caption',
+              'format': 'date',
             },
           ],
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+          ],
+          'gap': 'sm',
           'cols': 1,
         },
         'listens': [
@@ -1516,9 +1540,8 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TicketIssueModal',
-        'linkedEntity': 'Ticket',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'title': 'Issue Ticket',
           'fields': [
             'eventId',
@@ -1527,6 +1550,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
             'holderEmail',
             'status',
           ],
+          'icon': 'plus-circle',
           'mode': 'create',
         },
         'events': {
@@ -1667,7 +1691,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1679,6 +1703,10 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1702,7 +1730,9 @@ export const StdEventTicketingTicketOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TicketAppLayout',
@@ -1737,20 +1767,23 @@ export function isStdEventTicketingTicketOrbitalParams(p: object): p is StdEvent
 /**
  * Tunable params for the CheckinOrbital orbital.
  *
- * Canonical entity: Attendee (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Attendee — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdEventTicketingCheckinOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1759,22 +1792,28 @@ export interface StdEventTicketingCheckinOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CheckinAppLayout' | 'GateScanner' | 'AttendeeListing',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CheckinOrbital orbital with consumer params. */
 export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckinOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Attendee';
+  const canonicalName = params.entityName ?? 'Attendee';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'attendees');
   const built = makeOrbitalWithUses({
     name: 'CheckinOrbital',
     uses: [
@@ -1793,7 +1832,7 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
     ],
     entity: {
       name: canonicalName,
-      collection: 'attendees',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1844,12 +1883,13 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CheckinAppLayout',
         'config': {
-          'searchEvent': 'CHECKIN_SEARCH',
+          'notificationClickEvent': 'CHECKIN_NOTIFICATIONS_OPEN',
+          'appName': 'EventTicketing',
           'navItems': [
             {
               'label': 'Events',
-              'href': '/events',
               'icon': 'calendar',
+              'href': '/events',
             },
             {
               'label': 'Tickets',
@@ -1857,20 +1897,19 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
               'href': '/tickets',
             },
             {
-              'href': '/checkin',
               'icon': 'qr-code',
+              'href': '/checkin',
               'label': 'Check-in',
             },
             {
-              'label': 'Waitlist',
               'href': '/waitlist',
+              'label': 'Waitlist',
               'icon': 'users',
             },
           ],
-          'appName': 'EventTicketing',
           'contentTrait': '@trait.CheckinDashboard',
           'notifications': [],
-          'notificationClickEvent': 'CHECKIN_NOTIFICATIONS_OPEN',
+          'searchEvent': 'CHECKIN_SEARCH',
         },
         'events': {
           'SEARCH': 'CHECKIN_SEARCH',
@@ -1941,23 +1980,21 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'sm',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'qr-code',
+                            'type': 'icon',
                           },
                           {
                             'variant': 'h2',
-                            'type': 'typography',
                             'content': 'Door Check-in',
+                            'type': 'typography',
                           },
                         ],
                       },
@@ -1969,12 +2006,14 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'Attendees',
                       },
                       '@trait.AttendeeListing',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                   },
                 ],
@@ -2005,7 +2044,7 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
       makeTraitRef({
         'ref': 'ListMol.traits.ListItemBrowse',
         'name': 'AttendeeListing',
-        'linkedEntity': 'Attendee',
+        'linkedEntity': canonicalName,
       }),
     ],
     pages: [
@@ -2031,7 +2070,7 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2043,6 +2082,10 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2066,7 +2109,9 @@ export const StdEventTicketingCheckinOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CheckinAppLayout',
@@ -2095,20 +2140,23 @@ export function isStdEventTicketingCheckinOrbitalParams(p: object): p is StdEven
 /**
  * Tunable params for the WaitlistOrbital orbital.
  *
- * Canonical entity: WaitlistRow (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: WaitlistRow — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdEventTicketingWaitlistOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2117,22 +2165,28 @@ export interface StdEventTicketingWaitlistOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'WaitlistAppLayout' | 'WaitlistManageView' | 'WaitlistBrowseList' | 'WaitlistJoinModal',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the WaitlistOrbital orbital with consumer params. */
 export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitlistOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'WaitlistRow';
+  const canonicalName = params.entityName ?? 'WaitlistRow';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'waitlistrows');
   const built = makeOrbitalWithUses({
     name: 'WaitlistOrbital',
     uses: [
@@ -2155,7 +2209,7 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
     ],
     entity: {
       name: canonicalName,
-      collection: 'waitlistrows',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2212,37 +2266,37 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WaitlistAppLayout',
         'config': {
-          'searchEvent': 'WAITLIST_SEARCH',
-          'contentTrait': '@trait.WaitlistDashboard',
+          'notifications': [],
           'notificationClickEvent': 'WAITLIST_NOTIFICATIONS_OPEN',
-          'appName': 'EventTicketing',
           'navItems': [
             {
-              'href': '/events',
-              'icon': 'calendar',
               'label': 'Events',
+              'icon': 'calendar',
+              'href': '/events',
             },
             {
-              'href': '/tickets',
-              'label': 'Tickets',
               'icon': 'ticket',
+              'label': 'Tickets',
+              'href': '/tickets',
             },
             {
-              'href': '/checkin',
               'label': 'Check-in',
               'icon': 'qr-code',
+              'href': '/checkin',
             },
             {
-              'icon': 'users',
-              'label': 'Waitlist',
               'href': '/waitlist',
+              'label': 'Waitlist',
+              'icon': 'users',
             },
           ],
-          'notifications': [],
+          'contentTrait': '@trait.WaitlistDashboard',
+          'searchEvent': 'WAITLIST_SEARCH',
+          'appName': 'EventTicketing',
         },
         'events': {
-          'NOTIFY_CLICK': 'WAITLIST_NOTIFICATIONS_OPEN',
           'SEARCH': 'WAITLIST_SEARCH',
+          'NOTIFY_CLICK': 'WAITLIST_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -2325,18 +2379,19 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
-                                'name': 'users',
                                 'type': 'icon',
+                                'name': 'users',
                               },
                               {
                                 'type': 'typography',
@@ -2345,27 +2400,27 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
                               },
                             ],
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'align': 'center',
                           },
                           {
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'label': 'Join Waitlist',
-                                'icon': 'user-plus',
                                 'variant': 'primary',
+                                'label': 'Join Waitlist',
                                 'action': 'JOIN',
                                 'type': 'button',
+                                'icon': 'user-plus',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -2376,12 +2431,11 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
                       },
                       {
                         'type': 'typography',
-                        'content': 'All Entries',
                         'variant': 'h3',
+                        'content': 'All Entries',
                       },
                       '@trait.WaitlistBrowseList',
                     ],
-                    'type': 'stack',
                     'gap': 'lg',
                   },
                 ],
@@ -2411,8 +2465,9 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'WaitlistBrowseList',
-        'linkedEntity': 'WaitlistRow',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'itemActions': [],
           'fields': [
             {
@@ -2432,13 +2487,12 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
               'name': 'status',
             },
             {
+              'format': 'date',
               'name': 'joinedAt',
               'variant': 'caption',
-              'format': 'date',
             },
           ],
           'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -2454,16 +2508,16 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WaitlistJoinModal',
-        'linkedEntity': 'WaitlistRow',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'user-plus',
+          'title': 'Join Waitlist',
           'fields': [
             'targetId',
             'userId',
             'status',
           ],
           'mode': 'create',
-          'title': 'Join Waitlist',
         },
         'events': {
           'OPEN': 'JOIN',
@@ -2591,7 +2645,7 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2603,6 +2657,10 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2626,7 +2684,9 @@ export const StdEventTicketingWaitlistOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'WaitlistAppLayout',

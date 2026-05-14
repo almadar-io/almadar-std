@@ -30,27 +30,30 @@ const ALIAS = 'HrPortal';
  * without modifying its state-machine topology.
  */
 export interface StdHrPortalConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
  * Tunable params for the EmployeeOrbital orbital.
  *
- * Canonical entity: Employee (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Employee — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdHrPortalEmployeeOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdHrPortalEmployeeOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'EmployeeAppLayout' | 'EmployeeSearch' | 'EmployeeFilter' | 'EmployeeStats' | 'EmployeeGraphs' | 'EmployeeBrowseList' | 'EmployeeCreate' | 'EmployeeEdit' | 'EmployeeView' | 'EmployeeDelete' | 'EmployeeAvatarUpload',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the EmployeeOrbital orbital with consumer params. */
 export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Employee';
+  const canonicalName = params.entityName ?? 'Employee';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'employees');
   const built = makeOrbitalWithUses({
     name: 'EmployeeOrbital',
     uses: [
@@ -121,7 +130,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
     ],
     entity: {
       name: canonicalName,
-      collection: 'employees',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -187,11 +196,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'EmployeeAppLayout',
         'config': {
-          'appName': 'HRPortal',
-          'searchEvent': 'EMPLOYEE_SEARCH',
           'contentTrait': '@trait.EmployeeCatalog',
-          'notifications': [],
-          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'href': '/employees',
@@ -199,9 +204,9 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
               'icon': 'users',
             },
             {
+              'label': 'Onboarding',
               'href': '/onboarding',
               'icon': 'clipboard-check',
-              'label': 'Onboarding',
             },
             {
               'icon': 'calendar',
@@ -210,10 +215,14 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
             },
             {
               'icon': 'git-branch',
-              'label': 'Org Chart',
               'href': '/org-chart',
+              'label': 'Org Chart',
             },
           ],
+          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'HRPortal',
+          'searchEvent': 'EMPLOYEE_SEARCH',
         },
         'events': {
           'SEARCH': 'EMPLOYEE_SEARCH',
@@ -301,58 +310,60 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'main',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
                         'gap': 'md',
-                        'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'users',
                               },
                               {
-                                'content': 'Employees',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Employees',
                               },
                             ],
-                            'align': 'center',
-                            'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'button',
-                                'action': 'CREATE',
-                                'label': 'Add Employee',
-                                'variant': 'primary',
                                 'icon': 'plus',
+                                'variant': 'primary',
+                                'label': 'Add Employee',
+                                'action': 'CREATE',
+                                'type': 'button',
                               },
                             ],
+                            'type': 'stack',
                             'gap': 'sm',
                             'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           '@trait.EmployeeSearch',
                           '@trait.EmployeeFilter',
                         ],
-                        'gap': 'sm',
                         'direction': 'horizontal',
-                        'type': 'stack',
                       },
                       '@trait.EmployeeStats',
                       '@trait.EmployeeGraphs',
@@ -361,8 +372,6 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                       },
                       '@trait.EmployeeBrowseList',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -382,9 +391,6 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'main',
                   {
                     'className': 'py-8',
-                    'gap': 'md',
-                    'align': 'center',
-                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
@@ -392,23 +398,26 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
                         'type': 'typography',
+                        'variant': 'caption',
                         'color': 'muted',
                         'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                       },
                       {
-                        'label': 'Back to employees',
                         'type': 'button',
-                        'action': 'INIT',
+                        'label': 'Back to employees',
                         'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -431,6 +440,9 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'config': {
           'filters': [
             {
+              'label': 'Department',
+              'filterType': 'select',
+              'field': 'department',
               'options': [
                 'engineering',
                 'design',
@@ -439,12 +451,8 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                 'hr',
                 'finance',
               ],
-              'field': 'department',
-              'filterType': 'select',
-              'label': 'Department',
             },
             {
-              'field': 'role',
               'options': [
                 'manager',
                 'lead',
@@ -452,9 +460,11 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                 'intern',
               ],
               'filterType': 'select',
+              'field': 'role',
               'label': 'Role',
             },
             {
+              'filterType': 'select',
               'field': 'status',
               'label': 'Status',
               'options': [
@@ -462,7 +472,6 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                 'leave',
                 'terminated',
               ],
-              'filterType': 'select',
             },
           ],
           'event': 'FILTER',
@@ -472,32 +481,35 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'EmployeeStats',
         'config': {
+          'title': 'Workforce Overview',
           'metrics': [
             {
-              'variant': 'primary',
-              'format': 'number',
               'icon': 'users',
               'label': 'Total Employees',
-              'aggregation': 'count',
-            },
-            {
-              'aggregation': 'count',
+              'variant': 'primary',
               'format': 'number',
-              'variant': 'default',
-              'label': 'By Department',
-              'icon': 'layers',
+              'aggregation': 'count',
             },
             {
+              'icon': 'layers',
+              'format': 'number',
+              'aggregation': 'count',
+              'label': 'By Department',
+              'variant': 'default',
+            },
+            {
+              'aggregation': 'count',
+              'icon': 'user-plus',
               'variant': 'info',
               'label': 'New This Month',
-              'icon': 'user-plus',
-              'aggregation': 'count',
               'format': 'number',
             },
             {
+              'aggregation': 'count',
               'icon': 'calendar-off',
-              'variant': 'warning',
               'label': 'On Leave',
+              'variant': 'warning',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -507,11 +519,8 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'leave',
                 ],
               ],
-              'aggregation': 'count',
-              'format': 'number',
             },
           ],
-          'title': 'Workforce Overview',
         },
         'listens': [
           {
@@ -528,13 +537,13 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'EmployeeGraphs',
         'config': {
-          'showLegend': true,
-          'aggregation': 'count',
-          'chartType': 'pie',
           'height': 280,
-          'title': 'Employees by Department',
+          'showLegend': true,
           'subtitle': 'Headcount distribution',
+          'chartType': 'pie',
           'categoryField': 'department',
+          'aggregation': 'count',
+          'title': 'Employees by Department',
         },
         'listens': [
           {
@@ -550,18 +559,20 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'EmployeeBrowseList',
-        'linkedEntity': 'Employee',
+        'linkedEntity': canonicalName,
         'config': {
+          'imageField': 'avatar',
+          'gap': 'sm',
           'itemActions': [
             {
               'variant': 'ghost',
-              'event': 'VIEW',
               'label': 'View',
+              'event': 'VIEW',
             },
             {
               'label': 'Edit',
-              'event': 'EDIT',
               'variant': 'ghost',
+              'event': 'EDIT',
             },
             {
               'event': 'DELETE',
@@ -569,12 +580,10 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
               'label': 'Delete',
             },
           ],
-          'gap': 'sm',
-          'imageField': 'avatar',
           'fields': [
             {
-              'icon': 'user',
               'name': 'name',
+              'icon': 'user',
               'variant': 'h3',
             },
             {
@@ -586,14 +595,14 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'email',
+              'variant': 'caption',
             },
             {
-              'variant': 'caption',
-              'name': 'hireDate',
-              'label': 'Joined',
               'format': 'date',
+              'label': 'Joined',
+              'name': 'hireDate',
+              'variant': 'caption',
             },
           ],
         },
@@ -652,11 +661,10 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'EmployeeCreate',
-        'linkedEntity': 'Employee',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Add Employee',
           'mode': 'create',
-          'icon': 'plus-circle',
+          'title': 'Add Employee',
           'fields': [
             'name',
             'email',
@@ -665,6 +673,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
             'hireDate',
             'status',
           ],
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -684,9 +693,10 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'EmployeeEdit',
-        'linkedEntity': 'Employee',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
+          'title': 'Edit Employee',
+          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -695,12 +705,11 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
             'hireDate',
             'status',
           ],
-          'title': 'Edit Employee',
-          'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
-          'OPEN': 'EDIT',
           'SAVE': 'EMPLOYEE_UPDATED',
+          'OPEN': 'EDIT',
         },
         'listens': [
           {
@@ -716,8 +725,10 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'EmployeeView',
-        'linkedEntity': 'Employee',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -727,8 +738,6 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
             'status',
           ],
           'title': 'Employee Details',
-          'mode': 'edit',
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -747,11 +756,11 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'EmployeeDelete',
-        'linkedEntity': 'Employee',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Employee',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'title': 'Delete Employee',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
@@ -960,15 +969,15 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'EmployeeAvatarUpload',
         'config': {
-          'maxSize': 5242880,
-          'uiTrait': '@trait.EmployeeAvatarUploadForm',
           'allowedMimeTypes': [
             'image/jpeg',
             'image/png',
             'image/webp',
           ],
           'acl': 'public-read',
+          'uiTrait': '@trait.EmployeeAvatarUploadForm',
           'bucket': 'employee-avatars',
+          'maxSize': 5242880,
         },
       }),
       {
@@ -1013,11 +1022,8 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
@@ -1029,24 +1035,27 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
-                        'inputType': 'text',
                         'placeholder': 'Choose file path…',
+                        'inputType': 'text',
                         'type': 'input',
                       },
                       {
-                        'action': 'UPLOAD',
-                        'type': 'button',
                         'variant': 'primary',
-                        'label': 'Upload',
+                        'type': 'button',
                         'icon': 'upload',
+                        'label': 'Upload',
+                        'action': 'UPLOAD',
                       },
                     ],
+                    'gap': 'md',
                     'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1118,7 +1127,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1130,6 +1139,10 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1153,7 +1166,9 @@ export const StdHrPortalEmployeeOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'EmployeeAppLayout',
@@ -1192,20 +1207,23 @@ export function isStdHrPortalEmployeeOrbitalParams(p: object): p is StdHrPortalE
 /**
  * Tunable params for the OnboardingOrbital orbital.
  *
- * Canonical entity: Onboarding (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Onboarding — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdHrPortalOnboardingOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1214,22 +1232,28 @@ export interface StdHrPortalOnboardingOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'OnboardingAppLayout',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the OnboardingOrbital orbital with consumer params. */
 export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Onboarding';
+  const canonicalName = params.entityName ?? 'Onboarding';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'onboardings');
   const built = makeOrbitalWithUses({
     name: 'OnboardingOrbital',
     uses: [
@@ -1244,7 +1268,7 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'onboardings',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1294,39 +1318,39 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'OnboardingAppLayout',
-        'linkedEntity': 'Onboarding',
+        'linkedEntity': canonicalName,
         'config': {
+          'notificationClickEvent': 'ONBOARDING_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.OnboardingWizard',
+          'appName': 'HRPortal',
           'navItems': [
             {
               'icon': 'users',
-              'href': '/employees',
               'label': 'Employees',
+              'href': '/employees',
             },
             {
-              'label': 'Onboarding',
-              'icon': 'clipboard-check',
               'href': '/onboarding',
+              'icon': 'clipboard-check',
+              'label': 'Onboarding',
             },
             {
               'icon': 'calendar',
-              'href': '/timeoff',
               'label': 'Time Off',
+              'href': '/timeoff',
             },
             {
-              'icon': 'git-branch',
               'label': 'Org Chart',
               'href': '/org-chart',
+              'icon': 'git-branch',
             },
           ],
-          'notifications': [],
-          'contentTrait': '@trait.OnboardingWizard',
-          'appName': 'HRPortal',
           'searchEvent': 'ONBOARDING_SEARCH',
-          'notificationClickEvent': 'ONBOARDING_NOTIFICATIONS_OPEN',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'ONBOARDING_SEARCH',
           'NOTIFY_CLICK': 'ONBOARDING_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ONBOARDING_SEARCH',
         },
       }),
       {
@@ -1580,8 +1604,8 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'Onboarding',
                   {
                     'emit': {
-                      'success': 'OnboardingLoaded',
                       'failure': 'OnboardingLoadFailed',
+                      'success': 'OnboardingLoaded',
                     },
                   },
                 ],
@@ -1589,13 +1613,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'icon',
@@ -1607,6 +1628,9 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'variant': 'h2',
                           },
                         ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'currentStep': 0,
@@ -1623,36 +1647,36 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                       },
                       {
                         'type': 'typography',
-                        'content': 'Employee Details',
                         'variant': 'h3',
+                        'content': 'Employee Details',
                       },
                       {
-                        'showCancel': false,
-                        'submitEvent': 'NEXT',
                         'mode': 'create',
-                        'type': 'form-section',
-                        'submitLabel': 'Continue',
+                        'showCancel': false,
                         'fields': [
                           {
-                            'min': 2,
                             'name': 'employeeName',
+                            'min': 2,
                             'required': true,
                           },
                           {
-                            'required': true,
                             'type': 'email',
                             'name': 'email',
+                            'required': true,
                           },
                           {
                             'required': true,
                             'name': 'department',
                           },
                         ],
+                        'submitLabel': 'Continue',
+                        'type': 'form-section',
+                        'submitEvent': 'NEXT',
                       },
                     ],
                     'className': 'max-w-xl mx-auto w-full',
                     'gap': 'lg',
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1687,15 +1711,13 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
                     'className': 'max-w-xl mx-auto w-full',
                     'direction': 'vertical',
                     'children': [
                       {
+                        'variant': 'h2',
                         'content': 'Employee Onboarding',
                         'type': 'typography',
-                        'variant': 'h2',
                       },
                       {
                         'steps': [
@@ -1711,26 +1733,28 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Manager Assignment',
                       },
                       {
+                        'entity': '@entity',
                         'fields': [
                           {
-                            'required': true,
                             'name': 'manager',
+                            'required': true,
                           },
                         ],
                         'submitLabel': 'Continue',
-                        'type': 'form-section',
-                        'mode': 'edit',
-                        'cancelEvent': 'PREV',
                         'submitEvent': 'NEXT',
-                        'entity': '@entity',
+                        'mode': 'edit',
                         'cancelLabel': 'Back',
+                        'type': 'form-section',
+                        'cancelEvent': 'PREV',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1756,47 +1780,47 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'type': 'typography',
                         'content': 'Employee Onboarding',
                         'variant': 'h2',
+                        'type': 'typography',
                       },
                       {
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
-                        'type': 'wizard-progress',
-                        'currentStep': 2,
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'content': 'Setup Checklist',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'submitEvent': 'NEXT',
                         'type': 'form-section',
-                        'mode': 'edit',
-                        'submitLabel': 'Continue',
-                        'cancelEvent': 'PREV',
                         'entity': '@entity',
-                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
+                        'submitEvent': 'NEXT',
                         'fields': [
                           'equipmentReady',
                           'accessGranted',
                         ],
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'mode': 'edit',
                       },
                     ],
                     'gap': 'lg',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
                     'direction': 'vertical',
                   },
                 ],
@@ -1811,38 +1835,39 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'content': 'Employee Onboarding',
-                        'type': 'typography',
                         'variant': 'h2',
+                        'type': 'typography',
                       },
                       {
                         'type': 'wizard-progress',
+                        'currentStep': 0,
                         'steps': [
                           'Employee Details',
                           'Manager Assignment',
                           'Setup Checklist',
                           'Review',
                         ],
-                        'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Employee Details',
                         'type': 'typography',
+                        'content': 'Employee Details',
                         'variant': 'h3',
                       },
                       {
-                        'mode': 'edit',
-                        'submitLabel': 'Continue',
-                        'submitEvent': 'NEXT',
-                        'entity': '@entity',
                         'type': 'form-section',
+                        'entity': '@entity',
+                        'mode': 'edit',
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
                         'showCancel': false,
                         'fields': [
                           {
@@ -1851,9 +1876,9 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'name': 'employeeName',
                           },
                           {
+                            'required': true,
                             'name': 'email',
                             'type': 'email',
-                            'required': true,
                           },
                           {
                             'name': 'department',
@@ -1862,8 +1887,7 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         ],
                       },
                     ],
-                    'className': 'max-w-xl mx-auto w-full',
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1894,8 +1918,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'type': 'typography',
@@ -1916,85 +1942,86 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
                         'children': [
                           {
+                            'justify': 'between',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'justify': 'between',
+                            'gap': 'md',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'content': 'Employee',
+                                'variant': 'caption',
                                 'type': 'typography',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'body',
                                 'content': '@entity.employeeName',
+                                'type': 'typography',
                               },
                             ],
-                            'gap': 'md',
                           },
                           {
+                            'direction': 'horizontal',
                             'gap': 'md',
                             'justify': 'between',
                             'children': [
                               {
-                                'content': 'Email',
                                 'variant': 'caption',
+                                'content': 'Email',
                                 'type': 'typography',
                               },
                               {
-                                'variant': 'body',
                                 'content': '@entity.email',
+                                'variant': 'body',
                                 'type': 'typography',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
-                            'gap': 'md',
-                            'type': 'stack',
-                            'justify': 'between',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'content': 'Department',
-                                'variant': 'caption',
                                 'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
-                                'content': '@entity.department',
-                                'variant': 'body',
                                 'type': 'typography',
+                                'variant': 'body',
+                                'content': '@entity.department',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
                           },
                           {
-                            'children': [
-                              {
-                                'content': 'Manager',
-                                'type': 'typography',
-                                'variant': 'caption',
-                              },
-                              {
-                                'type': 'typography',
-                                'variant': 'body',
-                                'content': '@entity.manager',
-                              },
-                            ],
                             'type': 'stack',
                             'justify': 'between',
                             'gap': 'md',
                             'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Manager',
+                              },
+                              {
+                                'variant': 'body',
+                                'content': '@entity.manager',
+                                'type': 'typography',
+                              },
+                            ],
                           },
                           {
                             'type': 'stack',
                             'children': [
                               {
-                                'type': 'typography',
                                 'content': 'Equipment Ready',
+                                'type': 'typography',
                                 'variant': 'caption',
                               },
                               {
@@ -2008,56 +2035,53 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'gap': 'md',
                           },
                           {
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'justify': 'between',
                             'children': [
                               {
-                                'variant': 'caption',
-                                'type': 'typography',
                                 'content': 'Access Granted',
+                                'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
-                                'content': '@entity.accessGranted',
                                 'type': 'typography',
                                 'variant': 'body',
+                                'content': '@entity.accessGranted',
                               },
                             ],
                             'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'gap': 'sm',
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'justify': 'between',
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
                         'children': [
                           {
-                            'type': 'button',
-                            'action': 'PREV',
                             'label': 'Back',
-                            'variant': 'ghost',
+                            'type': 'button',
                             'icon': 'arrow-left',
+                            'variant': 'ghost',
+                            'action': 'PREV',
                           },
                           {
-                            'icon': 'check',
                             'action': 'COMPLETE',
-                            'label': 'Complete Onboarding',
                             'variant': 'primary',
                             'type': 'button',
+                            'label': 'Complete Onboarding',
+                            'icon': 'check',
                           },
                         ],
-                        'type': 'stack',
+                        'justify': 'between',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2073,9 +2097,9 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   {
                     'children': [
                       {
-                        'variant': 'h2',
                         'content': 'Employee Onboarding',
                         'type': 'typography',
+                        'variant': 'h2',
                       },
                       {
                         'currentStep': 1,
@@ -2091,11 +2115,15 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Manager Assignment',
-                        'variant': 'h3',
                       },
                       {
+                        'cancelEvent': 'PREV',
+                        'entity': '@entity',
+                        'mode': 'edit',
+                        'submitLabel': 'Continue',
                         'type': 'form-section',
                         'fields': [
                           {
@@ -2103,18 +2131,14 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                             'required': true,
                           },
                         ],
-                        'submitLabel': 'Continue',
-                        'mode': 'edit',
                         'submitEvent': 'NEXT',
-                        'entity': '@entity',
-                        'cancelEvent': 'PREV',
                         'cancelLabel': 'Back',
                       },
                     ],
                     'type': 'stack',
+                    'direction': 'vertical',
                     'className': 'max-w-xl mx-auto w-full',
                     'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2138,8 +2162,8 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   '@entity',
                   {
                     'emit': {
-                      'failure': 'OnboardingSaveFailed',
                       'success': 'OnboardingSaved',
+                      'failure': 'OnboardingSaveFailed',
                     },
                   },
                 ],
@@ -2148,10 +2172,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'email',
                   'send',
                   {
+                    'subject': 'Welcome to the team',
+                    'sender': 'hr@example.com',
                     'recipient': '@entity.email',
                     'body': 'Welcome aboard! Your manager and equipment have been set up.',
-                    'sender': 'hr@example.com',
-                    'subject': 'Welcome to the team',
                   },
                   {
                     'emit': {
@@ -2176,35 +2200,35 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full py-12',
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'lg',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full py-12',
                     'children': [
                       {
                         'name': 'check-circle',
                         'type': 'icon',
                       },
                       {
-                        'content': 'Onboarding Complete!',
                         'type': 'typography',
                         'variant': 'h2',
+                        'content': 'Onboarding Complete!',
                       },
                       {
-                        'variant': 'body',
-                        'color': 'muted',
-                        'type': 'typography',
                         'content': 'The new employee has been fully onboarded.',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'body',
                       },
                       {
-                        'type': 'button',
-                        'action': 'RESTART',
                         'icon': 'rotate-ccw',
+                        'action': 'RESTART',
+                        'type': 'button',
                         'label': 'Start new onboarding',
                         'variant': 'ghost',
                       },
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2218,16 +2242,16 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'variant': 'h2',
-                        'content': 'Employee Onboarding',
                         'type': 'typography',
+                        'content': 'Employee Onboarding',
                       },
                       {
-                        'currentStep': 2,
                         'type': 'wizard-progress',
                         'steps': [
                           'Employee Details',
@@ -2235,6 +2259,7 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                           'Setup Checklist',
                           'Review',
                         ],
+                        'currentStep': 2,
                       },
                       {
                         'type': 'divider',
@@ -2245,21 +2270,20 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                         'variant': 'h3',
                       },
                       {
-                        'entity': '@entity',
-                        'type': 'form-section',
-                        'submitEvent': 'NEXT',
-                        'mode': 'edit',
-                        'submitLabel': 'Continue',
                         'cancelLabel': 'Back',
+                        'submitLabel': 'Continue',
+                        'submitEvent': 'NEXT',
+                        'type': 'form-section',
+                        'entity': '@entity',
                         'fields': [
                           'equipmentReady',
                           'accessGranted',
                         ],
                         'cancelEvent': 'PREV',
+                        'mode': 'edit',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2328,13 +2352,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                   'main',
                   {
                     'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'variant': 'h2',
                         'type': 'typography',
+                        'variant': 'h2',
                         'content': 'Employee Onboarding',
                       },
                       {
@@ -2344,41 +2365,44 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
                           'Setup Checklist',
                           'Review',
                         ],
-                        'type': 'wizard-progress',
                         'currentStep': 0,
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Employee Details',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'Employee Details',
                       },
                       {
-                        'submitLabel': 'Continue',
-                        'submitEvent': 'NEXT',
                         'showCancel': false,
                         'fields': [
                           {
-                            'name': 'employeeName',
                             'required': true,
+                            'name': 'employeeName',
                             'min': 2,
                           },
                           {
                             'name': 'email',
-                            'type': 'email',
                             'required': true,
+                            'type': 'email',
                           },
                           {
-                            'name': 'department',
                             'required': true,
+                            'name': 'department',
                           },
                         ],
-                        'mode': 'create',
                         'type': 'form-section',
+                        'mode': 'create',
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
                       },
                     ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2405,7 +2429,7 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2417,6 +2441,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2440,7 +2468,9 @@ export const StdHrPortalOnboardingOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'OnboardingAppLayout',
@@ -2467,20 +2497,23 @@ export function isStdHrPortalOnboardingOrbitalParams(p: object): p is StdHrPorta
 /**
  * Tunable params for the TimeOffOrbital orbital.
  *
- * Canonical entity: TimeOff (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: TimeOff — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdHrPortalTimeOffOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2489,22 +2522,28 @@ export interface StdHrPortalTimeOffOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TimeOffAppLayout' | 'TimeOffCalendar' | 'TimeOffBrowseList' | 'TimeOffCreate' | 'TimeOffEdit' | 'TimeOffView' | 'TimeOffDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TimeOffOrbital orbital with consumer params. */
 export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'TimeOff';
+  const canonicalName = params.entityName ?? 'TimeOff';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'timeoffs');
   const built = makeOrbitalWithUses({
     name: 'TimeOffOrbital',
     uses: [
@@ -2535,7 +2574,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
     ],
     entity: {
       name: canonicalName,
-      collection: 'timeoffs',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2606,10 +2645,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TimeOffAppLayout',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
-          'notificationClickEvent': 'TIME_OFF_NOTIFICATIONS_OPEN',
-          'notifications': [],
           'navItems': [
             {
               'icon': 'users',
@@ -2618,23 +2655,25 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
             },
             {
               'label': 'Onboarding',
-              'href': '/onboarding',
               'icon': 'clipboard-check',
+              'href': '/onboarding',
             },
             {
               'icon': 'calendar',
-              'label': 'Time Off',
               'href': '/timeoff',
+              'label': 'Time Off',
             },
             {
-              'label': 'Org Chart',
               'href': '/org-chart',
               'icon': 'git-branch',
+              'label': 'Org Chart',
             },
           ],
           'contentTrait': '@trait.TimeOffCatalog',
           'appName': 'HRPortal',
           'searchEvent': 'TIME_OFF_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'TIME_OFF_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'TIME_OFF_SEARCH',
@@ -2683,49 +2722,47 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'calendar',
                                 'type': 'icon',
+                                'name': 'calendar',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Time Off Requests',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
                             'gap': 'sm',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
+                                'action': 'CREATE',
+                                'type': 'button',
                                 'variant': 'primary',
                                 'label': 'Request Time Off',
                                 'icon': 'plus',
-                                'action': 'CREATE',
-                                'type': 'button',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -2736,6 +2773,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
                       },
                       '@trait.TimeOffBrowseList',
                     ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2747,11 +2786,11 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'TimeOffCalendar',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
+          'titleField': 'reason',
           'colorField': 'status',
           'dateField': 'startDate',
-          'titleField': 'reason',
         },
         'listens': [
           {
@@ -2783,31 +2822,14 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TimeOffBrowseList',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'label': 'View',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'EDIT',
-              'variant': 'ghost',
-              'label': 'Edit',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
-            },
-          ],
           'fields': [
             {
-              'variant': 'h4',
-              'label': 'Employee',
-              'name': 'employeeName',
               'icon': 'user',
+              'name': 'employeeName',
+              'label': 'Employee',
+              'variant': 'h4',
             },
             {
               'label': 'Type',
@@ -2819,20 +2841,37 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
               'variant': 'badge',
             },
             {
-              'name': 'startDate',
-              'format': 'date',
               'variant': 'caption',
               'label': 'From',
+              'format': 'date',
+              'name': 'startDate',
             },
             {
-              'label': 'To',
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
               'name': 'endDate',
+              'label': 'To',
             },
             {
               'name': 'reason',
               'variant': 'caption',
+            },
+          ],
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
           'gap': 'sm',
@@ -2867,7 +2906,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TimeOffCreate',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'create',
           'title': 'Request Time Off',
@@ -2900,11 +2939,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TimeOffEdit',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Time Off',
-          'mode': 'edit',
           'fields': [
             'employeeName',
             'employeeEmail',
@@ -2914,10 +2950,13 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
             'reason',
             'status',
           ],
+          'title': 'Edit Time Off',
+          'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
-          'OPEN': 'EDIT',
           'SAVE': 'TIME_OFF_UPDATED',
+          'OPEN': 'EDIT',
         },
         'listens': [
           {
@@ -2933,10 +2972,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TimeOffView',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Time Off Details',
-          'icon': 'eye',
           'fields': [
             'employeeName',
             'employeeEmail',
@@ -2947,6 +2984,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
             'status',
           ],
           'mode': 'edit',
+          'title': 'Time Off Details',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2965,7 +3004,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'TimeOffDelete',
-        'linkedEntity': 'TimeOff',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'Delete Time Off Request',
           'icon': 'alert-triangle',
@@ -2973,8 +3012,8 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'TIME_OFF_DELETED',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -3300,7 +3339,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3312,6 +3351,10 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3335,7 +3378,9 @@ export const StdHrPortalTimeOffOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TimeOffAppLayout',
@@ -3369,20 +3414,23 @@ export function isStdHrPortalTimeOffOrbitalParams(p: object): p is StdHrPortalTi
 /**
  * Tunable params for the OrgChartOrbital orbital.
  *
- * Canonical entity: OrgNode (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: OrgNode — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdHrPortalOrgChartOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -3391,22 +3439,26 @@ export interface StdHrPortalOrgChartOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'OrgChartAppLayout' | 'EmployeeRelated',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the OrgChartOrbital orbital with consumer params. */
 export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'OrgNode';
+  const canonicalName = params.entityName ?? 'OrgNode';
   const built = makeOrbitalWithUses({
     name: 'OrgChartOrbital',
     uses: [
@@ -3460,8 +3512,11 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'OrgChartAppLayout',
-        'linkedEntity': 'OrgNode',
+        'linkedEntity': canonicalName,
         'config': {
+          'searchEvent': 'ORG_CHART_SEARCH',
+          'notifications': [],
+          'appName': 'HRPortal',
           'navItems': [
             {
               'href': '/employees',
@@ -3475,30 +3530,27 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
             },
             {
               'icon': 'calendar',
-              'href': '/timeoff',
               'label': 'Time Off',
+              'href': '/timeoff',
             },
             {
-              'href': '/org-chart',
               'label': 'Org Chart',
+              'href': '/org-chart',
               'icon': 'git-branch',
             },
           ],
-          'notifications': [],
-          'searchEvent': 'ORG_CHART_SEARCH',
           'contentTrait': '@trait.OrgChartDisplay',
           'notificationClickEvent': 'ORG_CHART_NOTIFICATIONS_OPEN',
-          'appName': 'HRPortal',
         },
         'events': {
-          'NOTIFY_CLICK': 'ORG_CHART_NOTIFICATIONS_OPEN',
           'SEARCH': 'ORG_CHART_SEARCH',
+          'NOTIFY_CLICK': 'ORG_CHART_NOTIFICATIONS_OPEN',
         },
       }),
       makeTraitRef({
         'ref': 'Related.traits.RelatedItemList',
         'name': 'EmployeeRelated',
-        'linkedEntity': 'OrgNode',
+        'linkedEntity': canonicalName,
         'config': {
           'relationField': 'managerId',
         },
@@ -3618,44 +3670,47 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'main',
                   {
                     'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'align': 'center',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'git-branch',
                               },
                               {
-                                'content': 'Org Chart',
                                 'type': 'typography',
                                 'variant': 'h2',
+                                'content': 'Org Chart',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'type': 'stack',
                           },
                           {
-                            'action': 'REFRESH',
-                            'variant': 'secondary',
-                            'label': 'Refresh',
-                            'type': 'button',
                             'icon': 'refresh-cw',
+                            'action': 'REFRESH',
+                            'type': 'button',
+                            'label': 'Refresh',
+                            'variant': 'secondary',
                           },
                         ],
-                        'justify': 'between',
-                        'align': 'center',
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'width': 800,
                         'nodes': [
                           {
                             'id': 'ceo',
@@ -3666,43 +3721,40 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                             'label': 'VP Engineering',
                           },
                           {
-                            'id': 'vp-sales',
                             'label': 'VP Sales',
+                            'id': 'vp-sales',
                           },
                           {
-                            'label': 'Frontend Lead',
                             'id': 'lead-fe',
+                            'label': 'Frontend Lead',
                           },
                           {
-                            'id': 'lead-be',
                             'label': 'Backend Lead',
+                            'id': 'lead-be',
                           },
                         ],
                         'edges': [
                           {
-                            'source': 'ceo',
                             'target': 'vp-eng',
+                            'source': 'ceo',
                           },
                           {
                             'target': 'vp-sales',
                             'source': 'ceo',
                           },
                           {
-                            'source': 'vp-eng',
                             'target': 'lead-fe',
+                            'source': 'vp-eng',
                           },
                           {
-                            'source': 'vp-eng',
                             'target': 'lead-be',
+                            'source': 'vp-eng',
                           },
                         ],
                         'type': 'graph-view',
                         'height': 400,
-                        'width': 800,
                       },
                     ],
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'gap': 'lg',
                     'direction': 'vertical',
                   },
                 ],
@@ -3717,71 +3769,47 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
                             'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'git-branch',
                                 'type': 'icon',
+                                'name': 'git-branch',
                               },
                               {
                                 'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Org Chart',
+                                'type': 'typography',
                               },
                             ],
                           },
                           {
-                            'icon': 'refresh-cw',
-                            'label': 'Refresh',
-                            'action': 'REFRESH',
                             'type': 'button',
+                            'action': 'REFRESH',
+                            'label': 'Refresh',
+                            'icon': 'refresh-cw',
                             'variant': 'secondary',
                           },
                         ],
-                        'justify': 'between',
                         'direction': 'horizontal',
                         'align': 'center',
-                        'type': 'stack',
                         'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'height': 400,
-                        'nodes': [
-                          {
-                            'label': 'CEO',
-                            'id': 'ceo',
-                          },
-                          {
-                            'id': 'vp-eng',
-                            'label': 'VP Engineering',
-                          },
-                          {
-                            'label': 'VP Sales',
-                            'id': 'vp-sales',
-                          },
-                          {
-                            'label': 'Frontend Lead',
-                            'id': 'lead-fe',
-                          },
-                          {
-                            'label': 'Backend Lead',
-                            'id': 'lead-be',
-                          },
-                        ],
-                        'type': 'graph-view',
                         'width': 800,
                         'edges': [
                           {
@@ -3793,17 +3821,41 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                             'source': 'ceo',
                           },
                           {
-                            'source': 'vp-eng',
                             'target': 'lead-fe',
+                            'source': 'vp-eng',
                           },
                           {
-                            'source': 'vp-eng',
                             'target': 'lead-be',
+                            'source': 'vp-eng',
                           },
                         ],
+                        'nodes': [
+                          {
+                            'label': 'CEO',
+                            'id': 'ceo',
+                          },
+                          {
+                            'id': 'vp-eng',
+                            'label': 'VP Engineering',
+                          },
+                          {
+                            'id': 'vp-sales',
+                            'label': 'VP Sales',
+                          },
+                          {
+                            'id': 'lead-fe',
+                            'label': 'Frontend Lead',
+                          },
+                          {
+                            'label': 'Backend Lead',
+                            'id': 'lead-be',
+                          },
+                        ],
+                        'type': 'graph-view',
+                        'height': 400,
                       },
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3827,22 +3879,22 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'className': 'py-12',
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
+                        'type': 'typography',
                         'content': 'Refreshing…',
+                        'color': 'muted',
                       },
                     ],
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -3872,7 +3924,7 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3884,6 +3936,10 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3907,7 +3963,9 @@ export const StdHrPortalOrgChartOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'OrgChartAppLayout',

@@ -30,27 +30,30 @@ const ALIAS = 'GenericApp';
  * without modifying its state-machine topology.
  */
 export interface StdGenericAppConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
  * Tunable params for the ContactOrbital orbital.
  *
- * Canonical entity: Contact (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Contact — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppContactOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdGenericAppContactOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ContactOrbital orbital with consumer params. */
 export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Contact';
+  const canonicalName = params.entityName ?? 'Contact';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'contacts');
   const built = makeOrbitalWithUses({
     name: 'ContactOrbital',
     uses: [
@@ -105,7 +114,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'contacts',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -161,42 +170,46 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ContactAppLayout',
         'config': {
+          'contentTrait': '@trait.ContactCatalog',
+          'searchEvent': 'CONTACT_SEARCH',
+          'notifications': [],
           'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
+          'appName': 'App',
           'navItems': [
             {
-              'label': 'Contacts',
               'href': '/contacts',
               'icon': 'users',
+              'label': 'Contacts',
             },
             {
-              'label': 'Items',
               'icon': 'package',
+              'label': 'Items',
               'href': '/items',
             },
             {
-              'href': '/activities',
-              'label': 'Activities',
               'icon': 'activity',
+              'label': 'Activities',
+              'href': '/activities',
             },
             {
-              'label': 'Tasks',
               'href': '/tasks',
+              'label': 'Tasks',
               'icon': 'check-square',
             },
             {
               'href': '/calendar',
-              'label': 'Calendar',
               'icon': 'calendar',
+              'label': 'Calendar',
             },
             {
               'href': '/widgets',
-              'label': 'Dashboard',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
-              'label': 'Feed',
-              'icon': 'rss',
               'href': '/feed',
+              'icon': 'rss',
+              'label': 'Feed',
             },
             {
               'label': 'Notes',
@@ -204,10 +217,6 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
               'href': '/notes',
             },
           ],
-          'notifications': [],
-          'searchEvent': 'CONTACT_SEARCH',
-          'contentTrait': '@trait.ContactCatalog',
-          'appName': 'App',
         },
         'events': {
           'SEARCH': 'CONTACT_SEARCH',
@@ -295,53 +304,51 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   'main',
                   {
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'users',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Contacts',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
                           },
                           {
-                            'action': 'CREATE',
-                            'type': 'button',
+                            'label': 'New Contact',
                             'variant': 'primary',
                             'icon': 'plus',
-                            'label': 'New Contact',
+                            'type': 'button',
+                            'action': 'CREATE',
                           },
                         ],
+                        'justify': 'between',
                         'type': 'stack',
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           '@trait.ContactSearch',
                           '@trait.ContactFilter',
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'align': 'center',
                         'gap': 'md',
                       },
                       {
@@ -349,6 +356,8 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                       },
                       '@trait.ContactBrowseList',
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -367,28 +376,28 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
+                    'type': 'stack',
                     'direction': 'vertical',
+                    'className': 'py-8',
+                    'align': 'center',
+                    'gap': 'md',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'No notifications',
                         'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
-                        'action': 'INIT',
                         'type': 'button',
-                        'label': 'Back',
                         'variant': 'ghost',
+                        'label': 'Back',
+                        'action': 'INIT',
                       },
                     ],
-                    'type': 'stack',
-                    'align': 'center',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -409,32 +418,32 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ContactFilter',
         'config': {
-          'event': 'CONTACT_FILTER',
           'filters': [
             {
               'options': [],
-              'label': 'Company',
               'field': 'company',
+              'label': 'Company',
               'filterType': 'select',
             },
           ],
+          'event': 'CONTACT_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ContactBrowseList',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
           'cols': 1,
           'fields': [
             {
-              'variant': 'h3',
               'name': 'name',
+              'variant': 'h3',
               'icon': 'user',
             },
             {
-              'name': 'email',
               'variant': 'body',
+              'name': 'email',
             },
             {
               'name': 'phone',
@@ -452,19 +461,19 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           'gap': 'sm',
           'itemActions': [
             {
+              'label': 'View',
               'event': 'VIEW',
               'variant': 'ghost',
-              'label': 'View',
             },
             {
+              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
-              'label': 'Edit',
             },
             {
+              'event': 'DELETE',
               'label': 'Delete',
               'variant': 'danger',
-              'event': 'DELETE',
             },
           ],
         },
@@ -514,11 +523,10 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ContactCreate',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'title': 'New Contact',
           'mode': 'create',
+          'title': 'New Contact',
           'fields': [
             'name',
             'email',
@@ -527,6 +535,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'role',
             'notes',
           ],
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -545,11 +554,8 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ContactEdit',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Contact',
-          'icon': 'edit',
-          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -558,6 +564,9 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'role',
             'notes',
           ],
+          'icon': 'edit',
+          'title': 'Edit Contact',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -576,11 +585,11 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ContactView',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'title': 'View Contact',
           'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -607,16 +616,16 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ContactDelete',
-        'linkedEntity': 'Contact',
+        'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Contact',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -854,7 +863,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -866,6 +875,10 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -889,7 +902,9 @@ export const StdGenericAppContactOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ContactAppLayout',
@@ -924,20 +939,23 @@ export function isStdGenericAppContactOrbitalParams(p: object): p is StdGenericA
 /**
  * Tunable params for the ItemOrbital orbital.
  *
- * Canonical entity: Item (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Item — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppItemOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -946,22 +964,28 @@ export interface StdGenericAppItemOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ItemAppLayout' | 'ItemSearch' | 'ItemFilter' | 'ItemBrowseList' | 'ItemCreate' | 'ItemEdit' | 'ItemView' | 'ItemDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ItemOrbital orbital with consumer params. */
 export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Item';
+  const canonicalName = params.entityName ?? 'Item';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'items');
   const built = makeOrbitalWithUses({
     name: 'ItemOrbital',
     uses: [
@@ -992,7 +1016,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
     ],
     entity: {
       name: canonicalName,
-      collection: 'items',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1048,9 +1072,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ItemAppLayout',
         'config': {
-          'searchEvent': 'ITEM_SEARCH',
-          'appName': 'App',
-          'notificationClickEvent': 'ITEM_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'label': 'Contacts',
@@ -1058,47 +1079,50 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
               'icon': 'users',
             },
             {
+              'label': 'Items',
               'href': '/items',
               'icon': 'package',
-              'label': 'Items',
             },
             {
-              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
+              'label': 'Activities',
             },
             {
-              'icon': 'check-square',
               'label': 'Tasks',
               'href': '/tasks',
+              'icon': 'check-square',
             },
             {
-              'icon': 'calendar',
               'label': 'Calendar',
+              'icon': 'calendar',
               'href': '/calendar',
             },
             {
               'href': '/widgets',
-              'label': 'Dashboard',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
-              'label': 'Feed',
               'icon': 'rss',
+              'label': 'Feed',
               'href': '/feed',
             },
             {
-              'href': '/notes',
-              'icon': 'file-text',
               'label': 'Notes',
+              'icon': 'file-text',
+              'href': '/notes',
             },
           ],
+          'searchEvent': 'ITEM_SEARCH',
           'notifications': [],
+          'appName': 'App',
           'contentTrait': '@trait.ItemCatalog',
+          'notificationClickEvent': 'ITEM_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'ITEM_SEARCH',
           'NOTIFY_CLICK': 'ITEM_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ITEM_SEARCH',
         },
       }),
       {
@@ -1181,58 +1205,58 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
                         'align': 'center',
                         'children': [
                           {
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'package',
                                 'type': 'icon',
+                                'name': 'package',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Items',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                             'align': 'center',
+                            'gap': 'sm',
                           },
                           {
+                            'type': 'button',
                             'action': 'CREATE',
                             'variant': 'primary',
-                            'type': 'button',
-                            'label': 'New Item',
                             'icon': 'plus',
+                            'label': 'New Item',
                           },
                         ],
-                        'justify': 'between',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
+                        'gap': 'md',
                         'align': 'center',
                         'direction': 'horizontal',
                         'children': [
                           '@trait.ItemSearch',
                           '@trait.ItemFilter',
                         ],
-                        'type': 'stack',
-                        'gap': 'md',
                       },
                       '@trait.ItemBrowseList',
                     ],
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1251,28 +1275,28 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'md',
                     'align': 'center',
-                    'className': 'py-8',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'variant': 'ghost',
-                        'label': 'Back',
-                        'action': 'INIT',
                         'type': 'button',
+                        'action': 'INIT',
+                        'label': 'Back',
+                        'variant': 'ghost',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -1293,39 +1317,58 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ItemFilter',
         'config': {
-          'event': 'ITEM_FILTER',
           'filters': [
             {
-              'label': 'Category',
               'options': [],
-              'filterType': 'select',
               'field': 'category',
+              'label': 'Category',
+              'filterType': 'select',
             },
           ],
+          'event': 'ITEM_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ItemBrowseList',
-        'linkedEntity': 'Item',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 2,
           'fields': [
             {
               'name': 'name',
-              'variant': 'h3',
               'icon': 'package',
+              'variant': 'h3',
             },
             {
               'name': 'description',
               'variant': 'body',
             },
             {
-              'variant': 'caption',
               'name': 'sku',
+              'variant': 'caption',
             },
             {
-              'variant': 'badge',
               'format': 'currency',
+              'variant': 'badge',
               'name': 'price',
             },
             {
@@ -1335,25 +1378,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             {
               'name': 'category',
               'variant': 'caption',
-            },
-          ],
-          'gap': 'sm',
-          'cols': 2,
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'label': 'View',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
             },
           ],
         },
@@ -1403,7 +1427,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ItemCreate',
-        'linkedEntity': 'Item',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'create',
           'fields': [
@@ -1434,8 +1458,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ItemEdit',
-        'linkedEntity': 'Item',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
+          'mode': 'edit',
           'title': 'Edit Item',
           'fields': [
             'name',
@@ -1445,8 +1471,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
-          'mode': 'edit',
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1465,8 +1489,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ItemView',
-        'linkedEntity': 'Item',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'title': 'View Item',
           'icon': 'eye',
           'fields': [
             'name',
@@ -1476,8 +1502,6 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
-          'mode': 'edit',
-          'title': 'View Item',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1496,16 +1520,16 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ItemDelete',
-        'linkedEntity': 'Item',
+        'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
           'title': 'Delete Item',
           'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1743,7 +1767,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1755,6 +1779,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1778,7 +1806,9 @@ export const StdGenericAppItemOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ItemAppLayout',
@@ -1813,20 +1843,23 @@ export function isStdGenericAppItemOrbitalParams(p: object): p is StdGenericAppI
 /**
  * Tunable params for the ActivityOrbital orbital.
  *
- * Canonical entity: Activity (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Activity — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppActivityOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1835,22 +1868,28 @@ export interface StdGenericAppActivityOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ActivityAppLayout' | 'ActivityBrowseList' | 'ActivityView' | 'ActivityEdit' | 'ActivityDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ActivityOrbital orbital with consumer params. */
 export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Activity';
+  const canonicalName = params.entityName ?? 'Activity';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'activities');
   const built = makeOrbitalWithUses({
     name: 'ActivityOrbital',
     uses: [
@@ -1873,7 +1912,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'activities',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1931,46 +1970,46 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
               'label': 'Contacts',
             },
             {
-              'href': '/items',
               'label': 'Items',
               'icon': 'package',
+              'href': '/items',
             },
             {
-              'href': '/activities',
-              'label': 'Activities',
               'icon': 'activity',
+              'label': 'Activities',
+              'href': '/activities',
             },
             {
-              'href': '/tasks',
-              'label': 'Tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
+              'href': '/tasks',
             },
             {
               'icon': 'calendar',
-              'href': '/calendar',
               'label': 'Calendar',
+              'href': '/calendar',
             },
             {
-              'href': '/widgets',
               'icon': 'layout-dashboard',
+              'href': '/widgets',
               'label': 'Dashboard',
             },
             {
+              'icon': 'rss',
               'label': 'Feed',
               'href': '/feed',
-              'icon': 'rss',
             },
             {
-              'label': 'Notes',
               'href': '/notes',
               'icon': 'file-text',
+              'label': 'Notes',
             },
           ],
+          'appName': 'App',
+          'searchEvent': 'ACTIVITY_SEARCH',
           'notifications': [],
           'notificationClickEvent': 'ACTIVITY_NOTIFICATIONS_OPEN',
-          'searchEvent': 'ACTIVITY_SEARCH',
           'contentTrait': '@trait.ActivityCatalog',
-          'appName': 'App',
         },
         'events': {
           'SEARCH': 'ACTIVITY_SEARCH',
@@ -2041,24 +2080,24 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'children': [
-                          {
-                            'name': 'activity',
-                            'type': 'icon',
-                          },
-                          {
-                            'variant': 'h2',
-                            'content': 'Activities',
-                            'type': 'typography',
-                          },
-                        ],
                         'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'activity',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Activities',
+                            'variant': 'h2',
+                          },
+                        ],
                         'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -2066,7 +2105,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                       '@trait.ActivityBrowseList',
                     ],
                     'gap': 'lg',
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2085,17 +2124,15 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
+                        'content': 'No notifications',
                         'variant': 'h3',
                         'type': 'typography',
-                        'content': 'No notifications',
                       },
                       {
                         'label': 'Back',
@@ -2104,9 +2141,11 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                         'variant': 'ghost',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'md',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-8',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2118,51 +2157,51 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ActivityBrowseList',
-        'linkedEntity': 'Activity',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
           'fields': [
             {
-              'name': 'title',
               'variant': 'h4',
+              'name': 'title',
               'icon': 'activity',
             },
             {
-              'variant': 'badge',
               'name': 'type',
+              'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'actor',
+              'variant': 'caption',
             },
             {
               'format': 'date',
-              'name': 'timestamp',
               'variant': 'caption',
+              'name': 'timestamp',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
           ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'event': 'DELETE',
-              'label': 'Delete',
-              'variant': 'danger',
-            },
-          ],
+          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -2194,8 +2233,9 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ActivityView',
-        'linkedEntity': 'Activity',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
           'title': 'View Activity',
           'fields': [
             'title',
@@ -2206,7 +2246,6 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             'notes',
           ],
           'mode': 'edit',
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2225,11 +2264,8 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ActivityEdit',
-        'linkedEntity': 'Activity',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Activity',
-          'mode': 'edit',
-          'icon': 'edit',
           'fields': [
             'title',
             'type',
@@ -2238,6 +2274,9 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             'status',
             'notes',
           ],
+          'title': 'Edit Activity',
+          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2256,16 +2295,16 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ActivityDelete',
-        'linkedEntity': 'Activity',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
-          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'title': 'Delete Activity',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -2457,7 +2496,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2469,6 +2508,10 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2492,7 +2535,9 @@ export const StdGenericAppActivityOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ActivityAppLayout',
@@ -2524,20 +2569,23 @@ export function isStdGenericAppActivityOrbitalParams(p: object): p is StdGeneric
 /**
  * Tunable params for the TaskOrbital orbital.
  *
- * Canonical entity: Task (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Task — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppTaskOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2546,22 +2594,28 @@ export interface StdGenericAppTaskOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TaskAppLayout' | 'TaskSelection' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TaskOrbital orbital with consumer params. */
 export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Task';
+  const canonicalName = params.entityName ?? 'Task';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'tasks');
   const built = makeOrbitalWithUses({
     name: 'TaskOrbital',
     uses: [
@@ -2588,7 +2642,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
     ],
     entity: {
       name: canonicalName,
-      collection: 'tasks',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2654,12 +2708,14 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TaskAppLayout',
         'config': {
+          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
+          'searchEvent': 'TASK_SEARCH',
           'appName': 'App',
           'navItems': [
             {
-              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
+              'href': '/contacts',
             },
             {
               'icon': 'package',
@@ -2672,39 +2728,37 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'href': '/activities',
             },
             {
-              'label': 'Tasks',
               'href': '/tasks',
+              'label': 'Tasks',
               'icon': 'check-square',
             },
             {
               'label': 'Calendar',
-              'href': '/calendar',
               'icon': 'calendar',
+              'href': '/calendar',
             },
             {
-              'label': 'Dashboard',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
               'href': '/widgets',
             },
             {
+              'icon': 'rss',
               'label': 'Feed',
               'href': '/feed',
-              'icon': 'rss',
             },
             {
-              'icon': 'file-text',
               'label': 'Notes',
+              'icon': 'file-text',
               'href': '/notes',
             },
           ],
-          'contentTrait': '@trait.TaskCatalog',
-          'searchEvent': 'TASK_SEARCH',
-          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'contentTrait': '@trait.TaskCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
           'SEARCH': 'TASK_SEARCH',
+          'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -2787,40 +2841,39 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
                         'gap': 'md',
-                        'align': 'center',
+                        'type': 'stack',
                         'justify': 'between',
+                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'check-square',
+                                'type': 'icon',
                               },
                               {
+                                'content': 'Tasks',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Tasks',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
-                            'action': 'CREATE',
-                            'icon': 'plus',
                             'label': 'New Task',
-                            'variant': 'primary',
+                            'icon': 'plus',
+                            'action': 'CREATE',
                             'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -2833,6 +2886,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2851,28 +2905,28 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
                       },
                       {
                         'action': 'INIT',
-                        'variant': 'ghost',
                         'type': 'button',
                         'label': 'Back',
+                        'variant': 'ghost',
                       },
                     ],
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2885,6 +2939,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         'ref': 'Selection.traits.SelectableItemSelection',
         'name': 'TaskSelection',
         'config': {
+          'event': 'TASK_STATUS_SELECT',
           'title': 'Filter by status',
           'options': [
             {
@@ -2900,15 +2955,13 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'value': 'done',
             },
           ],
-          'event': 'TASK_STATUS_SELECT',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TaskBrowseList',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
           'itemActions': [
             {
               'event': 'VIEW',
@@ -2916,9 +2969,9 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'variant': 'ghost',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
               'event': 'DELETE',
@@ -2926,23 +2979,24 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'label': 'Delete',
             },
           ],
+          'gap': 'sm',
           'fields': [
             {
-              'icon': 'check-square',
               'variant': 'h4',
+              'icon': 'check-square',
               'name': 'title',
             },
             {
-              'name': 'description',
               'variant': 'body',
+              'name': 'description',
             },
             {
-              'name': 'assignee',
               'variant': 'caption',
+              'name': 'assignee',
             },
             {
-              'name': 'dueDate',
               'format': 'date',
+              'name': 'dueDate',
               'variant': 'caption',
             },
             {
@@ -2954,7 +3008,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'name': 'status',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -2986,11 +3040,11 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TaskCreate',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'title': 'New Task',
           'mode': 'create',
-          'icon': 'plus-circle',
           'fields': [
             'title',
             'description',
@@ -3017,9 +3071,8 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TaskEdit',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'mode': 'edit',
           'fields': [
             'title',
@@ -3029,6 +3082,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'priority',
             'status',
           ],
+          'icon': 'edit',
           'title': 'Edit Task',
         },
         'events': {
@@ -3048,10 +3102,8 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TaskView',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Task',
-          'icon': 'eye',
           'mode': 'edit',
           'fields': [
             'title',
@@ -3061,6 +3113,8 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'priority',
             'status',
           ],
+          'icon': 'eye',
+          'title': 'View Task',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -3079,16 +3133,16 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'TaskDelete',
-        'linkedEntity': 'Task',
+        'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Task',
           'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -3323,7 +3377,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3335,6 +3389,10 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3358,7 +3416,9 @@ export const StdGenericAppTaskOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TaskAppLayout',
@@ -3392,20 +3452,23 @@ export function isStdGenericAppTaskOrbitalParams(p: object): p is StdGenericAppT
 /**
  * Tunable params for the CalendarOrbital orbital.
  *
- * Canonical entity: ScheduledEvent (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ScheduledEvent — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppCalendarOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -3414,22 +3477,28 @@ export interface StdGenericAppCalendarOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CalendarAppLayout' | 'CalendarView' | 'CalendarBrowseList' | 'CalendarCreate' | 'CalendarEdit' | 'CalendarDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CalendarOrbital orbital with consumer params. */
 export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ScheduledEvent';
+  const canonicalName = params.entityName ?? 'ScheduledEvent';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'scheduledevents');
   const built = makeOrbitalWithUses({
     name: 'CalendarOrbital',
     uses: [
@@ -3456,7 +3525,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'scheduledevents',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3512,15 +3581,14 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CalendarAppLayout',
         'config': {
-          'contentTrait': '@trait.CalendarCatalog',
-          'notificationClickEvent': 'CAL_NOTIFICATIONS_OPEN',
+          'notifications': [],
           'appName': 'App',
-          'searchEvent': 'CAL_SEARCH',
+          'notificationClickEvent': 'CAL_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'icon': 'users',
               'label': 'Contacts',
               'href': '/contacts',
-              'icon': 'users',
             },
             {
               'icon': 'package',
@@ -3528,41 +3596,42 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'href': '/items',
             },
             {
+              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
-              'label': 'Activities',
             },
             {
-              'label': 'Tasks',
               'href': '/tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
-              'icon': 'calendar',
               'label': 'Calendar',
               'href': '/calendar',
+              'icon': 'calendar',
             },
             {
+              'label': 'Dashboard',
               'href': '/widgets',
               'icon': 'layout-dashboard',
-              'label': 'Dashboard',
             },
             {
-              'href': '/feed',
               'label': 'Feed',
+              'href': '/feed',
               'icon': 'rss',
             },
             {
-              'icon': 'file-text',
               'label': 'Notes',
               'href': '/notes',
+              'icon': 'file-text',
             },
           ],
-          'notifications': [],
+          'searchEvent': 'CAL_SEARCH',
+          'contentTrait': '@trait.CalendarCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'CAL_NOTIFICATIONS_OPEN',
           'SEARCH': 'CAL_SEARCH',
+          'NOTIFY_CLICK': 'CAL_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -3645,42 +3714,42 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
                         'direction': 'horizontal',
-                        'type': 'stack',
+                        'align': 'center',
                         'justify': 'between',
-                        'gap': 'md',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'calendar',
                               },
                               {
-                                'content': 'Calendar',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Calendar',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'button',
-                            'icon': 'plus',
-                            'label': 'New Event',
-                            'action': 'CREATE',
                             'variant': 'primary',
+                            'action': 'CREATE',
+                            'type': 'button',
+                            'label': 'New Event',
+                            'icon': 'plus',
                           },
                         ],
-                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
@@ -3709,9 +3778,6 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'type': 'stack',
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
@@ -3723,14 +3789,17 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                         'content': 'No notifications',
                       },
                       {
-                        'type': 'button',
-                        'label': 'Back',
-                        'variant': 'ghost',
                         'action': 'INIT',
+                        'variant': 'ghost',
+                        'label': 'Back',
+                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'md',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -3744,8 +3813,8 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         'name': 'CalendarView',
         'config': {
           'dateField': 'startTime',
-          'labelField': 'title',
           'title': 'Schedule',
+          'labelField': 'title',
         },
         'listens': [
           {
@@ -3761,44 +3830,18 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'CalendarBrowseList',
-        'linkedEntity': 'ScheduledEvent',
+        'linkedEntity': canonicalName,
         'config': {
-          'fields': [
-            {
-              'icon': 'calendar',
-              'name': 'title',
-              'variant': 'h4',
-            },
-            {
-              'variant': 'caption',
-              'name': 'startTime',
-              'format': 'date',
-            },
-            {
-              'name': 'endTime',
-              'format': 'date',
-              'variant': 'caption',
-            },
-            {
-              'variant': 'body',
-              'name': 'location',
-            },
-            {
-              'variant': 'caption',
-              'name': 'attendees',
-            },
-          ],
-          'cols': 1,
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
               'label': 'View',
             },
             {
+              'event': 'EDIT',
               'variant': 'ghost',
               'label': 'Edit',
-              'event': 'EDIT',
             },
             {
               'event': 'DELETE',
@@ -3806,7 +3849,33 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'label': 'Delete',
             },
           ],
+          'fields': [
+            {
+              'name': 'title',
+              'variant': 'h4',
+              'icon': 'calendar',
+            },
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'startTime',
+            },
+            {
+              'format': 'date',
+              'name': 'endTime',
+              'variant': 'caption',
+            },
+            {
+              'name': 'location',
+              'variant': 'body',
+            },
+            {
+              'name': 'attendees',
+              'variant': 'caption',
+            },
+          ],
           'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -3838,10 +3907,10 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CalendarCreate',
-        'linkedEntity': 'ScheduledEvent',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Event',
           'mode': 'create',
+          'title': 'New Event',
           'fields': [
             'title',
             'startTime',
@@ -3869,10 +3938,9 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CalendarEdit',
-        'linkedEntity': 'ScheduledEvent',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Event',
+          'mode': 'edit',
           'fields': [
             'title',
             'startTime',
@@ -3881,7 +3949,8 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             'attendees',
             'description',
           ],
-          'mode': 'edit',
+          'title': 'Edit Event',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -3900,12 +3969,12 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'CalendarDelete',
-        'linkedEntity': 'ScheduledEvent',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'alert-triangle',
+          'title': 'Delete Event',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
-          'title': 'Delete Event',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -4141,7 +4210,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -4153,6 +4222,10 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -4176,7 +4249,9 @@ export const StdGenericAppCalendarOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CalendarAppLayout',
@@ -4209,20 +4284,23 @@ export function isStdGenericAppCalendarOrbitalParams(p: object): p is StdGeneric
 /**
  * Tunable params for the WidgetOrbital orbital.
  *
- * Canonical entity: Widget (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Widget — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppWidgetOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -4231,22 +4309,28 @@ export interface StdGenericAppWidgetOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'WidgetAppLayout' | 'WidgetStats' | 'WidgetGraphs' | 'WidgetBrowseList' | 'WidgetView' | 'WidgetEdit' | 'WidgetDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the WidgetOrbital orbital with consumer params. */
 export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Widget';
+  const canonicalName = params.entityName ?? 'Widget';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'widgets');
   const built = makeOrbitalWithUses({
     name: 'WidgetOrbital',
     uses: [
@@ -4277,7 +4361,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
     ],
     entity: {
       name: canonicalName,
-      collection: 'widgets',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -4328,40 +4412,44 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WidgetAppLayout',
         'config': {
+          'contentTrait': '@trait.WidgetCatalog',
+          'notifications': [],
+          'searchEvent': 'WIDGET_SEARCH',
+          'appName': 'App',
           'navItems': [
             {
-              'icon': 'users',
               'label': 'Contacts',
               'href': '/contacts',
+              'icon': 'users',
             },
             {
-              'icon': 'package',
               'href': '/items',
+              'icon': 'package',
               'label': 'Items',
             },
             {
+              'label': 'Activities',
               'icon': 'activity',
               'href': '/activities',
-              'label': 'Activities',
             },
             {
-              'icon': 'check-square',
               'label': 'Tasks',
               'href': '/tasks',
+              'icon': 'check-square',
             },
             {
               'label': 'Calendar',
-              'icon': 'calendar',
               'href': '/calendar',
+              'icon': 'calendar',
             },
             {
-              'icon': 'layout-dashboard',
-              'label': 'Dashboard',
               'href': '/widgets',
+              'label': 'Dashboard',
+              'icon': 'layout-dashboard',
             },
             {
-              'href': '/feed',
               'label': 'Feed',
+              'href': '/feed',
               'icon': 'rss',
             },
             {
@@ -4371,14 +4459,10 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             },
           ],
           'notificationClickEvent': 'WIDGET_NOTIFICATIONS_OPEN',
-          'searchEvent': 'WIDGET_SEARCH',
-          'appName': 'App',
-          'contentTrait': '@trait.WidgetCatalog',
-          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'WIDGET_NOTIFICATIONS_OPEN',
           'SEARCH': 'WIDGET_SEARCH',
+          'NOTIFY_CLICK': 'WIDGET_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -4445,13 +4529,19 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'layout-dashboard',
                             'type': 'icon',
+                            'name': 'layout-dashboard',
                           },
                           {
                             'content': 'Dashboard',
@@ -4459,9 +4549,6 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                             'type': 'typography',
                           },
                         ],
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
@@ -4473,9 +4560,6 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                       },
                       '@trait.WidgetBrowseList',
                     ],
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -4494,27 +4578,27 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'gap': 'md',
                     'align': 'center',
                     'className': 'py-8',
-                    'gap': 'md',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
+                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'No notifications',
                       },
                       {
                         'action': 'INIT',
                         'type': 'button',
-                        'variant': 'ghost',
                         'label': 'Back',
+                        'variant': 'ghost',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -4528,24 +4612,24 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'WidgetStats',
         'config': {
+          'title': 'Key Metrics',
           'metrics': [
             {
-              'aggregation': 'count',
-              'variant': 'primary',
               'format': 'number',
-              'label': 'Widgets',
               'icon': 'layout-dashboard',
+              'variant': 'primary',
+              'aggregation': 'count',
+              'label': 'Widgets',
             },
             {
-              'label': 'Total Value',
-              'variant': 'success',
-              'format': 'number',
               'aggregation': 'sum',
-              'field': 'value',
               'icon': 'trending-up',
+              'variant': 'success',
+              'field': 'value',
+              'label': 'Total Value',
+              'format': 'number',
             },
           ],
-          'title': 'Key Metrics',
         },
         'listens': [
           {
@@ -4562,13 +4646,13 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'WidgetGraphs',
         'config': {
-          'aggregation': 'count',
           'height': 240,
-          'showLegend': true,
+          'subtitle': 'Distribution',
+          'aggregation': 'count',
           'title': 'Widgets by type',
           'categoryField': 'type',
-          'subtitle': 'Distribution',
           'chartType': 'pie',
+          'showLegend': true,
         },
         'listens': [
           {
@@ -4584,51 +4668,51 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'WidgetBrowseList',
-        'linkedEntity': 'Widget',
+        'linkedEntity': canonicalName,
         'config': {
           'gap': 'sm',
-          'cols': 2,
-          'fields': [
-            {
-              'variant': 'h4',
-              'name': 'title',
-              'icon': 'layout-dashboard',
-            },
-            {
-              'variant': 'badge',
-              'name': 'type',
-            },
-            {
-              'variant': 'caption',
-              'name': 'label',
-            },
-            {
-              'format': 'number',
-              'name': 'value',
-              'variant': 'badge',
-            },
-            {
-              'name': 'dataSource',
-              'variant': 'caption',
-            },
-          ],
           'itemActions': [
             {
+              'label': 'View',
               'variant': 'ghost',
               'event': 'VIEW',
-              'label': 'View',
             },
             {
-              'variant': 'ghost',
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
             },
             {
               'variant': 'danger',
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
             },
           ],
+          'fields': [
+            {
+              'name': 'title',
+              'icon': 'layout-dashboard',
+              'variant': 'h4',
+            },
+            {
+              'name': 'type',
+              'variant': 'badge',
+            },
+            {
+              'name': 'label',
+              'variant': 'caption',
+            },
+            {
+              'name': 'value',
+              'format': 'number',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'dataSource',
+            },
+          ],
+          'cols': 2,
         },
         'listens': [
           {
@@ -4660,7 +4744,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WidgetView',
-        'linkedEntity': 'Widget',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
           'icon': 'eye',
@@ -4691,11 +4775,8 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'WidgetEdit',
-        'linkedEntity': 'Widget',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Widget',
-          'mode': 'edit',
           'fields': [
             'title',
             'type',
@@ -4704,6 +4785,9 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             'dataSource',
             'refreshInterval',
           ],
+          'title': 'Edit Widget',
+          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -4722,16 +4806,16 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'WidgetDelete',
-        'linkedEntity': 'Widget',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'Delete Widget',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -4929,7 +5013,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -4941,6 +5025,10 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -4964,7 +5052,9 @@ export const StdGenericAppWidgetOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'WidgetAppLayout',
@@ -4998,20 +5088,23 @@ export function isStdGenericAppWidgetOrbitalParams(p: object): p is StdGenericAp
 /**
  * Tunable params for the FeedOrbital orbital.
  *
- * Canonical entity: FeedPost (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: FeedPost — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppFeedOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -5020,22 +5113,28 @@ export interface StdGenericAppFeedOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'FeedAppLayout' | 'FeedPagination' | 'FeedBrowseList' | 'FeedCreate' | 'FeedEdit' | 'FeedDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the FeedOrbital orbital with consumer params. */
 export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'FeedPost';
+  const canonicalName = params.entityName ?? 'FeedPost';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'feedposts');
   const built = makeOrbitalWithUses({
     name: 'FeedOrbital',
     uses: [
@@ -5062,7 +5161,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
     ],
     entity: {
       name: canonicalName,
-      collection: 'feedposts',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -5114,13 +5213,15 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         'name': 'FeedAppLayout',
         'config': {
           'notifications': [],
-          'searchEvent': 'FEED_SEARCH',
           'contentTrait': '@trait.FeedCatalog',
+          'searchEvent': 'FEED_SEARCH',
+          'notificationClickEvent': 'FEED_NOTIFICATIONS_OPEN',
+          'appName': 'App',
           'navItems': [
             {
-              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
+              'href': '/contacts',
             },
             {
               'icon': 'package',
@@ -5128,13 +5229,13 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'label': 'Items',
             },
             {
-              'icon': 'activity',
               'label': 'Activities',
               'href': '/activities',
+              'icon': 'activity',
             },
             {
-              'label': 'Tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
               'href': '/tasks',
             },
             {
@@ -5148,18 +5249,16 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'icon': 'layout-dashboard',
             },
             {
-              'href': '/feed',
               'label': 'Feed',
               'icon': 'rss',
+              'href': '/feed',
             },
             {
-              'label': 'Notes',
-              'icon': 'file-text',
               'href': '/notes',
+              'icon': 'file-text',
+              'label': 'Notes',
             },
           ],
-          'notificationClickEvent': 'FEED_NOTIFICATIONS_OPEN',
-          'appName': 'App',
         },
         'events': {
           'NOTIFY_CLICK': 'FEED_NOTIFICATIONS_OPEN',
@@ -5247,39 +5346,40 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   'main',
                   {
                     'type': 'stack',
+                    'gap': 'lg',
                     'direction': 'vertical',
                     'children': [
                       {
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'rss',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                                 'content': 'Feed',
                               },
                             ],
-                            'gap': 'sm',
                           },
                           {
                             'type': 'button',
-                            'label': 'New Post',
                             'action': 'CREATE',
+                            'label': 'New Post',
                             'icon': 'plus',
                             'variant': 'primary',
                           },
                         ],
                         'type': 'stack',
-                        'gap': 'md',
                         'justify': 'between',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'align': 'center',
                       },
                       {
@@ -5288,7 +5388,6 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                       '@trait.FeedBrowseList',
                       '@trait.FeedPagination',
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -5309,26 +5408,26 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   {
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-8',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
-                        'variant': 'ghost',
                         'label': 'Back',
-                        'action': 'INIT',
                         'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -5357,17 +5456,18 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'FeedBrowseList',
-        'linkedEntity': 'FeedPost',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'fields': [
             {
+              'name': 'title',
               'variant': 'h3',
               'icon': 'rss',
-              'name': 'title',
             },
             {
-              'name': 'body',
               'variant': 'body',
+              'name': 'body',
             },
             {
               'name': 'author',
@@ -5375,25 +5475,25 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             },
             {
               'format': 'date',
-              'name': 'postedAt',
               'variant': 'caption',
+              'name': 'postedAt',
             },
             {
               'name': 'tags',
               'variant': 'badge',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
           'itemActions': [
             {
               'event': 'VIEW',
-              'variant': 'ghost',
               'label': 'View',
+              'variant': 'ghost',
             },
             {
-              'event': 'EDIT',
-              'label': 'Edit',
               'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
             },
             {
               'event': 'DELETE',
@@ -5401,7 +5501,6 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'variant': 'danger',
             },
           ],
-          'cols': 1,
         },
         'listens': [
           {
@@ -5433,8 +5532,9 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'FeedCreate',
-        'linkedEntity': 'FeedPost',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Post',
           'fields': [
             'title',
             'body',
@@ -5443,7 +5543,6 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             'tags',
           ],
           'icon': 'plus-circle',
-          'title': 'New Post',
           'mode': 'create',
         },
         'events': {
@@ -5463,8 +5562,10 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'FeedEdit',
-        'linkedEntity': 'FeedPost',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'Edit Post',
+          'mode': 'edit',
           'fields': [
             'title',
             'body',
@@ -5472,9 +5573,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             'postedAt',
             'tags',
           ],
-          'title': 'Edit Post',
           'icon': 'edit',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -5493,11 +5592,11 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'FeedDelete',
-        'linkedEntity': 'FeedPost',
+        'linkedEntity': canonicalName,
         'config': {
           'confirmLabel': 'Delete',
-          'title': 'Delete Post',
           'icon': 'alert-triangle',
+          'title': 'Delete Post',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
@@ -5734,7 +5833,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -5746,6 +5845,10 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -5769,7 +5872,9 @@ export const StdGenericAppFeedOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'FeedAppLayout',
@@ -5802,20 +5907,23 @@ export function isStdGenericAppFeedOrbitalParams(p: object): p is StdGenericAppF
 /**
  * Tunable params for the NoteOrbital orbital.
  *
- * Canonical entity: Note (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Note — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdGenericAppNoteOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -5824,22 +5932,28 @@ export interface StdGenericAppNoteOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'NoteAppLayout' | 'NoteSearch' | 'NoteBrowseList' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the NoteOrbital orbital with consumer params. */
 export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Note';
+  const canonicalName = params.entityName ?? 'Note';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'notes');
   const built = makeOrbitalWithUses({
     name: 'NoteOrbital',
     uses: [
@@ -5866,7 +5980,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
     ],
     entity: {
       name: canonicalName,
-      collection: 'notes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -5917,23 +6031,23 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'NoteAppLayout',
         'config': {
-          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'label': 'Contacts',
               'href': '/contacts',
               'icon': 'users',
-              'label': 'Contacts',
             },
             {
-              'label': 'Items',
               'href': '/items',
+              'label': 'Items',
               'icon': 'package',
             },
             {
               'label': 'Activities',
-              'icon': 'activity',
               'href': '/activities',
+              'icon': 'activity',
             },
             {
               'href': '/tasks',
@@ -5946,28 +6060,28 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'href': '/calendar',
             },
             {
-              'icon': 'layout-dashboard',
               'label': 'Dashboard',
               'href': '/widgets',
+              'icon': 'layout-dashboard',
             },
             {
               'label': 'Feed',
-              'href': '/feed',
               'icon': 'rss',
+              'href': '/feed',
             },
             {
-              'label': 'Notes',
               'icon': 'file-text',
+              'label': 'Notes',
               'href': '/notes',
             },
           ],
-          'searchEvent': 'NOTE_SEARCH',
           'appName': 'App',
           'contentTrait': '@trait.NoteCatalog',
+          'searchEvent': 'NOTE_SEARCH',
         },
         'events': {
-          'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
           'SEARCH': 'NOTE_SEARCH',
+          'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -6050,41 +6164,39 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'justify': 'between',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'file-text',
                               },
                               {
-                                'variant': 'h2',
-                                'content': 'Notes',
                                 'type': 'typography',
+                                'content': 'Notes',
+                                'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
                             'align': 'center',
-                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
+                            'icon': 'plus',
                             'label': 'New Note',
                             'variant': 'primary',
-                            'icon': 'plus',
-                            'action': 'CREATE',
                             'type': 'button',
+                            'action': 'CREATE',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
@@ -6095,7 +6207,9 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                       },
                       '@trait.NoteBrowseList',
                     ],
+                    'type': 'stack',
                     'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -6114,9 +6228,11 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'align': 'center',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
@@ -6124,18 +6240,16 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                       },
                       {
                         'content': 'No notifications',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'variant': 'ghost',
-                        'action': 'INIT',
                         'type': 'button',
+                        'variant': 'ghost',
                         'label': 'Back',
+                        'action': 'INIT',
                       },
                     ],
-                    'className': 'py-8',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -6155,8 +6269,9 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'NoteBrowseList',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'fields': [
             {
               'icon': 'file-text',
@@ -6164,8 +6279,8 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'name': 'title',
             },
             {
-              'name': 'body',
               'variant': 'body',
+              'name': 'body',
             },
             {
               'name': 'tags',
@@ -6177,12 +6292,11 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'variant': 'caption',
             },
           ],
-          'gap': 'sm',
           'itemActions': [
             {
-              'event': 'VIEW',
-              'variant': 'ghost',
               'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
             },
             {
               'event': 'EDIT',
@@ -6190,8 +6304,8 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'label': 'Edit',
             },
             {
-              'variant': 'danger',
               'label': 'Delete',
+              'variant': 'danger',
               'event': 'DELETE',
             },
           ],
@@ -6235,9 +6349,10 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'NoteCreate',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
+          'title': 'New Note',
           'mode': 'create',
           'fields': [
             'title',
@@ -6246,7 +6361,6 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
-          'title': 'New Note',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -6265,9 +6379,11 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'NoteEdit',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
           'title': 'Edit Note',
+          'icon': 'edit',
           'fields': [
             'title',
             'body',
@@ -6275,8 +6391,6 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
-          'icon': 'edit',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -6295,8 +6409,9 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'NoteView',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Note',
           'fields': [
             'title',
             'body',
@@ -6304,7 +6419,6 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
-          'title': 'View Note',
           'mode': 'edit',
           'icon': 'eye',
         },
@@ -6325,16 +6439,16 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'NoteDelete',
-        'linkedEntity': 'Note',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Note',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
+          'title': 'Delete Note',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -6569,7 +6683,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6581,6 +6695,10 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -6604,7 +6722,9 @@ export const StdGenericAppNoteOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'NoteAppLayout',

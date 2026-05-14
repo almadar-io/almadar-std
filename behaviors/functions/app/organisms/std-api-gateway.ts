@@ -30,27 +30,30 @@ const ALIAS = 'ApiGateway';
  * without modifying its state-machine topology.
  */
 export interface StdApiGatewayConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
  * Tunable params for the RouteOrbital orbital.
  *
- * Canonical entity: Route (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Route — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdApiGatewayRouteOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdApiGatewayRouteOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'RouteAppLayout' | 'RouteSearch' | 'RouteFilter' | 'RouteStats' | 'RouteGraphs' | 'RouteBrowseList' | 'RouteCreate' | 'RouteEdit' | 'RouteView' | 'RouteDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the RouteOrbital orbital with consumer params. */
 export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Route';
+  const canonicalName = params.entityName ?? 'Route';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'routes');
   const built = makeOrbitalWithUses({
     name: 'RouteOrbital',
     uses: [
@@ -113,7 +122,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
     ],
     entity: {
       name: canonicalName,
-      collection: 'routes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -179,32 +188,32 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'ref': 'AppShell.traits.AppLayout',
         'name': 'RouteAppLayout',
         'config': {
-          'navItems': [
-            {
-              'href': '/routes',
-              'label': 'Routes',
-              'icon': 'git-branch',
-            },
-            {
-              'href': '/backends',
-              'label': 'Backends',
-              'icon': 'server',
-            },
-            {
-              'label': 'Analytics',
-              'href': '/analytics',
-              'icon': 'bar-chart-2',
-            },
-          ],
-          'contentTrait': '@trait.RouteCatalog',
+          'appName': 'API Gateway',
           'searchEvent': 'ROUTE_SEARCH',
           'notificationClickEvent': 'ROUTE_NOTIFICATIONS_OPEN',
           'notifications': [],
-          'appName': 'API Gateway',
+          'contentTrait': '@trait.RouteCatalog',
+          'navItems': [
+            {
+              'label': 'Routes',
+              'href': '/routes',
+              'icon': 'git-branch',
+            },
+            {
+              'label': 'Backends',
+              'href': '/backends',
+              'icon': 'server',
+            },
+            {
+              'href': '/analytics',
+              'label': 'Analytics',
+              'icon': 'bar-chart-2',
+            },
+          ],
         },
         'events': {
-          'SEARCH': 'ROUTE_SEARCH',
           'NOTIFY_CLICK': 'ROUTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ROUTE_SEARCH',
         },
       }),
       {
@@ -289,57 +298,57 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   {
                     'children': [
                       {
-                        'gap': 'md',
+                        'type': 'stack',
                         'align': 'center',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'git-branch',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                                 'content': 'Routes',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'align': 'center',
                           },
                           {
                             'children': [
                               {
-                                'type': 'button',
+                                'icon': 'plus',
                                 'label': 'Create Route',
+                                'type': 'button',
                                 'action': 'CREATE',
                                 'variant': 'primary',
-                                'icon': 'plus',
                               },
                             ],
-                            'gap': 'sm',
                             'type': 'stack',
+                            'gap': 'sm',
                             'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'md',
+                        'align': 'center',
                         'children': [
                           '@trait.RouteSearch',
                           '@trait.RouteFilter',
                         ],
-                        'type': 'stack',
-                        'align': 'center',
                       },
                       '@trait.RouteStats',
                       '@trait.RouteGraphs',
@@ -348,9 +357,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                       },
                       '@trait.RouteBrowseList',
                     ],
-                    'gap': 'lg',
                     'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -369,34 +378,34 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
                     'className': 'py-8',
-                    'align': 'center',
-                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'type': 'typography',
-                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                        'type': 'typography',
                         'variant': 'caption',
                       },
                       {
-                        'action': 'INIT',
-                        'variant': 'ghost',
                         'label': 'Back to routes',
+                        'variant': 'ghost',
+                        'action': 'INIT',
                         'type': 'button',
                       },
                     ],
+                    'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -409,8 +418,8 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'RouteSearch',
         'config': {
-          'placeholder': 'Search routes…',
           'event': 'ROUTE_SEARCH',
+          'placeholder': 'Search routes…',
         },
       }),
       makeTraitRef({
@@ -419,24 +428,24 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'config': {
           'filters': [
             {
-              'label': 'Method',
-              'filterType': 'select',
               'options': [
                 'GET',
                 'POST',
                 'PUT',
                 'DELETE',
               ],
+              'filterType': 'select',
               'field': 'method',
+              'label': 'Method',
             },
             {
+              'label': 'Status',
+              'filterType': 'select',
+              'field': 'status',
               'options': [
                 'active',
                 'disabled',
               ],
-              'field': 'status',
-              'label': 'Status',
-              'filterType': 'select',
             },
           ],
           'event': 'ROUTE_FILTER',
@@ -446,16 +455,19 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'RouteStats',
         'config': {
-          'title': 'Routes',
           'metrics': [
             {
               'aggregation': 'count',
-              'label': 'Total',
-              'format': 'number',
-              'variant': 'primary',
               'icon': 'git-branch',
+              'label': 'Total',
+              'variant': 'primary',
+              'format': 'number',
             },
             {
+              'label': 'Active',
+              'aggregation': 'count',
+              'variant': 'success',
+              'icon': 'check-circle',
               'format': 'number',
               'filter': [
                 'fn',
@@ -466,14 +478,13 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'active',
                 ],
               ],
-              'label': 'Active',
-              'aggregation': 'count',
-              'icon': 'check-circle',
-              'variant': 'success',
             },
             {
-              'aggregation': 'count',
+              'icon': 'x-circle',
               'variant': 'warning',
+              'label': 'Disabled',
+              'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -483,11 +494,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
                   'disabled',
                 ],
               ],
-              'icon': 'x-circle',
-              'format': 'number',
-              'label': 'Disabled',
             },
           ],
+          'title': 'Routes',
         },
         'listens': [
           {
@@ -504,13 +513,13 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'RouteGraphs',
         'config': {
-          'subtitle': 'Distribution across HTTP methods',
           'chartType': 'pie',
-          'categoryField': 'method',
-          'aggregation': 'count',
-          'height': 240,
-          'showLegend': true,
           'title': 'Routes by Method',
+          'subtitle': 'Distribution across HTTP methods',
+          'showLegend': true,
+          'categoryField': 'method',
+          'height': 240,
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -526,18 +535,35 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'RouteBrowseList',
-        'linkedEntity': 'Route',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
           'gap': 'sm',
           'fields': [
             {
+              'variant': 'h3',
               'name': 'path',
               'icon': 'git-branch',
-              'variant': 'h3',
             },
             {
-              'variant': 'badge',
               'name': 'method',
+              'variant': 'badge',
             },
             {
               'name': 'status',
@@ -548,27 +574,10 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
               'variant': 'body',
             },
             {
-              'format': 'number',
-              'variant': 'caption',
               'name': 'hits',
+              'variant': 'caption',
               'label': 'Hits',
-            },
-          ],
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'variant': 'ghost',
-              'label': 'View',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'variant': 'danger',
-              'event': 'DELETE',
-              'label': 'Delete',
+              'format': 'number',
             },
           ],
           'cols': 1,
@@ -619,11 +628,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'RouteCreate',
-        'linkedEntity': 'Route',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'mode': 'create',
-          'title': 'New Route',
           'fields': [
             'path',
             'method',
@@ -631,6 +638,8 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
             'target',
             'rateLimit',
           ],
+          'title': 'New Route',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -649,11 +658,9 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'RouteEdit',
-        'linkedEntity': 'Route',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'icon': 'edit',
-          'title': 'Edit Route',
           'fields': [
             'path',
             'method',
@@ -661,6 +668,8 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
             'target',
             'rateLimit',
           ],
+          'icon': 'edit',
+          'title': 'Edit Route',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -679,8 +688,10 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'RouteView',
-        'linkedEntity': 'Route',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'title': 'View Route',
           'fields': [
             'path',
             'method',
@@ -688,9 +699,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
             'target',
             'rateLimit',
           ],
-          'mode': 'edit',
           'icon': 'eye',
-          'title': 'View Route',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -709,12 +718,12 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'RouteDelete',
-        'linkedEntity': 'Route',
+        'linkedEntity': canonicalName,
         'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Route',
-          'confirmLabel': 'Delete',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -962,7 +971,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -974,6 +983,10 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -997,7 +1010,9 @@ export const StdApiGatewayRouteOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'RouteAppLayout',
@@ -1034,20 +1049,23 @@ export function isStdApiGatewayRouteOrbitalParams(p: object): p is StdApiGateway
 /**
  * Tunable params for the BackendOrbital orbital.
  *
- * Canonical entity: Backend (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Backend — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdApiGatewayBackendOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1056,22 +1074,28 @@ export interface StdApiGatewayBackendOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'BackendAppLayout' | 'BackendBrowseList' | 'BackendCircuitBreaker' | 'BackendRateLimiter' | 'BackendCache' | 'BackendCreate' | 'BackendEdit' | 'BackendView' | 'BackendDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BackendOrbital orbital with consumer params. */
 export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Backend';
+  const canonicalName = params.entityName ?? 'Backend';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'backends');
   const built = makeOrbitalWithUses({
     name: 'BackendOrbital',
     uses: [
@@ -1106,7 +1130,7 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'backends',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1155,18 +1179,13 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BackendAppLayout',
-        'linkedEntity': 'Backend',
+        'linkedEntity': canonicalName,
         'config': {
-          'notificationClickEvent': 'BACKEND_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.BackendCatalog',
-          'notifications': [],
-          'searchEvent': 'BACKEND_SEARCH',
-          'appName': 'API Gateway',
           'navItems': [
             {
-              'icon': 'git-branch',
               'label': 'Routes',
               'href': '/routes',
+              'icon': 'git-branch',
             },
             {
               'href': '/backends',
@@ -1174,15 +1193,20 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
               'label': 'Backends',
             },
             {
+              'icon': 'bar-chart-2',
               'label': 'Analytics',
               'href': '/analytics',
-              'icon': 'bar-chart-2',
             },
           ],
+          'appName': 'API Gateway',
+          'searchEvent': 'BACKEND_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.BackendCatalog',
+          'notificationClickEvent': 'BACKEND_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'BACKEND_SEARCH',
           'NOTIFY_CLICK': 'BACKEND_NOTIFICATIONS_OPEN',
+          'SEARCH': 'BACKEND_SEARCH',
         },
       }),
       {
@@ -1265,16 +1289,20 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'server',
                                 'type': 'icon',
+                                'name': 'server',
                               },
                               {
                                 'type': 'typography',
@@ -1282,29 +1310,27 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                                 'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
                             'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
-                            'gap': 'sm',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
+                                'action': 'CREATE',
                                 'type': 'button',
                                 'label': 'Create Backend',
-                                'icon': 'plus',
                                 'variant': 'primary',
-                                'action': 'CREATE',
+                                'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -1322,8 +1348,6 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                       '@trait.BackendRateLimiter',
                       '@trait.BackendCache',
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -1343,34 +1367,34 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'align': 'center',
+                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'className': 'py-8',
+                    'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                         'variant': 'h3',
                       },
                       {
-                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
                       },
                       {
-                        'type': 'button',
                         'variant': 'ghost',
-                        'label': 'Back to backends',
                         'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to backends',
                       },
                     ],
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -1382,8 +1406,9 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'BackendBrowseList',
-        'linkedEntity': 'Backend',
+        'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
           'itemActions': [
             {
               'variant': 'ghost',
@@ -1391,8 +1416,8 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
               'event': 'VIEW',
             },
             {
-              'variant': 'ghost',
               'label': 'Edit',
+              'variant': 'ghost',
               'event': 'EDIT',
             },
             {
@@ -1401,26 +1426,25 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
               'event': 'DELETE',
             },
           ],
-          'cols': 1,
           'fields': [
             {
-              'variant': 'h3',
               'name': 'name',
+              'variant': 'h3',
               'icon': 'server',
             },
             {
-              'name': 'url',
               'variant': 'body',
+              'name': 'url',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'variant': 'caption',
-              'format': 'number',
-              'label': 'Latency',
               'name': 'latency',
+              'label': 'Latency',
+              'format': 'number',
             },
           ],
           'gap': 'sm',
@@ -1467,17 +1491,17 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'BackendCreate',
-        'linkedEntity': 'Backend',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
-          'title': 'New Backend',
           'fields': [
             'name',
             'url',
             'status',
             'latency',
           ],
+          'mode': 'create',
           'icon': 'plus-circle',
+          'title': 'New Backend',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1496,17 +1520,17 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'BackendEdit',
-        'linkedEntity': 'Backend',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
           'mode': 'edit',
-          'title': 'Edit Backend',
           'fields': [
             'name',
             'url',
             'status',
             'latency',
           ],
-          'icon': 'edit',
+          'title': 'Edit Backend',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1525,16 +1549,16 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'BackendView',
-        'linkedEntity': 'Backend',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'eye',
-          'title': 'View Backend',
           'fields': [
             'name',
             'url',
             'status',
             'latency',
           ],
+          'title': 'View Backend',
           'mode': 'edit',
         },
         'events': {
@@ -1554,16 +1578,16 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'BackendDelete',
-        'linkedEntity': 'Backend',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Backend',
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'title': 'Delete Backend',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1804,7 +1828,7 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1816,6 +1840,10 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1839,7 +1867,9 @@ export const StdApiGatewayBackendOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'BackendAppLayout',
@@ -1875,20 +1905,23 @@ export function isStdApiGatewayBackendOrbitalParams(p: object): p is StdApiGatew
 /**
  * Tunable params for the AnalyticsOrbital orbital.
  *
- * Canonical entity: AnalyticsRecord (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: AnalyticsRecord — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdApiGatewayAnalyticsOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1897,22 +1930,28 @@ export interface StdApiGatewayAnalyticsOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'AnalyticsAppLayout' | 'AnalyticsBrowseList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the AnalyticsOrbital orbital with consumer params. */
 export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'AnalyticsRecord';
+  const canonicalName = params.entityName ?? 'AnalyticsRecord';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'analyticsrecords');
   const built = makeOrbitalWithUses({
     name: 'AnalyticsOrbital',
     uses: [
@@ -1927,7 +1966,7 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
     ],
     entity: {
       name: canonicalName,
-      collection: 'analyticsrecords',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1971,50 +2010,47 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'AnalyticsAppLayout',
-        'linkedEntity': 'AnalyticsRecord',
+        'linkedEntity': canonicalName,
         'config': {
-          'appName': 'API Gateway',
+          'searchEvent': 'ANALYTICS_SEARCH',
+          'contentTrait': '@trait.AnalyticsDisplay',
           'notifications': [],
+          'notificationClickEvent': 'ANALYTICS_NOTIFICATIONS_OPEN',
+          'appName': 'API Gateway',
           'navItems': [
             {
+              'label': 'Routes',
               'icon': 'git-branch',
               'href': '/routes',
-              'label': 'Routes',
             },
             {
+              'label': 'Backends',
               'href': '/backends',
               'icon': 'server',
-              'label': 'Backends',
             },
             {
-              'href': '/analytics',
               'label': 'Analytics',
               'icon': 'bar-chart-2',
+              'href': '/analytics',
             },
           ],
-          'searchEvent': 'ANALYTICS_SEARCH',
-          'notificationClickEvent': 'ANALYTICS_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.AnalyticsDisplay',
         },
         'events': {
-          'NOTIFY_CLICK': 'ANALYTICS_NOTIFICATIONS_OPEN',
           'SEARCH': 'ANALYTICS_SEARCH',
+          'NOTIFY_CLICK': 'ANALYTICS_NOTIFICATIONS_OPEN',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'AnalyticsBrowseList',
-        'linkedEntity': 'AnalyticsRecord',
+        'linkedEntity': canonicalName,
         'config': {
-          'pageSize': 100,
-          'displayPageSize': 10,
-          'cols': 1,
           'fields': [
             {
-              'icon': 'bar-chart-2',
               'name': 'routePath',
-              'label': 'Route',
               'variant': 'h4',
+              'label': 'Route',
+              'icon': 'bar-chart-2',
             },
             {
               'label': 'Method',
@@ -2022,24 +2058,27 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
               'name': 'method',
             },
             {
-              'label': 'Status',
-              'variant': 'badge',
               'name': 'statusCode',
+              'variant': 'badge',
+              'label': 'Status',
             },
             {
               'name': 'latencyMs',
-              'variant': 'caption',
               'label': 'Latency',
+              'variant': 'caption',
               'format': 'number',
             },
             {
-              'format': 'date',
-              'variant': 'caption',
               'name': 'timestamp',
+              'variant': 'caption',
+              'format': 'date',
               'label': 'Time',
             },
           ],
+          'pageSize': 100,
           'gap': 'sm',
+          'cols': 1,
+          'displayPageSize': 10,
         },
       }),
       {
@@ -2106,38 +2145,38 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'bar-chart-2',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Analytics',
                             'variant': 'h2',
+                            'content': 'Analytics',
                             'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Recent requests',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       '@trait.AnalyticsBrowseList',
                     ],
                     'direction': 'vertical',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -2156,34 +2195,34 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'className': 'py-8',
-                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
+                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
-                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
                         'type': 'typography',
+                        'color': 'muted',
                       },
                       {
-                        'type': 'button',
-                        'variant': 'ghost',
                         'label': 'Back to analytics',
+                        'variant': 'ghost',
                         'action': 'INIT',
+                        'type': 'button',
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2213,7 +2252,7 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2225,6 +2264,10 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2248,7 +2291,9 @@ export const StdApiGatewayAnalyticsOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'AnalyticsAppLayout',

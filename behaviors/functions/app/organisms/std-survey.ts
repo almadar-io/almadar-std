@@ -30,27 +30,30 @@ const ALIAS = 'Survey';
  * without modifying its state-machine topology.
  */
 export interface StdSurveyConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
  * Tunable params for the SurveyOrbital orbital.
  *
- * Canonical entity: Survey (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Survey — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSurveySurveyOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdSurveySurveyOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'SurveyAppLayout' | 'SurveySearch' | 'SurveyStats' | 'SurveyGraphs' | 'SurveyBrowseList' | 'SurveyQuestionBank' | 'SurveyBranching' | 'SurveyPreviewForm' | 'SurveyCreate' | 'SurveyEdit' | 'SurveyView' | 'SurveyDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the SurveyOrbital orbital with consumer params. */
 export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Survey';
+  const canonicalName = params.entityName ?? 'Survey';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'surveys');
   const built = makeOrbitalWithUses({
     name: 'SurveyOrbital',
     uses: [
@@ -121,7 +130,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
     ],
     entity: {
       name: canonicalName,
-      collection: 'surveys',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -173,22 +182,22 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'name': 'SurveyAppLayout',
         'config': {
           'notificationClickEvent': 'SURVEY_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'Surveys',
           'navItems': [
             {
+              'label': 'Surveys',
               'icon': 'list-checks',
               'href': '/surveys',
-              'label': 'Surveys',
             },
             {
-              'href': '/responses',
               'icon': 'inbox',
               'label': 'Responses',
+              'href': '/responses',
             },
           ],
-          'appName': 'Surveys',
-          'searchEvent': 'SURVEY_SEARCH',
-          'notifications': [],
           'contentTrait': '@trait.SurveyCatalog',
+          'searchEvent': 'SURVEY_SEARCH',
         },
         'events': {
           'SEARCH': 'SURVEY_SEARCH',
@@ -275,47 +284,48 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'gap': 'md',
                         'align': 'center',
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'list-checks',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Surveys',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
+                            'align': 'center',
                             'gap': 'sm',
                           },
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'variant': 'primary',
+                                'icon': 'plus',
                                 'type': 'button',
                                 'label': 'New Survey',
-                                'icon': 'plus',
                                 'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'md',
-                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
@@ -331,32 +341,31 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
-                        'content': 'Question Bank',
                         'type': 'typography',
+                        'content': 'Question Bank',
+                        'variant': 'h3',
                       },
                       '@trait.SurveyQuestionBank',
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Skip Logic',
+                        'variant': 'h3',
                       },
                       '@trait.SurveyBranching',
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Survey Preview',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       '@trait.SurveyPreviewForm',
                     ],
-                    'gap': 'lg',
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -377,8 +386,8 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   {
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'type': 'typography',
@@ -386,23 +395,23 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                         'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
-                        'type': 'typography',
+                        'variant': 'caption',
                         'color': 'muted',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'ghost',
-                        'label': 'Back to surveys',
-                        'type': 'button',
                         'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to surveys',
+                        'variant': 'ghost',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
                     'className': 'py-8',
+                    'type': 'stack',
+                    'align': 'center',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -427,17 +436,16 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
           'metrics': [
             {
               'aggregation': 'count',
-              'icon': 'list-checks',
-              'variant': 'primary',
               'format': 'number',
               'label': 'Total',
+              'variant': 'primary',
+              'icon': 'list-checks',
             },
             {
-              'format': 'number',
-              'icon': 'edit',
-              'variant': 'warning',
               'aggregation': 'count',
+              'icon': 'edit',
               'label': 'Draft',
+              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -447,8 +455,12 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'draft',
                 ],
               ],
+              'format': 'number',
             },
             {
+              'format': 'number',
+              'icon': 'check-circle',
+              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -458,11 +470,8 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'published',
                 ],
               ],
-              'aggregation': 'count',
-              'icon': 'check-circle',
               'label': 'Published',
-              'variant': 'success',
-              'format': 'number',
+              'aggregation': 'count',
             },
           ],
         },
@@ -482,12 +491,12 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'name': 'SurveyGraphs',
         'config': {
           'title': 'Surveys by Status',
-          'subtitle': 'Distribution across lifecycle states',
-          'categoryField': 'status',
-          'chartType': 'bar',
-          'height': 240,
-          'aggregation': 'count',
           'showLegend': false,
+          'chartType': 'bar',
+          'categoryField': 'status',
+          'subtitle': 'Distribution across lifecycle states',
+          'aggregation': 'count',
+          'height': 240,
         },
         'listens': [
           {
@@ -503,35 +512,34 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'SurveyBrowseList',
-        'linkedEntity': 'Survey',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
           'fields': [
             {
-              'variant': 'h3',
               'icon': 'list-checks',
               'name': 'title',
+              'variant': 'h3',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
-              'name': 'description',
               'variant': 'caption',
+              'name': 'description',
             },
             {
+              'format': 'date',
               'name': 'createdAt',
               'variant': 'caption',
-              'format': 'date',
             },
           ],
-          'cols': 1,
+          'gap': 'sm',
           'itemActions': [
             {
               'event': 'VIEW',
-              'label': 'View',
               'variant': 'ghost',
+              'label': 'View',
             },
             {
               'event': 'EDIT',
@@ -539,11 +547,12 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
               'label': 'Edit',
             },
             {
-              'event': 'DELETE',
-              'variant': 'danger',
               'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
             },
           ],
+          'cols': 1,
         },
         'listens': [
           {
@@ -601,16 +610,16 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SurveyCreate',
-        'linkedEntity': 'Survey',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'title': 'New Survey',
-          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'description',
             'status',
           ],
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -629,9 +638,8 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SurveyEdit',
-        'linkedEntity': 'Survey',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'mode': 'edit',
           'fields': [
             'title',
@@ -639,6 +647,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
             'status',
           ],
           'title': 'Edit Survey',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -657,16 +666,16 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SurveyView',
-        'linkedEntity': 'Survey',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
           'title': 'View Survey',
-          'icon': 'eye',
           'fields': [
             'title',
             'description',
             'status',
           ],
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -685,7 +694,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'SurveyDelete',
-        'linkedEntity': 'Survey',
+        'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Survey',
@@ -944,7 +953,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -956,6 +965,10 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -979,7 +992,9 @@ export const StdSurveySurveyOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'SurveyAppLayout',
@@ -1018,20 +1033,23 @@ export function isStdSurveySurveyOrbitalParams(p: object): p is StdSurveySurveyO
 /**
  * Tunable params for the ResponseOrbital orbital.
  *
- * Canonical entity: Response (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Response — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSurveyResponseOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1040,22 +1058,28 @@ export interface StdSurveyResponseOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ResponseAppLayout' | 'ResponseCollect' | 'ResponseBrowseList' | 'ResponseView',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ResponseOrbital orbital with consumer params. */
 export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Response';
+  const canonicalName = params.entityName ?? 'Response';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'responses');
   const built = makeOrbitalWithUses({
     name: 'ResponseOrbital',
     uses: [
@@ -1078,7 +1102,7 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
     ],
     entity: {
       name: canonicalName,
-      collection: 'responses',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1129,21 +1153,21 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ResponseAppLayout',
         'config': {
-          'appName': 'Surveys',
-          'notifications': [],
           'notificationClickEvent': 'RESPONSE_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.ResponseDashboard',
+          'notifications': [],
+          'appName': 'Surveys',
           'searchEvent': 'RESPONSE_SEARCH',
           'navItems': [
             {
-              'href': '/surveys',
               'label': 'Surveys',
               'icon': 'list-checks',
+              'href': '/surveys',
             },
             {
               'href': '/responses',
-              'label': 'Responses',
               'icon': 'inbox',
+              'label': 'Responses',
             },
           ],
         },
@@ -1216,35 +1240,35 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'type': 'stack',
                     'direction': 'vertical',
                     'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                         'children': [
                           {
                             'name': 'inbox',
                             'type': 'icon',
                           },
                           {
-                            'content': 'Responses',
                             'variant': 'h2',
+                            'content': 'Responses',
                             'type': 'typography',
                           },
                         ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Submit a response',
                         'variant': 'h3',
+                        'content': 'Submit a response',
+                        'type': 'typography',
                       },
                       '@trait.ResponseCollect',
                       {
@@ -1252,8 +1276,8 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                       },
                       {
                         'content': 'All responses',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.ResponseBrowseList',
                     ],
@@ -1275,34 +1299,34 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
                     'align': 'center',
-                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
-                        'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
                         'type': 'typography',
+                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
                         'color': 'muted',
-                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'variant': 'ghost',
-                        'action': 'INIT',
                         'type': 'button',
                         'label': 'Back to responses',
+                        'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'py-8',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1321,22 +1345,20 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ResponseBrowseList',
-        'linkedEntity': 'Response',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'displayPageSize': 10,
-          'cols': 1,
           'pageSize': 100,
+          'displayPageSize': 10,
           'fields': [
             {
-              'label': 'Survey',
               'name': 'surveyId',
               'variant': 'caption',
+              'label': 'Survey',
             },
             {
-              'label': 'Respondent',
-              'name': 'respondentId',
               'variant': 'body',
+              'name': 'respondentId',
+              'label': 'Respondent',
             },
             {
               'variant': 'caption',
@@ -1344,15 +1366,15 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
               'label': 'Question',
             },
             {
-              'label': 'Answer',
               'variant': 'body',
               'name': 'answerJson',
+              'label': 'Answer',
             },
             {
-              'name': 'submittedAt',
-              'label': 'Submitted',
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
+              'label': 'Submitted',
+              'name': 'submittedAt',
             },
           ],
           'itemActions': [
@@ -1362,6 +1384,8 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
               'event': 'VIEW',
             },
           ],
+          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -1377,10 +1401,9 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ResponseView',
-        'linkedEntity': 'Response',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'icon': 'eye',
           'fields': [
             'surveyId',
             'respondentId',
@@ -1389,6 +1412,7 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
             'submittedAt',
           ],
           'title': 'View Response',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1431,7 +1455,7 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1443,6 +1467,10 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1466,7 +1494,9 @@ export const StdSurveyResponseOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ResponseAppLayout',

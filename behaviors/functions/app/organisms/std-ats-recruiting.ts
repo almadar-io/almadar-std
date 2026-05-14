@@ -37,20 +37,23 @@ export interface StdAtsRecruitingConfig {
 /**
  * Tunable params for the JobOpeningOrbital orbital.
  *
- * Canonical entity: JobOpening (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: JobOpening — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAtsRecruitingJobOpeningOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdAtsRecruitingJobOpeningOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'JobOpeningAppLayout' | 'JobOpeningSearch' | 'JobOpeningFilter' | 'JobOpeningStats' | 'JobOpeningGraphs' | 'JobOpeningBrowseList' | 'JobOpeningCreate' | 'JobOpeningEdit' | 'JobOpeningView' | 'JobOpeningDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the JobOpeningOrbital orbital with consumer params. */
 export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpeningOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'JobOpening';
+  const canonicalName = params.entityName ?? 'JobOpening';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'jobopenings');
   const built = makeOrbitalWithUses({
     name: 'JobOpeningOrbital',
     uses: [
@@ -113,7 +122,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
     ],
     entity: {
       name: canonicalName,
-      collection: 'jobopenings',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -174,37 +183,37 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'ref': 'AppShell.traits.AppLayout',
         'name': 'JobOpeningAppLayout',
         'config': {
-          'searchEvent': 'JOB_OPENING_SEARCH',
+          'contentTrait': '@trait.JobOpeningCatalog',
           'notificationClickEvent': 'JOB_OPENING_NOTIFICATIONS_OPEN',
           'appName': 'ATSRecruiting',
           'navItems': [
             {
-              'label': 'Openings',
               'icon': 'briefcase',
               'href': '/openings',
+              'label': 'Openings',
             },
             {
-              'icon': 'user-plus',
               'label': 'Pipeline',
+              'icon': 'user-plus',
               'href': '/pipeline',
             },
             {
-              'label': 'Interviews',
               'href': '/interviews',
               'icon': 'calendar',
+              'label': 'Interviews',
             },
             {
-              'label': 'Offers',
               'href': '/offers',
               'icon': 'file-text',
+              'label': 'Offers',
             },
           ],
+          'searchEvent': 'JOB_OPENING_SEARCH',
           'notifications': [],
-          'contentTrait': '@trait.JobOpeningCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'JOB_OPENING_NOTIFICATIONS_OPEN',
           'SEARCH': 'JOB_OPENING_SEARCH',
+          'NOTIFY_CLICK': 'JOB_OPENING_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -287,62 +296,61 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
+                        'justify': 'between',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'briefcase',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Job Openings',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                             ],
-                            'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
-                            'gap': 'sm',
                             'direction': 'horizontal',
-                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
+                                'action': 'CREATE',
+                                'label': 'New Opening',
                                 'type': 'button',
                                 'variant': 'primary',
-                                'label': 'New Opening',
-                                'action': 'CREATE',
                                 'icon': 'plus',
                               },
                             ],
+                            'type': 'stack',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
                         'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
                         'direction': 'horizontal',
                         'children': [
                           '@trait.JobOpeningSearch',
                           '@trait.JobOpeningFilter',
                         ],
-                        'gap': 'md',
                         'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
                       },
                       '@trait.JobOpeningStats',
                       '@trait.JobOpeningGraphs',
@@ -351,6 +359,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                       },
                       '@trait.JobOpeningBrowseList',
                     ],
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -375,27 +384,27 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                         'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'No notifications',
                       },
                       {
                         'type': 'typography',
                         'color': 'muted',
-                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
                       },
                       {
-                        'type': 'button',
                         'variant': 'ghost',
-                        'action': 'INIT',
+                        'type': 'button',
                         'label': 'Back to openings',
+                        'action': 'INIT',
                       },
                     ],
                     'direction': 'vertical',
-                    'align': 'center',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
                     'className': 'py-8',
                   },
                 ],
@@ -409,29 +418,27 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'JobOpeningSearch',
         'config': {
-          'placeholder': 'Search openings…',
           'event': 'JOB_OPENING_SEARCH',
+          'placeholder': 'Search openings…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'JobOpeningFilter',
         'config': {
-          'event': 'JOB_OPENING_FILTER',
           'filters': [
             {
-              'field': 'status',
               'label': 'Status',
-              'filterType': 'select',
+              'field': 'status',
               'options': [
                 'open',
                 'closed',
                 'draft',
               ],
+              'filterType': 'select',
             },
             {
               'field': 'department',
-              'filterType': 'select',
               'label': 'Department',
               'options': [
                 'engineering',
@@ -442,8 +449,10 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                 'finance',
                 'operations',
               ],
+              'filterType': 'select',
             },
           ],
+          'event': 'JOB_OPENING_FILTER',
         },
       }),
       makeTraitRef({
@@ -452,18 +461,15 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'config': {
           'metrics': [
             {
-              'icon': 'briefcase',
+              'label': 'Total',
+              'variant': 'primary',
               'format': 'number',
               'aggregation': 'count',
-              'variant': 'primary',
-              'label': 'Total',
+              'icon': 'briefcase',
             },
             {
-              'variant': 'success',
-              'icon': 'circle',
               'format': 'number',
               'aggregation': 'count',
-              'label': 'Open',
               'filter': [
                 'fn',
                 'row',
@@ -473,10 +479,13 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'open',
                 ],
               ],
+              'label': 'Open',
+              'icon': 'circle',
+              'variant': 'success',
             },
             {
-              'aggregation': 'count',
-              'variant': 'warning',
+              'icon': 'edit',
+              'label': 'Drafts',
               'filter': [
                 'fn',
                 'row',
@@ -486,17 +495,17 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'draft',
                 ],
               ],
-              'label': 'Drafts',
+              'variant': 'warning',
               'format': 'number',
-              'icon': 'edit',
+              'aggregation': 'count',
             },
             {
-              'label': 'Seats',
+              'variant': 'primary',
               'icon': 'users',
               'format': 'number',
               'aggregation': 'sum',
-              'variant': 'primary',
               'field': 'headcount',
+              'label': 'Seats',
             },
           ],
           'title': 'Openings',
@@ -516,13 +525,13 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'JobOpeningGraphs',
         'config': {
+          'height': 240,
           'chartType': 'bar',
           'aggregation': 'count',
+          'subtitle': 'Headcount distribution across teams',
           'title': 'Openings by Department',
           'categoryField': 'department',
           'showLegend': false,
-          'height': 240,
-          'subtitle': 'Headcount distribution across teams',
         },
         'listens': [
           {
@@ -538,13 +547,31 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'JobOpeningBrowseList',
-        'linkedEntity': 'JobOpening',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'cols': 1,
           'fields': [
             {
-              'icon': 'briefcase',
               'name': 'title',
               'variant': 'h3',
+              'icon': 'briefcase',
             },
             {
               'name': 'department',
@@ -559,8 +586,8 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
               'variant': 'body',
             },
             {
-              'name': 'hiringManager',
               'variant': 'caption',
+              'name': 'hiringManager',
             },
             {
               'name': 'headcount',
@@ -568,24 +595,6 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
             },
           ],
           'gap': 'sm',
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
-          'cols': 1,
         },
         'listens': [
           {
@@ -633,9 +642,11 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'JobOpeningCreate',
-        'linkedEntity': 'JobOpening',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'New Opening',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'department',
@@ -644,8 +655,6 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
             'hiringManager',
             'headcount',
           ],
-          'mode': 'create',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -664,9 +673,11 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'JobOpeningEdit',
-        'linkedEntity': 'JobOpening',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
           'title': 'Edit Opening',
+          'mode': 'edit',
           'fields': [
             'title',
             'department',
@@ -675,8 +686,6 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
             'hiringManager',
             'headcount',
           ],
-          'icon': 'edit',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -695,11 +704,11 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'JobOpeningView',
-        'linkedEntity': 'JobOpening',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'title': 'View Opening',
           'mode': 'edit',
+          'title': 'View Opening',
+          'icon': 'eye',
           'fields': [
             'title',
             'department',
@@ -726,16 +735,16 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'JobOpeningDelete',
-        'linkedEntity': 'JobOpening',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Opening',
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
+          'title': 'Delete Opening',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -979,7 +988,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -991,6 +1000,10 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1014,7 +1027,9 @@ export const StdAtsRecruitingJobOpeningOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'JobOpeningAppLayout',
@@ -1051,20 +1066,23 @@ export function isStdAtsRecruitingJobOpeningOrbitalParams(p: object): p is StdAt
 /**
  * Tunable params for the ApplicantPipelineOrbital orbital.
  *
- * Canonical entity: ApplicationIntake (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ApplicationIntake — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAtsRecruitingApplicantPipelineOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1073,22 +1091,28 @@ export interface StdAtsRecruitingApplicantPipelineOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ApplicantPipelineAppLayout' | 'PipelineIntakeBrowse' | 'PipelineIntakeCreate' | 'PipelineIntakeEdit' | 'PipelineIntakeDelete' | 'PipelineIntakePersistor',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ApplicantPipelineOrbital orbital with consumer params. */
 export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitingApplicantPipelineOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ApplicationIntake';
+  const canonicalName = params.entityName ?? 'ApplicationIntake';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'applicationintakes');
   const built = makeOrbitalWithUses({
     name: 'ApplicantPipelineOrbital',
     uses: [
@@ -1103,7 +1127,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
     ],
     entity: {
       name: canonicalName,
-      collection: 'applicationintakes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1190,16 +1214,11 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ApplicantPipelineAppLayout',
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
-          'searchEvent': 'PIPELINE_SEARCH',
-          'contentTrait': '@trait.PipelineIntakeBrowse',
-          'appName': 'ATSRecruiting',
           'navItems': [
             {
+              'label': 'Openings',
               'href': '/openings',
               'icon': 'briefcase',
-              'label': 'Openings',
             },
             {
               'href': '/pipeline',
@@ -1212,11 +1231,16 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
               'href': '/interviews',
             },
             {
+              'label': 'Offers',
               'href': '/offers',
               'icon': 'file-text',
-              'label': 'Offers',
             },
           ],
+          'contentTrait': '@trait.PipelineIntakeBrowse',
+          'searchEvent': 'PIPELINE_SEARCH',
+          'notifications': [],
+          'appName': 'ATSRecruiting',
+          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'PIPELINE_SEARCH',
@@ -1226,7 +1250,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       makeTraitRef({
         'ref': 'ApplicantForm.traits.ApplicationIntakeBrowse',
         'name': 'PipelineIntakeBrowse',
-        'linkedEntity': 'ApplicationIntake',
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'INTAKE_CREATED',
@@ -1257,7 +1281,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       makeTraitRef({
         'ref': 'ApplicantForm.traits.ApplicationIntakeCreate',
         'name': 'PipelineIntakeCreate',
-        'linkedEntity': 'ApplicationIntake',
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
@@ -1272,7 +1296,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       makeTraitRef({
         'ref': 'ApplicantForm.traits.ApplicationIntakeEdit',
         'name': 'PipelineIntakeEdit',
-        'linkedEntity': 'ApplicationIntake',
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'REQUEST_EDIT',
@@ -1287,7 +1311,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       makeTraitRef({
         'ref': 'ApplicantForm.traits.ApplicationIntakeDelete',
         'name': 'PipelineIntakeDelete',
-        'linkedEntity': 'ApplicationIntake',
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'REQUEST_DELETE',
@@ -1302,7 +1326,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       makeTraitRef({
         'ref': 'ApplicantForm.traits.ApplicationIntakePersistor',
         'name': 'PipelineIntakePersistor',
-        'linkedEntity': 'ApplicationIntake',
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'SAVE',
@@ -1360,7 +1384,7 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1372,6 +1396,10 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1395,7 +1423,9 @@ export const StdAtsRecruitingApplicantPipelineOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ApplicantPipelineAppLayout',
@@ -1426,20 +1456,23 @@ export function isStdAtsRecruitingApplicantPipelineOrbitalParams(p: object): p i
 /**
  * Tunable params for the ApplicantOrbital orbital.
  *
- * Canonical entity: Applicant (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Applicant — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAtsRecruitingApplicantOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1448,22 +1481,28 @@ export interface StdAtsRecruitingApplicantOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ApplicantAppLayout' | 'ApplicantList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ApplicantOrbital orbital with consumer params. */
 export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplicantOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Applicant';
+  const canonicalName = params.entityName ?? 'Applicant';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'applicants');
   const built = makeOrbitalWithUses({
     name: 'ApplicantOrbital',
     uses: [
@@ -1478,7 +1517,7 @@ export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplica
     ],
     entity: {
       name: canonicalName,
-      collection: 'applicants',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1547,37 +1586,37 @@ export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplica
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ApplicantAppLayout',
         'config': {
+          'searchEvent': 'APPLICANT_SEARCH',
           'navItems': [
             {
-              'label': 'Openings',
-              'icon': 'briefcase',
               'href': '/openings',
+              'icon': 'briefcase',
+              'label': 'Openings',
             },
             {
               'href': '/pipeline',
-              'icon': 'user-plus',
               'label': 'Pipeline',
+              'icon': 'user-plus',
             },
             {
-              'icon': 'calendar',
-              'href': '/interviews',
               'label': 'Interviews',
+              'href': '/interviews',
+              'icon': 'calendar',
             },
             {
+              'icon': 'file-text',
               'href': '/offers',
               'label': 'Offers',
-              'icon': 'file-text',
             },
           ],
+          'notifications': [],
           'contentTrait': '@trait.ApplicantList',
           'appName': 'ATSRecruiting',
-          'searchEvent': 'APPLICANT_SEARCH',
           'notificationClickEvent': 'APPLICANT_NOTIFICATIONS_OPEN',
-          'notifications': [],
         },
         'events': {
-          'SEARCH': 'APPLICANT_SEARCH',
           'NOTIFY_CLICK': 'APPLICANT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'APPLICANT_SEARCH',
         },
       }),
       makeTraitRef({
@@ -1605,7 +1644,7 @@ export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplica
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1617,6 +1656,10 @@ export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplica
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1640,7 +1683,9 @@ export const StdAtsRecruitingApplicantOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ApplicantAppLayout',
@@ -1667,20 +1712,23 @@ export function isStdAtsRecruitingApplicantOrbitalParams(p: object): p is StdAts
 /**
  * Tunable params for the InterviewScheduleOrbital orbital.
  *
- * Canonical entity: InterviewSlot (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: InterviewSlot — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAtsRecruitingInterviewScheduleOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1689,22 +1737,28 @@ export interface StdAtsRecruitingInterviewScheduleOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'InterviewScheduleAppLayout' | 'InterviewScheduleList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the InterviewScheduleOrbital orbital with consumer params. */
 export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitingInterviewScheduleOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'InterviewSlot';
+  const canonicalName = params.entityName ?? 'InterviewSlot';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'interviewslots');
   const built = makeOrbitalWithUses({
     name: 'InterviewScheduleOrbital',
     uses: [
@@ -1719,7 +1773,7 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
     ],
     entity: {
       name: canonicalName,
-      collection: 'interviewslots',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1791,10 +1845,6 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
         'ref': 'AppShell.traits.AppLayout',
         'name': 'InterviewScheduleAppLayout',
         'config': {
-          'searchEvent': 'INTERVIEW_SEARCH',
-          'notifications': [],
-          'contentTrait': '@trait.InterviewScheduleList',
-          'notificationClickEvent': 'INTERVIEW_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'href': '/openings',
@@ -1802,26 +1852,30 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
               'label': 'Openings',
             },
             {
-              'href': '/pipeline',
               'icon': 'user-plus',
+              'href': '/pipeline',
               'label': 'Pipeline',
             },
             {
               'label': 'Interviews',
-              'href': '/interviews',
               'icon': 'calendar',
+              'href': '/interviews',
             },
             {
               'icon': 'file-text',
-              'label': 'Offers',
               'href': '/offers',
+              'label': 'Offers',
             },
           ],
+          'contentTrait': '@trait.InterviewScheduleList',
+          'searchEvent': 'INTERVIEW_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'INTERVIEW_NOTIFICATIONS_OPEN',
           'appName': 'ATSRecruiting',
         },
         'events': {
-          'SEARCH': 'INTERVIEW_SEARCH',
           'NOTIFY_CLICK': 'INTERVIEW_NOTIFICATIONS_OPEN',
+          'SEARCH': 'INTERVIEW_SEARCH',
         },
       }),
       makeTraitRef({
@@ -1849,7 +1903,7 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1861,6 +1915,10 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1884,7 +1942,9 @@ export const StdAtsRecruitingInterviewScheduleOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'InterviewScheduleAppLayout',
@@ -1911,20 +1971,23 @@ export function isStdAtsRecruitingInterviewScheduleOrbitalParams(p: object): p i
 /**
  * Tunable params for the OfferLetterFlowOrbital orbital.
  *
- * Canonical entity: OfferLetter (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: OfferLetter — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAtsRecruitingOfferLetterFlowOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1933,22 +1996,28 @@ export interface StdAtsRecruitingOfferLetterFlowOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'OfferLetterAppLayout' | 'OfferLetterList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the OfferLetterFlowOrbital orbital with consumer params. */
 export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingOfferLetterFlowOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'OfferLetter';
+  const canonicalName = params.entityName ?? 'OfferLetter';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'offerletters');
   const built = makeOrbitalWithUses({
     name: 'OfferLetterFlowOrbital',
     uses: [
@@ -1963,7 +2032,7 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
     ],
     entity: {
       name: canonicalName,
-      collection: 'offerletters',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2031,18 +2100,19 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
         'ref': 'AppShell.traits.AppLayout',
         'name': 'OfferLetterAppLayout',
         'config': {
-          'appName': 'ATSRecruiting',
+          'searchEvent': 'OFFER_SEARCH',
           'contentTrait': '@trait.OfferLetterList',
+          'notificationClickEvent': 'OFFER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'href': '/openings',
               'icon': 'briefcase',
               'label': 'Openings',
-              'href': '/openings',
             },
             {
               'href': '/pipeline',
-              'icon': 'user-plus',
               'label': 'Pipeline',
+              'icon': 'user-plus',
             },
             {
               'href': '/interviews',
@@ -2055,13 +2125,12 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
               'href': '/offers',
             },
           ],
+          'appName': 'ATSRecruiting',
           'notifications': [],
-          'searchEvent': 'OFFER_SEARCH',
-          'notificationClickEvent': 'OFFER_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'OFFER_SEARCH',
           'NOTIFY_CLICK': 'OFFER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'OFFER_SEARCH',
         },
       }),
       makeTraitRef({
@@ -2089,7 +2158,7 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2101,6 +2170,10 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2124,7 +2197,9 @@ export const StdAtsRecruitingOfferLetterFlowOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'OfferLetterAppLayout',

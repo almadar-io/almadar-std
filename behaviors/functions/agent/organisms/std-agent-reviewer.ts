@@ -100,20 +100,23 @@ export interface StdAgentReviewerReviewCompletionSaveFailedPayload {
 /**
  * Tunable params for the ReviewOrbital orbital.
  *
- * Canonical entity: Review (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Review — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentReviewerReviewOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -122,22 +125,26 @@ export interface StdAgentReviewerReviewOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ReviewOrbital orbital with consumer params. */
 export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Review';
+  const canonicalName = params.entityName ?? 'Review';
   const built = makeOrbitalWithUses({
     name: 'ReviewOrbital',
     uses: [
@@ -487,8 +494,8 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'Review',
                   {
                     'emit': {
-                      'failure': 'ReviewLoadFailed',
                       'success': 'ReviewLoaded',
+                      'failure': 'ReviewLoadFailed',
                     },
                   },
                 ],
@@ -504,45 +511,43 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                       },
                       {
                         'icon': 'tag',
-                        'href': '/analysis',
                         'label': 'Analysis',
+                        'href': '/analysis',
                       },
                       {
+                        'href': '/issues',
                         'icon': 'alert-triangle',
                         'label': 'Issues',
-                        'href': '/issues',
                       },
                     ],
                     'children': [
                       {
                         'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'file-search',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Code Review',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
-                            'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'direction': 'vertical',
                                 'gap': 'md',
                                 'children': [
                                   {
@@ -551,25 +556,27 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                                     'variant': 'body',
                                   },
                                   {
-                                    'entity': '@entity',
-                                    'mode': 'edit',
                                     'type': 'form-section',
                                     'fields': [
                                       'target',
                                     ],
+                                    'mode': 'edit',
                                     'submitEvent': 'SUBMIT_REVIEW',
+                                    'entity': '@entity',
                                   },
                                 ],
                                 'type': 'stack',
+                                'direction': 'vertical',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
+                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                     'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -601,50 +608,50 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'gap': 'lg',
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'search',
                             'type': 'icon',
+                            'name': 'search',
                           },
                           {
-                            'content': 'Analyzing input...',
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
+                            'content': 'Analyzing input...',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
-                            'content': 'Classifying and searching for patterns',
-                            'type': 'typography',
                             'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Classifying and searching for patterns',
                           },
                         ],
+                        'direction': 'vertical',
                         'type': 'stack',
-                        'align': 'center',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Code Reviewer',
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'icon': 'file-search',
-                        'href': '/review',
-                      },
-                      {
-                        'icon': 'tag',
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                        'href': '/issues',
                       },
                     ],
                   },
@@ -669,52 +676,52 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                      },
-                      {
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                        'href': '/issues',
-                      },
-                    ],
-                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'gap': 'lg',
-                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'cpu',
                           },
                           {
-                            'content': 'Generating review...',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
+                            'content': 'Generating review...',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Category: @entity.category',
                             'variant': 'caption',
-                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -738,107 +745,107 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Code Reviewer',
                     'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
                             'children': [
                               {
-                                'gap': 'sm',
                                 'align': 'center',
-                                'type': 'stack',
-                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'name': 'check-circle',
                                     'type': 'icon',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Review Complete',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
                               },
                               {
-                                'type': 'badge',
                                 'label': '@entity.score',
+                                'type': 'badge',
                               },
                             ],
+                            'align': 'center',
                             'justify': 'between',
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
-                                'gap': 'md',
                                 'children': [
                                   {
+                                    'direction': 'horizontal',
                                     'type': 'stack',
-                                    'gap': 'sm',
                                     'children': [
                                       {
-                                        'type': 'badge',
                                         'label': '@entity.category',
+                                        'type': 'badge',
                                       },
                                       {
-                                        'label': '@entity.reviewStatus',
                                         'type': 'badge',
+                                        'label': '@entity.reviewStatus',
                                       },
                                     ],
-                                    'direction': 'horizontal',
+                                    'gap': 'sm',
                                   },
                                   {
-                                    'content': 'Issues',
                                     'variant': 'h4',
+                                    'content': 'Issues',
                                     'type': 'typography',
                                   },
                                   {
                                     'type': 'typography',
-                                    'content': '@entity.issues',
                                     'variant': 'body',
+                                    'content': '@entity.issues',
                                   },
                                   {
                                     'type': 'divider',
                                   },
                                   {
-                                    'content': 'Suggestions',
                                     'variant': 'h4',
                                     'type': 'typography',
+                                    'content': 'Suggestions',
                                   },
                                   {
-                                    'content': '@entity.suggestions',
                                     'variant': 'body',
+                                    'content': '@entity.suggestions',
                                     'type': 'typography',
                                   },
                                 ],
+                                'gap': 'md',
+                                'type': 'stack',
                                 'direction': 'vertical',
                               },
                             ],
-                            'type': 'card',
                           },
                           {
                             'label': 'New Review',
-                            'action': 'RESET',
                             'variant': 'ghost',
+                            'action': 'RESET',
                             'icon': 'rotate-ccw',
                             'type': 'button',
                           },
                         ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
                         'href': '/review',
@@ -846,14 +853,14 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                         'icon': 'file-search',
                       },
                       {
+                        'href': '/analysis',
                         'label': 'Analysis',
                         'icon': 'tag',
-                        'href': '/analysis',
                       },
                       {
-                        'label': 'Issues',
                         'href': '/issues',
                         'icon': 'alert-triangle',
+                        'label': 'Issues',
                       },
                     ],
                   },
@@ -894,27 +901,11 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                        'href': '/issues',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'gap': 'sm',
@@ -923,12 +914,12 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'file-search',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Code Review',
+                                'variant': 'h2',
                                 'type': 'typography',
                               },
                             ],
@@ -937,37 +928,53 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'gap': 'md',
+                                'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'variant': 'body',
                                     'type': 'typography',
+                                    'variant': 'body',
                                     'content': 'Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.',
                                   },
                                   {
-                                    'entity': '@entity',
-                                    'type': 'form-section',
+                                    'submitEvent': 'SUBMIT_REVIEW',
                                     'fields': [
                                       'target',
                                     ],
-                                    'submitEvent': 'SUBMIT_REVIEW',
+                                    'type': 'form-section',
                                     'mode': 'edit',
+                                    'entity': '@entity',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'type': 'stack',
+                                'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -991,7 +998,7 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1003,6 +1010,10 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1026,7 +1037,9 @@ export const StdAgentReviewerReviewOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -1052,20 +1065,23 @@ export function isStdAgentReviewerReviewOrbitalParams(p: object): p is StdAgentR
 /**
  * Tunable params for the ReviewRagOrbital orbital.
  *
- * Canonical entity: ReviewRag (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ReviewRag — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentReviewerReviewRagOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1074,22 +1090,26 @@ export interface StdAgentReviewerReviewRagOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ReviewRagOrbital orbital with consumer params. */
 export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewRagOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ReviewRag';
+  const canonicalName = params.entityName ?? 'ReviewRag';
   const built = makeOrbitalWithUses({
     name: 'ReviewRagOrbital',
     uses: [],
@@ -1291,25 +1311,20 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'label': 'Review',
                       },
                       {
-                        'label': 'Analysis',
                         'href': '/analysis',
                         'icon': 'tag',
+                        'label': 'Analysis',
                       },
                       {
+                        'href': '/issues',
                         'icon': 'alert-triangle',
                         'label': 'Issues',
-                        'href': '/issues',
                       },
                     ],
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
                             'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
@@ -1318,42 +1333,47 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                 'name': 'brain',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'RAG Pipeline',
+                                'variant': 'h2',
                                 'type': 'typography',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
                                 'direction': 'vertical',
                                 'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
+                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': 'Enter a query to retrieve context and generate a response',
-                                    'variant': 'body',
                                   },
                                   {
+                                    'type': 'form-section',
                                     'mode': 'edit',
                                     'entity': '@entity',
-                                    'type': 'form-section',
-                                    'submitEvent': 'GENERATE',
                                     'fields': [
                                       'query',
                                     ],
+                                    'submitEvent': 'GENERATE',
                                   },
                                 ],
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -1383,36 +1403,21 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'label': 'Review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                      },
-                      {
-                        'href': '/issues',
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'search',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Retrieving context...',
                             'variant': 'h3',
-                            'type': 'typography',
                           },
                           {
                             'type': 'spinner',
@@ -1420,24 +1425,39 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                           {
                             'children': [
                               {
-                                'label': 'Recalling memories',
                                 'type': 'badge',
+                                'label': 'Recalling memories',
                               },
                               {
                                 'label': 'Searching code',
                                 'type': 'badge',
                               },
                             ],
-                            'gap': 'md',
                             'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'md',
                             'justify': 'center',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'align': 'center',
-                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                   },
@@ -1484,17 +1504,17 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
                     'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
                         'href': '/review',
-                        'label': 'Review',
                         'icon': 'file-search',
+                        'label': 'Review',
                       },
                       {
-                        'icon': 'tag',
                         'label': 'Analysis',
+                        'icon': 'tag',
                         'href': '/analysis',
                       },
                       {
@@ -1505,21 +1525,24 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                     ],
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'cpu',
                           },
                           {
-                            'content': 'Generating response...',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': 'Generating response...',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'badge',
@@ -1531,13 +1554,10 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                               },
                             ],
                             'justify': 'center',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'md',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
+                        'align': 'center',
                         'type': 'stack',
                       },
                     ],
@@ -1564,27 +1584,27 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'href': '/review',
                         'icon': 'file-search',
                         'label': 'Review',
-                        'href': '/review',
                       },
                       {
                         'label': 'Analysis',
-                        'icon': 'tag',
                         'href': '/analysis',
+                        'icon': 'tag',
                       },
                       {
                         'icon': 'alert-triangle',
-                        'href': '/issues',
                         'label': 'Issues',
+                        'href': '/issues',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'gap': 'lg',
                         'align': 'center',
                         'children': [
@@ -1593,27 +1613,27 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h2',
-                            'content': 'RAG Pipeline Error',
                             'type': 'typography',
+                            'content': 'RAG Pipeline Error',
+                            'variant': 'h2',
                           },
                           {
-                            'message': '@entity.error',
                             'type': 'alert',
+                            'message': '@entity.error',
                             'variant': 'error',
                           },
                           {
                             'type': 'button',
-                            'icon': 'rotate-ccw',
                             'label': 'Try Again',
                             'action': 'RESET',
+                            'icon': 'rotate-ccw',
                             'variant': 'primary',
                           },
                         ],
                         'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -1646,32 +1666,38 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Review',
                         'href': '/review',
                         'icon': 'file-search',
-                        'label': 'Review',
                       },
                       {
-                        'icon': 'tag',
-                        'href': '/analysis',
                         'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
                       },
                       {
                         'label': 'Issues',
-                        'icon': 'alert-triangle',
                         'href': '/issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'gap': 'sm',
                             'children': [
                               {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'align': 'center',
+                                'gap': 'sm',
                                 'children': [
                                   {
                                     'name': 'check-circle',
@@ -1679,55 +1705,56 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'RAG Complete',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'align': 'center',
                               },
                               {
-                                'label': 'New Query',
                                 'action': 'RESET',
                                 'type': 'button',
-                                'variant': 'ghost',
                                 'icon': 'rotate-ccw',
+                                'variant': 'ghost',
+                                'label': 'New Query',
                               },
                             ],
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'align': 'center',
                             'justify': 'between',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'cols': 2,
                             'children': [
                               {
-                                'icon': 'brain',
-                                'label': 'Memory Hits',
-                                'type': 'stat-display',
                                 'value': '@entity.memoryHits',
+                                'type': 'stat-display',
+                                'label': 'Memory Hits',
+                                'icon': 'brain',
                               },
                               {
                                 'type': 'stat-display',
+                                'icon': 'code',
                                 'value': '@entity.searchHits',
                                 'label': 'Code Hits',
-                                'icon': 'code',
                               },
                             ],
                             'type': 'simple-grid',
+                            'cols': 2,
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'variant': 'caption',
@@ -1735,57 +1762,50 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                     'content': 'Query',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'content': '@entity.query',
                                     'variant': 'body',
+                                    'content': '@entity.query',
+                                    'type': 'typography',
                                   },
                                   {
                                     'type': 'divider',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Response',
+                                    'type': 'typography',
                                     'variant': 'caption',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': '@entity.response',
+                                    'type': 'typography',
                                     'variant': 'body',
                                   },
                                 ],
-                                'type': 'stack',
-                                'direction': 'vertical',
-                                'gap': 'md',
                               },
                             ],
-                            'type': 'card',
                           },
                           {
                             'children': [
                               {
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'content': 'Retrieved Context',
-                                    'variant': 'caption',
                                     'type': 'typography',
+                                    'variant': 'caption',
                                   },
                                   {
+                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': '@entity.context',
-                                    'variant': 'body',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'vertical',
                               },
                             ],
                             'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                       },
                     ],
                   },
@@ -1811,7 +1831,6 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
                         'label': 'Review',
@@ -1819,48 +1838,49 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'icon': 'file-search',
                       },
                       {
+                        'label': 'Analysis',
                         'href': '/analysis',
                         'icon': 'tag',
-                        'label': 'Analysis',
                       },
                       {
                         'href': '/issues',
-                        'icon': 'alert-triangle',
                         'label': 'Issues',
-                      },
-                    ],
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'align': 'center',
-                        'children': [
-                          {
-                            'name': 'alert-triangle',
-                            'type': 'icon',
-                          },
-                          {
-                            'content': 'RAG Pipeline Error',
-                            'type': 'typography',
-                            'variant': 'h2',
-                          },
-                          {
-                            'type': 'alert',
-                            'variant': 'error',
-                            'message': '@entity.error',
-                          },
-                          {
-                            'icon': 'rotate-ccw',
-                            'variant': 'primary',
-                            'type': 'button',
-                            'label': 'Try Again',
-                            'action': 'RESET',
-                          },
-                        ],
-                        'gap': 'lg',
+                        'icon': 'alert-triangle',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'alert-triangle',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'RAG Pipeline Error',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'error',
+                            'type': 'alert',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'action': 'RESET',
+                            'type': 'button',
+                            'variant': 'primary',
+                            'icon': 'rotate-ccw',
+                            'label': 'Try Again',
+                          },
+                        ],
+                      },
+                    ],
                   },
                 ],
               ],
@@ -1904,80 +1924,80 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'name': 'brain',
-                                'type': 'icon',
-                              },
-                              {
-                                'content': 'RAG Pipeline',
-                                'variant': 'h2',
-                                'type': 'typography',
-                              },
-                            ],
                             'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'brain',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'RAG Pipeline',
+                              },
+                            ],
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'md',
                                 'children': [
                                   {
+                                    'type': 'typography',
                                     'variant': 'body',
                                     'content': 'Enter a query to retrieve context and generate a response',
-                                    'type': 'typography',
                                   },
                                   {
-                                    'type': 'form-section',
                                     'entity': '@entity',
-                                    'submitEvent': 'GENERATE',
+                                    'type': 'form-section',
+                                    'mode': 'edit',
                                     'fields': [
                                       'query',
                                     ],
-                                    'mode': 'edit',
+                                    'submitEvent': 'GENERATE',
                                   },
                                 ],
-                                'gap': 'md',
-                                'direction': 'vertical',
-                                'type': 'stack',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'lg',
-                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'label': 'Review',
                         'href': '/review',
+                        'label': 'Review',
                         'icon': 'file-search',
                       },
                       {
-                        'href': '/analysis',
                         'label': 'Analysis',
                         'icon': 'tag',
+                        'href': '/analysis',
                       },
                       {
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
                         'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -2085,8 +2105,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'ReviewRag',
                   {
                     'emit': {
-                      'success': 'ReviewRagLoaded',
                       'failure': 'ReviewRagLoadFailed',
+                      'success': 'ReviewRagLoaded',
                     },
                   },
                 ],
@@ -2095,21 +2115,21 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'main',
                   {
                     'className': 'py-12',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Loading RAG pipeline…',
                         'type': 'typography',
+                        'content': 'Loading RAG pipeline…',
                         'variant': 'caption',
+                        'color': 'muted',
                       },
                     ],
+                    'align': 'center',
                     'gap': 'md',
                     'type': 'stack',
-                    'align': 'center',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2123,50 +2143,50 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/review',
                         'label': 'Review',
                         'icon': 'file-search',
+                        'href': '/review',
                       },
                       {
-                        'label': 'Analysis',
                         'href': '/analysis',
+                        'label': 'Analysis',
                         'icon': 'tag',
                       },
                       {
-                        'icon': 'alert-triangle',
                         'label': 'Issues',
                         'href': '/issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'brain',
                                 'type': 'icon',
+                                'name': 'brain',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                                 'content': 'RAG Pipeline',
                               },
                             ],
                             'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'tabChangeEvent': 'SELECT_TAB',
                             'type': 'tabs',
                             'defaultActiveTab': 'query',
                             'tabs': [
@@ -2183,44 +2203,44 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                 'value': 'response',
                               },
                             ],
-                            'tabChangeEvent': 'SELECT_TAB',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
-                            'type': 'data-grid',
+                            'className': 'transition-shadow hover:shadow-md cursor-pointer',
                             'fields': [],
+                            'entity': '@payload.data',
                             'renderItem': [
                               'fn',
                               'item',
                               {
+                                'gap': 'sm',
+                                'type': 'stack',
                                 'direction': 'vertical',
                                 'children': [
                                   {
-                                    'variant': 'h4',
                                     'content': '@item.query',
                                     'type': 'typography',
+                                    'variant': 'h4',
                                   },
                                   {
-                                    'variant': 'caption',
                                     'color': 'muted',
-                                    'type': 'typography',
                                     'content': '@item.query',
+                                    'type': 'typography',
+                                    'variant': 'caption',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
                               },
                             ],
-                            'className': 'transition-shadow hover:shadow-md cursor-pointer',
+                            'type': 'data-grid',
                           },
                         ],
+                        'gap': 'lg',
                         'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -2234,36 +2254,36 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'py-12',
                     'align': 'center',
+                    'gap': 'md',
+                    'className': 'py-12',
                     'children': [
                       {
-                        'type': 'icon',
-                        'color': 'destructive',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Failed to load RAG pipeline',
+                        'type': 'typography',
                       },
                       {
                         'color': 'muted',
-                        'type': 'typography',
                         'content': '@payload.error',
+                        'type': 'typography',
                         'variant': 'body',
                       },
                       {
-                        'icon': 'rotate-ccw',
-                        'type': 'button',
                         'label': 'Retry',
                         'action': 'INIT',
                         'variant': 'primary',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2385,22 +2405,22 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'caption',
                         'content': 'Loading…',
+                        'type': 'typography',
                         'color': 'muted',
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2414,40 +2434,37 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'type': 'stack',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'align': 'center',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'brain',
+                                    'type': 'icon',
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'ReviewRag Manager',
+                                    'variant': 'h2',
                                   },
                                 ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'align': 'center',
                               },
                             ],
                             'type': 'stack',
-                            'align': 'center',
                             'gap': 'md',
-                            'justify': 'between',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -2457,44 +2474,46 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                               {
                                 'name': 'content',
                                 'label': 'Content',
-                                'variant': 'h4',
                                 'icon': 'brain',
+                                'variant': 'h4',
                               },
                               {
-                                'name': 'category',
                                 'label': 'Category',
+                                'variant': 'badge',
+                                'name': 'category',
                                 'colorMap': {
+                                  'inactive': 'neutral',
+                                  'draft': 'warning',
+                                  'completed': 'success',
+                                  'active': 'success',
                                   'scheduled': 'warning',
                                   'disabled': 'neutral',
                                   'done': 'success',
-                                  'failed': 'destructive',
-                                  'active': 'success',
-                                  'draft': 'warning',
-                                  'inactive': 'neutral',
                                   'error': 'destructive',
-                                  'completed': 'success',
-                                  'cancelled': 'destructive',
                                   'pending': 'warning',
+                                  'cancelled': 'destructive',
+                                  'failed': 'destructive',
                                   'archived': 'neutral',
                                 },
-                                'variant': 'badge',
                               },
                               {
-                                'label': 'Strength',
                                 'name': 'strength',
                                 'variant': 'caption',
+                                'label': 'Strength',
                               },
                             ],
-                            'entity': '@payload.data',
                             'type': 'data-grid',
+                            'entity': '@payload.data',
                           },
                         ],
+                        'gap': 'lg',
                       },
                     ],
+                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'href': '/review',
                         'icon': 'file-search',
+                        'href': '/review',
                         'label': 'Review',
                       },
                       {
@@ -2503,11 +2522,12 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'icon': 'tag',
                       },
                       {
-                        'href': '/issues',
                         'label': 'Issues',
                         'icon': 'alert-triangle',
+                        'href': '/issues',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -2521,35 +2541,35 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
-                        'color': 'destructive',
                         'type': 'icon',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
                       },
                       {
+                        'type': 'typography',
                         'content': 'Failed to load reviewrag',
                         'variant': 'h3',
-                        'type': 'typography',
                       },
                       {
-                        'variant': 'body',
-                        'color': 'muted',
                         'type': 'typography',
+                        'variant': 'body',
                         'content': '@payload.error',
+                        'color': 'muted',
                       },
                       {
                         'type': 'button',
-                        'action': 'INIT',
                         'icon': 'rotate-ccw',
-                        'variant': 'primary',
                         'label': 'Retry',
+                        'action': 'INIT',
+                        'variant': 'primary',
                       },
                     ],
                     'gap': 'md',
                     'direction': 'vertical',
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-12',
                   },
                 ],
@@ -2639,8 +2659,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'ReviewRag',
                   {
                     'emit': {
-                      'failure': 'ReviewRagLoadFailed',
                       'success': 'ReviewRagLoaded',
+                      'failure': 'ReviewRagLoadFailed',
                     },
                   },
                 ],
@@ -2648,22 +2668,22 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Loading…',
-                        'variant': 'caption',
-                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'Loading…',
+                        'color': 'muted',
+                        'variant': 'caption',
                       },
                     ],
                     'gap': 'md',
-                    'className': 'py-12',
-                    'type': 'stack',
+                    'align': 'center',
                     'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2677,81 +2697,6 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'type': 'stack',
-                            'justify': 'between',
-                            'align': 'center',
-                            'children': [
-                              {
-                                'align': 'center',
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'children': [
-                                  {
-                                    'name': 'search',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'variant': 'h2',
-                                    'type': 'typography',
-                                    'content': 'ReviewRag',
-                                  },
-                                ],
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'fields': [
-                              {
-                                'name': 'query',
-                                'variant': 'h4',
-                                'label': 'Query',
-                                'icon': 'search',
-                              },
-                              {
-                                'label': 'Language',
-                                'name': 'language',
-                                'variant': 'badge',
-                                'colorMap': {
-                                  'active': 'success',
-                                  'pending': 'warning',
-                                  'scheduled': 'warning',
-                                  'error': 'destructive',
-                                  'inactive': 'neutral',
-                                  'done': 'success',
-                                  'draft': 'warning',
-                                  'disabled': 'neutral',
-                                  'completed': 'success',
-                                  'failed': 'destructive',
-                                  'archived': 'neutral',
-                                  'cancelled': 'destructive',
-                                },
-                              },
-                              {
-                                'name': 'resultCount',
-                                'variant': 'caption',
-                                'label': 'Result Count',
-                              },
-                            ],
-                            'type': 'data-grid',
-                            'entity': '@payload.data',
-                          },
-                        ],
-                        'type': 'stack',
-                      },
-                    ],
                     'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'navItems': [
@@ -2766,9 +2711,84 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'href': '/analysis',
                       },
                       {
-                        'icon': 'alert-triangle',
                         'label': 'Issues',
+                        'icon': 'alert-triangle',
                         'href': '/issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'className': 'max-w-5xl mx-auto w-full',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'justify': 'between',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'name': 'search',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'ReviewRag',
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
+                            'fields': [
+                              {
+                                'label': 'Query',
+                                'name': 'query',
+                                'icon': 'search',
+                                'variant': 'h4',
+                              },
+                              {
+                                'label': 'Language',
+                                'variant': 'badge',
+                                'colorMap': {
+                                  'active': 'success',
+                                  'pending': 'warning',
+                                  'scheduled': 'warning',
+                                  'disabled': 'neutral',
+                                  'archived': 'neutral',
+                                  'error': 'destructive',
+                                  'cancelled': 'destructive',
+                                  'failed': 'destructive',
+                                  'draft': 'warning',
+                                  'inactive': 'neutral',
+                                  'done': 'success',
+                                  'completed': 'success',
+                                },
+                                'name': 'language',
+                              },
+                              {
+                                'name': 'resultCount',
+                                'variant': 'caption',
+                                'label': 'Result Count',
+                              },
+                            ],
+                          },
+                        ],
+                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -2785,7 +2805,10 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'main',
                   {
                     'type': 'stack',
+                    'align': 'center',
                     'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'icon',
@@ -2793,27 +2816,24 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'name': 'alert-triangle',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'Failed to load reviewrag',
                       },
                       {
-                        'color': 'muted',
                         'content': '@payload.error',
-                        'variant': 'body',
                         'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'body',
                       },
                       {
+                        'icon': 'rotate-ccw',
                         'action': 'INIT',
                         'type': 'button',
                         'label': 'Retry',
-                        'icon': 'rotate-ccw',
                         'variant': 'primary',
                       },
                     ],
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -3005,72 +3025,72 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'href': '/review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'href': '/analysis',
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'href': '/issues',
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
-                                    'content': 'ReviewRag',
                                     'type': 'typography',
                                     'variant': 'h2',
+                                    'content': 'ReviewRag',
                                   },
                                 ],
                                 'type': 'stack',
                                 'gap': 'md',
                               },
                               {
-                                'type': 'button',
                                 'label': 'Open',
                                 'variant': 'primary',
-                                'icon': 'sparkles',
                                 'action': 'GENERATE',
+                                'type': 'button',
+                                'icon': 'sparkles',
                               },
                             ],
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'justify': 'between',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'sparkles',
                             'title': 'Nothing open',
+                            'icon': 'sparkles',
                             'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                   },
@@ -3087,13 +3107,15 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'modal',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'sparkles',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
@@ -3102,37 +3124,35 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                           },
                         ],
                         'direction': 'horizontal',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
                             'label': '@entity.provider',
                             'type': 'badge',
                           },
                           {
-                            'label': '@entity.model',
                             'type': 'badge',
+                            'label': '@entity.model',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'sm',
                       },
                       {
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
                         'fields': [
                           'prompt',
                         ],
-                        'cancelEvent': 'CLOSE',
-                        'submitEvent': 'SAVE',
                         'type': 'form-section',
-                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
                   },
                 ],
@@ -3167,72 +3187,72 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                        'label': 'Issues',
+                      },
+                    ],
                     'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'justify': 'between',
-                            'type': 'stack',
-                            'gap': 'md',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'ReviewRag',
+                                    'type': 'typography',
                                     'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
                                 'direction': 'horizontal',
+                                'gap': 'md',
                               },
                               {
+                                'variant': 'primary',
+                                'icon': 'sparkles',
+                                'type': 'button',
                                 'label': 'Open',
                                 'action': 'GENERATE',
-                                'variant': 'primary',
-                                'type': 'button',
-                                'icon': 'sparkles',
                               },
                             ],
+                            'gap': 'md',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'sparkles',
                             'description': 'Click Open to view details in a modal overlay.',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
+                            'type': 'empty-state',
+                            'icon': 'sparkles',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                        'href': '/issues',
                       },
                     ],
                   },
@@ -3270,8 +3290,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'ReviewRag',
                   {
                     'emit': {
-                      'failure': 'ReviewRagLoadFailed',
                       'success': 'ReviewRagLoaded',
+                      'failure': 'ReviewRagLoadFailed',
                     },
                   },
                 ],
@@ -3279,37 +3299,53 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'label': 'Review',
+                        'href': '/review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
                     'children': [
                       {
                         'children': [
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'sparkles',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'ReviewRag',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
-                                'direction': 'horizontal',
+                                'type': 'stack',
                               },
                               {
-                                'type': 'button',
+                                'variant': 'primary',
                                 'label': 'Open',
                                 'action': 'GENERATE',
-                                'variant': 'primary',
+                                'type': 'button',
                                 'icon': 'sparkles',
                               },
                             ],
@@ -3318,35 +3354,19 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'sparkles',
-                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
                             'title': 'Nothing open',
+                            'type': 'empty-state',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'lg',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'label': 'Review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -3370,7 +3390,7 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3382,6 +3402,10 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3405,7 +3429,9 @@ export const StdAgentReviewerReviewRagOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -3435,20 +3461,23 @@ export function isStdAgentReviewerReviewRagOrbitalParams(p: object): p is StdAge
 /**
  * Tunable params for the AnalysisOrbital orbital.
  *
- * Canonical entity: Analysis (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Analysis — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentReviewerAnalysisOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -3457,22 +3486,26 @@ export interface StdAgentReviewerAnalysisOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the AnalysisOrbital orbital with consumer params. */
 export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysisOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Analysis';
+  const canonicalName = params.entityName ?? 'Analysis';
   const built = makeOrbitalWithUses({
     name: 'AnalysisOrbital',
     uses: [],
@@ -3692,8 +3725,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'Analysis',
                   {
                     'emit': {
-                      'failure': 'AnalysisLoadFailed',
                       'success': 'AnalysisLoaded',
+                      'failure': 'AnalysisLoadFailed',
                     },
                   },
                 ],
@@ -3701,8 +3734,6 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'file-search',
@@ -3715,22 +3746,21 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                         'icon': 'tag',
                       },
                       {
-                        'href': '/issues',
                         'label': 'Issues',
+                        'href': '/issues',
                         'icon': 'alert-triangle',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'gap': 'md',
+                                'direction': 'horizontal',
                                 'type': 'stack',
                                 'children': [
                                   {
@@ -3738,37 +3768,40 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                                     'name': 'tag',
                                   },
                                   {
-                                    'content': 'Analysis',
                                     'type': 'typography',
+                                    'content': 'Analysis',
                                     'variant': 'h2',
                                   },
                                 ],
-                                'direction': 'horizontal',
                               },
                               {
-                                'label': 'Open',
-                                'icon': 'tag',
                                 'type': 'button',
-                                'variant': 'primary',
+                                'label': 'Open',
                                 'action': 'CLASSIFY',
+                                'variant': 'primary',
+                                'icon': 'tag',
                               },
                             ],
                             'justify': 'between',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'tag',
-                            'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
                             'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'icon': 'tag',
                           },
                         ],
                         'type': 'stack',
                         'gap': 'lg',
                       },
                     ],
+                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -3782,21 +3815,20 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'tag',
+                            'type': 'icon',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Analysis',
                             'variant': 'h3',
-                            'type': 'typography',
                           },
                         ],
                       },
@@ -3804,57 +3836,58 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'typography',
-                            'content': 'Categories:',
                             'variant': 'caption',
+                            'content': 'Categories:',
+                            'type': 'typography',
                           },
                           {
+                            'variant': 'secondary',
                             'type': 'badge',
                             'label': 'schema',
-                            'variant': 'secondary',
                           },
                           {
+                            'variant': 'secondary',
                             'type': 'badge',
                             'label': 'component',
-                            'variant': 'secondary',
                           },
                           {
-                            'variant': 'secondary',
                             'type': 'badge',
+                            'variant': 'secondary',
                             'label': 'trait',
                           },
                           {
-                            'variant': 'secondary',
                             'type': 'badge',
+                            'variant': 'secondary',
                             'label': 'page',
                           },
                           {
-                            'label': 'behavior',
                             'type': 'badge',
+                            'label': 'behavior',
                             'variant': 'secondary',
                           },
                           {
                             'variant': 'secondary',
-                            'label': 'style',
                             'type': 'badge',
+                            'label': 'style',
                           },
                         ],
-                        'gap': 'sm',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
+                        'cancelEvent': 'CLOSE',
                         'mode': 'create',
+                        'type': 'form-section',
                         'fields': [
                           'input',
                         ],
-                        'type': 'form-section',
-                        'cancelEvent': 'CLOSE',
                         'submitEvent': 'SAVE',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
                   },
@@ -3881,8 +3914,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'Analysis',
                   {
                     'emit': {
-                      'success': 'AnalysisLoaded',
                       'failure': 'AnalysisLoadFailed',
+                      'success': 'AnalysisLoaded',
                     },
                   },
                 ],
@@ -3891,73 +3924,73 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
                     'children': [
                       {
+                        'direction': 'vertical',
                         'type': 'stack',
                         'gap': 'lg',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'children': [
-                                  {
-                                    'name': 'tag',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'content': 'Analysis',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                              },
-                              {
-                                'variant': 'primary',
-                                'icon': 'tag',
-                                'type': 'button',
-                                'action': 'CLASSIFY',
-                                'label': 'Open',
-                              },
-                            ],
+                            'gap': 'md',
                             'direction': 'horizontal',
                             'type': 'stack',
                             'justify': 'between',
-                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'tag',
+                                  },
+                                  {
+                                    'content': 'Analysis',
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                  },
+                                ],
+                                'gap': 'md',
+                              },
+                              {
+                                'type': 'button',
+                                'label': 'Open',
+                                'action': 'CLASSIFY',
+                                'variant': 'primary',
+                                'icon': 'tag',
+                              },
+                            ],
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'tag',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
+                            'type': 'empty-state',
+                            'icon': 'tag',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'file-search',
-                        'href': '/review',
-                        'label': 'Review',
-                      },
-                      {
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                      },
-                      {
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                        'href': '/issues',
-                      },
-                    ],
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -3974,8 +4007,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'AnalysisSaveFailed',
                       'success': 'AnalysisSaved',
+                      'failure': 'AnalysisSaveFailed',
                     },
                   },
                 ],
@@ -4011,32 +4044,32 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                           {
                             'children': [
                               {
-                                'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'name': 'tag',
                                     'type': 'icon',
+                                    'name': 'tag',
                                   },
                                   {
                                     'type': 'typography',
-                                    'content': 'Analysis',
                                     'variant': 'h2',
+                                    'content': 'Analysis',
                                   },
                                 ],
+                                'gap': 'md',
                                 'direction': 'horizontal',
+                                'type': 'stack',
                               },
                               {
-                                'icon': 'tag',
                                 'action': 'CLASSIFY',
-                                'label': 'Open',
                                 'type': 'button',
+                                'label': 'Open',
                                 'variant': 'primary',
+                                'icon': 'tag',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'md',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'justify': 'between',
                           },
                           {
@@ -4044,32 +4077,32 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                           },
                           {
                             'type': 'empty-state',
-                            'icon': 'tag',
                             'description': 'Click Open to view details in a modal overlay.',
                             'title': 'Nothing open',
+                            'icon': 'tag',
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'navItems': [
                       {
                         'label': 'Review',
-                        'icon': 'file-search',
                         'href': '/review',
+                        'icon': 'file-search',
                       },
                       {
-                        'icon': 'tag',
                         'label': 'Analysis',
                         'href': '/analysis',
+                        'icon': 'tag',
                       },
                       {
+                        'label': 'Issues',
                         'href': '/issues',
                         'icon': 'alert-triangle',
-                        'label': 'Issues',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4205,36 +4238,39 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'icon': 'file-search',
-                        'href': '/review',
                         'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
                       },
                       {
-                        'href': '/analysis',
-                        'icon': 'tag',
                         'label': 'Analysis',
+                        'icon': 'tag',
+                        'href': '/analysis',
                       },
                       {
+                        'icon': 'alert-triangle',
                         'label': 'Issues',
                         'href': '/issues',
-                        'icon': 'alert-triangle',
                       },
                     ],
                     'children': [
                       {
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                         'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
+                                'direction': 'horizontal',
                                 'type': 'stack',
+                                'gap': 'md',
                                 'align': 'center',
                                 'children': [
                                   {
@@ -4242,26 +4278,22 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                                     'name': 'tag',
                                   },
                                   {
-                                    'type': 'typography',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                     'content': 'Analysis Result',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
+                                'variant': 'ghost',
                                 'icon': 'x',
                                 'type': 'button',
-                                'variant': 'ghost',
-                                'action': 'HIDE',
                                 'label': 'Dismiss',
+                                'action': 'HIDE',
                               },
                             ],
-                            'direction': 'horizontal',
                             'justify': 'between',
-                            'align': 'center',
-                            'gap': 'md',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -4282,6 +4314,7 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                         ],
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4305,19 +4338,20 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'align': 'center',
                             'direction': 'horizontal',
                             'gap': 'md',
-                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'align': 'center',
                                 'children': [
                                   {
@@ -4326,29 +4360,30 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                                   },
                                   {
                                     'variant': 'h2',
-                                    'type': 'typography',
                                     'content': 'Analysis Result',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'gap': 'md',
+                                'type': 'stack',
                               },
                               {
-                                'type': 'button',
                                 'icon': 'x',
                                 'action': 'HIDE',
-                                'variant': 'ghost',
+                                'type': 'button',
                                 'label': 'Dismiss',
+                                'variant': 'ghost',
                               },
                             ],
-                            'align': 'center',
+                            'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'message': '@entity.message',
                             'type': 'alert',
+                            'message': '@entity.message',
                             'variant': '@entity.notificationType',
                           },
                           {
@@ -4360,21 +4395,18 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                             'type': 'alert',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
                     'navItems': [
                       {
-                        'label': 'Review',
                         'icon': 'file-search',
                         'href': '/review',
+                        'label': 'Review',
                       },
                       {
+                        'label': 'Analysis',
                         'href': '/analysis',
                         'icon': 'tag',
-                        'label': 'Analysis',
                       },
                       {
                         'icon': 'alert-triangle',
@@ -4382,6 +4414,7 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                         'href': '/issues',
                       },
                     ],
+                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -4544,31 +4577,31 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
-                    'children': [
-                      {
-                        'title': 'Classifier',
-                        'description': 'Classifier is ready',
-                        'type': 'empty-state',
-                        'icon': 'tag',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'file-search',
-                        'label': 'Review',
                         'href': '/review',
+                        'label': 'Review',
                       },
                       {
                         'icon': 'tag',
-                        'href': '/analysis',
                         'label': 'Analysis',
+                        'href': '/analysis',
                       },
                       {
                         'label': 'Issues',
                         'href': '/issues',
                         'icon': 'alert-triangle',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'description': 'Classifier is ready',
+                        'type': 'empty-state',
+                        'icon': 'tag',
+                        'title': 'Classifier',
                       },
                     ],
                   },
@@ -4672,7 +4705,7 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -4684,6 +4717,10 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -4707,7 +4744,9 @@ export const StdAgentReviewerAnalysisOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -4735,20 +4774,23 @@ export function isStdAgentReviewerAnalysisOrbitalParams(p: object): p is StdAgen
 /**
  * Tunable params for the ReviewCompletionOrbital orbital.
  *
- * Canonical entity: ReviewCompletion (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ReviewCompletion — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentReviewerReviewCompletionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -4757,22 +4799,26 @@ export interface StdAgentReviewerReviewCompletionOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ReviewCompletionOrbital orbital with consumer params. */
 export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewerReviewCompletionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ReviewCompletion';
+  const canonicalName = params.entityName ?? 'ReviewCompletion';
   const built = makeOrbitalWithUses({
     name: 'ReviewCompletionOrbital',
     uses: [],
@@ -4993,8 +5039,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'ReviewCompletion',
                   {
                     'emit': {
-                      'success': 'ReviewCompletionLoaded',
                       'failure': 'ReviewCompletionLoadFailed',
+                      'success': 'ReviewCompletionLoaded',
                     },
                   },
                 ],
@@ -5002,20 +5048,37 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
                             'gap': 'md',
                             'children': [
                               {
                                 'direction': 'horizontal',
-                                'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -5027,48 +5090,31 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                                     'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
+                                'type': 'stack',
                               },
                               {
                                 'variant': 'primary',
-                                'label': 'Open',
-                                'icon': 'sparkles',
                                 'type': 'button',
                                 'action': 'GENERATE',
+                                'label': 'Open',
+                                'icon': 'sparkles',
                               },
                             ],
-                            'type': 'stack',
-                            'justify': 'between',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
-                            'title': 'Nothing open',
                             'icon': 'sparkles',
+                            'title': 'Nothing open',
+                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
                       },
                     ],
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'icon': 'file-search',
-                        'href': '/review',
-                      },
-                      {
-                        'icon': 'tag',
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                   },
                 ],
@@ -5083,7 +5129,6 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
@@ -5091,13 +5136,13 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'sparkles',
                             'type': 'icon',
+                            'name': 'sparkles',
                           },
                           {
-                            'content': 'ReviewCompletion',
                             'variant': 'h3',
                             'type': 'typography',
+                            'content': 'ReviewCompletion',
                           },
                         ],
                       },
@@ -5105,30 +5150,31 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'badge',
                             'label': '@entity.provider',
+                            'type': 'badge',
                           },
                           {
-                            'label': '@entity.model',
                             'type': 'badge',
+                            'label': '@entity.model',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
-                        'mode': 'create',
+                        'type': 'form-section',
                         'cancelEvent': 'CLOSE',
                         'fields': [
                           'prompt',
                         ],
-                        'type': 'form-section',
+                        'mode': 'create',
                         'submitEvent': 'SAVE',
                       },
                     ],
+                    'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
                   },
@@ -5165,16 +5211,66 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'main',
                   {
                     'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'ReviewCompletion',
+                                  },
+                                ],
+                                'gap': 'md',
+                              },
+                              {
+                                'icon': 'sparkles',
+                                'action': 'GENERATE',
+                                'label': 'Open',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'icon': 'sparkles',
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Review',
-                        'href': '/review',
                         'icon': 'file-search',
+                        'href': '/review',
                       },
                       {
                         'icon': 'tag',
-                        'href': '/analysis',
                         'label': 'Analysis',
+                        'href': '/analysis',
                       },
                       {
                         'href': '/issues',
@@ -5182,56 +5278,6 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                         'label': 'Issues',
                       },
                     ],
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'children': [
-                          {
-                            'justify': 'between',
-                            'children': [
-                              {
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'sparkles',
-                                  },
-                                  {
-                                    'content': 'ReviewCompletion',
-                                    'type': 'typography',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                                'type': 'stack',
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                              },
-                              {
-                                'action': 'GENERATE',
-                                'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'sparkles',
-                                'label': 'Open',
-                              },
-                            ],
-                            'gap': 'md',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'empty-state',
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'icon': 'sparkles',
-                            'title': 'Nothing open',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -5248,8 +5294,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'ReviewCompletionSaved',
                       'failure': 'ReviewCompletionSaveFailed',
+                      'success': 'ReviewCompletionSaved',
                     },
                   },
                 ],
@@ -5279,9 +5325,9 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/review',
-                        'icon': 'file-search',
                         'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
                       },
                       {
                         'icon': 'tag',
@@ -5289,43 +5335,46 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                         'href': '/analysis',
                       },
                       {
+                        'label': 'Issues',
                         'icon': 'alert-triangle',
                         'href': '/issues',
-                        'label': 'Issues',
                       },
                     ],
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
                                 'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
                                     'content': 'ReviewCompletion',
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                   },
                                 ],
                                 'type': 'stack',
-                                'gap': 'md',
                               },
                               {
-                                'type': 'button',
-                                'action': 'GENERATE',
-                                'icon': 'sparkles',
                                 'variant': 'primary',
+                                'action': 'GENERATE',
+                                'type': 'button',
                                 'label': 'Open',
+                                'icon': 'sparkles',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'justify': 'between',
                             'type': 'stack',
                           },
                           {
@@ -5333,17 +5382,14 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                           },
                           {
                             'type': 'empty-state',
-                            'icon': 'sparkles',
-                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
                           },
                         ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -5479,70 +5525,52 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Code Reviewer',
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                      },
-                      {
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                        'href': '/issues',
-                      },
-                    ],
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'sparkles',
+                                    'type': 'icon',
                                   },
                                   {
+                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'ReviewCompletion Status',
-                                    'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
-                                'direction': 'horizontal',
+                                'align': 'center',
                               },
                               {
-                                'type': 'button',
-                                'action': 'HIDE',
                                 'icon': 'x',
+                                'type': 'button',
                                 'label': 'Dismiss',
+                                'action': 'HIDE',
                                 'variant': 'ghost',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                            'align': 'center',
-                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'message': '@entity.message',
                             'type': 'alert',
                             'variant': '@entity.notificationType',
-                            'message': '@entity.message',
                           },
                           {
                             'type': 'toast-slot',
@@ -5553,9 +5581,27 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                             'message': '@entity.message',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -5579,40 +5625,38 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'icon': 'file-search',
-                        'href': '/review',
                         'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
                       },
                       {
-                        'label': 'Analysis',
                         'href': '/analysis',
+                        'label': 'Analysis',
                         'icon': 'tag',
                       },
                       {
                         'icon': 'alert-triangle',
-                        'href': '/issues',
                         'label': 'Issues',
+                        'href': '/issues',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'gap': 'md',
-                            'align': 'center',
-                            'justify': 'between',
                             'type': 'stack',
+                            'align': 'center',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
                                 'direction': 'horizontal',
                                 'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -5624,17 +5668,17 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                                     'content': 'ReviewCompletion Status',
                                   },
                                 ],
+                                'type': 'stack',
                                 'align': 'center',
                               },
                               {
                                 'action': 'HIDE',
+                                'variant': 'ghost',
                                 'label': 'Dismiss',
                                 'type': 'button',
-                                'variant': 'ghost',
                                 'icon': 'x',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -5653,9 +5697,11 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                             'message': '@entity.message',
                           },
                         ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -5826,30 +5872,30 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'children': [
-                      {
-                        'description': 'Completion is ready',
-                        'title': 'Completion',
-                        'type': 'empty-state',
-                        'icon': 'sparkles',
-                      },
-                    ],
                     'appName': 'Code Reviewer',
                     'navItems': [
                       {
+                        'label': 'Review',
                         'href': '/review',
                         'icon': 'file-search',
-                        'label': 'Review',
                       },
                       {
                         'href': '/analysis',
-                        'icon': 'tag',
                         'label': 'Analysis',
+                        'icon': 'tag',
                       },
                       {
                         'icon': 'alert-triangle',
-                        'href': '/issues',
                         'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'empty-state',
+                        'icon': 'sparkles',
+                        'title': 'Completion',
+                        'description': 'Completion is ready',
                       },
                     ],
                   },
@@ -5907,8 +5953,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'emit',
                   'SHOW',
                   {
-                    'notificationType': 'success',
                     'message': 'Review complete',
+                    'notificationType': 'success',
                   },
                 ],
               ],
@@ -6019,7 +6065,7 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6031,6 +6077,10 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -6054,7 +6104,9 @@ export const StdAgentReviewerReviewCompletionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -6082,20 +6134,23 @@ export function isStdAgentReviewerReviewCompletionOrbitalParams(p: object): p is
 /**
  * Tunable params for the ReviewNavOrbital orbital.
  *
- * Canonical entity: ReviewNav (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ReviewNav — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentReviewerReviewNavOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -6104,22 +6159,26 @@ export interface StdAgentReviewerReviewNavOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ReviewerTabs',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ReviewNavOrbital orbital with consumer params. */
 export function stdAgentReviewerReviewNavOrbital(params: StdAgentReviewerReviewNavOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ReviewNav';
+  const canonicalName = params.entityName ?? 'ReviewNav';
   const built = makeOrbitalWithUses({
     name: 'ReviewNavOrbital',
     uses: [
@@ -6201,7 +6260,7 @@ export function stdAgentReviewerReviewNavOrbital(params: StdAgentReviewerReviewN
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6213,6 +6272,10 @@ export function stdAgentReviewerReviewNavOrbital(params: StdAgentReviewerReviewN
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -6236,7 +6299,9 @@ export const StdAgentReviewerReviewNavOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ReviewerTabs',
@@ -6262,20 +6327,23 @@ export function isStdAgentReviewerReviewNavOrbitalParams(p: object): p is StdAge
 /**
  * Tunable params for the ReviewIssueOrbital orbital.
  *
- * Canonical entity: ReviewIssue (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ReviewIssue — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentReviewerReviewIssueOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -6284,22 +6352,26 @@ export interface StdAgentReviewerReviewIssueOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'IssuesBrowse',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ReviewIssueOrbital orbital with consumer params. */
 export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerReviewIssueOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ReviewIssue';
+  const canonicalName = params.entityName ?? 'ReviewIssue';
   const built = makeOrbitalWithUses({
     name: 'ReviewIssueOrbital',
     uses: [
@@ -6341,7 +6413,7 @@ export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerRevie
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'IssuesBrowse',
-        'linkedEntity': 'ReviewIssue',
+        'linkedEntity': canonicalName,
       }),
     ],
     pages: [
@@ -6358,7 +6430,7 @@ export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerRevie
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -6370,6 +6442,10 @@ export function stdAgentReviewerReviewIssueOrbital(params: StdAgentReviewerRevie
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -6393,7 +6469,9 @@ export const StdAgentReviewerReviewIssueOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'IssuesBrowse',

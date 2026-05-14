@@ -60,12 +60,12 @@ export interface StdModalModalRecordLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModalConfig {
-  /** Default: `[]` */
-  fields?: string[];
   /** Default: `"create"` */
   mode?: string;
   /** Default: `"layout-panel-top"` */
   icon?: string;
+  /** Default: `[]` */
+  fields?: string[];
   /** Default: `"Details"` */
   title?: string;
 }

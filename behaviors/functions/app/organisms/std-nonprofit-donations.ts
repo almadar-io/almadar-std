@@ -30,8 +30,8 @@ const ALIAS = 'NonprofitDonations';
  * without modifying its state-machine topology.
  */
 export interface StdNonprofitDonationsConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**

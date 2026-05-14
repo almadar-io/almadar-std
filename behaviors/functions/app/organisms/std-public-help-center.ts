@@ -35,252 +35,1710 @@ export interface StdPublicHelpCenterConfig {
 }
 
 /**
- * Params for the std-public-help-center descriptor helpers.
+ * Tunable params for the HelpCenterOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: HelpCenter — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdPublicHelpCenterParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdPublicHelpCenterHelpCenterOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdPublicHelpCenterConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'HelpCenterAppLayout' | 'HelpCenterSearch' | 'HelpCenterFilter' | 'HelpCenterStats' | 'HelpCenterGraphs' | 'HelpCenterBrowseList' | 'HelpCenterCreate' | 'HelpCenterEdit' | 'HelpCenterView' | 'HelpCenterDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterAppLayout`. */
-export function stdPublicHelpCenterHelpCenterAppLayoutTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterCatalog`. */
-export function stdPublicHelpCenterHelpCenterCatalogTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterSearch`. */
-export function stdPublicHelpCenterHelpCenterSearchTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterFilter`. */
-export function stdPublicHelpCenterHelpCenterFilterTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterStats`. */
-export function stdPublicHelpCenterHelpCenterStatsTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterGraphs`. */
-export function stdPublicHelpCenterHelpCenterGraphsTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterBrowseList`. */
-export function stdPublicHelpCenterHelpCenterBrowseListTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterCreate`. */
-export function stdPublicHelpCenterHelpCenterCreateTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterEdit`. */
-export function stdPublicHelpCenterHelpCenterEditTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterView`. */
-export function stdPublicHelpCenterHelpCenterViewTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterDelete`. */
-export function stdPublicHelpCenterHelpCenterDeleteTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `PublicHelpCenter.traits.HelpCenterPersistor`. */
-export function stdPublicHelpCenterHelpCenterPersistorTrait(params: StdPublicHelpCenterParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.HelpCenterPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `PublicHelpCenter.pages.HelpCentersPage`. */
-export function stdPublicHelpCenterPage(params: StdPublicHelpCenterParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.HelpCentersPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdPublicHelpCenter(params: StdPublicHelpCenterParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the HelpCenterOrbital orbital with consumer params. */
+export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenterHelpCenterOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'HelpCenter';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'helpcenters');
+  const built = makeOrbitalWithUses({
     name: 'HelpCenterOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-help-article',
+        'as': 'HelpArticle',
+      },
+      {
+        'from': 'std/behaviors/std-help-category',
+        'as': 'HelpCategory',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'domain',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'totalArticles',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalCategories',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'published',
+              'private',
+            ],
+          },
+          {
+            'name': 'publishedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'lastUpdatedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdPublicHelpCenterHelpCenterAppLayoutTrait(params),
-      stdPublicHelpCenterHelpCenterCatalogTrait(params),
-      stdPublicHelpCenterHelpCenterSearchTrait(params),
-      stdPublicHelpCenterHelpCenterFilterTrait(params),
-      stdPublicHelpCenterHelpCenterStatsTrait(params),
-      stdPublicHelpCenterHelpCenterGraphsTrait(params),
-      stdPublicHelpCenterHelpCenterBrowseListTrait(params),
-      stdPublicHelpCenterHelpCenterCreateTrait(params),
-      stdPublicHelpCenterHelpCenterEditTrait(params),
-      stdPublicHelpCenterHelpCenterViewTrait(params),
-      stdPublicHelpCenterHelpCenterDeleteTrait(params),
-      stdPublicHelpCenterHelpCenterPersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'HelpCenterAppLayout',
+        'config': {
+          'contentTrait': '@trait.HelpCenterCatalog',
+          'appName': 'Help Center',
+          'searchEvent': 'HELP_CENTER_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'HELP_CENTER_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/help-centers',
+              'icon': 'life-buoy',
+              'label': 'Help Centers',
+            },
+            {
+              'href': '/articles',
+              'label': 'Articles',
+              'icon': 'book',
+            },
+            {
+              'href': '/categories',
+              'label': 'Categories',
+              'icon': 'folder',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'HELP_CENTER_SEARCH',
+          'NOTIFY_CLICK': 'HELP_CENTER_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'HelpCenterCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'HELP_CENTER_SEARCH',
+            'triggers': 'HELP_CENTER_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterAppLayout',
+            },
+          },
+          {
+            'event': 'HELP_CENTER_NOTIFICATIONS_OPEN',
+            'triggers': 'HELP_CENTER_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'HELP_CENTER_SEARCH',
+              'name': 'Help Center Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'HELP_CENTER_NOTIFICATIONS_OPEN',
+              'name': 'Help Center Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'life-buoy',
+                              },
+                              {
+                                'content': 'Help Centers',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'New Help Center',
+                                'icon': 'plus',
+                                'type': 'button',
+                                'action': 'CREATE',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          '@trait.HelpCenterSearch',
+                          '@trait.HelpCenterFilter',
+                        ],
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      '@trait.HelpCenterStats',
+                      '@trait.HelpCenterGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.HelpCenterBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'HELP_CENTER_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'HELP_CENTER_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
+                        'label': 'Back to help centers',
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'HelpCenterSearch',
+        'config': {
+          'placeholder': 'Search help centers…',
+          'event': 'HELP_CENTER_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'HelpCenterFilter',
+        'config': {
+          'filters': [
+            {
+              'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
+              'options': [
+                'draft',
+                'published',
+                'private',
+              ],
+            },
+          ],
+          'event': 'HELP_CENTER_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'HelpCenterStats',
+        'config': {
+          'title': 'Help Centers',
+          'metrics': [
+            {
+              'variant': 'primary',
+              'icon': 'life-buoy',
+              'format': 'number',
+              'label': 'Total',
+              'aggregation': 'count',
+            },
+            {
+              'format': 'number',
+              'aggregation': 'count',
+              'label': 'Published',
+              'icon': 'check-circle',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'published',
+                ],
+              ],
+            },
+            {
+              'label': 'Draft',
+              'aggregation': 'count',
+              'variant': 'warning',
+              'format': 'number',
+              'icon': 'edit',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'draft',
+                ],
+              ],
+            },
+            {
+              'label': 'Articles',
+              'icon': 'book-open',
+              'field': 'totalArticles',
+              'aggregation': 'sum',
+              'variant': 'info',
+              'format': 'number',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'HelpCenterGraphs',
+        'config': {
+          'subtitle': 'Publication state across managed help centers',
+          'categoryField': 'status',
+          'chartType': 'bar',
+          'aggregation': 'count',
+          'height': 240,
+          'showLegend': false,
+          'title': 'Help Centers by Status',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'HelpCenterBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
+          'fields': [
+            {
+              'name': 'name',
+              'variant': 'h3',
+              'icon': 'life-buoy',
+            },
+            {
+              'variant': 'caption',
+              'name': 'slug',
+            },
+            {
+              'name': 'domain',
+              'variant': 'caption',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'badge',
+              'format': 'number',
+              'name': 'totalArticles',
+            },
+            {
+              'variant': 'caption',
+              'format': 'number',
+              'name': 'totalCategories',
+            },
+            {
+              'variant': 'caption',
+              'name': 'lastUpdatedAt',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterFilter',
+            },
+          },
+          {
+            'event': 'HELP_CENTER_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterPersistor',
+            },
+          },
+          {
+            'event': 'HELP_CENTER_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterPersistor',
+            },
+          },
+          {
+            'event': 'HELP_CENTER_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'HelpCenterCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'plus-circle',
+          'fields': [
+            'name',
+            'slug',
+            'domain',
+            'status',
+          ],
+          'mode': 'create',
+          'title': 'New Help Center',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'HelpCenterEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Edit Help Center',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'slug',
+            'domain',
+            'status',
+          ],
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'HelpCenterView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'eye',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'slug',
+            'domain',
+            'status',
+          ],
+          'title': 'View Help Center',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'HelpCenterDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'title': 'Delete Help Center',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'HelpCenterPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'HelpCenter',
+        'emits': [
+          {
+            'event': 'HELP_CENTER_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'HELP_CENTER_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'HELP_CENTER_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'HelpCenterDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'HELP_CENTER_CREATED',
+              'name': 'Help Center Created',
+            },
+            {
+              'key': 'HELP_CENTER_UPDATED',
+              'name': 'Help Center Updated',
+            },
+            {
+              'key': 'HELP_CENTER_DELETED',
+              'name': 'Help Center Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'HelpCenter',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'HELP_CENTER_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'HelpCenter',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'HELP_CENTER_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'HelpCenter',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'HELP_CENTER_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdPublicHelpCenterPage(params),
+      {
+        'name': 'HelpCentersPage',
+        'path': '/help-centers',
+        'traits': [
+          {
+            'ref': 'HelpCenterAppLayout',
+          },
+          {
+            'ref': 'HelpCenterCatalog',
+          },
+          {
+            'ref': 'HelpCenterSearch',
+          },
+          {
+            'ref': 'HelpCenterFilter',
+          },
+          {
+            'ref': 'HelpCenterStats',
+          },
+          {
+            'ref': 'HelpCenterGraphs',
+          },
+          {
+            'ref': 'HelpCenterBrowseList',
+          },
+          {
+            'ref': 'HelpCenterCreate',
+          },
+          {
+            'ref': 'HelpCenterEdit',
+          },
+          {
+            'ref': 'HelpCenterView',
+          },
+          {
+            'ref': 'HelpCenterDelete',
+          },
+          {
+            'ref': 'HelpCenterPersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPublicHelpCenterHelpCenterOrbital. */
+export const StdPublicHelpCenterHelpCenterOrbitalManifest = {
+  organism: 'std-public-help-center',
+  orbitalName: 'HelpCenterOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'HelpCenterAppLayout',
+    'HelpCenterSearch',
+    'HelpCenterFilter',
+    'HelpCenterStats',
+    'HelpCenterGraphs',
+    'HelpCenterBrowseList',
+    'HelpCenterCreate',
+    'HelpCenterEdit',
+    'HelpCenterView',
+    'HelpCenterDelete',
+  ] as const,
+  inlineTraitNames: [
+    'HelpCenterCatalog',
+    'HelpCenterPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPublicHelpCenterHelpCenterOrbitalParams keys. */
+export function isStdPublicHelpCenterHelpCenterOrbitalParams(p: object): p is StdPublicHelpCenterHelpCenterOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPublicHelpCenterHelpCenterOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPublicHelpCenterHelpCenterOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the HelpArticlePanelOrbital orbital.
+ *
+ * Canonical entity: HelpArticle — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdPublicHelpCenterHelpArticlePanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'HelpArticleAppLayout' | 'HelpArticleView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the HelpArticlePanelOrbital orbital with consumer params. */
+export function stdPublicHelpCenterHelpArticlePanelOrbital(params: StdPublicHelpCenterHelpArticlePanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'HelpArticle';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'helparticles');
+  const built = makeOrbitalWithUses({
+    name: 'HelpArticlePanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-help-article',
+        'as': 'HelpArticle',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'body',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'summary',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'categoryId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'categoryName',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'author',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'published',
+              'archived',
+              'needs-update',
+            ],
+          },
+          {
+            'name': 'viewCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'helpfulCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'notHelpfulCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'publishedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'HelpArticleAppLayout',
+        'config': {
+          'appName': 'Help Center',
+          'notificationClickEvent': 'HELP_ARTICLE_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'icon': 'book',
+              'label': 'Articles',
+              'href': '/articles',
+            },
+            {
+              'label': 'Help Centers',
+              'href': '/help-centers',
+              'icon': 'life-buoy',
+            },
+            {
+              'href': '/categories',
+              'icon': 'folder',
+              'label': 'Categories',
+            },
+          ],
+          'notifications': [],
+          'contentTrait': '@trait.HelpArticlePanel',
+          'searchEvent': 'HELP_ARTICLE_SEARCH',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'HELP_ARTICLE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'HELP_ARTICLE_SEARCH',
+        },
+      }),
+      {
+        'name': 'HelpArticlePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'book',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Help Articles',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.HelpArticleView',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'HelpArticle.traits.HelpArticleManage',
+        'name': 'HelpArticleView',
+        'config': {
+          'title': 'Help Articles',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ArticlesPage',
+        'path': '/articles',
+        'traits': [
+          {
+            'ref': 'HelpArticleAppLayout',
+          },
+          {
+            'ref': 'HelpArticlePanel',
+          },
+          {
+            'ref': 'HelpArticleView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPublicHelpCenterHelpArticlePanelOrbital. */
+export const StdPublicHelpCenterHelpArticlePanelOrbitalManifest = {
+  organism: 'std-public-help-center',
+  orbitalName: 'HelpArticlePanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'HelpArticleAppLayout',
+    'HelpArticleView',
+  ] as const,
+  inlineTraitNames: [
+    'HelpArticlePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPublicHelpCenterHelpArticlePanelOrbitalParams keys. */
+export function isStdPublicHelpCenterHelpArticlePanelOrbitalParams(p: object): p is StdPublicHelpCenterHelpArticlePanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPublicHelpCenterHelpArticlePanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPublicHelpCenterHelpArticlePanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the HelpCategoryPanelOrbital orbital.
+ *
+ * Canonical entity: HelpCategory — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdPublicHelpCenterHelpCategoryPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'HelpCategoryAppLayout' | 'HelpCategoryView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the HelpCategoryPanelOrbital orbital with consumer params. */
+export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHelpCenterHelpCategoryPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'HelpCategory';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'helpcategories');
+  const built = makeOrbitalWithUses({
+    name: 'HelpCategoryPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-help-category',
+        'as': 'HelpCategory',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'slug',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'icon',
+            'type': 'string',
+            'default': 'folder',
+          },
+          {
+            'name': 'sortOrder',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'articleCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'published',
+              'draft',
+              'archived',
+            ],
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'HelpCategoryAppLayout',
+        'config': {
+          'notificationClickEvent': 'HELP_CATEGORY_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.HelpCategoryPanel',
+          'searchEvent': 'HELP_CATEGORY_SEARCH',
+          'navItems': [
+            {
+              'label': 'Categories',
+              'icon': 'folder',
+              'href': '/categories',
+            },
+            {
+              'label': 'Help Centers',
+              'href': '/help-centers',
+              'icon': 'life-buoy',
+            },
+            {
+              'href': '/articles',
+              'icon': 'book',
+              'label': 'Articles',
+            },
+          ],
+          'notifications': [],
+          'appName': 'Help Center',
+        },
+        'events': {
+          'SEARCH': 'HELP_CATEGORY_SEARCH',
+          'NOTIFY_CLICK': 'HELP_CATEGORY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'HelpCategoryPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'folder',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Help Categories',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.HelpCategoryView',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'HelpCategory.traits.HelpCategoryDirectory',
+        'name': 'HelpCategoryView',
+        'config': {
+          'title': 'Help Categories',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'CategoriesPage',
+        'path': '/categories',
+        'traits': [
+          {
+            'ref': 'HelpCategoryAppLayout',
+          },
+          {
+            'ref': 'HelpCategoryPanel',
+          },
+          {
+            'ref': 'HelpCategoryView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdPublicHelpCenterHelpCategoryPanelOrbital. */
+export const StdPublicHelpCenterHelpCategoryPanelOrbitalManifest = {
+  organism: 'std-public-help-center',
+  orbitalName: 'HelpCategoryPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'HelpCategoryAppLayout',
+    'HelpCategoryView',
+  ] as const,
+  inlineTraitNames: [
+    'HelpCategoryPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdPublicHelpCenterHelpCategoryPanelOrbitalParams keys. */
+export function isStdPublicHelpCenterHelpCategoryPanelOrbitalParams(p: object): p is StdPublicHelpCenterHelpCategoryPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdPublicHelpCenterHelpCategoryPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdPublicHelpCenterHelpCategoryPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-public-help-center — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdPublicHelpCenterParams {
+  HelpCenter?: StdPublicHelpCenterHelpCenterOrbitalParams;
+  HelpArticlePanel?: StdPublicHelpCenterHelpArticlePanelOrbitalParams;
+  HelpCategoryPanel?: StdPublicHelpCenterHelpCategoryPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+export function stdPublicHelpCenter(params: StdPublicHelpCenterParams = {}): OrbitalDefinition[] {
+  return [
+    stdPublicHelpCenterHelpCenterOrbital(params.HelpCenter ?? {}),
+    stdPublicHelpCenterHelpArticlePanelOrbital(params.HelpArticlePanel ?? {}),
+    stdPublicHelpCenterHelpCategoryPanelOrbital(params.HelpCategoryPanel ?? {}),
+  ];
 }

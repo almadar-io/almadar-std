@@ -29,7 +29,22 @@ const ALIAS = 'ModifierGroup';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdModifierGroupEventKey = 'CREATE' | 'DELETE' | 'INIT' | 'ModifierGroupCreated' | 'ModifierGroupDeleted' | 'ModifierGroupLoadFailed' | 'ModifierGroupLoaded' | 'ModifierGroupUpdated' | 'ModifierGroupWriteFailed' | 'UPDATE';
+export type StdModifierGroupEventKey = 'CLOSE_VIEW' | 'CREATE' | 'DELETE' | 'INIT' | 'ModifierGroupCreated' | 'ModifierGroupDeleted' | 'ModifierGroupLoadFailed' | 'ModifierGroupLoaded' | 'ModifierGroupUpdated' | 'ModifierGroupWriteFailed' | 'OPEN_GROUP' | 'UPDATE';
+
+/**
+ * Payload shape for the `OPEN_GROUP` event.
+ */
+export interface StdModifierGroupOpenGroupPayload {
+  id: string;
+  row?: {
+    id: string;
+    name: string;
+    constraintType?: string;
+    minSelect?: number;
+    maxSelect?: number;
+    optionsJson?: string;
+  };
+}
 
 /**
  * Payload shape for the `CREATE` event.

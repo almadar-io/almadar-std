@@ -35,252 +35,2064 @@ export interface StdFleetMgmtConfig {
 }
 
 /**
- * Params for the std-fleet-mgmt descriptor helpers.
+ * Tunable params for the FleetOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Fleet — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdFleetMgmtParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdFleetMgmtFleetOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdFleetMgmtConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'FleetAppLayout' | 'FleetSearch' | 'FleetFilter' | 'FleetStats' | 'FleetGraphs' | 'FleetBrowseList' | 'FleetCreate' | 'FleetEdit' | 'FleetView' | 'FleetDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `FleetMgmt.traits.FleetAppLayout`. */
-export function stdFleetMgmtFleetAppLayoutTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetCatalog`. */
-export function stdFleetMgmtFleetCatalogTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetSearch`. */
-export function stdFleetMgmtFleetSearchTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetFilter`. */
-export function stdFleetMgmtFleetFilterTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetStats`. */
-export function stdFleetMgmtFleetStatsTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetGraphs`. */
-export function stdFleetMgmtFleetGraphsTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetBrowseList`. */
-export function stdFleetMgmtFleetBrowseListTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetCreate`. */
-export function stdFleetMgmtFleetCreateTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetEdit`. */
-export function stdFleetMgmtFleetEditTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetView`. */
-export function stdFleetMgmtFleetViewTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetDelete`. */
-export function stdFleetMgmtFleetDeleteTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `FleetMgmt.traits.FleetPersistor`. */
-export function stdFleetMgmtFleetPersistorTrait(params: StdFleetMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.FleetPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `FleetMgmt.pages.FleetsPage`. */
-export function stdFleetMgmtPage(params: StdFleetMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.FleetsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdFleetMgmt(params: StdFleetMgmtParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the FleetOrbital orbital with consumer params. */
+export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Fleet';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'fleets');
+  const built = makeOrbitalWithUses({
     name: 'FleetOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-vehicle',
+        'as': 'Vehicle',
+      },
+      {
+        'from': 'std/behaviors/std-driver',
+        'as': 'Driver',
+      },
+      {
+        'from': 'std/behaviors/std-telematics-event',
+        'as': 'TelematicsEvent',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'region',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'vehicleCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'driverCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'merging',
+              'archived',
+            ],
+          },
+          {
+            'name': 'managedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdFleetMgmtFleetAppLayoutTrait(params),
-      stdFleetMgmtFleetCatalogTrait(params),
-      stdFleetMgmtFleetSearchTrait(params),
-      stdFleetMgmtFleetFilterTrait(params),
-      stdFleetMgmtFleetStatsTrait(params),
-      stdFleetMgmtFleetGraphsTrait(params),
-      stdFleetMgmtFleetBrowseListTrait(params),
-      stdFleetMgmtFleetCreateTrait(params),
-      stdFleetMgmtFleetEditTrait(params),
-      stdFleetMgmtFleetViewTrait(params),
-      stdFleetMgmtFleetDeleteTrait(params),
-      stdFleetMgmtFleetPersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'FleetAppLayout',
+        'config': {
+          'contentTrait': '@trait.FleetCatalog',
+          'navItems': [
+            {
+              'href': '/fleets',
+              'label': 'Fleets',
+              'icon': 'truck',
+            },
+            {
+              'label': 'Vehicles',
+              'href': '/vehicles',
+              'icon': 'truck',
+            },
+            {
+              'label': 'Drivers',
+              'href': '/drivers',
+              'icon': 'user',
+            },
+            {
+              'href': '/telematics',
+              'label': 'Telematics',
+              'icon': 'activity',
+            },
+          ],
+          'notifications': [],
+          'searchEvent': 'FLEET_SEARCH',
+          'notificationClickEvent': 'FLEET_NOTIFICATIONS_OPEN',
+          'appName': 'Fleet Manager',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'FLEET_NOTIFICATIONS_OPEN',
+          'SEARCH': 'FLEET_SEARCH',
+        },
+      }),
+      {
+        'name': 'FleetCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'FLEET_SEARCH',
+            'triggers': 'FLEET_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetAppLayout',
+            },
+          },
+          {
+            'event': 'FLEET_NOTIFICATIONS_OPEN',
+            'triggers': 'FLEET_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'FLEET_SEARCH',
+              'name': 'Fleet Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FLEET_NOTIFICATIONS_OPEN',
+              'name': 'Fleet Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'truck',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Fleets',
+                                'type': 'typography',
+                              },
+                            ],
+                            'align': 'center',
+                          },
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'label': 'New Fleet',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'type': 'button',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'align': 'center',
+                        'children': [
+                          '@trait.FleetSearch',
+                          '@trait.FleetFilter',
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      '@trait.FleetStats',
+                      '@trait.FleetGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.FleetBrowseList',
+                    ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'FLEET_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'FLEET_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'label': 'Back to fleets',
+                        'type': 'button',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'className': 'py-8',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'FleetSearch',
+        'config': {
+          'placeholder': 'Search fleets…',
+          'event': 'FLEET_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'FleetFilter',
+        'config': {
+          'filters': [
+            {
+              'options': [
+                'active',
+                'inactive',
+                'merging',
+                'archived',
+              ],
+              'filterType': 'select',
+              'label': 'Status',
+              'field': 'status',
+            },
+          ],
+          'event': 'FLEET_FILTER',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'FleetStats',
+        'config': {
+          'title': 'Fleets',
+          'metrics': [
+            {
+              'aggregation': 'count',
+              'icon': 'truck',
+              'variant': 'primary',
+              'label': 'Total',
+              'format': 'number',
+            },
+            {
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'aggregation': 'count',
+              'variant': 'success',
+              'label': 'Active',
+              'icon': 'check-circle',
+            },
+            {
+              'aggregation': 'sum',
+              'variant': 'info',
+              'label': 'Vehicles',
+              'icon': 'truck',
+              'format': 'number',
+              'field': 'vehicleCount',
+            },
+            {
+              'format': 'number',
+              'field': 'driverCount',
+              'variant': 'info',
+              'icon': 'users',
+              'aggregation': 'sum',
+              'label': 'Drivers',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'FleetGraphs',
+        'config': {
+          'height': 240,
+          'title': 'Fleets by Status',
+          'subtitle': 'Operational composition across fleet statuses',
+          'chartType': 'bar',
+          'categoryField': 'status',
+          'aggregation': 'count',
+          'showLegend': false,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'FleetBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'cols': 1,
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
+          'fields': [
+            {
+              'variant': 'h3',
+              'name': 'name',
+              'icon': 'truck',
+            },
+            {
+              'name': 'region',
+              'variant': 'caption',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'vehicleCount',
+            },
+            {
+              'variant': 'caption',
+              'name': 'driverCount',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetFilter',
+            },
+          },
+          {
+            'event': 'FLEET_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetPersistor',
+            },
+          },
+          {
+            'event': 'FLEET_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetPersistor',
+            },
+          },
+          {
+            'event': 'FLEET_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'FleetCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'New Fleet',
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'name',
+            'description',
+            'region',
+            'status',
+            'managedBy',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'FleetEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Edit Fleet',
+          'mode': 'edit',
+          'icon': 'edit',
+          'fields': [
+            'name',
+            'description',
+            'region',
+            'status',
+            'managedBy',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'FleetView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'View Fleet',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'description',
+            'region',
+            'status',
+            'managedBy',
+            'vehicleCount',
+            'driverCount',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'FleetDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Delete Fleet',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'FleetPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Fleet',
+        'emits': [
+          {
+            'event': 'FLEET_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'FLEET_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'FLEET_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'FleetDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'FLEET_CREATED',
+              'name': 'Fleet Created',
+            },
+            {
+              'key': 'FLEET_UPDATED',
+              'name': 'Fleet Updated',
+            },
+            {
+              'key': 'FLEET_DELETED',
+              'name': 'Fleet Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Fleet',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'FLEET_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Fleet',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'FLEET_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Fleet',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'FLEET_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdFleetMgmtPage(params),
+      {
+        'name': 'FleetsPage',
+        'path': '/fleets',
+        'traits': [
+          {
+            'ref': 'FleetAppLayout',
+          },
+          {
+            'ref': 'FleetCatalog',
+          },
+          {
+            'ref': 'FleetSearch',
+          },
+          {
+            'ref': 'FleetFilter',
+          },
+          {
+            'ref': 'FleetStats',
+          },
+          {
+            'ref': 'FleetGraphs',
+          },
+          {
+            'ref': 'FleetBrowseList',
+          },
+          {
+            'ref': 'FleetCreate',
+          },
+          {
+            'ref': 'FleetEdit',
+          },
+          {
+            'ref': 'FleetView',
+          },
+          {
+            'ref': 'FleetDelete',
+          },
+          {
+            'ref': 'FleetPersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdFleetMgmtFleetOrbital. */
+export const StdFleetMgmtFleetOrbitalManifest = {
+  organism: 'std-fleet-mgmt',
+  orbitalName: 'FleetOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'FleetAppLayout',
+    'FleetSearch',
+    'FleetFilter',
+    'FleetStats',
+    'FleetGraphs',
+    'FleetBrowseList',
+    'FleetCreate',
+    'FleetEdit',
+    'FleetView',
+    'FleetDelete',
+  ] as const,
+  inlineTraitNames: [
+    'FleetCatalog',
+    'FleetPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdFleetMgmtFleetOrbitalParams keys. */
+export function isStdFleetMgmtFleetOrbitalParams(p: object): p is StdFleetMgmtFleetOrbitalParams {
+  type _OverrideRecord = NonNullable<StdFleetMgmtFleetOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdFleetMgmtFleetOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the VehiclePanelOrbital orbital.
+ *
+ * Canonical entity: Vehicle — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdFleetMgmtVehiclePanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'VehicleAppLayout' | 'VehicleView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the VehiclePanelOrbital orbital with consumer params. */
+export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Vehicle';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'vehicles');
+  const built = makeOrbitalWithUses({
+    name: 'VehiclePanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-vehicle',
+        'as': 'Vehicle',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'vin',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'licensePlate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'make',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'model',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'year',
+            'type': 'number',
+            'default': 2020,
+          },
+          {
+            'name': 'vehicleType',
+            'type': 'string',
+            'default': 'car',
+            'values': [
+              'car',
+              'truck',
+              'van',
+              'trailer',
+              'motorcycle',
+            ],
+          },
+          {
+            'name': 'odometer',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'fuelType',
+            'type': 'string',
+            'default': 'gasoline',
+            'values': [
+              'gasoline',
+              'diesel',
+              'electric',
+              'hybrid',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'maintenance',
+              'retired',
+              'in-transit',
+            ],
+          },
+          {
+            'name': 'assignedDriverId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'VehicleAppLayout',
+        'config': {
+          'searchEvent': 'VEHICLE_SEARCH',
+          'navItems': [
+            {
+              'href': '/fleets',
+              'icon': 'truck',
+              'label': 'Fleets',
+            },
+            {
+              'label': 'Vehicles',
+              'icon': 'truck',
+              'href': '/vehicles',
+            },
+            {
+              'href': '/drivers',
+              'icon': 'user',
+              'label': 'Drivers',
+            },
+            {
+              'label': 'Telematics',
+              'href': '/telematics',
+              'icon': 'activity',
+            },
+          ],
+          'notificationClickEvent': 'VEHICLE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.VehiclePanel',
+          'notifications': [],
+          'appName': 'Fleet Management',
+        },
+        'events': {
+          'SEARCH': 'VEHICLE_SEARCH',
+          'NOTIFY_CLICK': 'VEHICLE_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'VehiclePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'truck',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Vehicles',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.VehicleView',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Vehicle.traits.VehicleFleet',
+        'name': 'VehicleView',
+        'config': {
+          'title': 'Fleet Vehicles',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'VehiclesPage',
+        'path': '/vehicles',
+        'traits': [
+          {
+            'ref': 'VehicleAppLayout',
+          },
+          {
+            'ref': 'VehiclePanel',
+          },
+          {
+            'ref': 'VehicleView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdFleetMgmtVehiclePanelOrbital. */
+export const StdFleetMgmtVehiclePanelOrbitalManifest = {
+  organism: 'std-fleet-mgmt',
+  orbitalName: 'VehiclePanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'VehicleAppLayout',
+    'VehicleView',
+  ] as const,
+  inlineTraitNames: [
+    'VehiclePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdFleetMgmtVehiclePanelOrbitalParams keys. */
+export function isStdFleetMgmtVehiclePanelOrbitalParams(p: object): p is StdFleetMgmtVehiclePanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdFleetMgmtVehiclePanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdFleetMgmtVehiclePanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the DriverPanelOrbital orbital.
+ *
+ * Canonical entity: Driver — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdFleetMgmtDriverPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'DriverAppLayout' | 'DriverView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the DriverPanelOrbital orbital with consumer params. */
+export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Driver';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'drivers');
+  const built = makeOrbitalWithUses({
+    name: 'DriverPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-driver',
+        'as': 'Driver',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'licenseNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'licenseClass',
+            'type': 'string',
+            'default': 'C',
+            'values': [
+              'A',
+              'B',
+              'C',
+              'CDL-A',
+              'CDL-B',
+              'CDL-C',
+            ],
+          },
+          {
+            'name': 'licenseExpiresAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'hiredAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'phone',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'email',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'on-leave',
+              'terminated',
+              'suspended',
+            ],
+          },
+          {
+            'name': 'assignedVehicleId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DriverAppLayout',
+        'config': {
+          'notificationClickEvent': 'DRIVER_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'DRIVER_SEARCH',
+          'navItems': [
+            {
+              'label': 'Fleets',
+              'href': '/fleets',
+              'icon': 'truck',
+            },
+            {
+              'href': '/vehicles',
+              'label': 'Vehicles',
+              'icon': 'truck',
+            },
+            {
+              'icon': 'user',
+              'label': 'Drivers',
+              'href': '/drivers',
+            },
+            {
+              'label': 'Telematics',
+              'href': '/telematics',
+              'icon': 'activity',
+            },
+          ],
+          'appName': 'Fleet Management',
+          'contentTrait': '@trait.DriverPanel',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'DRIVER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'DRIVER_SEARCH',
+        },
+      }),
+      {
+        'name': 'DriverPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'name': 'user',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Drivers',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.DriverView',
+                    ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Driver.traits.DriverRoster',
+        'name': 'DriverView',
+        'config': {
+          'title': 'Driver Roster',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'DriversPage',
+        'path': '/drivers',
+        'traits': [
+          {
+            'ref': 'DriverAppLayout',
+          },
+          {
+            'ref': 'DriverPanel',
+          },
+          {
+            'ref': 'DriverView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdFleetMgmtDriverPanelOrbital. */
+export const StdFleetMgmtDriverPanelOrbitalManifest = {
+  organism: 'std-fleet-mgmt',
+  orbitalName: 'DriverPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'DriverAppLayout',
+    'DriverView',
+  ] as const,
+  inlineTraitNames: [
+    'DriverPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdFleetMgmtDriverPanelOrbitalParams keys. */
+export function isStdFleetMgmtDriverPanelOrbitalParams(p: object): p is StdFleetMgmtDriverPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdFleetMgmtDriverPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdFleetMgmtDriverPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the TelematicsEventPanelOrbital orbital.
+ *
+ * Canonical entity: TelematicsEvent — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdFleetMgmtTelematicsEventPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'TelematicsEventAppLayout' | 'TelematicsEventView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the TelematicsEventPanelOrbital orbital with consumer params. */
+export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTelematicsEventPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'TelematicsEvent';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'telematicsevents');
+  const built = makeOrbitalWithUses({
+    name: 'TelematicsEventPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-telematics-event',
+        'as': 'TelematicsEvent',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'vehicleId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'eventType',
+            'type': 'string',
+            'default': 'speeding',
+            'values': [
+              'hard-brake',
+              'speeding',
+              'idle',
+              'harsh-acceleration',
+              'geofence-violation',
+              'engine-fault',
+              'low-fuel',
+            ],
+          },
+          {
+            'name': 'severity',
+            'type': 'string',
+            'default': 'info',
+            'values': [
+              'info',
+              'warning',
+              'critical',
+            ],
+          },
+          {
+            'name': 'speed',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'locationLat',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'locationLng',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'occurredAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'acknowledged',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'acknowledgedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'acknowledgedAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'TelematicsEventAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'label': 'Fleets',
+              'icon': 'truck',
+              'href': '/fleets',
+            },
+            {
+              'label': 'Vehicles',
+              'href': '/vehicles',
+              'icon': 'truck',
+            },
+            {
+              'icon': 'user',
+              'label': 'Drivers',
+              'href': '/drivers',
+            },
+            {
+              'href': '/telematics',
+              'label': 'Telematics',
+              'icon': 'activity',
+            },
+          ],
+          'searchEvent': 'TELEMATICS_EVENT_SEARCH',
+          'appName': 'Fleet Management',
+          'notifications': [],
+          'notificationClickEvent': 'TELEMATICS_EVENT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.TelematicsEventPanel',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'TELEMATICS_EVENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TELEMATICS_EVENT_SEARCH',
+        },
+      }),
+      {
+        'name': 'TelematicsEventPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'name': 'activity',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Telematics Events',
+                            'type': 'typography',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.TelematicsEventView',
+                    ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'TelematicsEvent.traits.TelematicsEventStream',
+        'name': 'TelematicsEventView',
+        'config': {
+          'title': 'Event Stream',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'TelematicsPage',
+        'path': '/telematics',
+        'traits': [
+          {
+            'ref': 'TelematicsEventAppLayout',
+          },
+          {
+            'ref': 'TelematicsEventPanel',
+          },
+          {
+            'ref': 'TelematicsEventView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdFleetMgmtTelematicsEventPanelOrbital. */
+export const StdFleetMgmtTelematicsEventPanelOrbitalManifest = {
+  organism: 'std-fleet-mgmt',
+  orbitalName: 'TelematicsEventPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'TelematicsEventAppLayout',
+    'TelematicsEventView',
+  ] as const,
+  inlineTraitNames: [
+    'TelematicsEventPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdFleetMgmtTelematicsEventPanelOrbitalParams keys. */
+export function isStdFleetMgmtTelematicsEventPanelOrbitalParams(p: object): p is StdFleetMgmtTelematicsEventPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdFleetMgmtTelematicsEventPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdFleetMgmtTelematicsEventPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-fleet-mgmt — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdFleetMgmtParams {
+  Fleet?: StdFleetMgmtFleetOrbitalParams;
+  VehiclePanel?: StdFleetMgmtVehiclePanelOrbitalParams;
+  DriverPanel?: StdFleetMgmtDriverPanelOrbitalParams;
+  TelematicsEventPanel?: StdFleetMgmtTelematicsEventPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdFleetMgmt(params: StdFleetMgmtParams = {}): OrbitalDefinition[] {
+  return [
+    stdFleetMgmtFleetOrbital(params.Fleet ?? {}),
+    stdFleetMgmtVehiclePanelOrbital(params.VehiclePanel ?? {}),
+    stdFleetMgmtDriverPanelOrbital(params.DriverPanel ?? {}),
+    stdFleetMgmtTelematicsEventPanelOrbital(params.TelematicsEventPanel ?? {}),
+  ];
 }

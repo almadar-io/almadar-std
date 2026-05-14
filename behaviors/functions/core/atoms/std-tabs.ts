@@ -47,12 +47,12 @@ export interface StdTabsTabChangedPayload {
 export interface StdTabsConfig {
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
+  /** Default: `[{"label":"Overview","id":"overview","icon":"info"},{"icon":"list","id":"details","label":"Details"},{"label":"Settings","icon":"settings","id":"settings"}]` */
+  tabs?: TraitConfig[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
   /** Default: `"overview"` */
   defaultTab?: string;
-  /** Default: `[{"id":"overview","icon":"info","label":"Overview"},{"icon":"list","id":"details","label":"Details"},{"label":"Settings","id":"settings","icon":"settings"}]` */
-  tabs?: TraitConfig[];
 }
 
 /**

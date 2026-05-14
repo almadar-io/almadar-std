@@ -29,7 +29,30 @@ const ALIAS = 'Menu';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdMenuEventKey = 'CREATE' | 'DELETE' | 'INIT' | 'MenuItemCreated' | 'MenuItemDeleted' | 'MenuItemLoadFailed' | 'MenuItemLoaded' | 'MenuItemUpdated' | 'MenuItemWriteFailed' | 'TOGGLE_AVAILABLE' | 'UPDATE';
+export type StdMenuEventKey = 'CLOSE_VIEW' | 'CREATE' | 'DELETE' | 'INIT' | 'MenuItemCreated' | 'MenuItemDeleted' | 'MenuItemLoadFailed' | 'MenuItemLoaded' | 'MenuItemUpdated' | 'MenuItemWriteFailed' | 'OPEN_ITEM' | 'TOGGLE_AVAILABLE' | 'UPDATE';
+
+/**
+ * Payload shape for the `OPEN_ITEM` event.
+ */
+export interface StdMenuOpenItemPayload {
+  id: string;
+  row?: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    currency?: string;
+    category: string;
+    imageUrl?: string;
+    available?: boolean;
+    availableFrom?: string;
+    availableUntil?: string;
+    tags?: string[];
+    modifierGroupIds?: string[];
+    prepTimeMinutes?: number;
+    order?: number;
+  };
+}
 
 /**
  * Payload shape for the `CREATE` event.

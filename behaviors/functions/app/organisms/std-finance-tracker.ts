@@ -37,20 +37,23 @@ export interface StdFinanceTrackerConfig {
 /**
  * Tunable params for the TransactionOrbital orbital.
  *
- * Canonical entity: Transaction (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Transaction — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFinanceTrackerTransactionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdFinanceTrackerTransactionOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'TransactionAppLayout' | 'TransactionSearch' | 'TransactionFilter' | 'TransactionStats' | 'TransactionGraphs' | 'TransactionBrowseList' | 'TransactionCreate' | 'TransactionEdit' | 'TransactionView' | 'TransactionDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the TransactionOrbital orbital with consumer params. */
 export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTransactionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Transaction';
+  const canonicalName = params.entityName ?? 'Transaction';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'transactions');
   const built = makeOrbitalWithUses({
     name: 'TransactionOrbital',
     uses: [
@@ -113,7 +122,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
     ],
     entity: {
       name: canonicalName,
-      collection: 'transactions',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -172,16 +181,16 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TransactionAppLayout',
         'config': {
-          'notifications': [],
           'searchEvent': 'TRANSACTION_SEARCH',
-          'contentTrait': '@trait.TransactionCatalog',
-          'appName': 'Finance Tracker',
+          'notifications': [],
           'notificationClickEvent': 'TRANSACTION_NOTIFICATIONS_OPEN',
+          'appName': 'Finance Tracker',
+          'contentTrait': '@trait.TransactionCatalog',
           'navItems': [
             {
+              'icon': 'receipt',
               'label': 'Transactions',
               'href': '/transactions',
-              'icon': 'receipt',
             },
             {
               'label': 'Summary',
@@ -189,15 +198,15 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
               'icon': 'layout-list',
             },
             {
-              'icon': 'bar-chart',
               'label': 'Reports',
               'href': '/reports',
+              'icon': 'bar-chart',
             },
           ],
         },
         'events': {
-          'NOTIFY_CLICK': 'TRANSACTION_NOTIFICATIONS_OPEN',
           'SEARCH': 'TRANSACTION_SEARCH',
+          'NOTIFY_CLICK': 'TRANSACTION_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -280,61 +289,61 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'gap': 'lg',
                     'direction': 'vertical',
                     'children': [
                       {
                         'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
-                                'name': 'receipt',
                                 'type': 'icon',
+                                'name': 'receipt',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Transactions',
+                                'variant': 'h2',
                               },
                             ],
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'action': 'CREATE',
-                                'variant': 'primary',
                                 'icon': 'plus',
                                 'type': 'button',
+                                'variant': 'primary',
                                 'label': 'Add Transaction',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'type': 'stack',
                           },
                         ],
-                        'align': 'center',
                         'type': 'stack',
                         'justify': 'between',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.TransactionSearch',
                           '@trait.TransactionFilter',
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       '@trait.TransactionStats',
                       '@trait.TransactionGraphs',
@@ -343,7 +352,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                       },
                       '@trait.TransactionBrowseList',
                     ],
-                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -362,34 +371,34 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'className': 'py-8',
                     'gap': 'md',
-                    'align': 'center',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'caption',
                         'color': 'muted',
-                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                       },
                       {
-                        'type': 'button',
-                        'action': 'INIT',
                         'label': 'Back to transactions',
+                        'action': 'INIT',
+                        'type': 'button',
                         'variant': 'ghost',
                       },
                     ],
                     'direction': 'vertical',
-                    'className': 'py-8',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -402,15 +411,14 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'TransactionSearch',
         'config': {
-          'placeholder': 'Search transactions…',
           'event': 'TRANSACTION_SEARCH',
+          'placeholder': 'Search transactions…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'TransactionFilter',
         'config': {
-          'event': 'TRANSACTION_FILTER',
           'filters': [
             {
               'filterType': 'text',
@@ -418,28 +426,33 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
               'field': 'category',
             },
             {
-              'label': 'Account',
-              'field': 'account',
               'filterType': 'text',
+              'field': 'account',
+              'label': 'Account',
             },
             {
-              'filterType': 'select',
-              'label': 'Type',
               'options': [
                 'income',
                 'expense',
               ],
+              'label': 'Type',
               'field': 'type',
+              'filterType': 'select',
             },
           ],
+          'event': 'TRANSACTION_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'TransactionStats',
         'config': {
+          'title': 'Transactions',
           'metrics': [
             {
+              'aggregation': 'sum',
+              'label': 'Income',
+              'icon': 'trending-up',
               'variant': 'success',
               'field': 'amount',
               'format': 'currency',
@@ -452,15 +465,10 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'income',
                 ],
               ],
-              'aggregation': 'sum',
-              'icon': 'trending-up',
-              'label': 'Income',
             },
             {
+              'format': 'currency',
               'variant': 'error',
-              'field': 'amount',
-              'icon': 'trending-down',
-              'aggregation': 'sum',
               'label': 'Expenses',
               'filter': [
                 'fn',
@@ -471,17 +479,18 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'expense',
                 ],
               ],
-              'format': 'currency',
+              'aggregation': 'sum',
+              'field': 'amount',
+              'icon': 'trending-down',
             },
             {
-              'aggregation': 'count',
-              'label': 'Savings Rate',
-              'icon': 'percent',
-              'format': 'number',
               'variant': 'primary',
+              'label': 'Savings Rate',
+              'format': 'number',
+              'aggregation': 'count',
+              'icon': 'percent',
             },
           ],
-          'title': 'Transactions',
         },
         'listens': [
           {
@@ -498,14 +507,14 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'TransactionGraphs',
         'config': {
-          'chartType': 'pie',
           'valueField': 'amount',
           'showLegend': true,
-          'subtitle': 'Distribution across categories',
-          'height': 240,
-          'title': 'Spending by Category',
           'categoryField': 'category',
+          'chartType': 'pie',
           'aggregation': 'sum',
+          'height': 240,
+          'subtitle': 'Distribution across categories',
+          'title': 'Spending by Category',
         },
         'listens': [
           {
@@ -521,52 +530,52 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TransactionBrowseList',
-        'linkedEntity': 'Transaction',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
           'fields': [
             {
-              'name': 'date',
               'variant': 'caption',
               'format': 'date',
+              'name': 'date',
             },
             {
               'name': 'description',
-              'icon': 'receipt',
               'variant': 'h4',
+              'icon': 'receipt',
             },
             {
               'name': 'category',
               'variant': 'badge',
             },
             {
-              'format': 'currency',
-              'variant': 'h4',
               'name': 'amount',
+              'variant': 'h4',
+              'format': 'currency',
             },
             {
-              'variant': 'badge',
               'name': 'type',
-            },
-          ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'event': 'EDIT',
-              'variant': 'ghost',
-              'label': 'Edit',
-            },
-            {
-              'event': 'DELETE',
-              'label': 'Delete',
-              'variant': 'danger',
+              'variant': 'badge',
             },
           ],
           'cols': 1,
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+            },
+          ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -614,9 +623,11 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TransactionCreate',
-        'linkedEntity': 'Transaction',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'Add Transaction',
           'fields': [
             'description',
             'amount',
@@ -625,8 +636,6 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
             'type',
             'date',
           ],
-          'icon': 'plus-circle',
-          'title': 'Add Transaction',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -645,9 +654,10 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TransactionEdit',
-        'linkedEntity': 'Transaction',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'edit',
+          'title': 'Edit Transaction',
           'fields': [
             'description',
             'amount',
@@ -656,7 +666,6 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
             'type',
             'date',
           ],
-          'title': 'Edit Transaction',
           'mode': 'edit',
         },
         'events': {
@@ -676,9 +685,10 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TransactionView',
-        'linkedEntity': 'Transaction',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'View Transaction',
+          'mode': 'edit',
           'fields': [
             'description',
             'amount',
@@ -688,7 +698,6 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
             'date',
           ],
           'icon': 'eye',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -707,7 +716,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'TransactionDelete',
-        'linkedEntity': 'Transaction',
+        'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
@@ -960,7 +969,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -972,6 +981,10 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -995,7 +1008,9 @@ export const StdFinanceTrackerTransactionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'TransactionAppLayout',
@@ -1032,20 +1047,23 @@ export function isStdFinanceTrackerTransactionOrbitalParams(p: object): p is Std
 /**
  * Tunable params for the FinanceSummaryOrbital orbital.
  *
- * Canonical entity: FinanceSummary (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: FinanceSummary — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFinanceTrackerFinanceSummaryOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1054,22 +1072,26 @@ export interface StdFinanceTrackerFinanceSummaryOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'FinanceSummaryAppLayout',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the FinanceSummaryOrbital orbital with consumer params. */
 export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTrackerFinanceSummaryOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'FinanceSummary';
+  const canonicalName = params.entityName ?? 'FinanceSummary';
   const built = makeOrbitalWithUses({
     name: 'FinanceSummaryOrbital',
     uses: [
@@ -1119,30 +1141,30 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'FinanceSummaryAppLayout',
-        'linkedEntity': 'FinanceSummary',
+        'linkedEntity': canonicalName,
         'config': {
-          'notificationClickEvent': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'contentTrait': '@trait.FinanceSummaryDisplay',
           'navItems': [
             {
-              'label': 'Transactions',
               'href': '/transactions',
+              'label': 'Transactions',
               'icon': 'receipt',
             },
             {
-              'label': 'Summary',
               'href': '/summary',
               'icon': 'layout-list',
+              'label': 'Summary',
             },
             {
-              'icon': 'bar-chart',
-              'href': '/reports',
               'label': 'Reports',
+              'href': '/reports',
+              'icon': 'bar-chart',
             },
           ],
-          'appName': 'Finance Tracker',
-          'contentTrait': '@trait.FinanceSummaryDisplay',
           'searchEvent': 'FINANCE_SUMMARY_SEARCH',
+          'notificationClickEvent': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
+          'appName': 'Finance Tracker',
         },
         'events': {
           'NOTIFY_CLICK': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
@@ -1262,14 +1284,12 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-5xl mx-auto w-full',
-                    'type': 'stack',
                     'children': [
                       {
                         'items': [
                           {
-                            'href': '/',
                             'label': 'Home',
+                            'href': '/',
                           },
                           {
                             'label': 'Financial Summary',
@@ -1278,17 +1298,12 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                         'type': 'breadcrumb',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'md',
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'gap': 'md',
                         'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
@@ -1296,19 +1311,24 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Financial Summary',
+                                'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'button',
-                            'label': 'Refresh',
-                            'variant': 'secondary',
                             'icon': 'refresh-cw',
+                            'label': 'Refresh',
                             'action': 'REFRESH',
+                            'variant': 'secondary',
                           },
                         ],
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -1317,39 +1337,41 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                         'type': 'simple-grid',
                         'children': [
                           {
-                            'type': 'stat-display',
-                            'variant': 'success',
-                            'icon': 'trending-up',
                             'label': 'Total Income',
+                            'type': 'stat-display',
                             'value': '@entity.totalIncome',
+                            'icon': 'trending-up',
+                            'variant': 'success',
                           },
                           {
-                            'icon': 'trending-down',
-                            'value': '@entity.totalExpenses',
                             'type': 'stat-display',
-                            'label': 'Total Expenses',
                             'variant': 'error',
+                            'label': 'Total Expenses',
+                            'value': '@entity.totalExpenses',
+                            'icon': 'trending-down',
+                          },
+                          {
+                            'icon': 'wallet',
+                            'value': '@entity.balance',
+                            'label': 'Balance',
+                            'variant': 'primary',
+                            'type': 'stat-display',
                           },
                           {
                             'type': 'stat-display',
-                            'icon': 'wallet',
-                            'label': 'Balance',
-                            'value': '@entity.balance',
-                            'variant': 'primary',
-                          },
-                          {
+                            'label': 'Savings Rate',
+                            'value': '@entity.savingsRate',
                             'icon': 'percent',
                             'variant': 'primary',
-                            'label': 'Savings Rate',
-                            'type': 'stat-display',
-                            'value': '@entity.savingsRate',
                           },
                         ],
                         'cols': 4,
                       },
                     ],
+                    'type': 'stack',
                     'gap': 'lg',
                     'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
               ],
@@ -1364,8 +1386,8 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                   'FinanceSummary',
                   {
                     'emit': {
-                      'success': 'FinanceSummaryLoaded',
                       'failure': 'FinanceSummaryLoadFailed',
+                      'success': 'FinanceSummaryLoaded',
                     },
                   },
                 ],
@@ -1393,7 +1415,7 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1405,6 +1427,10 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1428,7 +1454,9 @@ export const StdFinanceTrackerFinanceSummaryOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'FinanceSummaryAppLayout',
@@ -1455,20 +1483,23 @@ export function isStdFinanceTrackerFinanceSummaryOrbitalParams(p: object): p is 
 /**
  * Tunable params for the FinanceReportOrbital orbital.
  *
- * Canonical entity: FinanceReport (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: FinanceReport — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdFinanceTrackerFinanceReportOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1477,22 +1508,28 @@ export interface StdFinanceTrackerFinanceReportOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'FinanceReportAppLayout' | 'FinanceReportView' | 'FinanceReportCreate',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the FinanceReportOrbital orbital with consumer params. */
 export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerFinanceReportOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'FinanceReport';
+  const canonicalName = params.entityName ?? 'FinanceReport';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'financereports');
   const built = makeOrbitalWithUses({
     name: 'FinanceReportOrbital',
     uses: [
@@ -1507,7 +1544,7 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
     ],
     entity: {
       name: canonicalName,
-      collection: 'financereports',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1561,11 +1598,10 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'FinanceReportAppLayout',
-        'linkedEntity': 'FinanceReport',
+        'linkedEntity': canonicalName,
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
           'appName': 'Finance Tracker',
+          'notificationClickEvent': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.FinanceReportBrowse',
           'searchEvent': 'FINANCE_REPORT_SEARCH',
           'navItems': [
@@ -1575,16 +1611,17 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
               'href': '/transactions',
             },
             {
-              'href': '/summary',
-              'label': 'Summary',
               'icon': 'layout-list',
+              'label': 'Summary',
+              'href': '/summary',
             },
             {
               'icon': 'bar-chart',
-              'label': 'Reports',
               'href': '/reports',
+              'label': 'Reports',
             },
           ],
+          'notifications': [],
         },
         'events': {
           'NOTIFY_CLICK': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
@@ -1871,22 +1908,22 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'className': 'py-12',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'variant': 'caption',
                         'content': 'Loading…',
+                        'variant': 'caption',
+                        'color': 'muted',
                         'type': 'typography',
                       },
                     ],
+                    'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1900,77 +1937,65 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'file-text',
                               },
                               {
-                                'content': 'Reports',
                                 'type': 'typography',
                                 'variant': 'h2',
+                                'content': 'Reports',
                               },
                             ],
+                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
                           },
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'icon': 'plus',
-                                'label': 'New Report',
                                 'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Report',
                                 'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                         ],
                         'align': 'center',
-                        'type': 'stack',
-                        'direction': 'horizontal',
+                        'justify': 'between',
                         'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'alert',
                         'variant': 'info',
                         'message': 'Generated reports are downloadable as PDF or CSV.',
-                        'type': 'alert',
                       },
                       {
-                        'itemActions': [
-                          {
-                            'label': 'Preview',
-                            'event': 'VIEW',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'variant': 'primary',
-                            'event': 'EXPORT_PDF',
-                            'label': 'Download PDF',
-                          },
-                          {
-                            'event': 'EXPORT_CSV',
-                            'variant': 'ghost',
-                            'label': 'Download CSV',
-                          },
-                        ],
+                        'variant': 'card',
+                        'type': 'data-list',
                         'fields': [
                           {
-                            'icon': 'file-text',
                             'variant': 'h3',
+                            'icon': 'file-text',
                             'name': 'title',
                           },
                           {
@@ -1978,9 +2003,9 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                             'name': 'period',
                           },
                           {
-                            'label': 'Date Range',
                             'variant': 'caption',
                             'name': 'dateRange',
+                            'label': 'Date Range',
                           },
                           {
                             'format': 'currency',
@@ -1988,21 +2013,33 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                             'variant': 'h4',
                           },
                           {
-                            'format': 'date',
                             'label': 'Generated',
-                            'name': 'generatedAt',
+                            'format': 'date',
                             'variant': 'caption',
+                            'name': 'generatedAt',
                           },
                         ],
-                        'variant': 'card',
-                        'type': 'data-list',
                         'gap': 'sm',
                         'entity': '@payload.data',
+                        'itemActions': [
+                          {
+                            'label': 'Preview',
+                            'event': 'VIEW',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'label': 'Download PDF',
+                            'event': 'EXPORT_PDF',
+                            'variant': 'primary',
+                          },
+                          {
+                            'label': 'Download CSV',
+                            'variant': 'ghost',
+                            'event': 'EXPORT_CSV',
+                          },
+                        ],
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'max-w-5xl mx-auto w-full',
                     'gap': 'lg',
                   },
                 ],
@@ -2018,9 +2055,9 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                   'main',
                   {
                     'align': 'center',
+                    'type': 'stack',
                     'className': 'py-12',
                     'gap': 'md',
-                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
@@ -2029,22 +2066,22 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                         'color': 'destructive',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Failed to load reports',
                       },
                       {
+                        'type': 'typography',
+                        'color': 'muted',
                         'content': '@payload.error',
                         'variant': 'body',
-                        'color': 'muted',
-                        'type': 'typography',
                       },
                       {
-                        'icon': 'rotate-ccw',
-                        'action': 'INIT',
-                        'label': 'Retry',
                         'type': 'button',
+                        'label': 'Retry',
+                        'action': 'INIT',
                         'variant': 'primary',
+                        'icon': 'rotate-ccw',
                       },
                     ],
                   },
@@ -2082,9 +2119,8 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'FinanceReportView',
-        'linkedEntity': 'FinanceReport',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
           'title': 'Report Preview',
           'fields': [
             'title',
@@ -2093,6 +2129,7 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
             'total',
             'generatedAt',
           ],
+          'icon': 'eye',
           'mode': 'edit',
         },
         'events': {
@@ -2112,17 +2149,17 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'FinanceReportCreate',
-        'linkedEntity': 'FinanceReport',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'mode': 'create',
           'title': 'New Report',
+          'mode': 'create',
           'fields': [
             'title',
             'period',
             'dateRange',
             'filters',
           ],
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2247,7 +2284,7 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2259,6 +2296,10 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2282,7 +2323,9 @@ export const StdFinanceTrackerFinanceReportOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'FinanceReportAppLayout',

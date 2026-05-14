@@ -129,20 +129,6 @@ import {
   isStdApiGatewayAnalyticsOrbitalParams,
 } from './app/organisms/std-api-gateway.js';
 import {
-  stdArcadeGameArcadeStateOrbital,
-  StdArcadeGameArcadeStateOrbitalManifest,
-  isStdArcadeGameArcadeStateOrbitalParams,
-  stdArcadeGameArcadeCanvasOrbital,
-  StdArcadeGameArcadeCanvasOrbitalManifest,
-  isStdArcadeGameArcadeCanvasOrbitalParams,
-  stdArcadeGameArcadeScoreOrbital,
-  StdArcadeGameArcadeScoreOrbitalManifest,
-  isStdArcadeGameArcadeScoreOrbitalParams,
-  stdArcadeGameArcadeHudOrbital,
-  StdArcadeGameArcadeHudOrbitalManifest,
-  isStdArcadeGameArcadeHudOrbitalParams,
-} from './game/organisms/std-arcade-game.js';
-import {
   stdAtsRecruitingJobOpeningOrbital,
   StdAtsRecruitingJobOpeningOrbitalManifest,
   isStdAtsRecruitingJobOpeningOrbitalParams,
@@ -212,6 +198,20 @@ import {
   StdCodingAcademyStudentProgressOrbitalManifest,
   isStdCodingAcademyStudentProgressOrbitalParams,
 } from './app/organisms/std-coding-academy.js';
+import {
+  stdConstructionPmProjectOrbital,
+  StdConstructionPmProjectOrbitalManifest,
+  isStdConstructionPmProjectOrbitalParams,
+  stdConstructionPmRfiPanelOrbital,
+  StdConstructionPmRfiPanelOrbitalManifest,
+  isStdConstructionPmRfiPanelOrbitalParams,
+  stdConstructionPmSubmittalPanelOrbital,
+  StdConstructionPmSubmittalPanelOrbitalManifest,
+  isStdConstructionPmSubmittalPanelOrbitalParams,
+  stdConstructionPmChangeOrderPanelOrbital,
+  StdConstructionPmChangeOrderPanelOrbitalManifest,
+  isStdConstructionPmChangeOrderPanelOrbitalParams,
+} from './app/organisms/std-construction-pm.js';
 import {
   stdCrmContactOrbital,
   StdCrmContactOrbitalManifest,
@@ -305,6 +305,20 @@ import {
   isStdFitnessStudioClassRosterOrbitalParams,
 } from './app/organisms/std-fitness-studio.js';
 import {
+  stdFleetMgmtFleetOrbital,
+  StdFleetMgmtFleetOrbitalManifest,
+  isStdFleetMgmtFleetOrbitalParams,
+  stdFleetMgmtVehiclePanelOrbital,
+  StdFleetMgmtVehiclePanelOrbitalManifest,
+  isStdFleetMgmtVehiclePanelOrbitalParams,
+  stdFleetMgmtDriverPanelOrbital,
+  StdFleetMgmtDriverPanelOrbitalManifest,
+  isStdFleetMgmtDriverPanelOrbitalParams,
+  stdFleetMgmtTelematicsEventPanelOrbital,
+  StdFleetMgmtTelematicsEventPanelOrbitalManifest,
+  isStdFleetMgmtTelematicsEventPanelOrbitalParams,
+} from './app/organisms/std-fleet-mgmt.js';
+import {
   stdForumQuestionOrbital,
   StdForumQuestionOrbitalManifest,
   isStdForumQuestionOrbitalParams,
@@ -381,6 +395,23 @@ import {
   isStdHrPortalOrgChartOrbitalParams,
 } from './app/organisms/std-hr-portal.js';
 import {
+  stdInventoryInventoryItemOrbital,
+  StdInventoryInventoryItemOrbitalManifest,
+  isStdInventoryInventoryItemOrbitalParams,
+  stdInventoryStockLevelPanelOrbital,
+  StdInventoryStockLevelPanelOrbitalManifest,
+  isStdInventoryStockLevelPanelOrbitalParams,
+  stdInventoryWarehousePanelOrbital,
+  StdInventoryWarehousePanelOrbitalManifest,
+  isStdInventoryWarehousePanelOrbitalParams,
+  stdInventoryReorderRulePanelOrbital,
+  StdInventoryReorderRulePanelOrbitalManifest,
+  isStdInventoryReorderRulePanelOrbitalParams,
+  stdInventoryStockAdjustmentPanelOrbital,
+  StdInventoryStockAdjustmentPanelOrbitalManifest,
+  isStdInventoryStockAdjustmentPanelOrbitalParams,
+} from './app/organisms/std-inventory.js';
+import {
   stdIotDashboardSensorReadingOrbital,
   StdIotDashboardSensorReadingOrbitalManifest,
   isStdIotDashboardSensorReadingOrbitalParams,
@@ -401,6 +432,9 @@ import {
   stdLegalCaseCourtDeadlinePanelOrbital,
   StdLegalCaseCourtDeadlinePanelOrbitalManifest,
   isStdLegalCaseCourtDeadlinePanelOrbitalParams,
+  stdLegalCaseMatterPanelOrbital,
+  StdLegalCaseMatterPanelOrbitalManifest,
+  isStdLegalCaseMatterPanelOrbitalParams,
 } from './app/organisms/std-legal-case.js';
 import {
   stdListingsListingOrbital,
@@ -422,17 +456,6 @@ import {
   isStdLmsProgressOrbitalParams,
 } from './app/organisms/std-lms.js';
 import {
-  stdLogicTrainingDebugChallengeOrbital,
-  StdLogicTrainingDebugChallengeOrbitalManifest,
-  isStdLogicTrainingDebugChallengeOrbitalParams,
-  stdLogicTrainingNegotiateChallengeOrbital,
-  StdLogicTrainingNegotiateChallengeOrbitalManifest,
-  isStdLogicTrainingNegotiateChallengeOrbitalParams,
-  stdLogicTrainingTrainingScoreOrbital,
-  StdLogicTrainingTrainingScoreOrbitalManifest,
-  isStdLogicTrainingTrainingScoreOrbitalParams,
-} from './game/organisms/std-logic-training.js';
-import {
   stdMarketplaceVendorOrbital,
   StdMarketplaceVendorOrbitalManifest,
   isStdMarketplaceVendorOrbitalParams,
@@ -444,16 +467,13 @@ import {
   isStdMarketplaceOrderOrbitalParams,
 } from './app/organisms/std-marketplace.js';
 import {
-  stdPlatformerAppPlatLevelOrbital,
-  StdPlatformerAppPlatLevelOrbitalManifest,
-  isStdPlatformerAppPlatLevelOrbitalParams,
-  stdPlatformerAppPlatScoreOrbital,
-  StdPlatformerAppPlatScoreOrbitalManifest,
-  isStdPlatformerAppPlatScoreOrbitalParams,
-  stdPlatformerAppCollectibleOrbital,
-  StdPlatformerAppCollectibleOrbitalManifest,
-  isStdPlatformerAppCollectibleOrbitalParams,
-} from './game/organisms/std-platformer-app.js';
+  stdNotesNoteOrbital,
+  StdNotesNoteOrbitalManifest,
+  isStdNotesNoteOrbitalParams,
+  stdNotesRichEditorPanelOrbital,
+  StdNotesRichEditorPanelOrbitalManifest,
+  isStdNotesRichEditorPanelOrbitalParams,
+} from './app/organisms/std-notes.js';
 import {
   stdProjectManagerTaskOrbital,
   StdProjectManagerTaskOrbitalManifest,
@@ -466,13 +486,33 @@ import {
   isStdProjectManagerBurndownOrbitalParams,
 } from './app/organisms/std-project-manager.js';
 import {
-  stdPuzzleAppPuzzleLevelOrbital,
-  StdPuzzleAppPuzzleLevelOrbitalManifest,
-  isStdPuzzleAppPuzzleLevelOrbitalParams,
-  stdPuzzleAppPuzzleScoreOrbital,
-  StdPuzzleAppPuzzleScoreOrbitalManifest,
-  isStdPuzzleAppPuzzleScoreOrbitalParams,
-} from './game/organisms/std-puzzle-app.js';
+  stdPropertyMgmtPropertyOrbital,
+  StdPropertyMgmtPropertyOrbitalManifest,
+  isStdPropertyMgmtPropertyOrbitalParams,
+  stdPropertyMgmtLeasePanelOrbital,
+  StdPropertyMgmtLeasePanelOrbitalManifest,
+  isStdPropertyMgmtLeasePanelOrbitalParams,
+  stdPropertyMgmtTenantPanelOrbital,
+  StdPropertyMgmtTenantPanelOrbitalManifest,
+  isStdPropertyMgmtTenantPanelOrbitalParams,
+  stdPropertyMgmtRentChargePanelOrbital,
+  StdPropertyMgmtRentChargePanelOrbitalManifest,
+  isStdPropertyMgmtRentChargePanelOrbitalParams,
+  stdPropertyMgmtMaintenanceRequestPanelOrbital,
+  StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest,
+  isStdPropertyMgmtMaintenanceRequestPanelOrbitalParams,
+} from './app/organisms/std-property-mgmt.js';
+import {
+  stdPublicHelpCenterHelpCenterOrbital,
+  StdPublicHelpCenterHelpCenterOrbitalManifest,
+  isStdPublicHelpCenterHelpCenterOrbitalParams,
+  stdPublicHelpCenterHelpArticlePanelOrbital,
+  StdPublicHelpCenterHelpArticlePanelOrbitalManifest,
+  isStdPublicHelpCenterHelpArticlePanelOrbitalParams,
+  stdPublicHelpCenterHelpCategoryPanelOrbital,
+  StdPublicHelpCenterHelpCategoryPanelOrbitalManifest,
+  isStdPublicHelpCenterHelpCategoryPanelOrbitalParams,
+} from './app/organisms/std-public-help-center.js';
 import {
   stdRealtimeChatChatMessageOrbital,
   StdRealtimeChatChatMessageOrbitalManifest,
@@ -513,20 +553,6 @@ import {
   isStdRetailPosCustomerOrbitalParams,
 } from './app/organisms/std-retail-pos.js';
 import {
-  stdRpgGameBattleStateOrbital,
-  StdRpgGameBattleStateOrbitalManifest,
-  isStdRpgGameBattleStateOrbitalParams,
-  stdRpgGameWorldZoneOrbital,
-  StdRpgGameWorldZoneOrbitalManifest,
-  isStdRpgGameWorldZoneOrbitalParams,
-  stdRpgGameRpgItemOrbital,
-  StdRpgGameRpgItemOrbitalManifest,
-  isStdRpgGameRpgItemOrbitalParams,
-  stdRpgGameMissionOrbital,
-  StdRpgGameMissionOrbitalManifest,
-  isStdRpgGameMissionOrbitalParams,
-} from './game/organisms/std-rpg-game.js';
-import {
   stdServiceMarketplaceProductOrbital,
   StdServiceMarketplaceProductOrbitalManifest,
   isStdServiceMarketplaceProductOrbitalParams,
@@ -563,28 +589,6 @@ import {
   isStdSocialFeedCommentOrbitalParams,
 } from './app/organisms/std-social-feed.js';
 import {
-  stdStemLabExperimentOrbital,
-  StdStemLabExperimentOrbitalManifest,
-  isStdStemLabExperimentOrbitalParams,
-  stdStemLabClassificationOrbital,
-  StdStemLabClassificationOrbitalManifest,
-  isStdStemLabClassificationOrbitalParams,
-  stdStemLabLabResultOrbital,
-  StdStemLabLabResultOrbitalManifest,
-  isStdStemLabLabResultOrbitalParams,
-} from './game/organisms/std-stem-lab.js';
-import {
-  stdStrategyGameArmyBattleOrbital,
-  StdStrategyGameArmyBattleOrbitalManifest,
-  isStdStrategyGameArmyBattleOrbitalParams,
-  stdStrategyGameTerritoryOrbital,
-  StdStrategyGameTerritoryOrbitalManifest,
-  isStdStrategyGameTerritoryOrbitalParams,
-  stdStrategyGameResourceOrbital,
-  StdStrategyGameResourceOrbitalManifest,
-  isStdStrategyGameResourceOrbitalParams,
-} from './game/organisms/std-strategy-game.js';
-import {
   stdSubscriptionBillingSubscriptionOrbital,
   StdSubscriptionBillingSubscriptionOrbitalManifest,
   isStdSubscriptionBillingSubscriptionOrbitalParams,
@@ -603,6 +607,23 @@ import {
   StdSurveyResponseOrbitalManifest,
   isStdSurveyResponseOrbitalParams,
 } from './app/organisms/std-survey.js';
+import {
+  stdTimeTrackingEmployeeOrbital,
+  StdTimeTrackingEmployeeOrbitalManifest,
+  isStdTimeTrackingEmployeeOrbitalParams,
+  stdTimeTrackingTimesheetPanelOrbital,
+  StdTimeTrackingTimesheetPanelOrbitalManifest,
+  isStdTimeTrackingTimesheetPanelOrbitalParams,
+  stdTimeTrackingTimeEntryPanelOrbital,
+  StdTimeTrackingTimeEntryPanelOrbitalManifest,
+  isStdTimeTrackingTimeEntryPanelOrbitalParams,
+  stdTimeTrackingBillableHourTimeTrackingOrbital,
+  StdTimeTrackingBillableHourTimeTrackingOrbitalManifest,
+  isStdTimeTrackingBillableHourTimeTrackingOrbitalParams,
+  stdTimeTrackingApprovalRequestPanelOrbital,
+  StdTimeTrackingApprovalRequestPanelOrbitalManifest,
+  isStdTimeTrackingApprovalRequestPanelOrbitalParams,
+} from './app/organisms/std-time-tracking.js';
 import {
   stdTradingDashboardPortfolioOrbital,
   StdTradingDashboardPortfolioOrbitalManifest,
@@ -949,42 +970,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdApiGatewayAnalyticsOrbitalManifest,
   }],
-  ['std-arcade-game::ArcadeStateOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdArcadeGameArcadeStateOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-arcade-game::ArcadeStateOrbital');
-      }
-      return stdArcadeGameArcadeStateOrbital(p);
-    },
-    manifest: StdArcadeGameArcadeStateOrbitalManifest,
-  }],
-  ['std-arcade-game::ArcadeCanvasOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdArcadeGameArcadeCanvasOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-arcade-game::ArcadeCanvasOrbital');
-      }
-      return stdArcadeGameArcadeCanvasOrbital(p);
-    },
-    manifest: StdArcadeGameArcadeCanvasOrbitalManifest,
-  }],
-  ['std-arcade-game::ArcadeScoreOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdArcadeGameArcadeScoreOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-arcade-game::ArcadeScoreOrbital');
-      }
-      return stdArcadeGameArcadeScoreOrbital(p);
-    },
-    manifest: StdArcadeGameArcadeScoreOrbitalManifest,
-  }],
-  ['std-arcade-game::ArcadeHudOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdArcadeGameArcadeHudOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-arcade-game::ArcadeHudOrbital');
-      }
-      return stdArcadeGameArcadeHudOrbital(p);
-    },
-    manifest: StdArcadeGameArcadeHudOrbitalManifest,
-  }],
   ['std-ats-recruiting::JobOpeningOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdAtsRecruitingJobOpeningOrbitalParams(p)) {
@@ -1164,6 +1149,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdCodingAcademyStudentProgressOrbital(p);
     },
     manifest: StdCodingAcademyStudentProgressOrbitalManifest,
+  }],
+  ['std-construction-pm::ProjectOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdConstructionPmProjectOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-construction-pm::ProjectOrbital');
+      }
+      return stdConstructionPmProjectOrbital(p);
+    },
+    manifest: StdConstructionPmProjectOrbitalManifest,
+  }],
+  ['std-construction-pm::RfiPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdConstructionPmRfiPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-construction-pm::RfiPanelOrbital');
+      }
+      return stdConstructionPmRfiPanelOrbital(p);
+    },
+    manifest: StdConstructionPmRfiPanelOrbitalManifest,
+  }],
+  ['std-construction-pm::SubmittalPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdConstructionPmSubmittalPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-construction-pm::SubmittalPanelOrbital');
+      }
+      return stdConstructionPmSubmittalPanelOrbital(p);
+    },
+    manifest: StdConstructionPmSubmittalPanelOrbitalManifest,
+  }],
+  ['std-construction-pm::ChangeOrderPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdConstructionPmChangeOrderPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-construction-pm::ChangeOrderPanelOrbital');
+      }
+      return stdConstructionPmChangeOrderPanelOrbital(p);
+    },
+    manifest: StdConstructionPmChangeOrderPanelOrbitalManifest,
   }],
   ['std-crm::ContactOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1399,6 +1420,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdFitnessStudioClassRosterOrbitalManifest,
   }],
+  ['std-fleet-mgmt::FleetOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFleetMgmtFleetOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fleet-mgmt::FleetOrbital');
+      }
+      return stdFleetMgmtFleetOrbital(p);
+    },
+    manifest: StdFleetMgmtFleetOrbitalManifest,
+  }],
+  ['std-fleet-mgmt::VehiclePanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFleetMgmtVehiclePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fleet-mgmt::VehiclePanelOrbital');
+      }
+      return stdFleetMgmtVehiclePanelOrbital(p);
+    },
+    manifest: StdFleetMgmtVehiclePanelOrbitalManifest,
+  }],
+  ['std-fleet-mgmt::DriverPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFleetMgmtDriverPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fleet-mgmt::DriverPanelOrbital');
+      }
+      return stdFleetMgmtDriverPanelOrbital(p);
+    },
+    manifest: StdFleetMgmtDriverPanelOrbitalManifest,
+  }],
+  ['std-fleet-mgmt::TelematicsEventPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFleetMgmtTelematicsEventPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fleet-mgmt::TelematicsEventPanelOrbital');
+      }
+      return stdFleetMgmtTelematicsEventPanelOrbital(p);
+    },
+    manifest: StdFleetMgmtTelematicsEventPanelOrbitalManifest,
+  }],
   ['std-forum::QuestionOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdForumQuestionOrbitalParams(p)) {
@@ -1597,6 +1654,51 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdHrPortalOrgChartOrbitalManifest,
   }],
+  ['std-inventory::InventoryItemOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdInventoryInventoryItemOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-inventory::InventoryItemOrbital');
+      }
+      return stdInventoryInventoryItemOrbital(p);
+    },
+    manifest: StdInventoryInventoryItemOrbitalManifest,
+  }],
+  ['std-inventory::StockLevelPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdInventoryStockLevelPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-inventory::StockLevelPanelOrbital');
+      }
+      return stdInventoryStockLevelPanelOrbital(p);
+    },
+    manifest: StdInventoryStockLevelPanelOrbitalManifest,
+  }],
+  ['std-inventory::WarehousePanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdInventoryWarehousePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-inventory::WarehousePanelOrbital');
+      }
+      return stdInventoryWarehousePanelOrbital(p);
+    },
+    manifest: StdInventoryWarehousePanelOrbitalManifest,
+  }],
+  ['std-inventory::ReorderRulePanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdInventoryReorderRulePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-inventory::ReorderRulePanelOrbital');
+      }
+      return stdInventoryReorderRulePanelOrbital(p);
+    },
+    manifest: StdInventoryReorderRulePanelOrbitalManifest,
+  }],
+  ['std-inventory::StockAdjustmentPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdInventoryStockAdjustmentPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-inventory::StockAdjustmentPanelOrbital');
+      }
+      return stdInventoryStockAdjustmentPanelOrbital(p);
+    },
+    manifest: StdInventoryStockAdjustmentPanelOrbitalManifest,
+  }],
   ['std-iot-dashboard::SensorReadingOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdIotDashboardSensorReadingOrbitalParams(p)) {
@@ -1651,6 +1753,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLegalCaseCourtDeadlinePanelOrbitalManifest,
   }],
+  ['std-legal-case::MatterPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLegalCaseMatterPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-legal-case::MatterPanelOrbital');
+      }
+      return stdLegalCaseMatterPanelOrbital(p);
+    },
+    manifest: StdLegalCaseMatterPanelOrbitalManifest,
+  }],
   ['std-listings::ListingOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdListingsListingOrbitalParams(p)) {
@@ -1696,33 +1807,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLmsProgressOrbitalManifest,
   }],
-  ['std-logic-training::DebugChallengeOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLogicTrainingDebugChallengeOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-logic-training::DebugChallengeOrbital');
-      }
-      return stdLogicTrainingDebugChallengeOrbital(p);
-    },
-    manifest: StdLogicTrainingDebugChallengeOrbitalManifest,
-  }],
-  ['std-logic-training::NegotiateChallengeOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLogicTrainingNegotiateChallengeOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-logic-training::NegotiateChallengeOrbital');
-      }
-      return stdLogicTrainingNegotiateChallengeOrbital(p);
-    },
-    manifest: StdLogicTrainingNegotiateChallengeOrbitalManifest,
-  }],
-  ['std-logic-training::TrainingScoreOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLogicTrainingTrainingScoreOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-logic-training::TrainingScoreOrbital');
-      }
-      return stdLogicTrainingTrainingScoreOrbital(p);
-    },
-    manifest: StdLogicTrainingTrainingScoreOrbitalManifest,
-  }],
   ['std-marketplace::VendorOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdMarketplaceVendorOrbitalParams(p)) {
@@ -1750,32 +1834,23 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdMarketplaceOrderOrbitalManifest,
   }],
-  ['std-platformer-app::PlatLevelOrbital', {
+  ['std-notes::NoteOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdPlatformerAppPlatLevelOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-platformer-app::PlatLevelOrbital');
+      if (!isStdNotesNoteOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-notes::NoteOrbital');
       }
-      return stdPlatformerAppPlatLevelOrbital(p);
+      return stdNotesNoteOrbital(p);
     },
-    manifest: StdPlatformerAppPlatLevelOrbitalManifest,
+    manifest: StdNotesNoteOrbitalManifest,
   }],
-  ['std-platformer-app::PlatScoreOrbital', {
+  ['std-notes::RichEditorPanelOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdPlatformerAppPlatScoreOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-platformer-app::PlatScoreOrbital');
+      if (!isStdNotesRichEditorPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-notes::RichEditorPanelOrbital');
       }
-      return stdPlatformerAppPlatScoreOrbital(p);
+      return stdNotesRichEditorPanelOrbital(p);
     },
-    manifest: StdPlatformerAppPlatScoreOrbitalManifest,
-  }],
-  ['std-platformer-app::CollectibleOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdPlatformerAppCollectibleOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-platformer-app::CollectibleOrbital');
-      }
-      return stdPlatformerAppCollectibleOrbital(p);
-    },
-    manifest: StdPlatformerAppCollectibleOrbitalManifest,
+    manifest: StdNotesRichEditorPanelOrbitalManifest,
   }],
   ['std-project-manager::TaskOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1804,23 +1879,77 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdProjectManagerBurndownOrbitalManifest,
   }],
-  ['std-puzzle-app::PuzzleLevelOrbital', {
+  ['std-property-mgmt::PropertyOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdPuzzleAppPuzzleLevelOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-puzzle-app::PuzzleLevelOrbital');
+      if (!isStdPropertyMgmtPropertyOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-property-mgmt::PropertyOrbital');
       }
-      return stdPuzzleAppPuzzleLevelOrbital(p);
+      return stdPropertyMgmtPropertyOrbital(p);
     },
-    manifest: StdPuzzleAppPuzzleLevelOrbitalManifest,
+    manifest: StdPropertyMgmtPropertyOrbitalManifest,
   }],
-  ['std-puzzle-app::PuzzleScoreOrbital', {
+  ['std-property-mgmt::LeasePanelOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdPuzzleAppPuzzleScoreOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-puzzle-app::PuzzleScoreOrbital');
+      if (!isStdPropertyMgmtLeasePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-property-mgmt::LeasePanelOrbital');
       }
-      return stdPuzzleAppPuzzleScoreOrbital(p);
+      return stdPropertyMgmtLeasePanelOrbital(p);
     },
-    manifest: StdPuzzleAppPuzzleScoreOrbitalManifest,
+    manifest: StdPropertyMgmtLeasePanelOrbitalManifest,
+  }],
+  ['std-property-mgmt::TenantPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPropertyMgmtTenantPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-property-mgmt::TenantPanelOrbital');
+      }
+      return stdPropertyMgmtTenantPanelOrbital(p);
+    },
+    manifest: StdPropertyMgmtTenantPanelOrbitalManifest,
+  }],
+  ['std-property-mgmt::RentChargePanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPropertyMgmtRentChargePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-property-mgmt::RentChargePanelOrbital');
+      }
+      return stdPropertyMgmtRentChargePanelOrbital(p);
+    },
+    manifest: StdPropertyMgmtRentChargePanelOrbitalManifest,
+  }],
+  ['std-property-mgmt::MaintenanceRequestPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPropertyMgmtMaintenanceRequestPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-property-mgmt::MaintenanceRequestPanelOrbital');
+      }
+      return stdPropertyMgmtMaintenanceRequestPanelOrbital(p);
+    },
+    manifest: StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest,
+  }],
+  ['std-public-help-center::HelpCenterOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPublicHelpCenterHelpCenterOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-public-help-center::HelpCenterOrbital');
+      }
+      return stdPublicHelpCenterHelpCenterOrbital(p);
+    },
+    manifest: StdPublicHelpCenterHelpCenterOrbitalManifest,
+  }],
+  ['std-public-help-center::HelpArticlePanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPublicHelpCenterHelpArticlePanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-public-help-center::HelpArticlePanelOrbital');
+      }
+      return stdPublicHelpCenterHelpArticlePanelOrbital(p);
+    },
+    manifest: StdPublicHelpCenterHelpArticlePanelOrbitalManifest,
+  }],
+  ['std-public-help-center::HelpCategoryPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPublicHelpCenterHelpCategoryPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-public-help-center::HelpCategoryPanelOrbital');
+      }
+      return stdPublicHelpCenterHelpCategoryPanelOrbital(p);
+    },
+    manifest: StdPublicHelpCenterHelpCategoryPanelOrbitalManifest,
   }],
   ['std-realtime-chat::ChatMessageOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1921,42 +2050,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdRetailPosCustomerOrbitalManifest,
   }],
-  ['std-rpg-game::BattleStateOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRpgGameBattleStateOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rpg-game::BattleStateOrbital');
-      }
-      return stdRpgGameBattleStateOrbital(p);
-    },
-    manifest: StdRpgGameBattleStateOrbitalManifest,
-  }],
-  ['std-rpg-game::WorldZoneOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRpgGameWorldZoneOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rpg-game::WorldZoneOrbital');
-      }
-      return stdRpgGameWorldZoneOrbital(p);
-    },
-    manifest: StdRpgGameWorldZoneOrbitalManifest,
-  }],
-  ['std-rpg-game::RpgItemOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRpgGameRpgItemOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rpg-game::RpgItemOrbital');
-      }
-      return stdRpgGameRpgItemOrbital(p);
-    },
-    manifest: StdRpgGameRpgItemOrbitalManifest,
-  }],
-  ['std-rpg-game::MissionOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdRpgGameMissionOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-rpg-game::MissionOrbital');
-      }
-      return stdRpgGameMissionOrbital(p);
-    },
-    manifest: StdRpgGameMissionOrbitalManifest,
-  }],
   ['std-service-marketplace::ProductOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdServiceMarketplaceProductOrbitalParams(p)) {
@@ -2047,60 +2140,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdSocialFeedCommentOrbitalManifest,
   }],
-  ['std-stem-lab::ExperimentOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStemLabExperimentOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-stem-lab::ExperimentOrbital');
-      }
-      return stdStemLabExperimentOrbital(p);
-    },
-    manifest: StdStemLabExperimentOrbitalManifest,
-  }],
-  ['std-stem-lab::ClassificationOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStemLabClassificationOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-stem-lab::ClassificationOrbital');
-      }
-      return stdStemLabClassificationOrbital(p);
-    },
-    manifest: StdStemLabClassificationOrbitalManifest,
-  }],
-  ['std-stem-lab::LabResultOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStemLabLabResultOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-stem-lab::LabResultOrbital');
-      }
-      return stdStemLabLabResultOrbital(p);
-    },
-    manifest: StdStemLabLabResultOrbitalManifest,
-  }],
-  ['std-strategy-game::ArmyBattleOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStrategyGameArmyBattleOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-strategy-game::ArmyBattleOrbital');
-      }
-      return stdStrategyGameArmyBattleOrbital(p);
-    },
-    manifest: StdStrategyGameArmyBattleOrbitalManifest,
-  }],
-  ['std-strategy-game::TerritoryOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStrategyGameTerritoryOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-strategy-game::TerritoryOrbital');
-      }
-      return stdStrategyGameTerritoryOrbital(p);
-    },
-    manifest: StdStrategyGameTerritoryOrbitalManifest,
-  }],
-  ['std-strategy-game::ResourceOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdStrategyGameResourceOrbitalParams(p)) {
-        throw new TypeError('Invalid params for std-strategy-game::ResourceOrbital');
-      }
-      return stdStrategyGameResourceOrbital(p);
-    },
-    manifest: StdStrategyGameResourceOrbitalManifest,
-  }],
   ['std-subscription-billing::SubscriptionOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdSubscriptionBillingSubscriptionOrbitalParams(p)) {
@@ -2145,6 +2184,51 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdSurveyResponseOrbital(p);
     },
     manifest: StdSurveyResponseOrbitalManifest,
+  }],
+  ['std-time-tracking::EmployeeOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTimeTrackingEmployeeOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-time-tracking::EmployeeOrbital');
+      }
+      return stdTimeTrackingEmployeeOrbital(p);
+    },
+    manifest: StdTimeTrackingEmployeeOrbitalManifest,
+  }],
+  ['std-time-tracking::TimesheetPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTimeTrackingTimesheetPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-time-tracking::TimesheetPanelOrbital');
+      }
+      return stdTimeTrackingTimesheetPanelOrbital(p);
+    },
+    manifest: StdTimeTrackingTimesheetPanelOrbitalManifest,
+  }],
+  ['std-time-tracking::TimeEntryPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTimeTrackingTimeEntryPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-time-tracking::TimeEntryPanelOrbital');
+      }
+      return stdTimeTrackingTimeEntryPanelOrbital(p);
+    },
+    manifest: StdTimeTrackingTimeEntryPanelOrbitalManifest,
+  }],
+  ['std-time-tracking::BillableHourTimeTrackingOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTimeTrackingBillableHourTimeTrackingOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-time-tracking::BillableHourTimeTrackingOrbital');
+      }
+      return stdTimeTrackingBillableHourTimeTrackingOrbital(p);
+    },
+    manifest: StdTimeTrackingBillableHourTimeTrackingOrbitalManifest,
+  }],
+  ['std-time-tracking::ApprovalRequestPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTimeTrackingApprovalRequestPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-time-tracking::ApprovalRequestPanelOrbital');
+      }
+      return stdTimeTrackingApprovalRequestPanelOrbital(p);
+    },
+    manifest: StdTimeTrackingApprovalRequestPanelOrbitalManifest,
   }],
   ['std-trading-dashboard::PortfolioOrbital', {
     factory: (p: object): OrbitalDefinition => {

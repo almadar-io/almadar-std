@@ -29,7 +29,28 @@ const ALIAS = 'MaintenanceRequest';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdMaintenanceRequestEventKey = 'CANCEL_REQUEST' | 'COMPLETE_REQUEST' | 'INIT' | 'MaintenanceRequestLoadFailed' | 'MaintenanceRequestLoaded' | 'MaintenanceRequestUpdateFailed' | 'MaintenanceRequestUpdated' | 'SCHEDULE_REQUEST';
+export type StdMaintenanceRequestEventKey = 'CANCEL_REQUEST' | 'CLOSE_VIEW' | 'COMPLETE_REQUEST' | 'INIT' | 'MaintenanceRequestLoadFailed' | 'MaintenanceRequestLoaded' | 'MaintenanceRequestUpdateFailed' | 'MaintenanceRequestUpdated' | 'OPEN_REQUEST' | 'SCHEDULE_REQUEST';
+
+/**
+ * Payload shape for the `OPEN_REQUEST` event.
+ */
+export interface StdMaintenanceRequestOpenRequestPayload {
+  id: string;
+  row?: {
+    id: string;
+    unitId: string;
+    tenantId?: string;
+    requesterName?: string;
+    description: string;
+    priority?: string;
+    status?: string;
+    assignedTo?: string;
+    requestedAt?: string;
+    scheduledAt?: string;
+    completedAt?: string;
+    notes?: string;
+  };
+}
 
 /**
  * Payload shape for the `SCHEDULE_REQUEST` event.

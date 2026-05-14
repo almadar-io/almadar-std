@@ -29,13 +29,34 @@ const ALIAS = 'LedgerEntryForm';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLedgerEntryFormEventKey = 'CREATE' | 'INIT' | 'JournalTransactionLoadFailed' | 'JournalTransactionLoaded' | 'POST_TRANSACTION' | 'REQUEST_DELETE';
+export type StdLedgerEntryFormEventKey = 'CLOSE_VIEW' | 'CREATE' | 'INIT' | 'JournalTransactionLoadFailed' | 'JournalTransactionLoaded' | 'OPEN_TRANSACTION' | 'POST_TRANSACTION' | 'REQUEST_DELETE';
 
 /**
  * Closed set of event keys this trait listens for —
  * derived from the .orb's `listens[]` block.
  */
 export type StdLedgerEntryFormListenKey = 'TRANSACTION_CREATED' | 'TRANSACTION_POSTED' | 'TRANSACTION_DELETED';
+
+/**
+ * Payload shape for the `OPEN_TRANSACTION` event.
+ */
+export interface StdLedgerEntryFormOpenTransactionPayload {
+  id: string;
+  row?: {
+    id: string;
+    transactionDate: string;
+    description?: string;
+    debitAccountId?: string;
+    debitAccountName?: string;
+    creditAccountId?: string;
+    creditAccountName?: string;
+    amount?: number;
+    referenceType?: string;
+    referenceId?: string;
+    isPosted?: boolean;
+    pendingId?: string;
+  };
+}
 
 /**
  * Payload shape for the `POST_TRANSACTION` event.

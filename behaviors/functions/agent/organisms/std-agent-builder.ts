@@ -107,20 +107,23 @@ export interface StdAgentBuilderBuildSessionUpdateFailedPayload {
 /**
  * Tunable params for the BuildPlanOrbital orbital.
  *
- * Canonical entity: BuildPlan (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BuildPlan — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentBuilderBuildPlanOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -129,22 +132,26 @@ export interface StdAgentBuilderBuildPlanOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BuildPlanOrbital orbital with consumer params. */
 export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlanOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BuildPlan';
+  const canonicalName = params.entityName ?? 'BuildPlan';
   const built = makeOrbitalWithUses({
     name: 'BuildPlanOrbital',
     uses: [
@@ -616,28 +623,47 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                     'children': [
                       {
                         'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'map',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Task Planner',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -647,22 +673,22 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'children': [
                               {
                                 'type': 'stack',
-                                'gap': 'md',
                                 'direction': 'vertical',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'content': 'Describe the task to plan',
                                     'type': 'typography',
+                                    'content': 'Describe the task to plan',
                                     'variant': 'body',
                                   },
                                   {
+                                    'type': 'form-section',
+                                    'entity': '@entity',
+                                    'mode': 'edit',
+                                    'submitEvent': 'PLAN',
                                     'fields': [
                                       'task',
                                     ],
-                                    'entity': '@entity',
-                                    'type': 'form-section',
-                                    'mode': 'edit',
-                                    'submitEvent': 'PLAN',
                                   },
                                 ],
                               },
@@ -671,25 +697,6 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                         ],
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'href': '/build',
-                        'icon': 'hammer',
-                        'label': 'Build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -722,36 +729,17 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'tag',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Classifying task...',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
                             'type': 'spinner',
@@ -762,9 +750,28 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'content': '@entity.task',
                           },
                         ],
+                        'type': 'stack',
                         'gap': 'lg',
                         'direction': 'vertical',
-                        'type': 'stack',
+                        'align': 'center',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
                       },
                     ],
                     'type': 'dashboard-layout',
@@ -803,18 +810,18 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   {
                     'children': [
                       {
-                        'gap': 'lg',
-                        'type': 'stack',
                         'align': 'center',
+                        'gap': 'lg',
                         'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'brain',
                           },
                           {
-                            'content': 'Recalling relevant experience...',
                             'type': 'typography',
+                            'content': 'Recalling relevant experience...',
                             'variant': 'h3',
                           },
                           {
@@ -830,22 +837,22 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                     'navItems': [
                       {
                         'label': 'Plan',
-                        'href': '/plan',
                         'icon': 'clipboard-list',
+                        'href': '/plan',
                       },
                       {
-                        'icon': 'hammer',
-                        'href': '/build',
                         'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
-                        'href': '/fix',
                         'label': 'Fix',
                         'icon': 'wrench',
+                        'href': '/fix',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -871,54 +878,54 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   {
                     'children': [
                       {
+                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'alert-triangle',
                           },
                           {
-                            'content': 'Planning Failed',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Planning Failed',
                           },
                           {
-                            'message': '@entity.error',
                             'variant': 'error',
+                            'message': '@entity.error',
                             'type': 'alert',
                           },
                           {
-                            'type': 'button',
-                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
                             'label': 'Try Again',
                             'variant': 'primary',
-                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'action': 'RESET',
                           },
                         ],
-                        'direction': 'vertical',
                         'type': 'stack',
-                        'align': 'center',
                         'gap': 'lg',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'href': '/fix',
-                        'label': 'Fix',
-                        'icon': 'wrench',
+                        'direction': 'vertical',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -964,10 +971,28 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'name': 'cpu',
@@ -982,43 +1007,25 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'type': 'spinner',
                           },
                           {
-                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'badge',
                                 'label': '@entity.category',
                               },
                               {
-                                'type': 'badge',
                                 'label': '@entity.memoryCount',
+                                'type': 'badge',
                               },
                             ],
-                            'justify': 'center',
                             'direction': 'horizontal',
-                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'center',
                           },
                         ],
-                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'align': 'center',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
                       },
                     ],
                   },
@@ -1044,56 +1051,56 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'href': '/build',
-                        'label': 'Build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'alert-triangle',
+                            'type': 'icon',
                           },
                           {
+                            'content': 'Planning Failed',
                             'type': 'typography',
                             'variant': 'h2',
-                            'content': 'Planning Failed',
                           },
                           {
                             'message': '@entity.error',
-                            'type': 'alert',
                             'variant': 'error',
+                            'type': 'alert',
                           },
                           {
+                            'type': 'button',
                             'label': 'Try Again',
                             'icon': 'rotate-ccw',
                             'action': 'RESET',
                             'variant': 'primary',
-                            'type': 'button',
                           },
                         ],
-                        'align': 'center',
+                        'type': 'stack',
                         'gap': 'lg',
-                        'direction': 'vertical',
+                        'align': 'center',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -1137,132 +1144,115 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
-                        'label': 'Plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
                     'children': [
                       {
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'justify': 'between',
                             'children': [
                               {
-                                'direction': 'horizontal',
+                                'align': 'center',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'check-circle',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'content': 'Plan Ready',
                                     'variant': 'h2',
+                                    'content': 'Plan Ready',
+                                    'type': 'typography',
                                   },
                                 ],
                                 'type': 'stack',
-                                'align': 'center',
                                 'gap': 'sm',
+                                'direction': 'horizontal',
                               },
                               {
-                                'label': 'New Plan',
-                                'icon': 'rotate-ccw',
                                 'type': 'button',
-                                'action': 'RESET',
                                 'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'action': 'RESET',
+                                'label': 'New Plan',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'align': 'center',
                             'type': 'stack',
+                            'align': 'center',
+                            'justify': 'between',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'children': [
-                              {
-                                'icon': 'tag',
-                                'value': '@entity.category',
-                                'type': 'stat-display',
-                                'label': 'Category',
-                              },
-                              {
-                                'value': '@entity.confidence',
-                                'label': 'Confidence',
-                                'icon': 'target',
-                                'type': 'stat-display',
-                              },
-                              {
-                                'type': 'stat-display',
-                                'icon': 'brain',
-                                'value': '@entity.memoryCount',
-                                'label': 'Memories Used',
-                              },
-                            ],
                             'cols': 3,
                             'type': 'simple-grid',
+                            'children': [
+                              {
+                                'label': 'Category',
+                                'value': '@entity.category',
+                                'icon': 'tag',
+                                'type': 'stat-display',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'value': '@entity.confidence',
+                                'icon': 'target',
+                                'label': 'Confidence',
+                              },
+                              {
+                                'label': 'Memories Used',
+                                'icon': 'brain',
+                                'type': 'stat-display',
+                                'value': '@entity.memoryCount',
+                              },
+                            ],
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'direction': 'vertical',
                                 'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'typography',
-                                    'content': 'Task',
                                     'variant': 'caption',
+                                    'content': 'Task',
+                                    'type': 'typography',
                                   },
                                   {
                                     'variant': 'body',
-                                    'type': 'typography',
                                     'content': '@entity.task',
+                                    'type': 'typography',
                                   },
                                   {
                                     'type': 'divider',
                                   },
                                   {
-                                    'variant': 'caption',
                                     'type': 'typography',
                                     'content': 'Execution Plan',
+                                    'variant': 'caption',
                                   },
                                   {
                                     'variant': 'body',
-                                    'content': '@entity.steps',
                                     'type': 'typography',
+                                    'content': '@entity.steps',
                                   },
                                 ],
                                 'gap': 'md',
-                                'direction': 'vertical',
                               },
                             ],
-                            'type': 'card',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'direction': 'vertical',
-                                'gap': 'sm',
                                 'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'vertical',
                                 'children': [
                                   {
                                     'type': 'typography',
@@ -1270,20 +1260,37 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                                     'content': 'Relevant Memories',
                                   },
                                   {
-                                    'content': '@entity.relevantMemories',
                                     'type': 'typography',
                                     'variant': 'body',
+                                    'content': '@entity.relevantMemories',
                                   },
                                 ],
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'gap': 'lg',
                         'type': 'stack',
-                        'direction': 'vertical',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
                   },
                 ],
@@ -1308,10 +1315,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'icon',
@@ -1323,27 +1331,27 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'variant': 'h2',
                           },
                           {
-                            'variant': 'error',
                             'type': 'alert',
+                            'variant': 'error',
                             'message': '@entity.error',
                           },
                           {
-                            'icon': 'rotate-ccw',
+                            'type': 'button',
                             'action': 'RESET',
                             'label': 'Try Again',
-                            'type': 'button',
+                            'icon': 'rotate-ccw',
                             'variant': 'primary',
                           },
                         ],
+                        'direction': 'vertical',
                         'align': 'center',
-                        'gap': 'lg',
                       },
                     ],
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                         'icon': 'clipboard-list',
                       },
                       {
@@ -1352,12 +1360,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                         'label': 'Build',
                       },
                       {
-                        'icon': 'wrench',
                         'href': '/fix',
                         'label': 'Fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -1411,10 +1418,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
                             'children': [
@@ -1423,14 +1431,14 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Task Planner',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
+                            'type': 'stack',
                             'align': 'center',
                           },
                           {
@@ -1441,33 +1449,31 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'children': [
                               {
                                 'gap': 'md',
+                                'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'typography',
-                                    'variant': 'body',
                                     'content': 'Describe the task to plan',
+                                    'variant': 'body',
                                   },
                                   {
-                                    'type': 'form-section',
+                                    'submitEvent': 'PLAN',
                                     'fields': [
                                       'task',
                                     ],
                                     'mode': 'edit',
-                                    'submitEvent': 'PLAN',
                                     'entity': '@entity',
+                                    'type': 'form-section',
                                   },
                                 ],
-                                'type': 'stack',
-                                'direction': 'vertical',
                               },
                             ],
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Plan',
@@ -1475,9 +1481,9 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                         'icon': 'clipboard-list',
                       },
                       {
-                        'href': '/build',
                         'label': 'Build',
                         'icon': 'hammer',
+                        'href': '/build',
                       },
                       {
                         'href': '/fix',
@@ -1485,6 +1491,7 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                         'label': 'Fix',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -1611,33 +1618,33 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'modal',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'map',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Describe the task to plan',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'entity': '@entity',
-                        'cancelEvent': 'CLOSE',
-                        'submitEvent': 'PLAN',
                         'type': 'form-section',
                         'mode': 'edit',
+                        'submitEvent': 'PLAN',
                         'fields': [
                           'task',
                         ],
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'type': 'stack',
                     'gap': 'md',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1863,71 +1870,71 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                     'children': [
                       {
                         'gap': 'lg',
-                        'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
                             'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'tag',
                                     'type': 'icon',
+                                    'name': 'tag',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'content': 'BuildPlan',
+                                    'variant': 'h2',
                                     'type': 'typography',
                                   },
                                 ],
+                                'gap': 'md',
                                 'direction': 'horizontal',
                                 'type': 'stack',
                               },
                               {
-                                'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'tag',
-                                'action': 'CLASSIFY',
                                 'label': 'Open',
+                                'variant': 'primary',
+                                'action': 'CLASSIFY',
+                                'type': 'button',
+                                'icon': 'tag',
                               },
                             ],
-                            'gap': 'md',
                             'justify': 'between',
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
                             'icon': 'tag',
                             'title': 'Nothing open',
-                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'href': '/plan',
-                        'icon': 'clipboard-list',
                         'label': 'Plan',
+                        'icon': 'clipboard-list',
                       },
                       {
-                        'label': 'Build',
                         'href': '/build',
                         'icon': 'hammer',
+                        'label': 'Build',
                       },
                       {
-                        'href': '/fix',
                         'label': 'Fix',
+                        'href': '/fix',
                         'icon': 'wrench',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -1946,31 +1953,29 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                     'gap': 'md',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'tag',
                             'type': 'icon',
                           },
                           {
-                            'content': 'BuildPlan',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': 'BuildPlan',
                           },
                         ],
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'typography',
                             'variant': 'caption',
+                            'type': 'typography',
                             'content': 'Categories:',
                           },
                           {
@@ -1979,36 +1984,38 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'variant': 'secondary',
                           },
                           {
-                            'type': 'badge',
                             'variant': 'secondary',
                             'label': 'component',
+                            'type': 'badge',
                           },
                           {
-                            'variant': 'secondary',
                             'type': 'badge',
                             'label': 'trait',
+                            'variant': 'secondary',
                           },
                           {
+                            'type': 'badge',
                             'variant': 'secondary',
                             'label': 'page',
-                            'type': 'badge',
                           },
                           {
+                            'label': 'behavior',
                             'variant': 'secondary',
                             'type': 'badge',
-                            'label': 'behavior',
                           },
                         ],
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
-                        'type': 'form-section',
+                        'mode': 'create',
                         'fields': [
                           'input',
                         ],
                         'submitEvent': 'SAVE',
-                        'mode': 'create',
                         'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
                       },
                     ],
                   },
@@ -2044,74 +2051,74 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'navItems': [
                       {
+                        'label': 'Plan',
                         'href': '/plan',
                         'icon': 'clipboard-list',
-                        'label': 'Plan',
                       },
                       {
-                        'label': 'Build',
                         'href': '/build',
                         'icon': 'hammer',
+                        'label': 'Build',
                       },
                       {
-                        'href': '/fix',
                         'icon': 'wrench',
                         'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                     'children': [
                       {
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
                             'children': [
                               {
-                                'gap': 'md',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'tag',
                                   },
                                   {
-                                    'content': 'BuildPlan',
                                     'variant': 'h2',
                                     'type': 'typography',
+                                    'content': 'BuildPlan',
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'type': 'stack',
+                                'gap': 'md',
                               },
                               {
-                                'label': 'Open',
                                 'icon': 'tag',
                                 'action': 'CLASSIFY',
+                                'label': 'Open',
                                 'type': 'button',
                                 'variant': 'primary',
                               },
                             ],
-                            'gap': 'md',
-                            'justify': 'between',
                             'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
                             'icon': 'tag',
+                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
                         'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -2128,8 +2135,8 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'BuildPlanSaved',
                       'failure': 'BuildPlanSaveFailed',
+                      'success': 'BuildPlanSaved',
                     },
                   },
                 ],
@@ -2147,8 +2154,8 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'BuildPlan',
                   {
                     'emit': {
-                      'success': 'BuildPlanLoaded',
                       'failure': 'BuildPlanLoadFailed',
+                      'success': 'BuildPlanLoaded',
                     },
                   },
                 ],
@@ -2156,30 +2163,27 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
                     'navItems': [
                       {
                         'icon': 'clipboard-list',
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                       },
                       {
-                        'label': 'Build',
                         'href': '/build',
+                        'label': 'Build',
                         'icon': 'hammer',
                       },
                       {
+                        'label': 'Fix',
                         'href': '/fix',
                         'icon': 'wrench',
-                        'label': 'Fix',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'justify': 'between',
@@ -2201,27 +2205,30 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                                 'direction': 'horizontal',
                               },
                               {
-                                'icon': 'tag',
-                                'label': 'Open',
-                                'type': 'button',
-                                'variant': 'primary',
                                 'action': 'CLASSIFY',
+                                'type': 'button',
+                                'icon': 'tag',
+                                'variant': 'primary',
+                                'label': 'Open',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
-                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
                             'icon': 'tag',
+                            'title': 'Nothing open',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -2404,8 +2411,8 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'BuildPlan',
                   {
                     'emit': {
-                      'success': 'BuildPlanLoaded',
                       'failure': 'BuildPlanLoadFailed',
+                      'success': 'BuildPlanLoaded',
                     },
                   },
                 ],
@@ -2413,38 +2420,40 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'gap': 'md',
                             'type': 'stack',
                             'direction': 'horizontal',
                             'justify': 'between',
+                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'stack',
+                                'gap': 'md',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'name': 'sparkles',
                                     'type': 'icon',
                                   },
                                   {
+                                    'content': 'BuildPlan',
                                     'variant': 'h2',
                                     'type': 'typography',
-                                    'content': 'BuildPlan',
                                   },
                                 ],
-                                'gap': 'md',
-                                'direction': 'horizontal',
                               },
                               {
-                                'action': 'GENERATE',
-                                'variant': 'primary',
                                 'icon': 'sparkles',
-                                'type': 'button',
                                 'label': 'Open',
+                                'variant': 'primary',
+                                'action': 'GENERATE',
+                                'type': 'button',
                               },
                             ],
                           },
@@ -2454,21 +2463,19 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                           {
                             'type': 'empty-state',
                             'icon': 'sparkles',
-                            'description': 'Click Open to view details in a modal overlay.',
                             'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'direction': 'vertical',
+                        'type': 'stack',
                         'gap': 'lg',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'icon': 'clipboard-list',
                         'label': 'Plan',
+                        'href': '/plan',
                       },
                       {
                         'label': 'Build',
@@ -2476,8 +2483,8 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                         'icon': 'hammer',
                       },
                       {
-                        'icon': 'wrench',
                         'href': '/fix',
+                        'icon': 'wrench',
                         'label': 'Fix',
                       },
                     ],
@@ -2494,23 +2501,23 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'modal',
                   {
-                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'sparkles',
                             'type': 'icon',
+                            'name': 'sparkles',
                           },
                           {
                             'content': 'BuildPlan',
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
@@ -2522,26 +2529,26 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                             'label': '@entity.provider',
                           },
                           {
-                            'label': '@entity.model',
                             'type': 'badge',
+                            'label': '@entity.model',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
                         'direction': 'horizontal',
                       },
                       {
                         'submitEvent': 'SAVE',
-                        'cancelEvent': 'CLOSE',
-                        'type': 'form-section',
                         'mode': 'create',
+                        'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'prompt',
                         ],
                       },
                     ],
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2576,71 +2583,71 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'type': 'stack',
                         'children': [
                           {
-                            'justify': 'between',
-                            'direction': 'horizontal',
                             'children': [
                               {
+                                'gap': 'md',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
-                                    'variant': 'h2',
-                                    'type': 'typography',
                                     'content': 'BuildPlan',
+                                    'type': 'typography',
+                                    'variant': 'h2',
                                   },
                                 ],
                                 'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
-                                'label': 'Open',
                                 'action': 'GENERATE',
-                                'type': 'button',
                                 'variant': 'primary',
+                                'type': 'button',
+                                'label': 'Open',
                                 'icon': 'sparkles',
                               },
                             ],
                             'gap': 'md',
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
                             'icon': 'sparkles',
-                            'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                   },
@@ -2659,8 +2666,8 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'BuildPlanSaved',
                       'failure': 'BuildPlanSaveFailed',
+                      'success': 'BuildPlanSaved',
                     },
                   },
                 ],
@@ -2687,71 +2694,71 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                        'href': '/fix',
-                      },
-                    ],
                     'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'justify': 'between',
                             'children': [
                               {
                                 'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'BuildPlan',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
                                 'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
-                                'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'sparkles',
                                 'action': 'GENERATE',
                                 'label': 'Open',
+                                'icon': 'sparkles',
+                                'type': 'button',
+                                'variant': 'primary',
                               },
                             ],
-                            'gap': 'md',
                             'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'icon': 'sparkles',
                             'title': 'Nothing open',
                             'type': 'empty-state',
-                            'icon': 'sparkles',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'href': '/build',
+                        'label': 'Build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                     'type': 'dashboard-layout',
@@ -2888,8 +2895,8 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'BuildPlan',
                   {
                     'emit': {
-                      'success': 'BuildPlanLoaded',
                       'failure': 'BuildPlanLoadFailed',
+                      'success': 'BuildPlanLoaded',
                     },
                   },
                 ],
@@ -2898,21 +2905,21 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'main',
                   {
                     'direction': 'vertical',
-                    'type': 'stack',
                     'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-12',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
-                        'color': 'muted',
                         'variant': 'caption',
                         'content': 'Loading…',
+                        'type': 'typography',
+                        'color': 'muted',
                       },
                     ],
+                    'gap': 'md',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -2926,17 +2933,34 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                      },
+                    ],
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
                         'className': 'max-w-5xl mx-auto w-full',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'align': 'center',
                             'type': 'stack',
+                            'justify': 'between',
+                            'align': 'center',
                             'children': [
                               {
                                 'children': [
@@ -2951,18 +2975,34 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                                   },
                                 ],
                                 'type': 'stack',
-                                'align': 'center',
                                 'direction': 'horizontal',
                                 'gap': 'sm',
+                                'align': 'center',
                               },
                             ],
                             'gap': 'md',
-                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'itemActions': [
+                              {
+                                'event': 'PIN',
+                                'label': 'Pin',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'event': 'REINFORCE',
+                                'label': 'Reinforce',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'event': 'FORGET',
+                                'variant': 'danger',
+                                'label': 'Forget',
+                              },
+                            ],
                             'type': 'data-grid',
                             'entity': '@payload.data',
                             'fields': [
@@ -2973,53 +3013,20 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                                 'label': 'Content',
                               },
                               {
-                                'label': 'Category',
                                 'name': 'category',
+                                'label': 'Category',
                                 'variant': 'badge',
                               },
                               {
-                                'label': 'Strength',
                                 'variant': 'caption',
+                                'label': 'Strength',
                                 'name': 'strength',
-                              },
-                            ],
-                            'itemActions': [
-                              {
-                                'event': 'PIN',
-                                'label': 'Pin',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'variant': 'ghost',
-                                'label': 'Reinforce',
-                                'event': 'REINFORCE',
-                              },
-                              {
-                                'label': 'Forget',
-                                'event': 'FORGET',
-                                'variant': 'danger',
                               },
                             ],
                           },
                         ],
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
                     'appName': 'Schema Builder',
@@ -3036,36 +3043,36 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Failed to load buildplan',
+                        'variant': 'h3',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'body',
                         'content': '@payload.error',
+                        'type': 'typography',
                         'color': 'muted',
                       },
                       {
                         'variant': 'primary',
                         'icon': 'rotate-ccw',
+                        'label': 'Retry',
                         'type': 'button',
                         'action': 'INIT',
-                        'label': 'Retry',
                       },
                     ],
-                    'className': 'py-12',
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -3089,7 +3096,7 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3101,6 +3108,10 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3124,7 +3135,9 @@ export const StdAgentBuilderBuildPlanOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -3154,20 +3167,23 @@ export function isStdAgentBuilderBuildPlanOrbitalParams(p: object): p is StdAgen
 /**
  * Tunable params for the BuildLoopOrbital orbital.
  *
- * Canonical entity: BuildLoop (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BuildLoop — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentBuilderBuildLoopOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -3176,22 +3192,26 @@ export interface StdAgentBuilderBuildLoopOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BuildLoopOrbital orbital with consumer params. */
 export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoopOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BuildLoop';
+  const canonicalName = params.entityName ?? 'BuildLoop';
   const built = makeOrbitalWithUses({
     name: 'BuildLoopOrbital',
     uses: [],
@@ -3514,12 +3534,10 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Plan',
                         'href': '/plan',
+                        'label': 'Plan',
                         'icon': 'clipboard-list',
                       },
                       {
@@ -3528,21 +3546,16 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'hammer',
                       },
                       {
-                        'label': 'Fix',
                         'href': '/fix',
+                        'label': 'Fix',
                         'icon': 'wrench',
                       },
                     ],
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
@@ -3550,10 +3563,14 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                               },
                               {
                                 'content': 'Tool Execution Loop',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -3562,32 +3579,35 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'children': [
                               {
                                 'direction': 'vertical',
-                                'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'content': 'Describe the task to execute with tools',
                                     'variant': 'body',
                                     'type': 'typography',
+                                    'content': 'Describe the task to execute with tools',
                                   },
                                   {
-                                    'submitEvent': 'EXECUTE',
+                                    'type': 'form-section',
                                     'fields': [
                                       'task',
                                     ],
-                                    'type': 'form-section',
                                     'entity': '@entity',
+                                    'submitEvent': 'EXECUTE',
                                     'mode': 'edit',
                                   },
                                 ],
+                                'type': 'stack',
+                                'gap': 'md',
                               },
                             ],
                             'type': 'card',
                           },
                         ],
                         'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3628,52 +3648,52 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Plan',
                         'href': '/plan',
                         'icon': 'clipboard-list',
-                        'label': 'Plan',
                       },
                       {
-                        'icon': 'hammer',
                         'label': 'Build',
                         'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
+                        'label': 'Fix',
                         'href': '/fix',
                         'icon': 'wrench',
-                        'label': 'Fix',
                       },
                     ],
                     'children': [
                       {
-                        'direction': 'vertical',
                         'gap': 'lg',
                         'align': 'center',
+                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'name': 'brain',
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h3',
-                            'content': 'Planning execution...',
                             'type': 'typography',
+                            'content': 'Planning execution...',
+                            'variant': 'h3',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
+                            'variant': 'caption',
                             'type': 'typography',
                             'content': '@entity.task',
-                            'variant': 'caption',
                           },
                         ],
-                        'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -3711,34 +3731,16 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'href': '/build',
-                        'label': 'Build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'justify': 'between',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'stack',
@@ -3751,27 +3753,31 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                     'name': 'tool',
                                   },
                                   {
-                                    'content': 'Executing Tool',
-                                    'type': 'typography',
                                     'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Executing Tool',
                                   },
                                 ],
                               },
                               {
-                                'label': '@entity.maxIterations',
                                 'type': 'badge',
+                                'label': '@entity.maxIterations',
                               },
                             ],
+                            'justify': 'between',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
                                 'direction': 'vertical',
-                                'type': 'stack',
                                 'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'typography',
@@ -3780,8 +3786,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                   },
                                   {
                                     'variant': 'h4',
-                                    'content': '@entity.currentTool',
                                     'type': 'typography',
+                                    'content': '@entity.currentTool',
                                   },
                                   {
                                     'type': 'spinner',
@@ -3789,20 +3795,16 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 ],
                               },
                             ],
-                            'type': 'card',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
-                                'direction': 'vertical',
                                 'gap': 'sm',
                                 'children': [
                                   {
+                                    'content': 'Plan',
                                     'variant': 'caption',
                                     'type': 'typography',
-                                    'content': 'Plan',
                                   },
                                   {
                                     'type': 'typography',
@@ -3810,15 +3812,33 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                     'content': '@entity.plan',
                                   },
                                 ],
+                                'direction': 'vertical',
+                                'type': 'stack',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -3842,7 +3862,6 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'children': [
@@ -3856,60 +3875,61 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'typography',
                           },
                           {
-                            'variant': 'error',
                             'message': '@entity.error',
                             'type': 'alert',
+                            'variant': 'error',
                           },
                           {
                             'type': 'simple-grid',
+                            'cols': 2,
                             'children': [
                               {
-                                'label': 'Iterations Used',
-                                'value': '@entity.iterations',
                                 'type': 'stat-display',
                                 'icon': 'repeat',
+                                'value': '@entity.iterations',
+                                'label': 'Iterations Used',
                               },
                               {
+                                'value': '@entity.maxIterations',
                                 'label': 'Max Allowed',
                                 'icon': 'shield',
                                 'type': 'stat-display',
-                                'value': '@entity.maxIterations',
                               },
                             ],
-                            'cols': 2,
                           },
                           {
-                            'label': 'Retry',
-                            'icon': 'rotate-ccw',
-                            'action': 'RESET',
                             'variant': 'primary',
+                            'icon': 'rotate-ccw',
                             'type': 'button',
+                            'label': 'Retry',
+                            'action': 'RESET',
                           },
                         ],
-                        'type': 'stack',
-                        'align': 'center',
                         'direction': 'vertical',
                         'gap': 'lg',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'href': '/build',
-                        'label': 'Build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -3941,37 +3961,21 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'eye',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
-                            'content': 'Checking result...',
                             'variant': 'h3',
+                            'content': 'Checking result...',
                           },
                           {
                             'type': 'spinner',
@@ -3981,11 +3985,27 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'label': '@entity.iterations',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -4009,43 +4029,27 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
-                        'label': 'Plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'align': 'center',
                         'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
                         'children': [
                           {
-                            'name': 'x-circle',
                             'type': 'icon',
+                            'name': 'x-circle',
                           },
                           {
-                            'content': 'Loop Failed',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Loop Failed',
                           },
                           {
                             'type': 'alert',
-                            'message': '@entity.error',
                             'variant': 'error',
+                            'message': '@entity.error',
                           },
                           {
                             'type': 'simple-grid',
@@ -4053,30 +4057,46 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'children': [
                               {
                                 'label': 'Iterations Used',
-                                'value': '@entity.iterations',
                                 'type': 'stat-display',
+                                'value': '@entity.iterations',
                                 'icon': 'repeat',
                               },
                               {
-                                'value': '@entity.maxIterations',
                                 'type': 'stat-display',
                                 'label': 'Max Allowed',
                                 'icon': 'shield',
+                                'value': '@entity.maxIterations',
                               },
                             ],
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'action': 'RESET',
-                            'type': 'button',
                             'label': 'Retry',
                             'variant': 'primary',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -4100,23 +4120,36 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                     'children': [
                       {
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'sm',
-                            'justify': 'between',
                             'children': [
                               {
-                                'direction': 'horizontal',
                                 'align': 'center',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'check-circle',
+                                    'type': 'icon',
                                   },
                                   {
                                     'variant': 'h2',
@@ -4124,37 +4157,42 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                     'content': 'Loop Complete',
                                   },
                                 ],
+                                'direction': 'horizontal',
                                 'type': 'stack',
-                                'gap': 'sm',
                               },
                               {
-                                'variant': 'ghost',
                                 'action': 'RESET',
+                                'variant': 'ghost',
+                                'type': 'button',
                                 'label': 'New Task',
                                 'icon': 'rotate-ccw',
-                                'type': 'button',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'justify': 'between',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'simple-grid',
                             'children': [
                               {
-                                'type': 'stat-display',
-                                'value': '@entity.iterations',
                                 'label': 'Iterations',
+                                'value': '@entity.iterations',
+                                'type': 'stat-display',
                                 'icon': 'repeat',
                               },
                               {
                                 'type': 'stat-display',
                                 'value': '@entity.status',
-                                'label': 'Status',
                                 'icon': 'check',
+                                'label': 'Status',
                               },
                             ],
-                            'type': 'simple-grid',
                             'cols': 2,
                           },
                           {
@@ -4164,16 +4202,19 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'typography',
-                                    'variant': 'caption',
                                     'content': 'Task',
+                                    'variant': 'caption',
+                                    'type': 'typography',
                                   },
                                   {
+                                    'content': '@entity.task',
                                     'type': 'typography',
                                     'variant': 'body',
-                                    'content': '@entity.task',
                                   },
                                   {
                                     'type': 'divider',
@@ -4185,41 +4226,20 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                   },
                                   {
                                     'content': '@entity.result',
-                                    'variant': 'body',
                                     'type': 'typography',
+                                    'variant': 'body',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'md',
-                                'type': 'stack',
                               },
                             ],
                           },
                         ],
-                        'gap': 'lg',
                         'direction': 'vertical',
                         'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4270,60 +4290,57 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                         'icon': 'clipboard-list',
                       },
                       {
                         'icon': 'hammer',
-                        'label': 'Build',
                         'href': '/build',
+                        'label': 'Build',
                       },
                       {
                         'href': '/fix',
-                        'icon': 'wrench',
                         'label': 'Fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
-                            'justify': 'between',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'align': 'center',
-                                'gap': 'sm',
                                 'type': 'stack',
+                                'gap': 'sm',
                                 'direction': 'horizontal',
+                                'align': 'center',
                                 'children': [
                                   {
-                                    'name': 'tool',
                                     'type': 'icon',
+                                    'name': 'tool',
                                   },
                                   {
-                                    'content': 'Executing Tool',
                                     'type': 'typography',
+                                    'content': 'Executing Tool',
                                     'variant': 'h2',
                                   },
                                 ],
                               },
                               {
-                                'type': 'badge',
                                 'label': '@entity.maxIterations',
+                                'type': 'badge',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'align': 'center',
+                            'justify': 'between',
                             'type': 'stack',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -4332,8 +4349,6 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'children': [
                               {
                                 'direction': 'vertical',
-                                'type': 'stack',
-                                'gap': 'sm',
                                 'children': [
                                   {
                                     'variant': 'caption',
@@ -4341,14 +4356,16 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                     'content': 'Current Tool',
                                   },
                                   {
+                                    'content': '@entity.currentTool',
                                     'type': 'typography',
                                     'variant': 'h4',
-                                    'content': '@entity.currentTool',
                                   },
                                   {
                                     'type': 'spinner',
                                   },
                                 ],
+                                'gap': 'sm',
+                                'type': 'stack',
                               },
                             ],
                             'type': 'card',
@@ -4357,25 +4374,28 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'card',
                             'children': [
                               {
-                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'vertical',
                                 'children': [
                                   {
-                                    'variant': 'caption',
                                     'content': 'Plan',
+                                    'variant': 'caption',
                                     'type': 'typography',
                                   },
                                   {
+                                    'type': 'typography',
                                     'content': '@entity.plan',
                                     'variant': 'body',
-                                    'type': 'typography',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'type': 'stack',
+                                'gap': 'sm',
                               },
                             ],
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -4401,74 +4421,74 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Plan',
                         'href': '/plan',
+                        'label': 'Plan',
                         'icon': 'clipboard-list',
                       },
                       {
+                        'icon': 'hammer',
                         'href': '/build',
                         'label': 'Build',
-                        'icon': 'hammer',
                       },
                       {
-                        'icon': 'wrench',
                         'href': '/fix',
                         'label': 'Fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'direction': 'vertical',
+                        'type': 'stack',
                         'align': 'center',
+                        'gap': 'lg',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'x-circle',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
+                            'type': 'typography',
                             'content': 'Loop Failed',
                           },
                           {
+                            'message': '@entity.error',
                             'variant': 'error',
                             'type': 'alert',
-                            'message': '@entity.error',
                           },
                           {
                             'children': [
                               {
-                                'icon': 'repeat',
+                                'label': 'Iterations Used',
                                 'value': '@entity.iterations',
                                 'type': 'stat-display',
-                                'label': 'Iterations Used',
+                                'icon': 'repeat',
                               },
                               {
-                                'type': 'stat-display',
+                                'label': 'Max Allowed',
                                 'value': '@entity.maxIterations',
                                 'icon': 'shield',
-                                'label': 'Max Allowed',
+                                'type': 'stat-display',
                               },
                             ],
-                            'cols': 2,
                             'type': 'simple-grid',
+                            'cols': 2,
                           },
                           {
-                            'variant': 'primary',
-                            'icon': 'rotate-ccw',
-                            'label': 'Retry',
                             'action': 'RESET',
                             'type': 'button',
+                            'variant': 'primary',
+                            'label': 'Retry',
+                            'icon': 'rotate-ccw',
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -4522,6 +4542,7 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
                     'navItems': [
                       {
@@ -4535,31 +4556,33 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'hammer',
                       },
                       {
+                        'label': 'Fix',
                         'href': '/fix',
                         'icon': 'wrench',
-                        'label': 'Fix',
                       },
                     ],
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'repeat',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Tool Execution Loop',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -4568,34 +4591,31 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
-                                'direction': 'vertical',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'content': 'Describe the task to execute with tools',
                                     'variant': 'body',
+                                    'type': 'typography',
                                   },
                                   {
-                                    'mode': 'edit',
                                     'type': 'form-section',
                                     'entity': '@entity',
                                     'submitEvent': 'EXECUTE',
                                     'fields': [
                                       'task',
                                     ],
+                                    'mode': 'edit',
                                   },
                                 ],
+                                'type': 'stack',
                                 'gap': 'md',
+                                'direction': 'vertical',
                               },
                             ],
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4649,33 +4669,35 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'repeat',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
-                                'content': 'Tool Execution Loop',
                                 'variant': 'h2',
+                                'content': 'Tool Execution Loop',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
                                 'children': [
@@ -4685,35 +4707,34 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                     'variant': 'body',
                                   },
                                   {
-                                    'type': 'form-section',
-                                    'entity': '@entity',
-                                    'submitEvent': 'EXECUTE',
                                     'mode': 'edit',
+                                    'submitEvent': 'EXECUTE',
+                                    'type': 'form-section',
                                     'fields': [
                                       'task',
                                     ],
+                                    'entity': '@entity',
                                   },
                                 ],
                                 'type': 'stack',
-                                'gap': 'md',
                                 'direction': 'vertical',
+                                'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
                       },
                     ],
                     'navItems': [
                       {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
                         'href': '/plan',
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
                       },
                       {
-                        'icon': 'hammer',
                         'href': '/build',
+                        'icon': 'hammer',
                         'label': 'Build',
                       },
                       {
@@ -4722,7 +4743,6 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'wrench',
                       },
                     ],
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -4866,8 +4886,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'BuildLoop',
                   {
                     'emit': {
-                      'success': 'BuildLoopLoaded',
                       'failure': 'BuildLoopLoadFailed',
+                      'success': 'BuildLoopLoaded',
                     },
                   },
                 ],
@@ -4877,38 +4897,41 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   {
                     'children': [
                       {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'list-ordered',
                                 'type': 'icon',
                               },
                               {
+                                'content': 'BuildLoop',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'BuildLoop',
                               },
                               {
+                                'label': 'Idle',
                                 'variant': 'default',
                                 'type': 'badge',
-                                'label': 'Idle',
                               },
                             ],
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'currentStep': '@entity.currentStep',
+                            'type': 'wizard-progress',
                             'steps': [
                               {
-                                'id': '0',
                                 'title': 'Plan',
+                                'id': '0',
                               },
                               {
                                 'id': '1',
@@ -4923,39 +4946,36 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'title': 'Complete',
                               },
                             ],
-                            'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                           },
                           {
-                            'type': 'button',
+                            'icon': 'play',
                             'action': 'START',
+                            'type': 'button',
                             'variant': 'primary',
                             'label': 'Start',
-                            'icon': 'play',
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'href': '/build',
+                        'label': 'Build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
                     'appName': 'Schema Builder',
                   },
                 ],
@@ -4980,51 +5000,48 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'label': 'Plan',
                         'icon': 'clipboard-list',
+                        'href': '/plan',
                       },
                       {
-                        'icon': 'hammer',
                         'label': 'Build',
                         'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
-                        'label': 'Fix',
                         'href': '/fix',
+                        'label': 'Fix',
                         'icon': 'wrench',
                       },
                     ],
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
-                                'name': 'loader',
                                 'type': 'icon',
+                                'name': 'loader',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'BuildLoop',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                               {
-                                'type': 'badge',
-                                'label': 'In Progress',
                                 'variant': 'warning',
+                                'label': 'In Progress',
+                                'type': 'badge',
                               },
                             ],
+                            'gap': 'sm',
                             'type': 'stack',
                           },
                           {
@@ -5032,7 +5049,6 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                           },
                           {
                             'type': 'wizard-progress',
-                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
                                 'id': '0',
@@ -5043,55 +5059,59 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'title': 'Execute',
                               },
                               {
-                                'title': 'Check',
                                 'id': '2',
+                                'title': 'Check',
                               },
                               {
-                                'id': '3',
                                 'title': 'Complete',
+                                'id': '3',
                               },
                             ],
+                            'currentStep': '@entity.currentStep',
                           },
                           {
                             'align': 'center',
-                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Current Step',
                                 'value': '@entity.currentStep',
+                                'type': 'stat-display',
                               },
                               {
+                                'label': 'Total Steps',
                                 'value': '@entity.totalSteps',
                                 'type': 'stat-display',
-                                'label': 'Total Steps',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                           {
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'icon': 'chevron-right',
                                 'variant': 'primary',
-                                'type': 'button',
                                 'action': 'ADVANCE',
                                 'label': 'Advance',
-                              },
-                              {
-                                'variant': 'ghost',
-                                'label': 'Reset',
-                                'icon': 'rotate-ccw',
-                                'action': 'RESET',
                                 'type': 'button',
                               },
+                              {
+                                'icon': 'rotate-ccw',
+                                'variant': 'ghost',
+                                'action': 'RESET',
+                                'type': 'button',
+                                'label': 'Reset',
+                              },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -5117,56 +5137,54 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Plan',
                         'href': '/plan',
                         'icon': 'clipboard-list',
+                        'label': 'Plan',
                       },
                       {
-                        'icon': 'hammer',
-                        'href': '/build',
                         'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
                         'label': 'Fix',
-                        'icon': 'wrench',
                         'href': '/fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'list-ordered',
                               },
                               {
-                                'content': 'BuildLoop',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'BuildLoop',
                               },
                               {
+                                'label': 'Idle',
                                 'type': 'badge',
                                 'variant': 'default',
-                                'label': 'Idle',
                               },
                             ],
                             'align': 'center',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
                             'steps': [
                               {
@@ -5174,8 +5192,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'title': 'Plan',
                               },
                               {
-                                'title': 'Execute',
                                 'id': '1',
+                                'title': 'Execute',
                               },
                               {
                                 'id': '2',
@@ -5186,19 +5204,21 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'title': 'Complete',
                               },
                             ],
+                            'type': 'wizard-progress',
                           },
                           {
                             'type': 'button',
-                            'label': 'Start',
                             'variant': 'primary',
-                            'icon': 'play',
                             'action': 'START',
+                            'label': 'Start',
+                            'icon': 'play',
                           },
                         ],
                         'type': 'stack',
-                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -5227,12 +5247,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'label': 'Plan',
                         'href': '/plan',
                         'icon': 'clipboard-list',
+                        'label': 'Plan',
                       },
                       {
                         'label': 'Build',
@@ -5240,60 +5259,63 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'href': '/build',
                       },
                       {
+                        'icon': 'wrench',
                         'label': 'Fix',
                         'href': '/fix',
-                        'icon': 'wrench',
                       },
                     ],
+                    'appName': 'Schema Builder',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'align': 'center',
-                            'type': 'stack',
                             'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'loader',
                               },
                               {
-                                'variant': 'h2',
-                                'content': 'BuildLoop',
                                 'type': 'typography',
+                                'content': 'BuildLoop',
+                                'variant': 'h2',
                               },
                               {
+                                'type': 'badge',
                                 'label': 'In Progress',
                                 'variant': 'warning',
-                                'type': 'badge',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
                                 'title': 'Plan',
                                 'id': '0',
                               },
                               {
-                                'title': 'Execute',
                                 'id': '1',
+                                'title': 'Execute',
                               },
                               {
-                                'id': '2',
                                 'title': 'Check',
+                                'id': '2',
                               },
                               {
                                 'title': 'Complete',
                                 'id': '3',
                               },
                             ],
-                            'type': 'wizard-progress',
-                            'currentStep': '@entity.currentStep',
                           },
                           {
                             'children': [
@@ -5303,40 +5325,38 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'label': 'Current Step',
                               },
                               {
-                                'label': 'Total Steps',
                                 'value': '@entity.totalSteps',
                                 'type': 'stat-display',
+                                'label': 'Total Steps',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'label': 'Advance',
-                                'type': 'button',
-                                'icon': 'chevron-right',
                                 'action': 'ADVANCE',
+                                'type': 'button',
+                                'label': 'Advance',
                                 'variant': 'primary',
+                                'icon': 'chevron-right',
                               },
                               {
-                                'type': 'button',
-                                'variant': 'ghost',
                                 'icon': 'rotate-ccw',
-                                'action': 'RESET',
+                                'type': 'button',
                                 'label': 'Reset',
+                                'action': 'RESET',
+                                'variant': 'ghost',
                               },
                             ],
-                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'lg',
                       },
                     ],
@@ -5376,23 +5396,22 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'hammer',
                       },
                       {
-                        'href': '/fix',
                         'icon': 'wrench',
+                        'href': '/fix',
                         'label': 'Fix',
                       },
                     ],
-                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'sm',
                             'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'check-circle',
                                 'type': 'icon',
+                                'name': 'check-circle',
                               },
                               {
                                 'type': 'typography',
@@ -5400,56 +5419,57 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'variant': 'h2',
                               },
                               {
-                                'label': 'Completed',
                                 'type': 'badge',
+                                'label': 'Completed',
                                 'variant': 'success',
                               },
                             ],
+                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'wizard-progress',
+                            'currentStep': '@entity.totalSteps',
                             'steps': [
                               {
-                                'id': '0',
                                 'title': 'Plan',
+                                'id': '0',
                               },
                               {
-                                'id': '1',
                                 'title': 'Execute',
+                                'id': '1',
                               },
                               {
                                 'title': 'Check',
                                 'id': '2',
                               },
                               {
-                                'title': 'Complete',
                                 'id': '3',
+                                'title': 'Complete',
                               },
                             ],
-                            'currentStep': '@entity.totalSteps',
-                            'type': 'wizard-progress',
                           },
                           {
                             'type': 'alert',
-                            'message': 'All steps completed successfully.',
                             'variant': 'success',
+                            'message': 'All steps completed successfully.',
                           },
                           {
-                            'action': 'RESET',
-                            'variant': 'ghost',
                             'type': 'button',
-                            'icon': 'rotate-ccw',
                             'label': 'Reset',
+                            'variant': 'ghost',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
                           },
                         ],
+                        'type': 'stack',
                         'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -5468,48 +5488,30 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'href': '/build',
-                        'label': 'Build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'x-circle',
                               },
                               {
-                                'type': 'typography',
-                                'content': 'BuildLoop',
                                 'variant': 'h2',
+                                'content': 'BuildLoop',
+                                'type': 'typography',
                               },
                               {
                                 'type': 'badge',
-                                'label': 'Failed',
                                 'variant': 'danger',
+                                'label': 'Failed',
                               },
                             ],
                           },
@@ -5517,24 +5519,24 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
+                            'type': 'wizard-progress',
                             'steps': [
                               {
                                 'id': '0',
                                 'title': 'Plan',
                               },
                               {
-                                'id': '1',
                                 'title': 'Execute',
+                                'id': '1',
                               },
                               {
                                 'id': '2',
                                 'title': 'Check',
                               },
                               {
-                                'id': '3',
                                 'title': 'Complete',
+                                'id': '3',
                               },
                             ],
                           },
@@ -5545,28 +5547,46 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                           },
                           {
                             'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'value': '@entity.currentStep',
                                 'label': 'Failed At Step',
-                                'type': 'stat-display',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
                             'label': 'Reset',
                             'variant': 'ghost',
-                            'icon': 'rotate-ccw',
                             'type': 'button',
-                            'action': 'RESET',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -5592,9 +5612,9 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   {
                     'navItems': [
                       {
-                        'label': 'Plan',
-                        'href': '/plan',
                         'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
                       },
                       {
                         'label': 'Build',
@@ -5603,25 +5623,25 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                       },
                       {
                         'label': 'Fix',
-                        'icon': 'wrench',
                         'href': '/fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
                     'children': [
                       {
                         'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'gap': 'sm',
                             'type': 'stack',
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-ordered',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'BuildLoop',
@@ -5634,17 +5654,17 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'variant': 'default',
                               },
                             ],
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'currentStep': '@entity.currentStep',
                             'type': 'wizard-progress',
                             'steps': [
                               {
-                                'title': 'Plan',
                                 'id': '0',
+                                'title': 'Plan',
                               },
                               {
                                 'title': 'Execute',
@@ -5659,19 +5679,19 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'id': '3',
                               },
                             ],
+                            'currentStep': '@entity.currentStep',
                           },
                           {
-                            'label': 'Start',
-                            'type': 'button',
-                            'icon': 'play',
                             'action': 'START',
+                            'label': 'Start',
+                            'icon': 'play',
+                            'type': 'button',
                             'variant': 'primary',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -5695,88 +5715,88 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'icon': 'hammer',
+                        'href': '/build',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                     'children': [
                       {
-                        'direction': 'vertical',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-ordered',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'BuildLoop',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
                                 'type': 'badge',
-                                'variant': 'default',
                                 'label': 'Idle',
+                                'variant': 'default',
                               },
                             ],
                             'align': 'center',
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
-                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
-                                'title': 'Plan',
                                 'id': '0',
+                                'title': 'Plan',
                               },
                               {
-                                'title': 'Execute',
                                 'id': '1',
+                                'title': 'Execute',
                               },
                               {
-                                'title': 'Check',
                                 'id': '2',
+                                'title': 'Check',
                               },
                               {
                                 'title': 'Complete',
                                 'id': '3',
                               },
                             ],
+                            'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                           },
                           {
                             'type': 'button',
-                            'action': 'START',
                             'label': 'Start',
                             'icon': 'play',
                             'variant': 'primary',
+                            'action': 'START',
                           },
                         ],
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'href': '/build',
-                        'label': 'Build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -5800,33 +5820,30 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'gap': 'sm',
                             'align': 'center',
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'list-ordered',
                                 'type': 'icon',
+                                'name': 'list-ordered',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'BuildLoop',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'variant': 'default',
                                 'type': 'badge',
                                 'label': 'Idle',
+                                'variant': 'default',
                               },
                             ],
                           },
@@ -5836,35 +5853,37 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                           {
                             'steps': [
                               {
-                                'id': '0',
                                 'title': 'Plan',
+                                'id': '0',
                               },
                               {
                                 'id': '1',
                                 'title': 'Execute',
                               },
                               {
-                                'id': '2',
                                 'title': 'Check',
+                                'id': '2',
                               },
                               {
-                                'id': '3',
                                 'title': 'Complete',
+                                'id': '3',
                               },
                             ],
                             'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
                           },
                           {
-                            'label': 'Start',
                             'type': 'button',
-                            'variant': 'primary',
+                            'label': 'Start',
                             'icon': 'play',
+                            'variant': 'primary',
                             'action': 'START',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Plan',
@@ -5872,16 +5891,17 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'clipboard-list',
                       },
                       {
-                        'label': 'Build',
                         'href': '/build',
                         'icon': 'hammer',
+                        'label': 'Build',
                       },
                       {
+                        'label': 'Fix',
                         'href': '/fix',
                         'icon': 'wrench',
-                        'label': 'Fix',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -6070,41 +6090,36 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'navItems': [
                       {
+                        'href': '/plan',
                         'icon': 'clipboard-list',
                         'label': 'Plan',
-                        'href': '/plan',
                       },
                       {
+                        'label': 'Build',
                         'href': '/build',
                         'icon': 'hammer',
-                        'label': 'Build',
                       },
                       {
-                        'icon': 'wrench',
                         'href': '/fix',
+                        'icon': 'wrench',
                         'label': 'Fix',
                       },
                     ],
                     'children': [
                       {
-                        'direction': 'vertical',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'justify': 'between',
-                            'gap': 'md',
                             'children': [
                               {
-                                'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
                                     'variant': 'h2',
@@ -6112,17 +6127,19 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                     'content': 'BuildLoop',
                                   },
                                 ],
+                                'direction': 'horizontal',
                                 'type': 'stack',
-                                'gap': 'md',
                               },
                               {
-                                'label': 'Open',
-                                'icon': 'sparkles',
                                 'type': 'button',
-                                'variant': 'primary',
+                                'label': 'Open',
                                 'action': 'GENERATE',
+                                'icon': 'sparkles',
+                                'variant': 'primary',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
@@ -6130,14 +6147,17 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                           {
                             'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'sparkles',
-                            'title': 'Nothing open',
                             'type': 'empty-state',
+                            'title': 'Nothing open',
                           },
                         ],
                         'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -6153,28 +6173,25 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   {
                     'children': [
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'sparkles',
+                            'type': 'icon',
                           },
                           {
+                            'type': 'typography',
                             'variant': 'h3',
                             'content': 'BuildLoop',
-                            'type': 'typography',
                           },
                         ],
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'badge',
@@ -6185,20 +6202,23 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'label': '@entity.model',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
-                        'type': 'form-section',
-                        'submitEvent': 'SAVE',
                         'cancelEvent': 'CLOSE',
-                        'mode': 'create',
                         'fields': [
                           'prompt',
                         ],
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'submitEvent': 'SAVE',
                       },
                     ],
-                    'gap': 'md',
                     'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -6232,23 +6252,38 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
-                            'gap': 'md',
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'stack',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'sparkles',
+                                    'type': 'icon',
                                   },
                                   {
                                     'type': 'typography',
@@ -6257,47 +6292,32 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                   },
                                 ],
                                 'gap': 'md',
+                                'type': 'stack',
                               },
                               {
-                                'icon': 'sparkles',
-                                'action': 'GENERATE',
-                                'type': 'button',
                                 'variant': 'primary',
+                                'type': 'button',
+                                'action': 'GENERATE',
                                 'label': 'Open',
+                                'icon': 'sparkles',
                               },
                             ],
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
-                            'icon': 'sparkles',
                             'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
                           },
                         ],
-                        'direction': 'vertical',
                         'gap': 'lg',
-                        'type': 'stack',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'href': '/build',
-                        'label': 'Build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                        'href': '/fix',
                       },
                     ],
                   },
@@ -6316,8 +6336,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'BuildLoopSaved',
                       'failure': 'BuildLoopSaveFailed',
+                      'success': 'BuildLoopSaved',
                     },
                   },
                 ],
@@ -6344,60 +6364,61 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
+                            'gap': 'md',
                             'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'sparkles',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'content': 'BuildLoop',
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
+                                    'content': 'BuildLoop',
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'md',
                               },
                               {
-                                'label': 'Open',
                                 'type': 'button',
-                                'action': 'GENERATE',
-                                'variant': 'primary',
                                 'icon': 'sparkles',
+                                'label': 'Open',
+                                'variant': 'primary',
+                                'action': 'GENERATE',
                               },
                             ],
                             'direction': 'horizontal',
-                            'justify': 'between',
-                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
-                            'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'sparkles',
                             'type': 'empty-state',
+                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
                     'navItems': [
                       {
-                        'href': '/plan',
-                        'label': 'Plan',
                         'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
                       },
                       {
                         'label': 'Build',
@@ -6405,13 +6426,12 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'hammer',
                       },
                       {
+                        'label': 'Fix',
                         'icon': 'wrench',
                         'href': '/fix',
-                        'label': 'Fix',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -6581,8 +6601,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'BuildLoop',
                   {
                     'emit': {
-                      'failure': 'BuildLoopLoadFailed',
                       'success': 'BuildLoopLoaded',
+                      'failure': 'BuildLoopLoadFailed',
                     },
                   },
                 ],
@@ -6591,70 +6611,70 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'href': '/build',
+                        'label': 'Build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
+                        'type': 'stack',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
                                 'direction': 'horizontal',
                                 'type': 'stack',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'wrench',
                                     'type': 'icon',
+                                    'name': 'wrench',
                                   },
                                   {
-                                    'content': 'Invoke Tool',
                                     'variant': 'h2',
                                     'type': 'typography',
+                                    'content': 'Invoke Tool',
                                   },
                                 ],
+                                'gap': 'md',
                               },
                               {
                                 'type': 'button',
-                                'variant': 'primary',
                                 'icon': 'wrench',
+                                'variant': 'primary',
                                 'action': 'INVOKE',
                                 'label': 'Open',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'wrench',
+                            'type': 'empty-state',
                           },
                         ],
                         'direction': 'vertical',
                         'gap': 'lg',
-                        'type': 'stack',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
                       },
                     ],
                     'appName': 'Schema Builder',
@@ -6671,40 +6691,40 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'modal',
                   {
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'wrench',
                             'type': 'icon',
+                            'name': 'wrench',
                           },
                           {
-                            'content': 'Invoke Tool',
                             'type': 'typography',
+                            'content': 'Invoke Tool',
                             'variant': 'h3',
                           },
                         ],
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'toolName',
                           'args',
                         ],
-                        'mode': 'create',
-                        'cancelEvent': 'CLOSE',
-                        'type': 'form-section',
-                        'submitEvent': 'SAVE',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -6729,8 +6749,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'BuildLoop',
                   {
                     'emit': {
-                      'failure': 'BuildLoopLoadFailed',
                       'success': 'BuildLoopLoaded',
+                      'failure': 'BuildLoopLoadFailed',
                     },
                   },
                 ],
@@ -6738,16 +6758,66 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'name': 'wrench',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Invoke Tool',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                              },
+                              {
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'Open',
+                                'action': 'INVOKE',
+                                'icon': 'wrench',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'icon': 'wrench',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'icon': 'clipboard-list',
                         'label': 'Plan',
                         'href': '/plan',
-                        'icon': 'clipboard-list',
                       },
                       {
-                        'href': '/build',
                         'icon': 'hammer',
+                        'href': '/build',
                         'label': 'Build',
                       },
                       {
@@ -6756,56 +6826,6 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'wrench',
                       },
                     ],
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'children': [
-                          {
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'children': [
-                              {
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'wrench',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'content': 'Invoke Tool',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                                'type': 'stack',
-                              },
-                              {
-                                'variant': 'primary',
-                                'action': 'INVOKE',
-                                'type': 'button',
-                                'icon': 'wrench',
-                                'label': 'Open',
-                              },
-                            ],
-                            'gap': 'md',
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'type': 'empty-state',
-                            'icon': 'wrench',
-                            'title': 'Nothing open',
-                          },
-                        ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -6822,8 +6842,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'BuildLoopSaved',
                       'failure': 'BuildLoopSaveFailed',
+                      'success': 'BuildLoopSaved',
                     },
                   },
                 ],
@@ -6850,72 +6870,72 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'icon': 'clipboard-list',
                         'label': 'Plan',
                         'href': '/plan',
-                        'icon': 'clipboard-list',
                       },
                       {
                         'icon': 'hammer',
-                        'href': '/build',
                         'label': 'Build',
+                        'href': '/build',
                       },
                       {
-                        'icon': 'wrench',
                         'label': 'Fix',
                         'href': '/fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
-                            'justify': 'between',
                             'children': [
                               {
-                                'gap': 'md',
+                                'type': 'stack',
                                 'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'wrench',
                                     'type': 'icon',
+                                    'name': 'wrench',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Invoke Tool',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'type': 'stack',
                               },
                               {
-                                'icon': 'wrench',
+                                'label': 'Open',
+                                'variant': 'primary',
                                 'type': 'button',
                                 'action': 'INVOKE',
-                                'variant': 'primary',
-                                'label': 'Open',
+                                'icon': 'wrench',
                               },
                             ],
+                            'direction': 'horizontal',
                             'gap': 'md',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
-                            'icon': 'wrench',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
                             'type': 'empty-state',
+                            'icon': 'wrench',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -7056,8 +7076,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'BuildLoop',
                   {
                     'emit': {
-                      'success': 'BuildLoopLoaded',
                       'failure': 'BuildLoopLoadFailed',
+                      'success': 'BuildLoopLoaded',
                     },
                   },
                 ],
@@ -7066,13 +7086,33 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'href': '/fix',
+                        'label': 'Fix',
+                      },
+                    ],
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'gauge',
@@ -7080,70 +7120,50 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
                               },
                               {
+                                'type': 'badge',
                                 'label': 'Normal',
                                 'variant': 'default',
-                                'type': 'badge',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
-                            'type': 'progress-bar',
                             'max': '@entity.max',
+                            'type': 'progress-bar',
+                            'value': '@entity.current',
                           },
                           {
                             'gap': 'md',
-                            'children': [
-                              {
-                                'value': '@entity.current',
-                                'label': 'Tokens Used',
-                                'type': 'stat-display',
-                              },
-                              {
-                                'label': 'Max Tokens',
-                                'value': '@entity.max',
-                                'type': 'stat-display',
-                              },
-                            ],
                             'direction': 'horizontal',
                             'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'stat-display',
+                                'label': 'Tokens Used',
+                                'value': '@entity.current',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'value': '@entity.max',
+                                'label': 'Max Tokens',
+                              },
+                            ],
                           },
                           {
                             'type': 'button',
                             'variant': 'ghost',
                             'icon': 'rotate-ccw',
-                            'action': 'RESET',
                             'label': 'Reset',
+                            'action': 'RESET',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'href': '/fix',
-                        'label': 'Fix',
                       },
                     ],
                     'appName': 'Schema Builder',
@@ -7176,84 +7196,84 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   {
                     'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
                         'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'gauge',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'label': 'Normal',
                                 'variant': 'default',
                                 'type': 'badge',
+                                'label': 'Normal',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
                             'type': 'progress-bar',
+                            'value': '@entity.current',
                             'max': '@entity.max',
                           },
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'type': 'stat-display',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'value': '@entity.max',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
                           },
                           {
-                            'icon': 'rotate-ccw',
                             'label': 'Reset',
-                            'action': 'RESET',
                             'variant': 'ghost',
+                            'icon': 'rotate-ccw',
                             'type': 'button',
+                            'action': 'RESET',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
                       },
                     ],
                   },
@@ -7295,67 +7315,64 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
                         'gap': 'lg',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'alert-triangle',
+                                'type': 'icon',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Token Usage',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                               {
-                                'label': 'Warning',
                                 'type': 'badge',
+                                'label': 'Warning',
                                 'variant': 'warning',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'variant': 'warning',
                             'message': 'Token usage approaching limit. Consider compacting.',
+                            'variant': 'warning',
                             'type': 'alert',
                           },
                           {
-                            'type': 'progress-bar',
-                            'value': '@entity.current',
                             'max': '@entity.max',
+                            'value': '@entity.current',
+                            'type': 'progress-bar',
                           },
                           {
-                            'gap': 'md',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'value': '@entity.current',
                                 'type': 'stat-display',
+                                'value': '@entity.current',
                                 'label': 'Tokens Used',
                               },
                               {
-                                'label': 'Max Tokens',
-                                'value': '@entity.max',
                                 'type': 'stat-display',
+                                'value': '@entity.max',
+                                'label': 'Max Tokens',
                               },
                             ],
+                            'gap': 'md',
                             'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'button',
@@ -7365,37 +7382,40 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'label': 'Compact',
                               },
                               {
-                                'action': 'RESET',
                                 'label': 'Reset',
-                                'variant': 'ghost',
-                                'icon': 'rotate-ccw',
                                 'type': 'button',
+                                'action': 'RESET',
+                                'icon': 'rotate-ccw',
+                                'variant': 'ghost',
                               },
                             ],
+                            'type': 'stack',
                             'gap': 'sm',
                             'direction': 'horizontal',
                           },
                         ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'href': '/build',
-                        'label': 'Build',
-                      },
-                      {
-                        'href': '/fix',
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                      },
-                    ],
                   },
                 ],
               ],
@@ -7425,26 +7445,27 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   {
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'alert-octagon',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Token Usage',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                               {
+                                'variant': 'danger',
                                 'type': 'badge',
                                 'label': 'Critical',
-                                'variant': 'danger',
                               },
                             ],
                           },
@@ -7462,68 +7483,67 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'progress-bar',
                           },
                           {
+                            'direction': 'horizontal',
                             'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
+                                'type': 'stat-display',
                                 'value': '@entity.current',
                               },
                               {
+                                'value': '@entity.max',
                                 'label': 'Max Tokens',
                                 'type': 'stat-display',
-                                'value': '@entity.max',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'type': 'button',
-                                'action': 'COMPACT',
                                 'label': 'Compact Now',
+                                'action': 'COMPACT',
+                                'variant': 'primary',
                                 'icon': 'minimize-2',
                               },
                               {
-                                'icon': 'rotate-ccw',
+                                'action': 'RESET',
                                 'label': 'Reset',
                                 'type': 'button',
                                 'variant': 'ghost',
-                                'action': 'RESET',
+                                'icon': 'rotate-ccw',
                               },
                             ],
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'icon': 'clipboard-list',
+                        'href': '/plan',
                         'label': 'Plan',
                       },
                       {
-                        'icon': 'hammer',
-                        'href': '/build',
                         'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
-                        'href': '/fix',
-                        'label': 'Fix',
                         'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7548,13 +7568,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'icon': 'clipboard-list',
                         'href': '/plan',
                         'label': 'Plan',
+                        'icon': 'clipboard-list',
                       },
                       {
                         'label': 'Build',
@@ -7562,8 +7580,8 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'hammer',
                       },
                       {
-                        'href': '/fix',
                         'icon': 'wrench',
+                        'href': '/fix',
                         'label': 'Fix',
                       },
                     ],
@@ -7575,23 +7593,23 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'children': [
                           {
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
                             'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'gauge',
                               },
                               {
-                                'content': 'Token Usage',
                                 'type': 'typography',
+                                'content': 'Token Usage',
                                 'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
-                                'variant': 'default',
                                 'label': 'Normal',
+                                'variant': 'default',
+                                'type': 'badge',
                               },
                             ],
                           },
@@ -7600,36 +7618,38 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                           },
                           {
                             'value': '@entity.current',
-                            'max': '@entity.max',
                             'type': 'progress-bar',
+                            'max': '@entity.max',
                           },
                           {
+                            'type': 'stack',
                             'gap': 'md',
                             'children': [
                               {
-                                'type': 'stat-display',
-                                'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
+                                'type': 'stat-display',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
+                                'value': '@entity.max',
                                 'label': 'Max Tokens',
                               },
                             ],
-                            'type': 'stack',
                             'direction': 'horizontal',
                           },
                           {
                             'label': 'Reset',
+                            'icon': 'rotate-ccw',
+                            'variant': 'ghost',
                             'action': 'RESET',
                             'type': 'button',
-                            'variant': 'ghost',
-                            'icon': 'rotate-ccw',
                           },
                         ],
                       },
                     ],
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7648,7 +7668,25 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'icon': 'hammer',
+                        'href': '/build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
                         'type': 'stack',
@@ -7656,80 +7694,62 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'gauge',
+                                'type': 'icon',
                               },
                               {
+                                'variant': 'h2',
                                 'content': 'Token Usage',
                                 'type': 'typography',
-                                'variant': 'h2',
                               },
                               {
-                                'label': 'Normal',
                                 'type': 'badge',
+                                'label': 'Normal',
                                 'variant': 'default',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'max': '@entity.max',
                             'type': 'progress-bar',
                             'value': '@entity.current',
+                            'max': '@entity.max',
                           },
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'md',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                               },
                               {
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                                 'type': 'stat-display',
-                                'label': 'Max Tokens',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
-                            'icon': 'rotate-ccw',
                             'action': 'RESET',
                             'label': 'Reset',
-                            'type': 'button',
+                            'icon': 'rotate-ccw',
                             'variant': 'ghost',
+                            'type': 'button',
                           },
                         ],
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'href': '/fix',
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7769,11 +7789,12 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
                         'label': 'Plan',
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
                       },
                       {
                         'icon': 'hammer',
@@ -7781,38 +7802,39 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'href': '/build',
                       },
                       {
-                        'href': '/fix',
                         'icon': 'wrench',
                         'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'alert-triangle',
                               },
                               {
-                                'content': 'Token Usage',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Token Usage',
                               },
                               {
-                                'variant': 'warning',
-                                'type': 'badge',
                                 'label': 'Warning',
+                                'type': 'badge',
+                                'variant': 'warning',
                               },
                             ],
+                            'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -7823,53 +7845,51 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'alert',
                           },
                           {
-                            'type': 'progress-bar',
-                            'value': '@entity.current',
                             'max': '@entity.max',
+                            'value': '@entity.current',
+                            'type': 'progress-bar',
                           },
                           {
-                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'type': 'stat-display',
                               },
                             ],
+                            'gap': 'md',
                             'direction': 'horizontal',
-                            'type': 'stack',
                           },
                           {
+                            'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'label': 'Compact',
                                 'action': 'COMPACT',
-                                'variant': 'primary',
+                                'label': 'Compact',
                                 'type': 'button',
+                                'variant': 'primary',
                                 'icon': 'minimize-2',
                               },
                               {
-                                'label': 'Reset',
-                                'action': 'RESET',
                                 'type': 'button',
+                                'label': 'Reset',
                                 'variant': 'ghost',
                                 'icon': 'rotate-ccw',
+                                'action': 'RESET',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
                       },
                     ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7897,25 +7917,24 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'align': 'center',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'alert-octagon',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Token Usage',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                               {
                                 'variant': 'danger',
@@ -7923,25 +7942,25 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'label': 'Critical',
                               },
                             ],
-                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'variant': 'error',
-                            'type': 'alert',
                             'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                            'type': 'alert',
+                            'variant': 'error',
                           },
                           {
-                            'max': '@entity.max',
                             'type': 'progress-bar',
                             'value': '@entity.current',
+                            'max': '@entity.max',
                           },
                           {
                             'type': 'stack',
                             'gap': 'md',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'label': 'Tokens Used',
@@ -7949,43 +7968,43 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'value': '@entity.current',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
                                 'value': '@entity.max',
+                                'label': 'Max Tokens',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'icon': 'minimize-2',
                                 'action': 'COMPACT',
                                 'label': 'Compact Now',
-                                'variant': 'primary',
                                 'type': 'button',
+                                'variant': 'primary',
                               },
                               {
-                                'icon': 'rotate-ccw',
-                                'label': 'Reset',
-                                'action': 'RESET',
                                 'type': 'button',
+                                'action': 'RESET',
+                                'label': 'Reset',
                                 'variant': 'ghost',
+                                'icon': 'rotate-ccw',
                               },
                             ],
-                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Plan',
                         'href': '/plan',
                         'icon': 'clipboard-list',
-                        'label': 'Plan',
                       },
                       {
                         'label': 'Build',
@@ -7998,6 +8017,7 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                         'icon': 'wrench',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -8026,21 +8046,33 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
                         'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'type': 'typography',
@@ -8048,12 +8080,14 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'variant': 'h2',
                               },
                               {
+                                'variant': 'default',
                                 'type': 'badge',
                                 'label': 'Normal',
-                                'variant': 'default',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -8064,49 +8098,35 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'type': 'progress-bar',
                           },
                           {
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'label': 'Tokens Used',
-                                'value': '@entity.current',
                                 'type': 'stat-display',
+                                'value': '@entity.current',
                               },
                               {
-                                'value': '@entity.max',
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'type': 'stat-display',
+                                'value': '@entity.max',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                           },
                           {
-                            'label': 'Reset',
                             'variant': 'ghost',
-                            'type': 'button',
                             'action': 'RESET',
                             'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'label': 'Reset',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'href': '/fix',
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                      },
-                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -8131,15 +8151,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -8151,54 +8167,59 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
                                 'variant': 'default',
                                 'label': 'Normal',
+                                'type': 'badge',
                               },
                             ],
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'max': '@entity.max',
                             'type': 'progress-bar',
                             'value': '@entity.current',
-                            'max': '@entity.max',
                           },
                           {
-                            'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'type': 'stat-display',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'label': 'Max Tokens',
                                 'type': 'stat-display',
                               },
                             ],
-                            'gap': 'md',
+                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                           {
+                            'type': 'button',
+                            'variant': 'ghost',
                             'label': 'Reset',
                             'icon': 'rotate-ccw',
-                            'variant': 'ghost',
-                            'type': 'button',
                             'action': 'RESET',
                           },
                         ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
                     'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                         'icon': 'clipboard-list',
                       },
                       {
@@ -8208,11 +8229,10 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                       },
                       {
                         'href': '/fix',
-                        'label': 'Fix',
                         'icon': 'wrench',
+                        'label': 'Fix',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8231,17 +8251,34 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'href': '/build',
+                        'label': 'Build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
                         'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -8249,23 +8286,25 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                               },
                               {
                                 'content': 'Token Usage',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'variant': 'default',
                                 'type': 'badge',
                                 'label': 'Normal',
+                                'variant': 'default',
                               },
                             ],
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'max': '@entity.max',
                             'type': 'progress-bar',
                             'value': '@entity.current',
-                            'max': '@entity.max',
                           },
                           {
                             'children': [
@@ -8275,9 +8314,9 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'value': '@entity.current',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'value': '@entity.max',
                               },
                             ],
                             'direction': 'horizontal',
@@ -8285,34 +8324,15 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'gap': 'md',
                           },
                           {
-                            'type': 'button',
-                            'variant': 'ghost',
-                            'label': 'Reset',
                             'icon': 'rotate-ccw',
+                            'variant': 'ghost',
                             'action': 'RESET',
+                            'type': 'button',
+                            'label': 'Reset',
                           },
                         ],
                       },
                     ],
-                    'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8340,21 +8360,36 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
+                            'align': 'center',
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'alert-octagon',
                                 'type': 'icon',
+                                'name': 'alert-octagon',
                               },
                               {
                                 'content': 'Token Usage',
@@ -8363,84 +8398,69 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                               },
                               {
                                 'type': 'badge',
-                                'variant': 'danger',
                                 'label': 'Critical',
+                                'variant': 'danger',
                               },
                             ],
                             'gap': 'sm',
-                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'message': 'Token usage critical. Compact immediately to avoid truncation.',
-                            'type': 'alert',
                             'variant': 'error',
+                            'type': 'alert',
+                            'message': 'Token usage critical. Compact immediately to avoid truncation.',
                           },
                           {
-                            'type': 'progress-bar',
-                            'max': '@entity.max',
                             'value': '@entity.current',
+                            'max': '@entity.max',
+                            'type': 'progress-bar',
                           },
                           {
+                            'children': [
+                              {
+                                'value': '@entity.current',
+                                'type': 'stat-display',
+                                'label': 'Tokens Used',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'label': 'Max Tokens',
+                                'value': '@entity.max',
+                              },
+                            ],
                             'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'md',
-                            'children': [
-                              {
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
-                                'value': '@entity.current',
-                              },
-                              {
-                                'type': 'stat-display',
-                                'value': '@entity.max',
-                                'label': 'Max Tokens',
-                              },
-                            ],
                           },
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'button',
-                                'action': 'COMPACT',
-                                'label': 'Compact Now',
                                 'variant': 'primary',
                                 'icon': 'minimize-2',
+                                'action': 'COMPACT',
+                                'label': 'Compact Now',
+                                'type': 'button',
                               },
                               {
-                                'label': 'Reset',
-                                'variant': 'ghost',
-                                'icon': 'rotate-ccw',
-                                'type': 'button',
                                 'action': 'RESET',
+                                'variant': 'ghost',
+                                'label': 'Reset',
+                                'type': 'button',
+                                'icon': 'rotate-ccw',
                               },
                             ],
+                            'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'href': '/build',
-                        'icon': 'hammer',
-                        'label': 'Build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'href': '/fix',
-                        'label': 'Fix',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8480,56 +8500,43 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'alert-triangle',
                                 'type': 'icon',
                               },
                               {
-                                'content': 'Token Usage',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Token Usage',
                               },
                               {
-                                'variant': 'warning',
-                                'type': 'badge',
                                 'label': 'Warning',
+                                'type': 'badge',
+                                'variant': 'warning',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'message': 'Token usage approaching limit. Consider compacting.',
-                            'variant': 'warning',
                             'type': 'alert',
+                            'variant': 'warning',
+                            'message': 'Token usage approaching limit. Consider compacting.',
                           },
                           {
                             'value': '@entity.current',
@@ -8537,50 +8544,63 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'max': '@entity.max',
                           },
                           {
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
                                 'value': '@entity.max',
+                                'label': 'Max Tokens',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'type': 'stack',
                             'children': [
                               {
-                                'label': 'Compact',
-                                'variant': 'primary',
-                                'icon': 'minimize-2',
                                 'action': 'COMPACT',
+                                'label': 'Compact',
+                                'icon': 'minimize-2',
+                                'variant': 'primary',
                                 'type': 'button',
                               },
                               {
-                                'type': 'button',
-                                'icon': 'rotate-ccw',
-                                'action': 'RESET',
-                                'label': 'Reset',
                                 'variant': 'ghost',
+                                'action': 'RESET',
+                                'icon': 'rotate-ccw',
+                                'type': 'button',
+                                'label': 'Reset',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -8608,36 +8628,14 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                        'href': '/fix',
-                      },
-                    ],
                     'children': [
                       {
-                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'content': 'Token Usage',
@@ -8646,50 +8644,72 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                               },
                               {
                                 'variant': 'default',
-                                'type': 'badge',
                                 'label': 'Normal',
+                                'type': 'badge',
                               },
                             ],
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'progress-bar',
                             'value': '@entity.current',
                             'max': '@entity.max',
+                            'type': 'progress-bar',
                           },
                           {
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'type': 'stat-display',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
                           },
                           {
-                            'action': 'RESET',
-                            'type': 'button',
-                            'variant': 'ghost',
                             'icon': 'rotate-ccw',
+                            'variant': 'ghost',
+                            'type': 'button',
+                            'action': 'RESET',
                             'label': 'Reset',
                           },
                         ],
                         'gap': 'lg',
+                        'type': 'stack',
                         'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -8716,32 +8736,36 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   {
                     'navItems': [
                       {
-                        'icon': 'clipboard-list',
                         'label': 'Plan',
+                        'icon': 'clipboard-list',
                         'href': '/plan',
                       },
                       {
-                        'icon': 'hammer',
                         'label': 'Build',
                         'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
-                        'href': '/fix',
                         'icon': 'wrench',
                         'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
+                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'children': [
                           {
+                            'align': 'center',
                             'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'type': 'typography',
@@ -8754,48 +8778,44 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'type': 'badge',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
-                            'type': 'progress-bar',
                             'max': '@entity.max',
+                            'type': 'progress-bar',
+                            'value': '@entity.current',
                           },
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'value': '@entity.current',
                                 'type': 'stat-display',
                                 'label': 'Tokens Used',
-                                'value': '@entity.current',
                               },
                               {
+                                'label': 'Max Tokens',
                                 'type': 'stat-display',
                                 'value': '@entity.max',
-                                'label': 'Max Tokens',
                               },
                             ],
                             'gap': 'md',
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'variant': 'ghost',
                             'label': 'Reset',
                             'type': 'button',
                             'action': 'RESET',
+                            'variant': 'ghost',
+                            'icon': 'rotate-ccw',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
                       },
                     ],
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -8814,32 +8834,52 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
                                 'label': 'Normal',
                                 'variant': 'default',
+                                'type': 'badge',
                               },
                             ],
+                            'type': 'stack',
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -8850,13 +8890,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                             'max': '@entity.max',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
+                                'value': '@entity.current',
                                 'type': 'stat-display',
                                 'label': 'Tokens Used',
-                                'value': '@entity.current',
                               },
                               {
                                 'type': 'stat-display',
@@ -8864,38 +8902,20 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
                                 'label': 'Max Tokens',
                               },
                             ],
+                            'direction': 'horizontal',
                             'gap': 'md',
+                            'type': 'stack',
                           },
                           {
                             'type': 'button',
+                            'action': 'RESET',
                             'icon': 'rotate-ccw',
                             'variant': 'ghost',
-                            'action': 'RESET',
                             'label': 'Reset',
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'href': '/build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8919,7 +8939,7 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -8931,6 +8951,10 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -8954,7 +8978,9 @@ export const StdAgentBuilderBuildLoopOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -8984,20 +9010,23 @@ export function isStdAgentBuilderBuildLoopOrbitalParams(p: object): p is StdAgen
 /**
  * Tunable params for the BuildFixOrbital orbital.
  *
- * Canonical entity: BuildFix (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BuildFix — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentBuilderBuildFixOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -9006,22 +9035,26 @@ export interface StdAgentBuilderBuildFixOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BuildFixOrbital orbital with consumer params. */
 export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BuildFix';
+  const canonicalName = params.entityName ?? 'BuildFix';
   const built = makeOrbitalWithUses({
     name: 'BuildFixOrbital',
     uses: [],
@@ -9301,6 +9334,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'navItems': [
                       {
                         'href': '/plan',
@@ -9308,71 +9343,69 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'label': 'Plan',
                       },
                       {
-                        'label': 'Build',
                         'href': '/build',
+                        'label': 'Build',
                         'icon': 'hammer',
                       },
                       {
-                        'icon': 'wrench',
                         'label': 'Fix',
                         'href': '/fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'wrench',
+                                'type': 'icon',
                               },
                               {
+                                'content': 'Validation-Fix Loop',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Validation-Fix Loop',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'gap': 'md',
                                 'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'variant': 'body',
+                                    'type': 'typography',
                                     'content': 'Enter the target to validate and auto-fix',
                                   },
                                   {
+                                    'submitEvent': 'FIX',
+                                    'type': 'form-section',
+                                    'mode': 'edit',
+                                    'entity': '@entity',
                                     'fields': [
                                       'target',
                                     ],
-                                    'entity': '@entity',
-                                    'type': 'form-section',
-                                    'mode': 'edit',
-                                    'submitEvent': 'FIX',
                                   },
                                 ],
-                                'gap': 'md',
-                                'type': 'stack',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -9415,43 +9448,42 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
                     'navItems': [
                       {
                         'icon': 'clipboard-list',
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                       },
                       {
                         'href': '/build',
-                        'icon': 'hammer',
                         'label': 'Build',
+                        'icon': 'hammer',
                       },
                       {
-                        'label': 'Fix',
                         'href': '/fix',
+                        'label': 'Fix',
                         'icon': 'wrench',
                       },
                     ],
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'shield-check',
                           },
                           {
-                            'variant': 'h3',
                             'type': 'typography',
                             'content': 'Validating...',
+                            'variant': 'h3',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
-                            'gap': 'md',
+                            'direction': 'horizontal',
                             'justify': 'center',
                             'children': [
                               {
@@ -9459,19 +9491,20 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'label': '@entity.target',
                               },
                               {
-                                'label': '@entity.maxAttempts',
                                 'type': 'badge',
+                                'label': '@entity.maxAttempts',
                               },
                             ],
+                            'gap': 'md',
                             'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -9494,100 +9527,81 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'type': 'stack',
                         'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'sm',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'stack',
-                                'align': 'center',
                                 'gap': 'sm',
                                 'children': [
                                   {
-                                    'name': 'check-circle',
                                     'type': 'icon',
+                                    'name': 'check-circle',
                                   },
                                   {
-                                    'content': 'Validation Passed',
                                     'type': 'typography',
                                     'variant': 'h2',
+                                    'content': 'Validation Passed',
                                   },
                                 ],
                                 'direction': 'horizontal',
+                                'align': 'center',
                               },
                               {
-                                'action': 'RESET',
                                 'type': 'button',
                                 'label': 'New Target',
+                                'action': 'RESET',
                                 'variant': 'ghost',
                                 'icon': 'rotate-ccw',
                               },
                             ],
-                            'justify': 'between',
                             'align': 'center',
-                            'gap': 'sm',
+                            'justify': 'between',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'cols': 2,
+                            'type': 'simple-grid',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Fix Attempts',
-                                'value': '@entity.fixAttempts',
                                 'icon': 'wrench',
+                                'type': 'stat-display',
+                                'value': '@entity.fixAttempts',
                               },
                               {
+                                'type': 'stat-display',
                                 'value': 'Passed',
                                 'label': 'Status',
                                 'icon': 'check',
-                                'type': 'stat-display',
                               },
                             ],
-                            'type': 'simple-grid',
+                            'cols': 2,
                           },
                           {
                             'children': [
                               {
-                                'direction': 'vertical',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'content': 'Target',
+                                    'type': 'typography',
                                     'variant': 'caption',
                                   },
                                   {
-                                    'variant': 'body',
                                     'content': '@entity.target',
                                     'type': 'typography',
+                                    'variant': 'body',
                                   },
                                 ],
+                                'direction': 'vertical',
                                 'type': 'stack',
                                 'gap': 'sm',
                               },
@@ -9595,9 +9609,28 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'card',
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -9646,58 +9679,43 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'href': '/build',
-                        'label': 'Build',
-                        'icon': 'hammer',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
                     'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'justify': 'between',
+                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'cpu',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Generating fix...',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'direction': 'horizontal',
                                 'type': 'stack',
                                 'align': 'center',
                                 'gap': 'sm',
                               },
                               {
-                                'type': 'badge',
                                 'label': '@entity.fixAttempts',
+                                'type': 'badge',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -9709,14 +9727,14 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'direction': 'vertical',
                                 'children': [
                                   {
-                                    'variant': 'caption',
                                     'type': 'typography',
                                     'content': 'Validation Errors',
+                                    'variant': 'caption',
                                   },
                                   {
-                                    'type': 'alert',
-                                    'variant': 'error',
                                     'message': '@entity.validationErrors',
+                                    'variant': 'error',
+                                    'type': 'alert',
                                   },
                                 ],
                                 'type': 'stack',
@@ -9728,10 +9746,25 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'spinner',
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                        'href': '/plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                        'href': '/fix',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -9759,33 +9792,16 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'href': '/build',
-                        'label': 'Build',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
                     'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'align': 'center',
                         'gap': 'lg',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'x-circle',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
@@ -9793,60 +9809,77 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'variant': 'h2',
                           },
                           {
+                            'type': 'alert',
                             'variant': 'error',
                             'message': '@entity.error',
-                            'type': 'alert',
                           },
                           {
                             'children': [
                               {
+                                'label': 'Attempts Used',
                                 'icon': 'wrench',
                                 'type': 'stat-display',
-                                'label': 'Attempts Used',
                                 'value': '@entity.fixAttempts',
                               },
                               {
                                 'type': 'stat-display',
+                                'value': '@entity.errorCount',
                                 'icon': 'alert-triangle',
                                 'label': 'Remaining Errors',
-                                'value': '@entity.errorCount',
                               },
                             ],
                             'type': 'simple-grid',
                             'cols': 2,
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'content': 'Last Validation Errors',
                                     'variant': 'caption',
+                                    'content': 'Last Validation Errors',
                                     'type': 'typography',
                                   },
                                   {
-                                    'variant': 'body',
                                     'content': '@entity.validationErrors',
+                                    'variant': 'body',
                                     'type': 'typography',
                                   },
                                 ],
-                                'direction': 'vertical',
+                                'type': 'stack',
                                 'gap': 'sm',
+                                'direction': 'vertical',
                               },
                             ],
-                            'type': 'card',
                           },
                           {
-                            'action': 'RESET',
-                            'variant': 'primary',
-                            'type': 'button',
                             'icon': 'rotate-ccw',
                             'label': 'Retry',
+                            'variant': 'primary',
+                            'action': 'RESET',
+                            'type': 'button',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'label': 'Build',
+                        'icon': 'hammer',
+                        'href': '/build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'href': '/fix',
+                        'label': 'Fix',
                       },
                     ],
                   },
@@ -9872,8 +9905,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'agent/invoke',
                   'apply-fix',
                   {
-                    'fix': '@payload.fix',
                     'target': '@entity.target',
+                    'fix': '@payload.fix',
                   },
                 ],
                 [
@@ -9882,33 +9915,34 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   {
                     'navItems': [
                       {
-                        'icon': 'clipboard-list',
                         'href': '/plan',
+                        'icon': 'clipboard-list',
                         'label': 'Plan',
                       },
                       {
                         'label': 'Build',
-                        'href': '/build',
                         'icon': 'hammer',
+                        'href': '/build',
                       },
                       {
-                        'icon': 'wrench',
-                        'label': 'Fix',
                         'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
                       },
                     ],
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'tool',
                           },
                           {
-                            'type': 'typography',
-                            'content': 'Applying fix...',
                             'variant': 'h3',
+                            'content': 'Applying fix...',
+                            'type': 'typography',
                           },
                           {
                             'type': 'spinner',
@@ -9917,32 +9951,31 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'card',
                             'children': [
                               {
-                                'direction': 'vertical',
                                 'type': 'stack',
                                 'gap': 'sm',
                                 'children': [
                                   {
                                     'content': 'Proposed Fix',
-                                    'type': 'typography',
                                     'variant': 'caption',
+                                    'type': 'typography',
                                   },
                                   {
-                                    'variant': 'body',
                                     'type': 'typography',
+                                    'variant': 'body',
                                     'content': '@entity.currentFix',
                                   },
                                 ],
+                                'direction': 'vertical',
                               },
                             ],
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'lg',
                         'direction': 'vertical',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -9971,95 +10004,95 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'main',
                   {
                     'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'align': 'center',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'x-circle',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Fix Loop Failed',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Fix Loop Failed',
                           },
                           {
-                            'message': '@entity.error',
-                            'type': 'alert',
                             'variant': 'error',
+                            'type': 'alert',
+                            'message': '@entity.error',
                           },
                           {
+                            'type': 'simple-grid',
+                            'cols': 2,
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'value': '@entity.fixAttempts',
+                                'type': 'stat-display',
                                 'icon': 'wrench',
                                 'label': 'Attempts Used',
                               },
                               {
-                                'icon': 'alert-triangle',
-                                'label': 'Remaining Errors',
-                                'value': '@entity.errorCount',
                                 'type': 'stat-display',
+                                'icon': 'alert-triangle',
+                                'value': '@entity.errorCount',
+                                'label': 'Remaining Errors',
                               },
                             ],
-                            'type': 'simple-grid',
-                            'cols': 2,
                           },
                           {
                             'type': 'card',
                             'children': [
                               {
                                 'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'vertical',
                                 'children': [
                                   {
-                                    'variant': 'caption',
                                     'type': 'typography',
+                                    'variant': 'caption',
                                     'content': 'Last Validation Errors',
                                   },
                                   {
-                                    'type': 'typography',
                                     'variant': 'body',
                                     'content': '@entity.validationErrors',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
                               },
                             ],
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'label': 'Retry',
-                            'action': 'RESET',
                             'type': 'button',
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
+                            'label': 'Retry',
                             'variant': 'primary',
                           },
                         ],
-                        'type': 'stack',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -10085,29 +10118,10 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
                     'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'direction': 'vertical',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
@@ -10115,8 +10129,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                           },
                           {
                             'content': 'Validating...',
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
                           },
                           {
                             'type': 'spinner',
@@ -10132,14 +10146,33 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'label': '@entity.maxAttempts',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'justify': 'center',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'md',
+                            'justify': 'center',
                           },
                         ],
+                        'align': 'center',
                         'gap': 'lg',
                         'type': 'stack',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                   },
@@ -10169,39 +10202,38 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'href': '/plan',
-                        'label': 'Plan',
                         'icon': 'clipboard-list',
+                        'label': 'Plan',
                       },
                       {
-                        'href': '/build',
                         'icon': 'hammer',
+                        'href': '/build',
                         'label': 'Build',
                       },
                       {
-                        'href': '/fix',
                         'icon': 'wrench',
+                        'href': '/fix',
                         'label': 'Fix',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'align': 'center',
                         'direction': 'vertical',
                         'gap': 'lg',
-                        'align': 'center',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'x-circle',
                           },
                           {
-                            'variant': 'h2',
-                            'content': 'Fix Loop Failed',
                             'type': 'typography',
+                            'content': 'Fix Loop Failed',
+                            'variant': 'h2',
                           },
                           {
                             'type': 'alert',
@@ -10209,53 +10241,54 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'message': '@entity.error',
                           },
                           {
+                            'cols': 2,
+                            'type': 'simple-grid',
                             'children': [
                               {
-                                'label': 'Attempts Used',
                                 'value': '@entity.fixAttempts',
-                                'type': 'stat-display',
+                                'label': 'Attempts Used',
                                 'icon': 'wrench',
+                                'type': 'stat-display',
                               },
                               {
-                                'value': '@entity.errorCount',
                                 'type': 'stat-display',
+                                'value': '@entity.errorCount',
                                 'label': 'Remaining Errors',
                                 'icon': 'alert-triangle',
                               },
                             ],
-                            'cols': 2,
-                            'type': 'simple-grid',
                           },
                           {
                             'children': [
                               {
+                                'direction': 'vertical',
+                                'gap': 'sm',
                                 'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'typography',
-                                    'content': 'Last Validation Errors',
                                     'variant': 'caption',
+                                    'content': 'Last Validation Errors',
+                                    'type': 'typography',
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'body',
                                     'content': '@entity.validationErrors',
+                                    'variant': 'body',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'sm',
                               },
                             ],
                             'type': 'card',
                           },
                           {
-                            'type': 'button',
-                            'label': 'Retry',
-                            'action': 'RESET',
-                            'variant': 'primary',
                             'icon': 'rotate-ccw',
+                            'label': 'Retry',
+                            'variant': 'primary',
+                            'type': 'button',
+                            'action': 'RESET',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
                     'appName': 'Schema Builder',
@@ -10307,68 +10340,48 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'href': '/fix',
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                      },
-                    ],
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'direction': 'horizontal',
                             'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'wrench',
                                 'type': 'icon',
+                                'name': 'wrench',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Validation-Fix Loop',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
                                 'children': [
                                   {
                                     'type': 'typography',
-                                    'variant': 'body',
                                     'content': 'Enter the target to validate and auto-fix',
+                                    'variant': 'body',
                                   },
                                   {
                                     'fields': [
                                       'target',
                                     ],
                                     'entity': '@entity',
-                                    'mode': 'edit',
                                     'type': 'form-section',
+                                    'mode': 'edit',
                                     'submitEvent': 'FIX',
                                   },
                                 ],
@@ -10377,8 +10390,28 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                   },
@@ -10429,33 +10462,15 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'icon': 'wrench',
-                        'href': '/fix',
-                      },
-                    ],
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'gap': 'lg',
                         'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
+                            'align': 'center',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'align': 'center',
                             'gap': 'sm',
                             'children': [
                               {
@@ -10463,8 +10478,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'name': 'wrench',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Validation-Fix Loop',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                             ],
@@ -10473,35 +10488,53 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': 'Enter the target to validate and auto-fix',
+                                    'variant': 'body',
                                   },
                                   {
+                                    'entity': '@entity',
+                                    'mode': 'edit',
+                                    'type': 'form-section',
+                                    'submitEvent': 'FIX',
                                     'fields': [
                                       'target',
                                     ],
-                                    'entity': '@entity',
-                                    'type': 'form-section',
-                                    'mode': 'edit',
-                                    'submitEvent': 'FIX',
                                   },
                                 ],
+                                'type': 'stack',
+                                'gap': 'md',
                                 'direction': 'vertical',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                   },
                 ],
@@ -10638,8 +10671,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'BuildFix',
                   {
                     'emit': {
-                      'success': 'BuildFixLoaded',
                       'failure': 'BuildFixLoadFailed',
+                      'success': 'BuildFixLoaded',
                     },
                   },
                 ],
@@ -10647,49 +10680,52 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Plan',
                         'href': '/plan',
                         'icon': 'clipboard-list',
-                        'label': 'Plan',
                       },
                       {
-                        'label': 'Build',
-                        'icon': 'hammer',
                         'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
                       },
                       {
+                        'href': '/fix',
                         'label': 'Fix',
                         'icon': 'wrench',
-                        'href': '/fix',
                       },
                     ],
                     'appName': 'Schema Builder',
                     'children': [
                       {
                         'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'list-ordered',
                                 'type': 'icon',
+                                'name': 'list-ordered',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                                 'content': 'BuildFix',
                               },
                               {
                                 'type': 'badge',
-                                'variant': 'default',
                                 'label': 'Idle',
+                                'variant': 'default',
                               },
                             ],
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -10717,18 +10753,15 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             ],
                           },
                           {
+                            'icon': 'play',
                             'label': 'Start',
                             'variant': 'primary',
                             'action': 'START',
-                            'icon': 'play',
                             'type': 'button',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -10752,7 +10785,6 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'clipboard-list',
@@ -10760,27 +10792,24 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'href': '/plan',
                       },
                       {
-                        'href': '/build',
-                        'label': 'Build',
                         'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
                       },
                       {
-                        'icon': 'wrench',
                         'href': '/fix',
+                        'icon': 'wrench',
                         'label': 'Fix',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -10792,18 +10821,20 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
                                 'variant': 'warning',
+                                'type': 'badge',
                                 'label': 'In Progress',
                               },
                             ],
+                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'currentStep': '@entity.currentStep',
-                            'type': 'wizard-progress',
                             'steps': [
                               {
                                 'title': 'Validate',
@@ -10814,55 +10845,57 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'title': 'Analyze',
                               },
                               {
-                                'id': '2',
                                 'title': 'Fix',
+                                'id': '2',
                               },
                               {
                                 'id': '3',
                                 'title': 'Re-validate',
                               },
                             ],
+                            'type': 'wizard-progress',
                           },
                           {
-                            'children': [
-                              {
-                                'type': 'stat-display',
-                                'value': '@entity.currentStep',
-                                'label': 'Current Step',
-                              },
-                              {
-                                'label': 'Total Steps',
-                                'value': '@entity.totalSteps',
-                                'type': 'stat-display',
-                              },
-                            ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
                             'align': 'center',
-                          },
-                          {
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'icon': 'chevron-right',
-                                'type': 'button',
-                                'label': 'Advance',
-                                'action': 'ADVANCE',
-                                'variant': 'primary',
+                                'value': '@entity.currentStep',
+                                'type': 'stat-display',
+                                'label': 'Current Step',
                               },
                               {
-                                'action': 'RESET',
-                                'type': 'button',
-                                'variant': 'ghost',
-                                'icon': 'rotate-ccw',
-                                'label': 'Reset',
+                                'type': 'stat-display',
+                                'label': 'Total Steps',
+                                'value': '@entity.totalSteps',
                               },
                             ],
+                          },
+                          {
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
+                            'children': [
+                              {
+                                'label': 'Advance',
+                                'action': 'ADVANCE',
+                                'icon': 'chevron-right',
+                                'variant': 'primary',
+                                'type': 'button',
+                              },
+                              {
+                                'type': 'button',
+                                'icon': 'rotate-ccw',
+                                'variant': 'ghost',
+                                'label': 'Reset',
+                                'action': 'RESET',
+                              },
+                            ],
+                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
                     'appName': 'Schema Builder',
@@ -10896,44 +10929,45 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'href': '/plan',
                       },
                       {
-                        'icon': 'hammer',
                         'label': 'Build',
                         'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
-                        'href': '/fix',
                         'label': 'Fix',
                         'icon': 'wrench',
+                        'href': '/fix',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-ordered',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                                 'content': 'BuildFix',
                               },
                               {
+                                'type': 'badge',
                                 'label': 'Idle',
                                 'variant': 'default',
-                                'type': 'badge',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -10941,36 +10975,35 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                           {
                             'steps': [
                               {
-                                'title': 'Validate',
                                 'id': '0',
+                                'title': 'Validate',
                               },
                               {
                                 'id': '1',
                                 'title': 'Analyze',
                               },
                               {
-                                'id': '2',
                                 'title': 'Fix',
+                                'id': '2',
                               },
                               {
-                                'id': '3',
                                 'title': 'Re-validate',
+                                'id': '3',
                               },
                             ],
                             'currentStep': '@entity.currentStep',
                             'type': 'wizard-progress',
                           },
                           {
-                            'label': 'Start',
-                            'variant': 'primary',
                             'icon': 'play',
-                            'type': 'button',
+                            'label': 'Start',
                             'action': 'START',
+                            'variant': 'primary',
+                            'type': 'button',
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -11001,37 +11034,39 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
                       },
                       {
                         'label': 'Build',
-                        'icon': 'hammer',
                         'href': '/build',
+                        'icon': 'hammer',
                       },
                       {
                         'icon': 'wrench',
-                        'label': 'Fix',
                         'href': '/fix',
+                        'label': 'Fix',
                       },
                     ],
-                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
-                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
-                                'name': 'loader',
                                 'type': 'icon',
+                                'name': 'loader',
                               },
                               {
-                                'content': 'BuildFix',
                                 'variant': 'h2',
+                                'content': 'BuildFix',
                                 'type': 'typography',
                               },
                               {
@@ -11040,46 +11075,39 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'variant': 'warning',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
-                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
                                 'id': '0',
                                 'title': 'Validate',
                               },
                               {
-                                'title': 'Analyze',
                                 'id': '1',
+                                'title': 'Analyze',
                               },
                               {
                                 'id': '2',
                                 'title': 'Fix',
                               },
                               {
-                                'id': '3',
                                 'title': 'Re-validate',
+                                'id': '3',
                               },
                             ],
+                            'currentStep': '@entity.currentStep',
+                            'type': 'wizard-progress',
                           },
                           {
-                            'gap': 'sm',
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'stat-display',
-                                'value': '@entity.currentStep',
                                 'label': 'Current Step',
+                                'value': '@entity.currentStep',
                               },
                               {
                                 'label': 'Total Steps',
@@ -11087,31 +11115,36 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'value': '@entity.totalSteps',
                               },
                             ],
+                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'icon': 'chevron-right',
                                 'label': 'Advance',
                                 'action': 'ADVANCE',
-                                'type': 'button',
+                                'icon': 'chevron-right',
                                 'variant': 'primary',
+                                'type': 'button',
                               },
                               {
-                                'icon': 'rotate-ccw',
-                                'type': 'button',
-                                'variant': 'ghost',
                                 'action': 'RESET',
+                                'icon': 'rotate-ccw',
+                                'variant': 'ghost',
                                 'label': 'Reset',
+                                'type': 'button',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'gap': 'lg',
                       },
                     ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -11138,13 +11171,11 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
@@ -11156,17 +11187,20 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'content': 'BuildFix',
                               },
                               {
-                                'variant': 'success',
                                 'type': 'badge',
+                                'variant': 'success',
                                 'label': 'Completed',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'currentStep': '@entity.totalSteps',
                             'type': 'wizard-progress',
                             'steps': [
                               {
@@ -11174,34 +11208,33 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'title': 'Validate',
                               },
                               {
-                                'id': '1',
                                 'title': 'Analyze',
+                                'id': '1',
                               },
                               {
                                 'id': '2',
                                 'title': 'Fix',
                               },
                               {
-                                'id': '3',
                                 'title': 'Re-validate',
+                                'id': '3',
                               },
                             ],
+                            'currentStep': '@entity.totalSteps',
                           },
                           {
-                            'message': 'All steps completed successfully.',
-                            'type': 'alert',
                             'variant': 'success',
+                            'type': 'alert',
+                            'message': 'All steps completed successfully.',
                           },
                           {
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
                             'label': 'Reset',
                             'variant': 'ghost',
-                            'type': 'button',
-                            'action': 'RESET',
-                            'icon': 'rotate-ccw',
                           },
                         ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
                     'navItems': [
@@ -11211,14 +11244,14 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'icon': 'clipboard-list',
                       },
                       {
-                        'label': 'Build',
                         'icon': 'hammer',
                         'href': '/build',
+                        'label': 'Build',
                       },
                       {
-                        'href': '/fix',
-                        'label': 'Fix',
                         'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
                       },
                     ],
                     'appName': 'Schema Builder',
@@ -11240,15 +11273,34 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                        'href': '/fix',
+                      },
+                    ],
                     'children': [
                       {
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
@@ -11256,12 +11308,12 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'BuildFix',
+                                'variant': 'h2',
                               },
                               {
-                                'variant': 'danger',
                                 'type': 'badge',
+                                'variant': 'danger',
                                 'label': 'Failed',
                               },
                             ],
@@ -11270,10 +11322,12 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'divider',
                           },
                           {
+                            'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
-                                'title': 'Validate',
                                 'id': '0',
+                                'title': 'Validate',
                               },
                               {
                                 'id': '1',
@@ -11284,12 +11338,10 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'id': '2',
                               },
                               {
-                                'id': '3',
                                 'title': 'Re-validate',
+                                'id': '3',
                               },
                             ],
-                            'type': 'wizard-progress',
-                            'currentStep': '@entity.currentStep',
                           },
                           {
                             'message': 'Pipeline failed at the current step.',
@@ -11298,6 +11350,7 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                           },
                           {
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'value': '@entity.currentStep',
@@ -11305,40 +11358,20 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'label': 'Failed At Step',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
                           },
                           {
                             'type': 'button',
-                            'label': 'Reset',
                             'action': 'RESET',
-                            'variant': 'ghost',
                             'icon': 'rotate-ccw',
+                            'variant': 'ghost',
+                            'label': 'Reset',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                      },
-                      {
-                        'href': '/build',
-                        'icon': 'hammer',
-                        'label': 'Build',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -11362,21 +11395,16 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-ordered',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'BuildFix',
@@ -11384,16 +11412,21 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'type': 'typography',
                               },
                               {
+                                'type': 'badge',
                                 'label': 'Idle',
                                 'variant': 'default',
-                                'type': 'badge',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'wizard-progress',
                             'steps': [
                               {
                                 'id': '0',
@@ -11404,33 +11437,33 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'title': 'Analyze',
                               },
                               {
-                                'title': 'Fix',
                                 'id': '2',
+                                'title': 'Fix',
                               },
                               {
-                                'id': '3',
                                 'title': 'Re-validate',
+                                'id': '3',
                               },
                             ],
                             'currentStep': '@entity.currentStep',
-                            'type': 'wizard-progress',
                           },
                           {
+                            'icon': 'play',
                             'type': 'button',
                             'action': 'START',
                             'variant': 'primary',
-                            'icon': 'play',
                             'label': 'Start',
                           },
                         ],
+                        'gap': 'lg',
                         'direction': 'vertical',
-                        'type': 'stack',
                       },
                     ],
+                    'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                         'icon': 'clipboard-list',
                       },
                       {
@@ -11467,43 +11500,45 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'list-ordered',
                                 'type': 'icon',
+                                'name': 'list-ordered',
                               },
                               {
                                 'content': 'BuildFix',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                               {
+                                'label': 'Idle',
                                 'variant': 'default',
                                 'type': 'badge',
-                                'label': 'Idle',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
-                                'id': '0',
                                 'title': 'Validate',
+                                'id': '0',
                               },
                               {
                                 'id': '1',
@@ -11518,35 +11553,33 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'id': '3',
                               },
                             ],
-                            'currentStep': '@entity.currentStep',
                           },
                           {
+                            'type': 'button',
                             'label': 'Start',
-                            'variant': 'primary',
                             'icon': 'play',
                             'action': 'START',
-                            'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Plan',
                         'icon': 'clipboard-list',
+                        'label': 'Plan',
                         'href': '/plan',
                       },
                       {
                         'label': 'Build',
-                        'href': '/build',
                         'icon': 'hammer',
+                        'href': '/build',
                       },
                       {
+                        'icon': 'wrench',
                         'label': 'Fix',
                         'href': '/fix',
-                        'icon': 'wrench',
                       },
                     ],
                   },
@@ -11572,57 +11605,38 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Plan',
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'href': '/build',
-                        'label': 'Build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
+                    'appName': 'Schema Builder',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'list-ordered',
                                 'type': 'icon',
+                                'name': 'list-ordered',
                               },
                               {
-                                'content': 'BuildFix',
                                 'variant': 'h2',
+                                'content': 'BuildFix',
                                 'type': 'typography',
                               },
                               {
-                                'variant': 'default',
                                 'type': 'badge',
                                 'label': 'Idle',
+                                'variant': 'default',
                               },
                             ],
-                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
                             'steps': [
                               {
@@ -11638,20 +11652,39 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'id': '2',
                               },
                               {
-                                'title': 'Re-validate',
                                 'id': '3',
+                                'title': 'Re-validate',
                               },
                             ],
-                            'type': 'wizard-progress',
                           },
                           {
-                            'variant': 'primary',
                             'action': 'START',
-                            'type': 'button',
                             'label': 'Start',
                             'icon': 'play',
+                            'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Plan',
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'href': '/fix',
+                        'label': 'Fix',
                       },
                     ],
                   },
@@ -11742,8 +11775,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'BuildFix',
                   {
                     'emit': {
-                      'success': 'BuildFixLoaded',
                       'failure': 'BuildFixLoadFailed',
+                      'success': 'BuildFixLoaded',
                     },
                   },
                 ],
@@ -11751,22 +11784,22 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-12',
                     'direction': 'vertical',
                     'gap': 'md',
-                    'align': 'center',
-                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'content': 'Loading…',
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
-                        'content': 'Loading…',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -11780,74 +11813,52 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'href': '/build',
-                        'icon': 'hammer',
-                        'label': 'Build',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                      },
-                    ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'type': 'stack',
                         'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'type': 'stack',
-                                'align': 'center',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'children': [
-                                  {
-                                    'name': 'alert-triangle',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'variant': 'h2',
-                                    'type': 'typography',
-                                    'content': 'Validation Errors',
-                                  },
-                                ],
-                              },
-                            ],
                             'type': 'stack',
                             'align': 'center',
-                            'gap': 'md',
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'alert-triangle',
+                                  },
+                                  {
+                                    'content': 'Validation Errors',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'align': 'center',
+                              },
+                            ],
                             'direction': 'horizontal',
                             'justify': 'between',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
                             'fields': [
                               {
-                                'name': 'target',
                                 'label': 'Target',
-                                'icon': 'alert-triangle',
                                 'variant': 'h4',
+                                'icon': 'alert-triangle',
+                                'name': 'target',
                               },
                               {
                                 'variant': 'badge',
-                                'label': 'Error Count',
                                 'name': 'errorCount',
+                                'label': 'Error Count',
                               },
                               {
                                 'variant': 'caption',
@@ -11856,13 +11867,35 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                               },
                             ],
                             'type': 'data-grid',
+                            'entity': '@payload.data',
                           },
                           {
                             'icon': 'plus',
-                            'type': 'floating-action-button',
                             'action': 'INIT',
+                            'type': 'floating-action-button',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'label': 'Fix',
+                        'href': '/fix',
+                        'icon': 'wrench',
                       },
                     ],
                   },
@@ -11878,36 +11911,36 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
                     'children': [
                       {
+                        'name': 'alert-triangle',
                         'type': 'icon',
                         'color': 'destructive',
-                        'name': 'alert-triangle',
                       },
                       {
-                        'content': 'Failed to load buildfix',
+                        'type': 'typography',
                         'variant': 'h3',
-                        'type': 'typography',
+                        'content': 'Failed to load buildfix',
                       },
                       {
+                        'type': 'typography',
                         'color': 'muted',
-                        'type': 'typography',
-                        'content': '@payload.error',
                         'variant': 'body',
+                        'content': '@payload.error',
                       },
                       {
+                        'variant': 'primary',
+                        'type': 'button',
                         'icon': 'rotate-ccw',
                         'action': 'INIT',
                         'label': 'Retry',
-                        'variant': 'primary',
-                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-12',
                   },
                 ],
               ],
@@ -12089,34 +12122,33 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'icon': 'clipboard-list',
+                        'href': '/plan',
                         'label': 'Plan',
                       },
                       {
-                        'label': 'Build',
                         'href': '/build',
                         'icon': 'hammer',
+                        'label': 'Build',
                       },
                       {
+                        'icon': 'wrench',
                         'label': 'Fix',
                         'href': '/fix',
-                        'icon': 'wrench',
                       },
                     ],
-                    'appName': 'Schema Builder',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
                                 'children': [
@@ -12126,8 +12158,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                   },
                                   {
                                     'type': 'typography',
-                                    'content': 'Invoke Tool',
                                     'variant': 'h2',
+                                    'content': 'Invoke Tool',
                                   },
                                 ],
                                 'gap': 'md',
@@ -12135,9 +12167,9 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                 'type': 'stack',
                               },
                               {
-                                'icon': 'wrench',
                                 'type': 'button',
                                 'label': 'Open',
+                                'icon': 'wrench',
                                 'variant': 'primary',
                                 'action': 'INVOKE',
                               },
@@ -12147,14 +12179,15 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'divider',
                           },
                           {
-                            'icon': 'wrench',
                             'type': 'empty-state',
                             'title': 'Nothing open',
+                            'icon': 'wrench',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'type': 'stack',
+                        'gap': 'lg',
                         'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -12170,9 +12203,6 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                     'children': [
                       {
                         'type': 'stack',
@@ -12182,28 +12212,31 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                             'type': 'icon',
                           },
                           {
+                            'content': 'Invoke Tool',
                             'variant': 'h3',
                             'type': 'typography',
-                            'content': 'Invoke Tool',
                           },
                         ],
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'cancelEvent': 'CLOSE',
-                        'mode': 'create',
-                        'submitEvent': 'SAVE',
                         'fields': [
                           'toolName',
                           'args',
                         ],
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
                         'type': 'form-section',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -12228,8 +12261,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'BuildFix',
                   {
                     'emit': {
-                      'failure': 'BuildFixLoadFailed',
                       'success': 'BuildFixLoaded',
+                      'failure': 'BuildFixLoadFailed',
                     },
                   },
                 ],
@@ -12237,6 +12270,7 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Schema Builder',
                     'navItems': [
                       {
                         'label': 'Plan',
@@ -12244,67 +12278,66 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'icon': 'clipboard-list',
                       },
                       {
+                        'label': 'Build',
                         'href': '/build',
                         'icon': 'hammer',
-                        'label': 'Build',
                       },
                       {
                         'label': 'Fix',
-                        'href': '/fix',
                         'icon': 'wrench',
+                        'href': '/fix',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'children': [
                           {
                             'gap': 'md',
+                            'direction': 'horizontal',
                             'justify': 'between',
+                            'type': 'stack',
                             'children': [
                               {
                                 'direction': 'horizontal',
-                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'wrench',
                                   },
                                   {
-                                    'content': 'Invoke Tool',
                                     'variant': 'h2',
+                                    'content': 'Invoke Tool',
                                     'type': 'typography',
                                   },
                                 ],
                                 'gap': 'md',
+                                'type': 'stack',
                               },
                               {
-                                'icon': 'wrench',
                                 'action': 'INVOKE',
-                                'type': 'button',
-                                'label': 'Open',
                                 'variant': 'primary',
+                                'icon': 'wrench',
+                                'label': 'Open',
+                                'type': 'button',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'icon': 'wrench',
-                            'title': 'Nothing open',
                             'type': 'empty-state',
+                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -12340,8 +12373,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'BuildFix',
                   {
                     'emit': {
-                      'success': 'BuildFixLoaded',
                       'failure': 'BuildFixLoadFailed',
+                      'success': 'BuildFixLoaded',
                     },
                   },
                 ],
@@ -12349,56 +12382,6 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'gap': 'md',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                                'children': [
-                                  {
-                                    'name': 'wrench',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'content': 'Invoke Tool',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                                'gap': 'md',
-                              },
-                              {
-                                'type': 'button',
-                                'icon': 'wrench',
-                                'label': 'Open',
-                                'action': 'INVOKE',
-                                'variant': 'primary',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'empty-state',
-                            'icon': 'wrench',
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'title': 'Nothing open',
-                          },
-                        ],
-                      },
-                    ],
                     'navItems': [
                       {
                         'label': 'Plan',
@@ -12411,11 +12394,61 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'icon': 'hammer',
                       },
                       {
+                        'label': 'Fix',
                         'href': '/fix',
                         'icon': 'wrench',
-                        'label': 'Fix',
                       },
                     ],
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'justify': 'between',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'wrench',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Invoke Tool',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'variant': 'primary',
+                                'action': 'INVOKE',
+                                'icon': 'wrench',
+                                'label': 'Open',
+                                'type': 'button',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'icon': 'wrench',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
                   },
                 ],
@@ -12589,8 +12622,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'BuildFix',
                   {
                     'emit': {
-                      'failure': 'BuildFixLoadFailed',
                       'success': 'BuildFixLoaded',
+                      'failure': 'BuildFixLoadFailed',
                     },
                   },
                 ],
@@ -12598,72 +12631,72 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
                     'navItems': [
                       {
-                        'href': '/plan',
                         'label': 'Plan',
+                        'href': '/plan',
                         'icon': 'clipboard-list',
                       },
                       {
+                        'icon': 'hammer',
                         'label': 'Build',
                         'href': '/build',
-                        'icon': 'hammer',
                       },
                       {
                         'icon': 'wrench',
-                        'label': 'Fix',
                         'href': '/fix',
+                        'label': 'Fix',
                       },
                     ],
+                    'appName': 'Schema Builder',
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'direction': 'horizontal',
-                                'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'wrench',
                                     'type': 'icon',
+                                    'name': 'wrench',
                                   },
                                   {
                                     'content': 'Invoke Tool',
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                               },
                               {
+                                'label': 'Open',
                                 'icon': 'wrench',
                                 'action': 'INVOKE',
-                                'label': 'Open',
                                 'variant': 'primary',
                                 'type': 'button',
                               },
                             ],
                             'gap': 'md',
-                            'type': 'stack',
                             'justify': 'between',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'icon': 'wrench',
+                            'title': 'Nothing open',
                             'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
-                            'title': 'Nothing open',
-                            'icon': 'wrench',
                           },
                         ],
-                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -12679,40 +12712,40 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
+                        'direction': 'horizontal',
                         'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'wrench',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Invoke Tool',
                             'variant': 'h3',
                             'type': 'typography',
+                            'content': 'Invoke Tool',
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'mode': 'create',
                         'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'toolName',
                           'args',
                         ],
-                        'submitEvent': 'SAVE',
                       },
                     ],
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -12746,60 +12779,41 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'href': '/build',
-                        'icon': 'hammer',
-                        'label': 'Build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
                     'type': 'dashboard-layout',
-                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
+                                'children': [
+                                  {
+                                    'name': 'wrench',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                    'content': 'Invoke Tool',
+                                  },
+                                ],
                                 'type': 'stack',
                                 'direction': 'horizontal',
                                 'gap': 'md',
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'wrench',
-                                  },
-                                  {
-                                    'content': 'Invoke Tool',
-                                    'variant': 'h2',
-                                    'type': 'typography',
-                                  },
-                                ],
                               },
                               {
+                                'label': 'Open',
                                 'action': 'INVOKE',
                                 'variant': 'primary',
                                 'type': 'button',
                                 'icon': 'wrench',
-                                'label': 'Open',
                               },
                             ],
                             'gap': 'md',
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'justify': 'between',
                           },
                           {
@@ -12808,12 +12822,31 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                           {
                             'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
-                            'title': 'Nothing open',
                             'icon': 'wrench',
+                            'title': 'Nothing open',
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
+                      },
+                      {
+                        'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                      },
+                    ],
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -12849,8 +12882,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'BuildFix',
                   {
                     'emit': {
-                      'failure': 'BuildFixLoadFailed',
                       'success': 'BuildFixLoaded',
+                      'failure': 'BuildFixLoadFailed',
                     },
                   },
                 ],
@@ -12858,74 +12891,74 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
+                      },
+                      {
+                        'href': '/build',
+                        'icon': 'hammer',
+                        'label': 'Build',
+                      },
+                      {
+                        'icon': 'wrench',
+                        'href': '/fix',
+                        'label': 'Fix',
+                      },
+                    ],
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'children': [
                               {
                                 'direction': 'horizontal',
-                                'type': 'stack',
                                 'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'wrench',
+                                    'type': 'icon',
                                   },
                                   {
                                     'content': 'Invoke Tool',
-                                    'type': 'typography',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'type': 'stack',
                               },
                               {
+                                'action': 'INVOKE',
+                                'label': 'Open',
                                 'type': 'button',
                                 'variant': 'primary',
                                 'icon': 'wrench',
-                                'label': 'Open',
-                                'action': 'INVOKE',
                               },
                             ],
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
+                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'wrench',
-                            'type': 'empty-state',
+                            'title': 'Nothing open',
                           },
                         ],
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/plan',
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'href': '/fix',
-                        'icon': 'wrench',
-                        'label': 'Fix',
+                        'direction': 'vertical',
                       },
                     ],
                     'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -13114,56 +13147,6 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'gap': 'md',
-                            'justify': 'between',
-                            'children': [
-                              {
-                                'gap': 'md',
-                                'children': [
-                                  {
-                                    'name': 'sparkles',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'content': 'BuildFix',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                              },
-                              {
-                                'label': 'Open',
-                                'action': 'GENERATE',
-                                'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'sparkles',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'icon': 'sparkles',
-                            'type': 'empty-state',
-                            'title': 'Nothing open',
-                            'description': 'Click Open to view details in a modal overlay.',
-                          },
-                        ],
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                      },
-                    ],
                     'appName': 'Schema Builder',
                     'navItems': [
                       {
@@ -13172,14 +13155,64 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                         'icon': 'clipboard-list',
                       },
                       {
+                        'icon': 'hammer',
                         'label': 'Build',
                         'href': '/build',
-                        'icon': 'hammer',
                       },
                       {
+                        'href': '/fix',
                         'label': 'Fix',
                         'icon': 'wrench',
-                        'href': '/fix',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'BuildFix',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                              },
+                              {
+                                'action': 'GENERATE',
+                                'icon': 'sparkles',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'label': 'Open',
+                              },
+                            ],
+                            'gap': 'md',
+                            'type': 'stack',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
+                            'type': 'empty-state',
+                          },
+                        ],
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -13195,54 +13228,54 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'modal',
                   {
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'sparkles',
                           },
                           {
+                            'content': 'BuildFix',
                             'variant': 'h3',
                             'type': 'typography',
-                            'content': 'BuildFix',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'direction': 'horizontal',
-                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'label': '@entity.provider',
                             'type': 'badge',
+                            'label': '@entity.provider',
                           },
                           {
-                            'type': 'badge',
                             'label': '@entity.model',
+                            'type': 'badge',
                           },
                         ],
-                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
                         'fields': [
                           'prompt',
                         ],
-                        'type': 'form-section',
-                        'cancelEvent': 'CLOSE',
-                        'mode': 'create',
-                        'submitEvent': 'SAVE',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -13276,36 +13309,24 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Plan',
-                        'href': '/plan',
-                      },
-                      {
-                        'icon': 'hammer',
-                        'label': 'Build',
-                        'href': '/build',
-                      },
-                      {
-                        'icon': 'wrench',
-                        'label': 'Fix',
-                        'href': '/fix',
-                      },
-                    ],
                     'appName': 'Schema Builder',
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'justify': 'between',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
                                     'variant': 'h2',
@@ -13313,37 +13334,49 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                     'content': 'BuildFix',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
+                                'direction': 'horizontal',
                               },
                               {
+                                'action': 'GENERATE',
+                                'variant': 'primary',
                                 'label': 'Open',
                                 'icon': 'sparkles',
                                 'type': 'button',
-                                'variant': 'primary',
-                                'action': 'GENERATE',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'type': 'stack',
                             'gap': 'md',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'sparkles',
-                            'title': 'Nothing open',
                             'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'icon': 'clipboard-list',
+                        'label': 'Plan',
+                      },
+                      {
+                        'icon': 'hammer',
+                        'label': 'Build',
+                        'href': '/build',
+                      },
+                      {
+                        'href': '/fix',
+                        'icon': 'wrench',
+                        'label': 'Fix',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -13360,8 +13393,8 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'BuildFixSaveFailed',
                       'success': 'BuildFixSaved',
+                      'failure': 'BuildFixSaveFailed',
                     },
                   },
                 ],
@@ -13388,19 +13421,17 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Schema Builder',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'justify': 'between',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'stack',
-                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -13412,50 +13443,52 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
                                     'type': 'typography',
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'gap': 'md',
                               },
                               {
                                 'type': 'button',
-                                'label': 'Open',
+                                'action': 'GENERATE',
                                 'variant': 'primary',
                                 'icon': 'sparkles',
-                                'action': 'GENERATE',
+                                'label': 'Open',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
                             'title': 'Nothing open',
                             'icon': 'sparkles',
+                            'type': 'empty-state',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
                     'navItems': [
                       {
+                        'icon': 'clipboard-list',
                         'label': 'Plan',
                         'href': '/plan',
-                        'icon': 'clipboard-list',
                       },
                       {
-                        'label': 'Build',
                         'icon': 'hammer',
+                        'label': 'Build',
                         'href': '/build',
                       },
                       {
                         'label': 'Fix',
-                        'icon': 'wrench',
                         'href': '/fix',
+                        'icon': 'wrench',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -13479,7 +13512,7 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -13491,6 +13524,10 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -13514,7 +13551,9 @@ export const StdAgentBuilderBuildFixOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -13545,20 +13584,23 @@ export function isStdAgentBuilderBuildFixOrbitalParams(p: object): p is StdAgent
 /**
  * Tunable params for the BuildSessionOrbital orbital.
  *
- * Canonical entity: BuildSession (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BuildSession — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentBuilderBuildSessionOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -13567,22 +13609,26 @@ export interface StdAgentBuilderBuildSessionOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     never,
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BuildSessionOrbital orbital with consumer params. */
 export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildSessionOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BuildSession';
+  const canonicalName = params.entityName ?? 'BuildSession';
   const built = makeOrbitalWithUses({
     name: 'BuildSessionOrbital',
     uses: [],
@@ -13752,8 +13798,8 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'BuildSession',
                   {
                     'emit': {
-                      'failure': 'BuildSessionLoadFailed',
                       'success': 'BuildSessionLoaded',
+                      'failure': 'BuildSessionLoadFailed',
                     },
                   },
                 ],
@@ -13761,21 +13807,21 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'className': 'py-12',
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'color': 'muted',
+                        'variant': 'caption',
                         'type': 'typography',
                         'content': 'Loading…',
-                        'variant': 'caption',
                       },
                     ],
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-12',
                     'gap': 'md',
                   },
                 ],
@@ -13798,77 +13844,76 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                         'icon': 'clipboard-list',
                       },
                       {
-                        'label': 'Build',
-                        'href': '/build',
                         'icon': 'hammer',
+                        'href': '/build',
+                        'label': 'Build',
                       },
                       {
-                        'label': 'Fix',
-                        'href': '/fix',
                         'icon': 'wrench',
+                        'href': '/fix',
+                        'label': 'Fix',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'justify': 'between',
                             'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'align': 'center',
-                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'terminal',
+                                    'type': 'icon',
                                   },
                                   {
                                     'content': 'BuildSession Manager',
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'direction': 'horizontal',
+                                'align': 'center',
                                 'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
                               },
                               {
                                 'direction': 'horizontal',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'action': 'FORK',
-                                    'type': 'button',
                                     'label': 'Fork',
-                                    'variant': 'secondary',
+                                    'type': 'button',
                                     'icon': 'git-branch',
+                                    'action': 'FORK',
+                                    'variant': 'secondary',
                                   },
                                   {
-                                    'action': 'LABEL',
+                                    'label': 'Label',
                                     'type': 'button',
                                     'variant': 'secondary',
                                     'icon': 'tag',
-                                    'label': 'Label',
+                                    'action': 'LABEL',
                                   },
                                   {
-                                    'type': 'button',
-                                    'action': 'END',
                                     'variant': 'ghost',
                                     'icon': 'square',
+                                    'type': 'button',
+                                    'action': 'END',
                                     'label': 'End',
                                   },
                                 ],
                                 'gap': 'sm',
-                                'type': 'stack',
                               },
                             ],
                             'gap': 'md',
-                            'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
@@ -13878,9 +13923,9 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                             'entity': '@payload.data',
                             'fields': [
                               {
-                                'label': 'Session ID',
                                 'variant': 'h4',
                                 'name': 'sessionId',
+                                'label': 'Session ID',
                                 'icon': 'terminal',
                               },
                               {
@@ -13889,8 +13934,8 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                                 'variant': 'badge',
                               },
                               {
-                                'variant': 'caption',
                                 'name': 'label',
+                                'variant': 'caption',
                                 'label': 'Label',
                               },
                             ],
@@ -13898,6 +13943,7 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                         ],
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -13911,36 +13957,36 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
+                    'className': 'py-12',
                     'children': [
                       {
+                        'name': 'alert-triangle',
                         'color': 'destructive',
                         'type': 'icon',
-                        'name': 'alert-triangle',
                       },
                       {
+                        'content': 'Failed to load buildsession',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'Failed to load buildsession',
                       },
                       {
-                        'variant': 'body',
-                        'type': 'typography',
                         'content': '@payload.error',
+                        'type': 'typography',
                         'color': 'muted',
+                        'variant': 'body',
                       },
                       {
-                        'icon': 'rotate-ccw',
-                        'variant': 'primary',
-                        'action': 'INIT',
-                        'label': 'Retry',
                         'type': 'button',
+                        'label': 'Retry',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'action': 'INIT',
                       },
                     ],
-                    'align': 'center',
-                    'className': 'py-12',
-                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -14146,22 +14192,19 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'tag',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Label Session',
                             'variant': 'h3',
-                            'type': 'typography',
                           },
                         ],
                         'direction': 'horizontal',
@@ -14170,13 +14213,13 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'md',
+                        'type': 'stack',
                         'children': [
                           {
-                            'variant': 'caption',
                             'type': 'typography',
+                            'variant': 'caption',
                             'content': 'Session:',
                           },
                           {
@@ -14186,16 +14229,19 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                         ],
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'mode': 'edit',
                         'submitEvent': 'SAVE',
                         'entity': '@entity',
+                        'mode': 'edit',
+                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
                         'fields': [
                           'label',
                         ],
-                        'type': 'form-section',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -14236,8 +14282,8 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'BuildSessionUpdateFailed',
                       'success': 'BuildSessionUpdated',
+                      'failure': 'BuildSessionUpdateFailed',
                     },
                   },
                 ],
@@ -14455,33 +14501,33 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Schema Builder',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/plan',
-                        'label': 'Plan',
                         'icon': 'clipboard-list',
+                        'label': 'Plan',
+                        'href': '/plan',
                       },
                       {
+                        'href': '/build',
                         'icon': 'hammer',
                         'label': 'Build',
-                        'href': '/build',
                       },
                       {
-                        'href': '/fix',
-                        'icon': 'wrench',
                         'label': 'Fix',
+                        'icon': 'wrench',
+                        'href': '/fix',
                       },
                     ],
                     'children': [
                       {
-                        'title': 'Session',
                         'icon': 'git-branch',
+                        'title': 'Session',
                         'description': 'Session is ready',
                         'type': 'empty-state',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                   },
                 ],
               ],
@@ -14507,10 +14553,10 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'create',
                   'BuildSession',
                   {
-                    'sessionId': '@entity.sessionId',
                     'parentId': '@entity.parentId',
-                    'status': 'forked',
                     'createdAt': '@now',
+                    'sessionId': '@entity.sessionId',
+                    'status': 'forked',
                   },
                   {
                     'emit': {
@@ -14594,10 +14640,10 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'create',
                   'BuildSession',
                   {
-                    'createdAt': '@now',
                     'status': 'forked',
                     'sessionId': '@entity.sessionId',
                     'parentId': '@entity.parentId',
+                    'createdAt': '@now',
                   },
                   {
                     'emit': {
@@ -14637,8 +14683,8 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'BuildSession',
                   {
                     'emit': {
-                      'success': 'BuildSessionLoaded',
                       'failure': 'BuildSessionLoadFailed',
+                      'success': 'BuildSessionLoaded',
                     },
                   },
                 ],
@@ -14692,24 +14738,8 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'clipboard-list',
-                        'href': '/plan',
-                        'label': 'Plan',
-                      },
-                      {
-                        'label': 'Build',
-                        'icon': 'hammer',
-                        'href': '/build',
-                      },
-                      {
-                        'label': 'Fix',
-                        'href': '/fix',
-                        'icon': 'wrench',
-                      },
-                    ],
                     'type': 'dashboard-layout',
+                    'appName': 'Schema Builder',
                     'children': [
                       {
                         'title': 'Session',
@@ -14718,7 +14748,23 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
                         'type': 'empty-state',
                       },
                     ],
-                    'appName': 'Schema Builder',
+                    'navItems': [
+                      {
+                        'href': '/plan',
+                        'label': 'Plan',
+                        'icon': 'clipboard-list',
+                      },
+                      {
+                        'label': 'Build',
+                        'href': '/build',
+                        'icon': 'hammer',
+                      },
+                      {
+                        'href': '/fix',
+                        'label': 'Fix',
+                        'icon': 'wrench',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -14742,7 +14788,7 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -14754,6 +14800,10 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -14777,7 +14827,9 @@ export const StdAgentBuilderBuildSessionOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
   ] as const,
@@ -14805,20 +14857,23 @@ export function isStdAgentBuilderBuildSessionOrbitalParams(p: object): p is StdA
 /**
  * Tunable params for the BuildTaskOrbital orbital.
  *
- * Canonical entity: BuildTask (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BuildTask — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentBuilderBuildTaskOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -14827,22 +14882,26 @@ export interface StdAgentBuilderBuildTaskOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'BuilderTabs',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BuildTaskOrbital orbital with consumer params. */
 export function stdAgentBuilderBuildTaskOrbital(params: StdAgentBuilderBuildTaskOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BuildTask';
+  const canonicalName = params.entityName ?? 'BuildTask';
   const built = makeOrbitalWithUses({
     name: 'BuildTaskOrbital',
     uses: [
@@ -14919,7 +14978,7 @@ export function stdAgentBuilderBuildTaskOrbital(params: StdAgentBuilderBuildTask
       makeTraitRef({
         'ref': 'Tabs.traits.TabsItemTabs',
         'name': 'BuilderTabs',
-        'linkedEntity': 'BuildTask',
+        'linkedEntity': canonicalName,
       }),
     ],
     pages: [
@@ -14936,7 +14995,7 @@ export function stdAgentBuilderBuildTaskOrbital(params: StdAgentBuilderBuildTask
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -14948,6 +15007,10 @@ export function stdAgentBuilderBuildTaskOrbital(params: StdAgentBuilderBuildTask
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -14971,7 +15034,9 @@ export const StdAgentBuilderBuildTaskOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'BuilderTabs',
@@ -14997,20 +15062,23 @@ export function isStdAgentBuilderBuildTaskOrbitalParams(p: object): p is StdAgen
 /**
  * Tunable params for the BuildProgressOrbital orbital.
  *
- * Canonical entity: BuildProgress (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BuildProgress — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdAgentBuilderBuildProgressOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -15019,22 +15087,26 @@ export interface StdAgentBuilderBuildProgressOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'BuildStepProgress',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BuildProgressOrbital orbital with consumer params. */
 export function stdAgentBuilderBuildProgressOrbital(params: StdAgentBuilderBuildProgressOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BuildProgress';
+  const canonicalName = params.entityName ?? 'BuildProgress';
   const built = makeOrbitalWithUses({
     name: 'BuildProgressOrbital',
     uses: [
@@ -15082,7 +15154,7 @@ export function stdAgentBuilderBuildProgressOrbital(params: StdAgentBuilderBuild
       makeTraitRef({
         'ref': 'AgentStepProgress.traits.AgentStepProgressProgress',
         'name': 'BuildStepProgress',
-        'linkedEntity': 'BuildProgress',
+        'linkedEntity': canonicalName,
       }),
     ],
     pages: [
@@ -15099,7 +15171,7 @@ export function stdAgentBuilderBuildProgressOrbital(params: StdAgentBuilderBuild
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -15111,6 +15183,10 @@ export function stdAgentBuilderBuildProgressOrbital(params: StdAgentBuilderBuild
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -15134,7 +15210,9 @@ export const StdAgentBuilderBuildProgressOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'BuildStepProgress',

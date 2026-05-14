@@ -37,20 +37,23 @@ export interface StdLegalCaseConfig {
 /**
  * Tunable params for the MatterOrbital orbital.
  *
- * Canonical entity: Matter (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Matter — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdLegalCaseMatterOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdLegalCaseMatterOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'MatterAppLayout' | 'MatterSearch' | 'MatterFilter' | 'MatterStats' | 'MatterGraphs' | 'MatterBrowseList' | 'MatterCreate' | 'MatterEdit' | 'MatterView' | 'MatterDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the MatterOrbital orbital with consumer params. */
 export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Matter';
+  const canonicalName = params.entityName ?? 'Matter';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'matters');
   const built = makeOrbitalWithUses({
     name: 'MatterOrbital',
     uses: [
@@ -125,7 +134,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
     ],
     entity: {
       name: canonicalName,
-      collection: 'matters',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -212,28 +221,33 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MatterAppLayout',
         'config': {
-          'appName': 'Legal Case',
-          'contentTrait': '@trait.MatterCatalog',
-          'searchEvent': 'MATTER_SEARCH',
           'notifications': [],
           'notificationClickEvent': 'MATTER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'scale',
               'href': '/matters',
+              'icon': 'scale',
               'label': 'Matters',
             },
             {
-              'label': 'Time',
+              'icon': 'folder',
+              'label': 'Cases',
+              'href': '/cases',
+            },
+            {
               'href': '/timesheet',
+              'label': 'Time',
               'icon': 'clock',
             },
             {
-              'icon': 'calendar',
               'label': 'Deadlines',
               'href': '/deadlines',
+              'icon': 'calendar',
             },
           ],
+          'appName': 'Legal Case',
+          'contentTrait': '@trait.MatterCatalog',
+          'searchEvent': 'MATTER_SEARCH',
         },
         'events': {
           'SEARCH': 'MATTER_SEARCH',
@@ -320,15 +334,8 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
-                        'align': 'center',
                         'children': [
                           {
                             'children': [
@@ -337,44 +344,49 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                                 'name': 'scale',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Matters',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
                           },
                           {
-                            'children': [
-                              {
-                                'variant': 'primary',
-                                'action': 'CREATE',
-                                'label': 'New Matter',
-                                'icon': 'plus',
-                                'type': 'button',
-                              },
-                            ],
                             'type': 'stack',
                             'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'label': 'New Matter',
+                              },
+                            ],
                             'gap': 'sm',
                           },
                         ],
+                        'justify': 'between',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'md',
                         'align': 'center',
-                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           '@trait.MatterSearch',
                           '@trait.MatterFilter',
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       '@trait.MatterStats',
                       '@trait.MatterGraphs',
@@ -384,6 +396,8 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                       '@trait.MatterBrowseList',
                     ],
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -402,34 +416,34 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'align': 'center',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
+                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'No notifications',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                         'color': 'muted',
                         'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'action': 'INIT',
                         'label': 'Back to matters',
-                        'variant': 'ghost',
+                        'action': 'INIT',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
-                    'align': 'center',
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -450,12 +464,10 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'MatterFilter',
         'config': {
-          'event': 'MATTER_FILTER',
           'filters': [
             {
-              'field': 'practiceArea',
-              'filterType': 'select',
               'label': 'Practice',
+              'filterType': 'select',
               'options': [
                 'litigation',
                 'transactional',
@@ -465,10 +477,9 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                 'family',
                 'other',
               ],
+              'field': 'practiceArea',
             },
             {
-              'field': 'status',
-              'filterType': 'select',
               'options': [
                 'open',
                 'active',
@@ -476,9 +487,12 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                 'closed',
                 'archived',
               ],
+              'field': 'status',
               'label': 'Status',
+              'filterType': 'select',
             },
           ],
+          'event': 'MATTER_FILTER',
         },
       }),
       makeTraitRef({
@@ -488,15 +502,13 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
           'title': 'Matters',
           'metrics': [
             {
-              'format': 'number',
-              'label': 'Total',
               'aggregation': 'count',
-              'variant': 'primary',
+              'label': 'Total',
               'icon': 'scale',
+              'format': 'number',
+              'variant': 'primary',
             },
             {
-              'icon': 'circle',
-              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -506,12 +518,18 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'open',
                 ],
               ],
+              'aggregation': 'count',
               'format': 'number',
-              'label': 'Open',
               'variant': 'warning',
+              'label': 'Open',
+              'icon': 'circle',
             },
             {
+              'label': 'Active',
               'variant': 'success',
+              'format': 'number',
+              'aggregation': 'count',
+              'icon': 'check-circle',
               'filter': [
                 'fn',
                 'row',
@@ -521,15 +539,9 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'active',
                 ],
               ],
-              'format': 'number',
-              'aggregation': 'count',
-              'label': 'Active',
-              'icon': 'check-circle',
             },
             {
-              'label': 'Closed',
               'variant': 'info',
-              'icon': 'archive',
               'filter': [
                 'fn',
                 'row',
@@ -539,8 +551,10 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'closed',
                 ],
               ],
-              'format': 'number',
+              'label': 'Closed',
               'aggregation': 'count',
+              'format': 'number',
+              'icon': 'archive',
             },
           ],
         },
@@ -559,13 +573,13 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'MatterGraphs',
         'config': {
-          'categoryField': 'practiceArea',
-          'height': 240,
           'title': 'Matters by Practice Area',
           'aggregation': 'count',
-          'showLegend': false,
-          'chartType': 'bar',
           'subtitle': 'Caseload composition across practice areas',
+          'chartType': 'bar',
+          'categoryField': 'practiceArea',
+          'height': 240,
+          'showLegend': false,
         },
         'listens': [
           {
@@ -581,40 +595,40 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'MatterBrowseList',
-        'linkedEntity': 'Matter',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'fields': [
             {
+              'name': 'matterNumber',
               'variant': 'caption',
               'icon': 'hash',
-              'name': 'matterNumber',
             },
             {
-              'name': 'title',
               'variant': 'h3',
+              'name': 'title',
             },
             {
-              'variant': 'body',
               'name': 'clientName',
+              'variant': 'body',
             },
             {
-              'name': 'practiceArea',
               'variant': 'badge',
+              'name': 'practiceArea',
             },
             {
               'name': 'leadAttorney',
               'variant': 'caption',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
           ],
-          'cols': 1,
           'itemActions': [
             {
-              'label': 'View',
               'event': 'VIEW',
+              'label': 'View',
               'variant': 'ghost',
             },
             {
@@ -623,12 +637,12 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
               'label': 'Edit',
             },
             {
-              'event': 'DELETE',
               'label': 'Delete',
+              'event': 'DELETE',
               'variant': 'danger',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -676,8 +690,11 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MatterCreate',
-        'linkedEntity': 'Matter',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'create',
+          'title': 'New Matter',
+          'icon': 'plus-circle',
           'fields': [
             'matterNumber',
             'title',
@@ -688,9 +705,6 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
             'openedAt',
             'notes',
           ],
-          'title': 'New Matter',
-          'mode': 'create',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -709,9 +723,8 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MatterEdit',
-        'linkedEntity': 'Matter',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Matter',
           'mode': 'edit',
           'icon': 'edit',
           'fields': [
@@ -725,6 +738,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
             'closedAt',
             'notes',
           ],
+          'title': 'Edit Matter',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -743,11 +757,9 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MatterView',
-        'linkedEntity': 'Matter',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'eye',
-          'title': 'View Matter',
-          'mode': 'edit',
           'fields': [
             'matterNumber',
             'title',
@@ -759,6 +771,8 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
             'closedAt',
             'notes',
           ],
+          'title': 'View Matter',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -777,16 +791,16 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'MatterDelete',
-        'linkedEntity': 'Matter',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Matter',
-          'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Matter',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1030,7 +1044,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1042,6 +1056,10 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1065,7 +1083,9 @@ export const StdLegalCaseMatterOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'MatterAppLayout',
@@ -1102,20 +1122,23 @@ export function isStdLegalCaseMatterOrbitalParams(p: object): p is StdLegalCaseM
 /**
  * Tunable params for the BillableHourPanelOrbital orbital.
  *
- * Canonical entity: BillableHour (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: BillableHour — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdLegalCaseBillableHourPanelOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1124,22 +1147,28 @@ export interface StdLegalCaseBillableHourPanelOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'BillableHourAppLayout' | 'BillableHourTimesheetView',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the BillableHourPanelOrbital orbital with consumer params. */
 export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillableHourPanelOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'BillableHour';
+  const canonicalName = params.entityName ?? 'BillableHour';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'billablehours');
   const built = makeOrbitalWithUses({
     name: 'BillableHourPanelOrbital',
     uses: [
@@ -1154,7 +1183,7 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
     ],
     entity: {
       name: canonicalName,
-      collection: 'billablehours',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1231,13 +1260,17 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BillableHourAppLayout',
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
+          'appName': 'Legal Case',
           'navItems': [
             {
+              'href': '/matters',
               'icon': 'scale',
               'label': 'Matters',
-              'href': '/matters',
+            },
+            {
+              'label': 'Cases',
+              'href': '/cases',
+              'icon': 'folder',
             },
             {
               'href': '/timesheet',
@@ -1250,8 +1283,9 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
               'label': 'Deadlines',
             },
           ],
-          'appName': 'Legal Case',
+          'notifications': [],
           'searchEvent': 'BILLABLE_HOUR_SEARCH',
+          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.BillableHourPanel',
         },
         'events': {
@@ -1285,33 +1319,33 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'clock',
                             'type': 'icon',
+                            'name': 'clock',
                           },
                           {
-                            'variant': 'h2',
                             'content': 'Time Entries',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'sm',
                         'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.BillableHourTimesheetView',
                     ],
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1348,7 +1382,7 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1360,6 +1394,10 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1383,7 +1421,9 @@ export const StdLegalCaseBillableHourPanelOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'BillableHourAppLayout',
@@ -1411,20 +1451,23 @@ export function isStdLegalCaseBillableHourPanelOrbitalParams(p: object): p is St
 /**
  * Tunable params for the CourtDeadlinePanelOrbital orbital.
  *
- * Canonical entity: CourtDeadline (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: CourtDeadline — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdLegalCaseCourtDeadlinePanelOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1433,22 +1476,28 @@ export interface StdLegalCaseCourtDeadlinePanelOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CourtDeadlineAppLayout' | 'CourtDeadlineDocketView',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CourtDeadlinePanelOrbital orbital with consumer params. */
 export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtDeadlinePanelOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'CourtDeadline';
+  const canonicalName = params.entityName ?? 'CourtDeadline';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'courtdeadlines');
   const built = makeOrbitalWithUses({
     name: 'CourtDeadlinePanelOrbital',
     uses: [
@@ -1463,7 +1512,7 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
     ],
     entity: {
       name: canonicalName,
-      collection: 'courtdeadlines',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1544,8 +1593,6 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
         'name': 'CourtDeadlineAppLayout',
         'config': {
           'notificationClickEvent': 'COURT_DEADLINE_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.CourtDeadlinePanel',
-          'appName': 'Legal Case',
           'navItems': [
             {
               'label': 'Matters',
@@ -1553,22 +1600,29 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
               'icon': 'scale',
             },
             {
-              'icon': 'clock',
+              'href': '/cases',
+              'label': 'Cases',
+              'icon': 'folder',
+            },
+            {
               'label': 'Time',
               'href': '/timesheet',
+              'icon': 'clock',
             },
             {
               'href': '/deadlines',
-              'icon': 'calendar',
               'label': 'Deadlines',
+              'icon': 'calendar',
             },
           ],
           'notifications': [],
+          'contentTrait': '@trait.CourtDeadlinePanel',
           'searchEvent': 'COURT_DEADLINE_SEARCH',
+          'appName': 'Legal Case',
         },
         'events': {
-          'SEARCH': 'COURT_DEADLINE_SEARCH',
           'NOTIFY_CLICK': 'COURT_DEADLINE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'COURT_DEADLINE_SEARCH',
         },
       }),
       {
@@ -1597,26 +1651,25 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'direction': 'vertical',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'calendar',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
-                            'variant': 'h2',
                             'content': 'Court Deadlines',
+                            'variant': 'h2',
+                            'type': 'typography',
                           },
                         ],
                         'gap': 'sm',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -1624,6 +1677,7 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
                       '@trait.CourtDeadlineDocketView',
                     ],
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1660,7 +1714,7 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1672,6 +1726,10 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1695,7 +1753,9 @@ export const StdLegalCaseCourtDeadlinePanelOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CourtDeadlineAppLayout',
@@ -1721,6 +1781,341 @@ export function isStdLegalCaseCourtDeadlinePanelOrbitalParams(p: object): p is S
 }
 
 /**
+ * Tunable params for the MatterPanelOrbital orbital.
+ *
+ * Canonical entity: MatterCase — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLegalCaseMatterPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'MatterCaseAppLayout' | 'MatterCaseDocketView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the MatterPanelOrbital orbital with consumer params. */
+export function stdLegalCaseMatterPanelOrbital(params: StdLegalCaseMatterPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'MatterCase';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'matters');
+  const built = makeOrbitalWithUses({
+    name: 'MatterPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-matter',
+        'as': 'Matter',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'matterNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'clientName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'practiceArea',
+            'type': 'string',
+            'default': 'other',
+            'values': [
+              'litigation',
+              'transactional',
+              'regulatory',
+              'ip',
+              'immigration',
+              'family',
+              'other',
+            ],
+          },
+          {
+            'name': 'leadAttorney',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'open',
+            'values': [
+              'open',
+              'active',
+              'on_hold',
+              'closed',
+              'archived',
+            ],
+          },
+          {
+            'name': 'openedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'closedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'notes',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'MatterCaseAppLayout',
+        'config': {
+          'appName': 'Legal Case',
+          'contentTrait': '@trait.MatterCasePanel',
+          'navItems': [
+            {
+              'label': 'Matters',
+              'href': '/matters',
+              'icon': 'scale',
+            },
+            {
+              'label': 'Cases',
+              'href': '/cases',
+              'icon': 'folder',
+            },
+            {
+              'label': 'Time',
+              'href': '/timesheet',
+              'icon': 'clock',
+            },
+            {
+              'href': '/deadlines',
+              'icon': 'calendar',
+              'label': 'Deadlines',
+            },
+          ],
+          'searchEvent': 'MATTER_CASE_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'MATTER_CASE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'MATTER_CASE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MATTER_CASE_SEARCH',
+        },
+      }),
+      {
+        'name': 'MatterCasePanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'folder',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'Cases',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.MatterCaseDocketView',
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Matter.traits.MatterDocket',
+        'name': 'MatterCaseDocketView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Case Files',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'CasesPage',
+        'path': '/cases',
+        'traits': [
+          {
+            'ref': 'MatterCaseAppLayout',
+          },
+          {
+            'ref': 'MatterCasePanel',
+          },
+          {
+            'ref': 'MatterCaseDocketView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLegalCaseMatterPanelOrbital. */
+export const StdLegalCaseMatterPanelOrbitalManifest = {
+  organism: 'std-legal-case',
+  orbitalName: 'MatterPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'MatterCaseAppLayout',
+    'MatterCaseDocketView',
+  ] as const,
+  inlineTraitNames: [
+    'MatterCasePanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLegalCaseMatterPanelOrbitalParams keys. */
+export function isStdLegalCaseMatterPanelOrbitalParams(p: object): p is StdLegalCaseMatterPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLegalCaseMatterPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdLegalCaseMatterPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-legal-case — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
@@ -1728,13 +2123,15 @@ export interface StdLegalCaseParams {
   Matter?: StdLegalCaseMatterOrbitalParams;
   BillableHourPanel?: StdLegalCaseBillableHourPanelOrbitalParams;
   CourtDeadlinePanel?: StdLegalCaseCourtDeadlinePanelOrbitalParams;
+  MatterPanel?: StdLegalCaseMatterPanelOrbitalParams;
 }
 
-/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
 export function stdLegalCase(params: StdLegalCaseParams = {}): OrbitalDefinition[] {
   return [
     stdLegalCaseMatterOrbital(params.Matter ?? {}),
     stdLegalCaseBillableHourPanelOrbital(params.BillableHourPanel ?? {}),
     stdLegalCaseCourtDeadlinePanelOrbital(params.CourtDeadlinePanel ?? {}),
+    stdLegalCaseMatterPanelOrbital(params.MatterPanel ?? {}),
   ];
 }

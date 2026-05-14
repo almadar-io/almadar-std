@@ -37,20 +37,23 @@ export interface StdSocialFeedConfig {
 /**
  * Tunable params for the PostOrbital orbital.
  *
- * Canonical entity: Post (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Post — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSocialFeedPostOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdSocialFeedPostOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'PostAppLayout' | 'PostSearch' | 'PostStats' | 'PostBrowseList' | 'PostCreate' | 'PostEdit' | 'PostView' | 'PostDeleteConfirm' | 'PostImageUpload',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the PostOrbital orbital with consumer params. */
 export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Post';
+  const canonicalName = params.entityName ?? 'Post';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'posts');
   const built = makeOrbitalWithUses({
     name: 'PostOrbital',
     uses: [
@@ -109,7 +118,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
     ],
     entity: {
       name: canonicalName,
-      collection: 'posts',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -165,23 +174,23 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PostAppLayout',
         'config': {
-          'contentTrait': '@trait.FeedCatalog',
           'notifications': [],
-          'appName': 'SocialFeed',
+          'notificationClickEvent': 'POST_NOTIFICATIONS_OPEN',
+          'searchEvent': 'POST_SEARCH',
           'navItems': [
             {
-              'href': '/feed',
               'label': 'Feed',
               'icon': 'rss',
+              'href': '/feed',
             },
             {
-              'icon': 'message-circle',
               'href': '/comments',
+              'icon': 'message-circle',
               'label': 'Comments',
             },
           ],
-          'searchEvent': 'POST_SEARCH',
-          'notificationClickEvent': 'POST_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.FeedCatalog',
+          'appName': 'SocialFeed',
         },
         'events': {
           'SEARCH': 'POST_SEARCH',
@@ -268,60 +277,58 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'rss',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Feed',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'action': 'CREATE',
-                                'label': 'New Post',
-                                'type': 'button',
-                                'variant': 'primary',
                                 'icon': 'plus',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'New Post',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                           },
                         ],
+                        'justify': 'between',
                         'align': 'center',
-                        'type': 'stack',
-                        'gap': 'md',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
-                        'gap': 'md',
                         'children': [
                           '@trait.PostSearch',
                         ],
-                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       '@trait.PostStats',
                       {
@@ -329,6 +336,8 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                       },
                       '@trait.PostBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
@@ -348,11 +357,10 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'className': 'py-8',
                     'direction': 'vertical',
-                    'align': 'center',
+                    'gap': 'md',
                     'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
@@ -371,11 +379,12 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                       },
                       {
                         'type': 'button',
-                        'action': 'INIT',
                         'label': 'Back to feed',
+                        'action': 'INIT',
                         'variant': 'ghost',
                       },
                     ],
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -388,29 +397,27 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PostSearch',
         'config': {
-          'placeholder': 'Search posts…',
           'event': 'POST_SEARCH',
+          'placeholder': 'Search posts…',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'PostStats',
         'config': {
-          'title': 'Feed',
           'metrics': [
             {
-              'label': 'Total Posts',
-              'aggregation': 'count',
               'format': 'number',
               'icon': 'rss',
+              'aggregation': 'count',
+              'label': 'Total Posts',
               'variant': 'primary',
             },
             {
-              'aggregation': 'count',
-              'label': 'Today',
-              'variant': 'info',
               'format': 'number',
-              'icon': 'calendar',
+              'label': 'Today',
+              'aggregation': 'count',
+              'variant': 'info',
               'filter': [
                 'fn',
                 'row',
@@ -420,24 +427,26 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'today',
                 ],
               ],
+              'icon': 'calendar',
             },
             {
-              'format': 'text',
-              'field': 'author',
-              'aggregation': 'mode',
               'variant': 'default',
+              'format': 'text',
+              'aggregation': 'mode',
               'label': 'Top Author',
+              'field': 'author',
               'icon': 'user',
             },
             {
+              'icon': 'hash',
+              'field': 'tag',
               'aggregation': 'mode',
               'format': 'text',
               'label': 'Top Tag',
-              'icon': 'hash',
               'variant': 'warning',
-              'field': 'tag',
             },
           ],
+          'title': 'Feed',
         },
         'listens': [
           {
@@ -453,22 +462,21 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'PostBrowseList',
-        'linkedEntity': 'Post',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'md',
           'fields': [
             {
               'name': 'author',
-              'variant': 'h4',
               'icon': 'user',
+              'variant': 'h4',
             },
             {
               'variant': 'body',
               'name': 'content',
             },
             {
-              'format': 'date',
               'variant': 'caption',
+              'format': 'date',
               'name': 'timestamp',
             },
             {
@@ -477,26 +485,27 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
               'variant': 'badge',
             },
           ],
+          'cols': 1,
           'imageField': 'image',
+          'gap': 'md',
+          'variant': 'card',
           'itemActions': [
             {
               'variant': 'ghost',
-              'label': 'View',
               'event': 'VIEW',
+              'label': 'View',
             },
             {
-              'variant': 'ghost',
               'label': 'Edit',
               'event': 'EDIT',
+              'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
-              'label': 'Delete',
               'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
             },
           ],
-          'cols': 1,
-          'variant': 'card',
         },
         'listens': [
           {
@@ -536,16 +545,16 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'PostCreate',
-        'linkedEntity': 'Post',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Post',
+          'mode': 'create',
           'fields': [
             'author',
             'content',
             'image',
             'tag',
           ],
-          'title': 'New Post',
-          'mode': 'create',
           'icon': 'plus-circle',
         },
         'events': {
@@ -565,17 +574,17 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'PostEdit',
-        'linkedEntity': 'Post',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Post',
+          'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Post',
           'fields': [
             'author',
             'content',
             'image',
             'tag',
           ],
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -594,9 +603,11 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'PostView',
-        'linkedEntity': 'Post',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Post',
           'icon': 'eye',
+          'mode': 'edit',
           'fields': [
             'author',
             'content',
@@ -604,8 +615,6 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
             'tag',
             'likes',
           ],
-          'title': 'View Post',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -624,16 +633,16 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'PostDeleteConfirm',
-        'linkedEntity': 'Post',
+        'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
-          'title': 'Delete Post',
           'confirmLabel': 'Delete',
+          'title': 'Delete Post',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -650,7 +659,6 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'PostImageUpload',
         'config': {
-          'acl': 'public',
           'allowedMimeTypes': [
             'image/png',
             'image/jpeg',
@@ -659,6 +667,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           ],
           'maxSize': 10485760,
           'uiTrait': '@trait.PostImageUploadForm',
+          'acl': 'public',
           'bucket': 'social-feed-images',
         },
       }),
@@ -709,27 +718,27 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'content': 'Attach an image',
                         'variant': 'caption',
                         'type': 'typography',
+                        'content': 'Attach an image',
                       },
                       {
-                        'placeholder': 'Choose image…',
                         'type': 'input',
+                        'placeholder': 'Choose image…',
                         'inputType': 'text',
                       },
                       {
-                        'label': 'Upload',
-                        'action': 'UPLOAD',
-                        'variant': 'ghost',
                         'icon': 'upload',
                         'type': 'button',
+                        'action': 'UPLOAD',
+                        'label': 'Upload',
+                        'variant': 'ghost',
                       },
                     ],
-                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -997,24 +1006,24 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
+                    'direction': 'horizontal',
+                    'gap': 'sm',
+                    'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
-                        'action': 'LIKE',
-                        'type': 'button',
-                        'label': 'Like',
-                        'variant': 'ghost',
                         'icon': 'heart',
+                        'label': 'Like',
+                        'type': 'button',
+                        'action': 'LIKE',
+                        'variant': 'ghost',
                       },
                       {
-                        'content': '@entity.likes',
-                        'variant': 'caption',
                         'type': 'typography',
+                        'variant': 'caption',
+                        'content': '@entity.likes',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'horizontal',
-                    'align': 'center',
-                    'gap': 'sm',
                   },
                 ],
               ],
@@ -1093,7 +1102,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1105,6 +1114,10 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1128,7 +1141,9 @@ export const StdSocialFeedPostOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'PostAppLayout',
@@ -1166,20 +1181,23 @@ export function isStdSocialFeedPostOrbitalParams(p: object): p is StdSocialFeedP
 /**
  * Tunable params for the CommentOrbital orbital.
  *
- * Canonical entity: Comment (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Comment — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdSocialFeedCommentOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1188,22 +1206,28 @@ export interface StdSocialFeedCommentOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CommentAppLayout' | 'CommentBrowseList' | 'CommentCreate' | 'CommentEdit' | 'CommentView' | 'CommentDeleteConfirm',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CommentOrbital orbital with consumer params. */
 export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Comment';
+  const canonicalName = params.entityName ?? 'Comment';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'comments');
   const built = makeOrbitalWithUses({
     name: 'CommentOrbital',
     uses: [
@@ -1226,7 +1250,7 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'comments',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1271,25 +1295,25 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CommentAppLayout',
-        'linkedEntity': 'Comment',
+        'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.CommentDisplay',
-          'appName': 'SocialFeed',
           'notifications': [],
+          'appName': 'SocialFeed',
+          'contentTrait': '@trait.CommentDisplay',
           'searchEvent': 'COMMENT_SEARCH',
-          'notificationClickEvent': 'COMMENT_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'icon': 'rss',
               'href': '/feed',
               'label': 'Feed',
-              'icon': 'rss',
             },
             {
-              'label': 'Comments',
               'href': '/comments',
+              'label': 'Comments',
               'icon': 'message-circle',
             },
           ],
+          'notificationClickEvent': 'COMMENT_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'COMMENT_SEARCH',
@@ -1376,56 +1400,56 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'justify': 'between',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'message-circle',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Comments',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
+                            'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'action': 'CREATE',
-                                'variant': 'primary',
-                                'type': 'button',
                                 'label': 'New Comment',
+                                'variant': 'primary',
                                 'icon': 'edit',
+                                'type': 'button',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
-                        'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.CommentBrowseList',
                     ],
+                    'gap': 'lg',
                     'type': 'stack',
                     'className': 'max-w-5xl mx-auto w-full',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1444,34 +1468,34 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'align': 'center',
                     'className': 'py-8',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
+                        'color': 'muted',
                       },
                       {
+                        'label': 'Back to comments',
+                        'type': 'button',
                         'variant': 'ghost',
                         'action': 'INIT',
-                        'type': 'button',
-                        'label': 'Back to comments',
                       },
                     ],
+                    'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1483,13 +1507,13 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'CommentBrowseList',
-        'linkedEntity': 'Comment',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             {
               'icon': 'user',
-              'name': 'author',
               'variant': 'h4',
+              'name': 'author',
             },
             {
               'name': 'body',
@@ -1497,22 +1521,20 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
             },
             {
               'format': 'date',
-              'name': 'createdAt',
               'variant': 'caption',
+              'name': 'createdAt',
             },
           ],
-          'variant': 'card',
-          'cols': 1,
           'itemActions': [
             {
-              'variant': 'ghost',
               'label': 'View',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
-              'event': 'EDIT',
               'variant': 'ghost',
               'label': 'Edit',
+              'event': 'EDIT',
             },
             {
               'label': 'Delete',
@@ -1520,7 +1542,9 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
               'variant': 'danger',
             },
           ],
+          'cols': 1,
           'gap': 'sm',
+          'variant': 'card',
         },
         'listens': [
           {
@@ -1552,15 +1576,15 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CommentCreate',
-        'linkedEntity': 'Comment',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'fields': [
             'postId',
             'author',
             'body',
           ],
           'title': 'New Comment',
+          'mode': 'create',
           'icon': 'plus-circle',
         },
         'events': {
@@ -1580,15 +1604,15 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CommentEdit',
-        'linkedEntity': 'Comment',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'fields': [
             'postId',
             'author',
             'body',
           ],
           'mode': 'edit',
+          'icon': 'edit',
           'title': 'Edit Comment',
         },
         'events': {
@@ -1608,7 +1632,7 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CommentView',
-        'linkedEntity': 'Comment',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'postId',
@@ -1617,8 +1641,8 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
             'createdAt',
           ],
           'icon': 'eye',
-          'title': 'View Comment',
           'mode': 'edit',
+          'title': 'View Comment',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1637,11 +1661,11 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'CommentDeleteConfirm',
-        'linkedEntity': 'Comment',
+        'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'title': 'Delete Comment',
           'icon': 'alert-triangle',
+          'title': 'Delete Comment',
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
         },
         'events': {
@@ -1878,7 +1902,7 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1890,6 +1914,10 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1913,7 +1941,9 @@ export const StdSocialFeedCommentOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CommentAppLayout',

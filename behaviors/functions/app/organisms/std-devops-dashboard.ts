@@ -30,27 +30,30 @@ const ALIAS = 'DevopsDashboard';
  * without modifying its state-machine topology.
  */
 export interface StdDevopsDashboardConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
  * Tunable params for the ServiceNodeOrbital orbital.
  *
- * Canonical entity: ServiceNode (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: ServiceNode — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdDevopsDashboardServiceNodeOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdDevopsDashboardServiceNodeOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ServiceNodeAppLayout' | 'ServiceNodeSearch' | 'ServiceNodeFilter' | 'ServiceNodeStats' | 'ServiceNodeGraphs' | 'ServiceNodeBrowseList' | 'ServiceNodeCreate' | 'ServiceNodeEdit' | 'ServiceNodeView' | 'ServiceNodeDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ServiceNodeOrbital orbital with consumer params. */
 export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardServiceNodeOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'ServiceNode';
+  const canonicalName = params.entityName ?? 'ServiceNode';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'servicenodes');
   const built = makeOrbitalWithUses({
     name: 'ServiceNodeOrbital',
     uses: [
@@ -113,7 +122,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
     ],
     entity: {
       name: canonicalName,
-      collection: 'servicenodes',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -183,37 +192,37 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ServiceNodeAppLayout',
         'config': {
-          'searchEvent': 'SERVICE_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'SERVICE_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ServiceNodeCatalog',
-          'appName': 'DevOps Dashboard',
           'navItems': [
             {
-              'label': 'Services',
-              'icon': 'server',
               'href': '/services',
+              'icon': 'server',
+              'label': 'Services',
             },
             {
-              'icon': 'bell',
-              'href': '/alerts',
               'label': 'Alerts',
+              'href': '/alerts',
+              'icon': 'bell',
             },
             {
-              'label': 'Logs',
               'href': '/logs',
               'icon': 'terminal',
+              'label': 'Logs',
             },
             {
-              'icon': 'layout-list',
               'label': 'Metrics',
+              'icon': 'layout-list',
               'href': '/metrics',
             },
           ],
+          'contentTrait': '@trait.ServiceNodeCatalog',
+          'appName': 'DevOps Dashboard',
+          'notifications': [],
+          'searchEvent': 'SERVICE_SEARCH',
+          'notificationClickEvent': 'SERVICE_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'SERVICE_NOTIFICATIONS_OPEN',
           'SEARCH': 'SERVICE_SEARCH',
+          'NOTIFY_CLICK': 'SERVICE_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -298,17 +307,19 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   {
                     'children': [
                       {
-                        'align': 'center',
-                        'gap': 'md',
                         'type': 'stack',
-                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'server',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'Services',
@@ -316,39 +327,37 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                                 'type': 'typography',
                               },
                             ],
-                            'align': 'center',
-                            'type': 'stack',
                             'gap': 'sm',
                           },
                           {
-                            'gap': 'sm',
-                            'children': [
-                              {
-                                'label': 'Register Service',
-                                'action': 'CREATE',
-                                'variant': 'primary',
-                                'type': 'button',
-                                'icon': 'plus',
-                              },
-                            ],
                             'direction': 'horizontal',
                             'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'label': 'Register Service',
+                              },
+                            ],
+                            'gap': 'sm',
                           },
                         ],
-                        'justify': 'between',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'align': 'center',
                         'children': [
                           '@trait.ServiceNodeSearch',
                           '@trait.ServiceNodeFilter',
                         ],
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       '@trait.ServiceNodeStats',
                       '@trait.ServiceNodeGraphs',
@@ -356,30 +365,30 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'sm',
-                        'align': 'center',
                         'children': [
                           {
                             'status': 'online',
+                            'pulse': false,
                             'label': 'Healthy',
                             'type': 'status-dot',
-                            'pulse': false,
                           },
                           {
                             'status': 'warning',
                             'label': 'Degraded',
-                            'type': 'status-dot',
                             'pulse': false,
+                            'type': 'status-dot',
                           },
                           {
-                            'label': 'Down',
                             'pulse': true,
-                            'status': 'critical',
+                            'label': 'Down',
                             'type': 'status-dot',
+                            'status': 'critical',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
+                        'type': 'stack',
                       },
                       '@trait.ServiceNodeBrowseList',
                       {
@@ -408,34 +417,34 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'gap': 'md',
                     'className': 'py-8',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
-                      },
-                      {
-                        'variant': 'caption',
-                        'color': 'muted',
-                        'content': 'You\'re all caught up.',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'action': 'INIT',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
                         'label': 'Back to services',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'gap': 'md',
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -448,8 +457,8 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ServiceNodeSearch',
         'config': {
-          'event': 'SERVICE_SEARCH',
           'placeholder': 'Search services…',
+          'event': 'SERVICE_SEARCH',
         },
       }),
       makeTraitRef({
@@ -460,23 +469,23 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           'filters': [
             {
               'label': 'Status',
-              'filterType': 'select',
+              'field': 'status',
               'options': [
                 'healthy',
                 'degraded',
                 'down',
               ],
-              'field': 'status',
+              'filterType': 'select',
             },
             {
               'field': 'region',
+              'filterType': 'select',
               'options': [
                 'us-east',
                 'us-west',
                 'eu-central',
                 'ap-south',
               ],
-              'filterType': 'select',
               'label': 'Region',
             },
           ],
@@ -490,12 +499,16 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           'metrics': [
             {
               'aggregation': 'count',
-              'variant': 'primary',
               'icon': 'server',
-              'label': 'Total',
+              'variant': 'primary',
               'format': 'number',
+              'label': 'Total',
             },
             {
+              'label': 'Healthy',
+              'icon': 'check-circle',
+              'variant': 'success',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -505,15 +518,11 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'healthy',
                 ],
               ],
-              'label': 'Healthy',
-              'icon': 'check-circle',
               'aggregation': 'count',
-              'variant': 'success',
-              'format': 'number',
             },
             {
-              'icon': 'alert-circle',
-              'label': 'Degraded',
+              'variant': 'warning',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -524,10 +533,11 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                 ],
               ],
               'aggregation': 'count',
-              'variant': 'warning',
-              'format': 'number',
+              'label': 'Degraded',
+              'icon': 'alert-circle',
             },
             {
+              'label': 'Down',
               'filter': [
                 'fn',
                 'row',
@@ -537,11 +547,10 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'down',
                 ],
               ],
-              'icon': 'alert-triangle',
-              'variant': 'danger',
-              'aggregation': 'count',
-              'label': 'Down',
               'format': 'number',
+              'aggregation': 'count',
+              'variant': 'danger',
+              'icon': 'alert-triangle',
             },
           ],
         },
@@ -560,13 +569,13 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ServiceNodeGraphs',
         'config': {
+          'chartType': 'pie',
           'height': 240,
           'showLegend': true,
-          'chartType': 'pie',
-          'subtitle': 'Health distribution across the fleet',
-          'categoryField': 'status',
           'title': 'Services by Status',
+          'categoryField': 'status',
           'aggregation': 'count',
+          'subtitle': 'Health distribution across the fleet',
         },
         'listens': [
           {
@@ -582,29 +591,8 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ServiceNodeBrowseList',
-        'linkedEntity': 'ServiceNode',
+        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'fields': [
-            {
-              'variant': 'h4',
-              'name': 'name',
-              'icon': 'server',
-            },
-            {
-              'name': 'status',
-              'variant': 'badge',
-            },
-            {
-              'variant': 'body',
-              'name': 'region',
-            },
-            {
-              'name': 'lastChecked',
-              'variant': 'caption',
-              'format': 'date',
-            },
-          ],
           'cols': 1,
           'itemActions': [
             {
@@ -623,6 +611,27 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
               'variant': 'danger',
             },
           ],
+          'fields': [
+            {
+              'variant': 'h4',
+              'icon': 'server',
+              'name': 'name',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'variant': 'body',
+              'name': 'region',
+            },
+            {
+              'variant': 'caption',
+              'name': 'lastChecked',
+              'format': 'date',
+            },
+          ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -670,8 +679,11 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ServiceNodeCreate',
-        'linkedEntity': 'ServiceNode',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'Register Service',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'status',
@@ -679,9 +691,6 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
             'url',
             'threshold',
           ],
-          'icon': 'plus-circle',
-          'title': 'Register Service',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -700,11 +709,10 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ServiceNodeEdit',
-        'linkedEntity': 'ServiceNode',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'title': 'Edit Service',
-          'mode': 'edit',
+          'icon': 'edit',
           'fields': [
             'name',
             'status',
@@ -712,6 +720,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
             'url',
             'threshold',
           ],
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -730,7 +739,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ServiceNodeView',
-        'linkedEntity': 'ServiceNode',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'name',
@@ -742,9 +751,9 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
             'successCount',
             'threshold',
           ],
-          'mode': 'edit',
-          'title': 'View Service',
           'icon': 'eye',
+          'title': 'View Service',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -763,12 +772,12 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ServiceNodeDelete',
-        'linkedEntity': 'ServiceNode',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
           'title': 'Delete Service',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -1094,70 +1103,70 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'align': 'center',
+                        'gap': 'md',
                         'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'name': 'shield-check',
-                                'type': 'icon',
-                              },
-                              {
-                                'variant': 'h3',
-                                'type': 'typography',
-                                'content': 'Circuit Breaker',
-                              },
-                            ],
-                            'type': 'stack',
                             'direction': 'horizontal',
                             'align': 'center',
+                            'type': 'stack',
                             'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'shield-check',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Circuit Breaker',
+                                'variant': 'h3',
+                              },
+                            ],
                           },
                           {
                             'label': 'Circuit Closed',
-                            'pulse': false,
-                            'status': 'online',
                             'type': 'status-dot',
+                            'status': 'online',
+                            'pulse': false,
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'md',
                       },
                       {
-                        'type': 'alert',
                         'variant': 'success',
                         'message': 'All requests are being processed.',
+                        'type': 'alert',
                       },
                       {
-                        'type': 'simple-grid',
-                        'cols': 2,
                         'children': [
                           {
-                            'label': 'Failures',
-                            'value': '@entity.failureCount',
                             'type': 'stat-display',
+                            'value': '@entity.failureCount',
+                            'label': 'Failures',
                           },
                           {
-                            'label': 'Successes',
                             'type': 'stat-display',
                             'value': '@entity.successCount',
+                            'label': 'Successes',
                           },
                         ],
+                        'type': 'simple-grid',
+                        'cols': 2,
                       },
                       {
-                        'max': '@entity.threshold',
-                        'type': 'meter',
-                        'value': '@entity.failureCount',
                         'min': 0,
+                        'value': '@entity.failureCount',
+                        'type': 'meter',
+                        'max': '@entity.threshold',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1171,12 +1180,13 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                     'children': [
                       {
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
                             'children': [
@@ -1185,36 +1195,32 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                                 'name': 'alert-triangle',
                               },
                               {
+                                'variant': 'h3',
                                 'type': 'typography',
                                 'content': 'Circuit Breaker',
-                                'variant': 'h3',
                               },
                             ],
-                            'align': 'center',
                             'type': 'stack',
+                            'align': 'center',
                             'direction': 'horizontal',
                             'gap': 'md',
                           },
                           {
-                            'pulse': true,
-                            'status': 'critical',
                             'type': 'status-dot',
+                            'status': 'critical',
+                            'pulse': true,
                             'label': 'Circuit Open',
                           },
                         ],
-                        'justify': 'between',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'align': 'center',
                       },
                       {
-                        'variant': 'error',
-                        'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
                         'type': 'alert',
+                        'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                        'variant': 'error',
                       },
                       {
-                        'cols': 2,
                         'type': 'simple-grid',
+                        'cols': 2,
                         'children': [
                           {
                             'value': '@entity.failureCount',
@@ -1222,26 +1228,29 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                             'type': 'stat-display',
                           },
                           {
+                            'type': 'stat-display',
                             'label': 'Successes',
                             'value': '@entity.successCount',
-                            'type': 'stat-display',
                           },
                         ],
                       },
                       {
-                        'min': 0,
                         'value': '@entity.failureCount',
                         'type': 'meter',
                         'max': '@entity.threshold',
+                        'min': 0,
                       },
                       {
-                        'variant': 'ghost',
+                        'label': 'Reset',
                         'action': 'RESET',
                         'icon': 'rotate-ccw',
-                        'label': 'Reset',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1255,69 +1264,69 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
+                        'justify': 'between',
                         'children': [
                           {
                             'type': 'stack',
-                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'shield-check',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Circuit Breaker',
+                                'type': 'typography',
                                 'variant': 'h3',
                               },
                             ],
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'md',
                           },
                           {
-                            'label': 'Circuit Closed',
                             'type': 'status-dot',
-                            'status': 'online',
                             'pulse': false,
+                            'label': 'Circuit Closed',
+                            'status': 'online',
                           },
                         ],
-                        'gap': 'md',
-                        'justify': 'between',
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'align': 'center',
                       },
                       {
-                        'variant': 'success',
                         'message': 'All requests are being processed.',
                         'type': 'alert',
+                        'variant': 'success',
                       },
                       {
-                        'cols': 2,
                         'type': 'simple-grid',
+                        'cols': 2,
                         'children': [
                           {
-                            'value': '@entity.failureCount',
                             'type': 'stat-display',
                             'label': 'Failures',
+                            'value': '@entity.failureCount',
                           },
                           {
-                            'value': '@entity.successCount',
                             'label': 'Successes',
                             'type': 'stat-display',
+                            'value': '@entity.successCount',
                           },
                         ],
                       },
                       {
-                        'min': 0,
-                        'type': 'meter',
                         'value': '@entity.failureCount',
+                        'type': 'meter',
                         'max': '@entity.threshold',
+                        'min': 0,
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'lg',
                   },
                 ],
@@ -1332,17 +1341,13 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
-                        'justify': 'between',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
@@ -1350,36 +1355,36 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                               },
                               {
                                 'content': 'Circuit Breaker',
-                                'variant': 'h3',
                                 'type': 'typography',
+                                'variant': 'h3',
                               },
                             ],
                             'gap': 'md',
-                            'type': 'stack',
                           },
                           {
+                            'pulse': true,
+                            'label': 'Half-Open',
                             'status': 'warning',
                             'type': 'status-dot',
-                            'label': 'Half-Open',
-                            'pulse': true,
                           },
                         ],
-                        'gap': 'md',
                         'type': 'stack',
+                        'justify': 'between',
+                        'gap': 'md',
                         'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
-                        'variant': 'warning',
                         'message': 'Testing recovery. Limited requests are being allowed through.',
                         'type': 'alert',
+                        'variant': 'warning',
                       },
                       {
-                        'cols': 2,
                         'children': [
                           {
-                            'type': 'stat-display',
                             'label': 'Failures',
                             'value': '@entity.failureCount',
+                            'type': 'stat-display',
                           },
                           {
                             'type': 'stat-display',
@@ -1388,8 +1393,12 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                           },
                         ],
                         'type': 'simple-grid',
+                        'cols': 2,
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1403,49 +1412,45 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'md',
+                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'name': 'shield-check',
                                 'type': 'icon',
+                                'name': 'shield-check',
                               },
                               {
-                                'variant': 'h3',
                                 'type': 'typography',
+                                'variant': 'h3',
                                 'content': 'Circuit Breaker',
                               },
                             ],
-                            'align': 'center',
+                            'gap': 'md',
                           },
                           {
-                            'status': 'online',
                             'type': 'status-dot',
                             'label': 'Circuit Closed',
+                            'status': 'online',
                             'pulse': false,
                           },
                         ],
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'align': 'center',
-                        'gap': 'md',
-                        'justify': 'between',
                       },
                       {
+                        'type': 'alert',
                         'message': 'All requests are being processed.',
                         'variant': 'success',
-                        'type': 'alert',
                       },
                       {
-                        'type': 'simple-grid',
                         'cols': 2,
                         'children': [
                           {
@@ -1454,19 +1459,23 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                             'type': 'stat-display',
                           },
                           {
-                            'type': 'stat-display',
-                            'value': '@entity.successCount',
                             'label': 'Successes',
+                            'value': '@entity.successCount',
+                            'type': 'stat-display',
                           },
                         ],
+                        'type': 'simple-grid',
                       },
                       {
-                        'max': '@entity.threshold',
+                        'value': '@entity.failureCount',
                         'type': 'meter',
                         'min': 0,
-                        'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
                       },
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1481,16 +1490,13 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'main',
                   {
                     'gap': 'lg',
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -1498,33 +1504,37 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                               },
                               {
                                 'content': 'Circuit Breaker',
-                                'variant': 'h3',
                                 'type': 'typography',
+                                'variant': 'h3',
                               },
                             ],
                             'gap': 'md',
-                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
-                            'type': 'status-dot',
-                            'pulse': false,
                             'label': 'Circuit Closed',
                             'status': 'online',
+                            'type': 'status-dot',
+                            'pulse': false,
                           },
                         ],
+                        'align': 'center',
                         'justify': 'between',
+                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       {
+                        'type': 'alert',
                         'variant': 'success',
                         'message': 'All requests are being processed.',
-                        'type': 'alert',
                       },
                       {
+                        'cols': 2,
                         'children': [
                           {
-                            'label': 'Failures',
                             'type': 'stat-display',
+                            'label': 'Failures',
                             'value': '@entity.failureCount',
                           },
                           {
@@ -1534,16 +1544,15 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                           },
                         ],
                         'type': 'simple-grid',
-                        'cols': 2,
                       },
                       {
                         'max': '@entity.threshold',
-                        'value': '@entity.failureCount',
-                        'type': 'meter',
                         'min': 0,
+                        'type': 'meter',
+                        'value': '@entity.failureCount',
                       },
                     ],
-                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1558,76 +1567,76 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'md',
+                        'justify': 'between',
                         'direction': 'horizontal',
                         'align': 'center',
-                        'justify': 'between',
+                        'type': 'stack',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'name': 'alert-triangle',
-                                'type': 'icon',
-                              },
-                              {
-                                'type': 'typography',
-                                'content': 'Circuit Breaker',
-                                'variant': 'h3',
-                              },
-                            ],
                             'type': 'stack',
-                            'gap': 'md',
                             'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'alert-triangle',
+                              },
+                              {
+                                'variant': 'h3',
+                                'content': 'Circuit Breaker',
+                                'type': 'typography',
+                              },
+                            ],
                           },
                           {
-                            'pulse': true,
-                            'status': 'critical',
                             'label': 'Circuit Open',
                             'type': 'status-dot',
+                            'pulse': true,
+                            'status': 'critical',
                           },
                         ],
                       },
                       {
-                        'variant': 'error',
-                        'type': 'alert',
                         'message': 'Circuit is open. Requests are being rejected to prevent cascading failures.',
+                        'type': 'alert',
+                        'variant': 'error',
                       },
                       {
-                        'cols': 2,
+                        'type': 'simple-grid',
                         'children': [
                           {
-                            'label': 'Failures',
-                            'value': '@entity.failureCount',
                             'type': 'stat-display',
+                            'value': '@entity.failureCount',
+                            'label': 'Failures',
                           },
                           {
-                            'label': 'Successes',
                             'type': 'stat-display',
+                            'label': 'Successes',
                             'value': '@entity.successCount',
                           },
                         ],
-                        'type': 'simple-grid',
+                        'cols': 2,
                       },
                       {
                         'type': 'meter',
-                        'value': '@entity.failureCount',
                         'max': '@entity.threshold',
                         'min': 0,
+                        'value': '@entity.failureCount',
                       },
                       {
-                        'variant': 'ghost',
                         'type': 'button',
-                        'action': 'RESET',
                         'label': 'Reset',
+                        'variant': 'ghost',
                         'icon': 'rotate-ccw',
+                        'action': 'RESET',
                       },
                     ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1643,68 +1652,68 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
                   {
                     'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
-                        'justify': 'between',
                         'gap': 'md',
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'md',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'shield-check',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Circuit Breaker',
                                 'variant': 'h3',
+                                'type': 'typography',
                               },
                             ],
                             'align': 'center',
-                            'direction': 'horizontal',
                           },
                           {
-                            'status': 'online',
-                            'pulse': false,
                             'type': 'status-dot',
                             'label': 'Circuit Closed',
+                            'status': 'online',
+                            'pulse': false,
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
-                        'variant': 'success',
-                        'message': 'All requests are being processed.',
                         'type': 'alert',
+                        'message': 'All requests are being processed.',
+                        'variant': 'success',
                       },
                       {
                         'type': 'simple-grid',
                         'cols': 2,
                         'children': [
                           {
-                            'label': 'Failures',
                             'type': 'stat-display',
                             'value': '@entity.failureCount',
+                            'label': 'Failures',
                           },
                           {
                             'type': 'stat-display',
-                            'label': 'Successes',
                             'value': '@entity.successCount',
+                            'label': 'Successes',
                           },
                         ],
                       },
                       {
-                        'max': '@entity.threshold',
-                        'min': 0,
                         'type': 'meter',
+                        'min': 0,
                         'value': '@entity.failureCount',
+                        'max': '@entity.threshold',
                       },
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1764,7 +1773,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1776,6 +1785,10 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1799,7 +1812,9 @@ export const StdDevopsDashboardServiceNodeOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ServiceNodeAppLayout',
@@ -1837,20 +1852,23 @@ export function isStdDevopsDashboardServiceNodeOrbitalParams(p: object): p is St
 /**
  * Tunable params for the AlertMetricOrbital orbital.
  *
- * Canonical entity: AlertMetric (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: AlertMetric — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdDevopsDashboardAlertMetricOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1859,22 +1877,28 @@ export interface StdDevopsDashboardAlertMetricOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'AlertMetricAppLayout' | 'AlertBrowseList' | 'AlertCreate' | 'AlertEdit' | 'AlertView' | 'AlertDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the AlertMetricOrbital orbital with consumer params. */
 export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardAlertMetricOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'AlertMetric';
+  const canonicalName = params.entityName ?? 'AlertMetric';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'alertmetrics');
   const built = makeOrbitalWithUses({
     name: 'AlertMetricOrbital',
     uses: [
@@ -1901,7 +1925,7 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
     ],
     entity: {
       name: canonicalName,
-      collection: 'alertmetrics',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1950,39 +1974,39 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'AlertMetricAppLayout',
-        'linkedEntity': 'AlertMetric',
+        'linkedEntity': canonicalName,
         'config': {
+          'notifications': [],
+          'notificationClickEvent': 'ALERT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.AlertCatalog',
+          'appName': 'DevOps Dashboard',
           'navItems': [
             {
-              'label': 'Services',
               'icon': 'server',
+              'label': 'Services',
               'href': '/services',
             },
             {
+              'href': '/alerts',
               'label': 'Alerts',
               'icon': 'bell',
-              'href': '/alerts',
             },
             {
-              'label': 'Logs',
               'href': '/logs',
               'icon': 'terminal',
+              'label': 'Logs',
             },
             {
               'href': '/metrics',
-              'label': 'Metrics',
               'icon': 'layout-list',
+              'label': 'Metrics',
             },
           ],
-          'appName': 'DevOps Dashboard',
-          'notifications': [],
-          'notificationClickEvent': 'ALERT_NOTIFICATIONS_OPEN',
           'searchEvent': 'ALERT_SEARCH',
-          'contentTrait': '@trait.AlertCatalog',
         },
         'events': {
-          'SEARCH': 'ALERT_SEARCH',
           'NOTIFY_CLICK': 'ALERT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ALERT_SEARCH',
         },
       }),
       {
@@ -2027,55 +2051,55 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
-                        'type': 'stack',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'bell',
-                              },
-                              {
-                                'type': 'typography',
-                                'content': 'Alerts',
-                                'variant': 'h2',
-                              },
-                            ],
-                          },
-                          {
-                            'children': [
-                              {
-                                'variant': 'primary',
-                                'type': 'button',
-                                'label': 'New Alert',
-                                'action': 'CREATE',
-                                'icon': 'plus',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
-                          },
-                        ],
                         'direction': 'horizontal',
                         'gap': 'md',
+                        'type': 'stack',
                         'justify': 'between',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'bell',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Alerts',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'label': 'New Alert',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                          },
+                        ],
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.AlertBrowseList',
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -2087,29 +2111,14 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'AlertBrowseList',
-        'linkedEntity': 'AlertMetric',
+        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'label': 'View',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
-            },
-          ],
+          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
-              'variant': 'badge',
               'name': 'severity',
+              'variant': 'badge',
             },
             {
               'icon': 'alert-triangle',
@@ -2121,13 +2130,28 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
               'name': 'source',
             },
             {
-              'format': 'date',
               'name': 'timestamp',
               'variant': 'caption',
+              'format': 'date',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
         },
         'listens': [
           {
@@ -2159,17 +2183,17 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'AlertCreate',
-        'linkedEntity': 'AlertMetric',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Alert',
           'fields': [
             'severity',
             'message',
             'source',
             'timestamp',
           ],
-          'title': 'New Alert',
-          'mode': 'create',
           'icon': 'plus-circle',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2188,16 +2212,16 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'AlertEdit',
-        'linkedEntity': 'AlertMetric',
+        'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'icon': 'edit',
           'fields': [
             'severity',
             'message',
             'source',
             'timestamp',
           ],
-          'mode': 'edit',
-          'icon': 'edit',
           'title': 'Edit Alert',
         },
         'events': {
@@ -2217,10 +2241,9 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'AlertView',
-        'linkedEntity': 'AlertMetric',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'View Alert',
-          'icon': 'eye',
           'mode': 'edit',
           'fields': [
             'severity',
@@ -2228,6 +2251,7 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
             'source',
             'timestamp',
           ],
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2246,16 +2270,16 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'AlertDelete',
-        'linkedEntity': 'AlertMetric',
+        'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Alert',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -2525,10 +2549,10 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
                   'email',
                   'send',
                   {
+                    'recipient': '@payload.recipient',
+                    'sender': 'alerts@example.com',
                     'subject': '@payload.subject',
                     'body': '@payload.body',
-                    'sender': 'alerts@example.com',
-                    'recipient': '@payload.recipient',
                   },
                 ],
               ],
@@ -2576,7 +2600,7 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2588,6 +2612,10 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2611,7 +2639,9 @@ export const StdDevopsDashboardAlertMetricOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'AlertMetricAppLayout',
@@ -2645,20 +2675,23 @@ export function isStdDevopsDashboardAlertMetricOrbitalParams(p: object): p is St
 /**
  * Tunable params for the LogEntryOrbital orbital.
  *
- * Canonical entity: LogEntry (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: LogEntry — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdDevopsDashboardLogEntryOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2667,22 +2700,28 @@ export interface StdDevopsDashboardLogEntryOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'LogEntryAppLayout' | 'LogBrowseList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the LogEntryOrbital orbital with consumer params. */
 export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogEntryOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'LogEntry';
+  const canonicalName = params.entityName ?? 'LogEntry';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'logentries');
   const built = makeOrbitalWithUses({
     name: 'LogEntryOrbital',
     uses: [
@@ -2697,7 +2736,7 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
     ],
     entity: {
       name: canonicalName,
-      collection: 'logentries',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2742,19 +2781,20 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'LogEntryAppLayout',
-        'linkedEntity': 'LogEntry',
+        'linkedEntity': canonicalName,
         'config': {
-          'notifications': [],
+          'appName': 'DevOps Dashboard',
+          'contentTrait': '@trait.LogCatalog',
           'navItems': [
             {
-              'label': 'Services',
               'href': '/services',
+              'label': 'Services',
               'icon': 'server',
             },
             {
-              'href': '/alerts',
-              'icon': 'bell',
               'label': 'Alerts',
+              'icon': 'bell',
+              'href': '/alerts',
             },
             {
               'label': 'Logs',
@@ -2767,10 +2807,9 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
               'href': '/metrics',
             },
           ],
-          'appName': 'DevOps Dashboard',
-          'searchEvent': 'LOG_SEARCH',
+          'notifications': [],
           'notificationClickEvent': 'LOG_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.LogCatalog',
+          'searchEvent': 'LOG_SEARCH',
         },
         'events': {
           'SEARCH': 'LOG_SEARCH',
@@ -2805,16 +2844,15 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
                   {
                     'children': [
                       {
+                        'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
                             'align': 'center',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'terminal',
                                 'type': 'icon',
+                                'name': 'terminal',
                               },
                               {
                                 'type': 'typography',
@@ -2822,12 +2860,13 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
                                 'content': 'Logs',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
-                        'justify': 'between',
-                        'gap': 'md',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'align': 'center',
                       },
                       {
@@ -2835,9 +2874,9 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
                       },
                       '@trait.LogBrowseList',
                     ],
-                    'gap': 'lg',
                     'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2849,9 +2888,9 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'LogBrowseList',
-        'linkedEntity': 'LogEntry',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
+          'variant': 'dense',
           'gap': 'sm',
           'fields': [
             {
@@ -2859,9 +2898,9 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
               'name': 'level',
             },
             {
-              'icon': 'file-text',
-              'name': 'message',
               'variant': 'body',
+              'name': 'message',
+              'icon': 'file-text',
             },
             {
               'name': 'service',
@@ -2873,7 +2912,7 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
               'name': 'timestamp',
             },
           ],
-          'variant': 'dense',
+          'cols': 1,
         },
       }),
     ],
@@ -2897,7 +2936,7 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2909,6 +2948,10 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2932,7 +2975,9 @@ export const StdDevopsDashboardLogEntryOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'LogEntryAppLayout',
@@ -2960,20 +3005,23 @@ export function isStdDevopsDashboardLogEntryOrbitalParams(p: object): p is StdDe
 /**
  * Tunable params for the SystemMetricOrbital orbital.
  *
- * Canonical entity: SystemMetric (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: SystemMetric — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdDevopsDashboardSystemMetricOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2982,22 +3030,28 @@ export interface StdDevopsDashboardSystemMetricOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'SystemMetricAppLayout' | 'SystemMetricsBrowse',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the SystemMetricOrbital orbital with consumer params. */
 export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboardSystemMetricOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'SystemMetric';
+  const canonicalName = params.entityName ?? 'SystemMetric';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'systemmetrics');
   const built = makeOrbitalWithUses({
     name: 'SystemMetricOrbital',
     uses: [
@@ -3012,7 +3066,7 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
     ],
     entity: {
       name: canonicalName,
-      collection: 'systemmetrics',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -3057,58 +3111,59 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'SystemMetricAppLayout',
-        'linkedEntity': 'SystemMetric',
+        'linkedEntity': canonicalName,
         'config': {
           'appName': 'DevOps Dashboard',
-          'searchEvent': 'SYSTEM_METRIC_SEARCH',
-          'contentTrait': '@trait.SystemMetricDisplay',
-          'notificationClickEvent': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'notificationClickEvent': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'label': 'Services',
               'href': '/services',
               'icon': 'server',
+              'label': 'Services',
             },
             {
-              'icon': 'bell',
-              'label': 'Alerts',
               'href': '/alerts',
+              'label': 'Alerts',
+              'icon': 'bell',
             },
             {
-              'label': 'Logs',
-              'href': '/logs',
               'icon': 'terminal',
+              'href': '/logs',
+              'label': 'Logs',
             },
             {
-              'href': '/metrics',
               'icon': 'layout-list',
               'label': 'Metrics',
+              'href': '/metrics',
             },
           ],
+          'searchEvent': 'SYSTEM_METRIC_SEARCH',
+          'contentTrait': '@trait.SystemMetricDisplay',
         },
         'events': {
-          'SEARCH': 'SYSTEM_METRIC_SEARCH',
           'NOTIFY_CLICK': 'SYSTEM_METRIC_NOTIFICATIONS_OPEN',
+          'SEARCH': 'SYSTEM_METRIC_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'SystemMetricsBrowse',
-        'linkedEntity': 'SystemMetric',
+        'linkedEntity': canonicalName,
         'config': {
+          'pageSize': 100,
           'displayPageSize': 10,
           'fields': [
             {
               'name': 'name',
-              'label': 'Metric',
               'variant': 'h4',
+              'label': 'Metric',
             },
             {
-              'format': 'number',
-              'variant': 'h3',
               'name': 'value',
+              'variant': 'h3',
               'label': 'Value',
+              'format': 'number',
             },
             {
               'name': 'unit',
@@ -3116,12 +3171,11 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
               'variant': 'caption',
             },
             {
-              'name': 'trend',
               'variant': 'badge',
+              'name': 'trend',
               'label': 'Trend',
             },
           ],
-          'pageSize': 100,
         },
       }),
       {
@@ -3150,14 +3204,8 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
@@ -3169,19 +3217,25 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
                             'variant': 'h2',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Recent',
+                        'type': 'typography',
                       },
                       '@trait.SystemMetricsBrowse',
                     ],
-                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -3211,7 +3265,7 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3223,6 +3277,10 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3246,7 +3304,9 @@ export const StdDevopsDashboardSystemMetricOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'SystemMetricAppLayout',

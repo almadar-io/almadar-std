@@ -29,7 +29,7 @@ const ALIAS = 'VendorOnboarding';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdVendorOnboardingEventKey = 'BACK_STEP' | 'EDIT_BANK' | 'EDIT_BUSINESS' | 'EDIT_TAX' | 'INIT' | 'NEXT_STEP' | 'SUBMIT' | 'UPLOAD_IDENTITY' | 'VendorLoadFailed' | 'VendorLoaded';
+export type StdVendorOnboardingEventKey = 'BACK_STEP' | 'INIT' | 'NEXT_STEP' | 'SUBMIT' | 'UPLOAD_IDENTITY' | 'VendorLoadFailed' | 'VendorLoaded';
 
 /**
  * Closed set of event keys this trait listens for —

@@ -37,20 +37,23 @@ export interface StdRetailPosConfig {
 /**
  * Tunable params for the SaleOrbital orbital.
  *
- * Canonical entity: Sale (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Sale — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRetailPosSaleOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdRetailPosSaleOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'SaleAppLayout' | 'SaleSearch' | 'SaleFilter' | 'SaleStats' | 'SaleGraphs' | 'SaleBrowseList' | 'SaleCreate' | 'SaleEdit' | 'SaleView' | 'SaleDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the SaleOrbital orbital with consumer params. */
 export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Sale';
+  const canonicalName = params.entityName ?? 'Sale';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'sales');
   const built = makeOrbitalWithUses({
     name: 'SaleOrbital',
     uses: [
@@ -113,7 +122,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
     ],
     entity: {
       name: canonicalName,
-      collection: 'sales',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -181,33 +190,33 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'SaleAppLayout',
         'config': {
+          'appName': 'Retail POS',
           'navItems': [
             {
               'icon': 'shopping-bag',
-              'label': 'Sales',
               'href': '/sales',
+              'label': 'Sales',
             },
             {
-              'icon': 'credit-card',
-              'href': '/checkout',
               'label': 'Checkout',
+              'href': '/checkout',
+              'icon': 'credit-card',
             },
             {
-              'href': '/receipts',
               'icon': 'receipt',
+              'href': '/receipts',
               'label': 'Receipts',
             },
             {
+              'href': '/customers',
               'label': 'Customers',
               'icon': 'users',
-              'href': '/customers',
             },
           ],
+          'notifications': [],
+          'searchEvent': 'SALE_SEARCH',
           'notificationClickEvent': 'SALE_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.SaleCatalog',
-          'appName': 'Retail POS',
-          'searchEvent': 'SALE_SEARCH',
-          'notifications': [],
         },
         'events': {
           'NOTIFY_CLICK': 'SALE_NOTIFICATIONS_OPEN',
@@ -296,17 +305,13 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                   {
                     'children': [
                       {
-                        'justify': 'between',
-                        'direction': 'horizontal',
-                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'shopping-bag',
                                 'type': 'icon',
+                                'name': 'shopping-bag',
                               },
                               {
                                 'type': 'typography',
@@ -314,39 +319,43 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                                 'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
                           },
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'label': 'New Sale',
-                                'type': 'button',
-                                'icon': 'plus',
-                                'variant': 'primary',
                                 'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Sale',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
                           },
                         ],
-                        'align': 'center',
+                        'gap': 'md',
+                        'justify': 'between',
                         'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
                         'type': 'stack',
                         'children': [
                           '@trait.SaleSearch',
                           '@trait.SaleFilter',
                         ],
-                        'gap': 'md',
-                        'align': 'center',
-                        'direction': 'horizontal',
                       },
                       '@trait.SaleStats',
                       '@trait.SaleGraphs',
@@ -355,8 +364,8 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                       },
                       '@trait.SaleBrowseList',
                     ],
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -376,11 +385,6 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'align': 'center',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'children': [
                       {
                         'name': 'bell',
@@ -388,22 +392,27 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                       },
                       {
                         'type': 'typography',
-                        'content': 'No notifications',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'caption',
-                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'caption',
                       },
                       {
-                        'type': 'button',
-                        'action': 'INIT',
                         'label': 'Back to sales',
+                        'action': 'INIT',
                         'variant': 'ghost',
+                        'type': 'button',
                       },
                     ],
+                    'type': 'stack',
+                    'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -416,8 +425,8 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'SaleSearch',
         'config': {
-          'placeholder': 'Search sales…',
           'event': 'SALE_SEARCH',
+          'placeholder': 'Search sales…',
         },
       }),
       makeTraitRef({
@@ -426,19 +435,19 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'config': {
           'filters': [
             {
-              'field': 'status',
               'label': 'Status',
-              'filterType': 'select',
               'options': [
                 'in-progress',
                 'completed',
                 'refunded',
                 'voided',
               ],
+              'filterType': 'select',
+              'field': 'status',
             },
             {
-              'filterType': 'select',
               'field': 'paymentMethod',
+              'filterType': 'select',
               'options': [
                 'cash',
                 'card',
@@ -455,34 +464,19 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'SaleStats',
         'config': {
+          'title': 'Sales',
           'metrics': [
             {
               'format': 'number',
-              'icon': 'shopping-bag',
               'variant': 'primary',
               'label': 'Total',
               'aggregation': 'count',
+              'icon': 'shopping-bag',
             },
             {
               'aggregation': 'count',
-              'format': 'number',
-              'variant': 'success',
-              'filter': [
-                'fn',
-                'row',
-                [
-                  '=',
-                  '@row.status',
-                  'completed',
-                ],
-              ],
               'label': 'Completed',
               'icon': 'check-circle',
-            },
-            {
-              'variant': 'info',
-              'aggregation': 'sum',
-              'format': 'currency',
               'filter': [
                 'fn',
                 'row',
@@ -492,12 +486,27 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                   'completed',
                 ],
               ],
+              'format': 'number',
+              'variant': 'success',
+            },
+            {
+              'aggregation': 'sum',
+              'format': 'currency',
+              'field': 'total',
               'label': 'Revenue',
               'icon': 'dollar-sign',
-              'field': 'total',
+              'variant': 'info',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'completed',
+                ],
+              ],
             },
           ],
-          'title': 'Sales',
         },
         'listens': [
           {
@@ -514,13 +523,13 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'SaleGraphs',
         'config': {
+          'title': 'Sales by Payment Method',
+          'subtitle': 'Volume across payment types',
+          'chartType': 'bar',
+          'categoryField': 'paymentMethod',
+          'aggregation': 'count',
           'height': 240,
           'showLegend': false,
-          'chartType': 'bar',
-          'title': 'Sales by Payment Method',
-          'categoryField': 'paymentMethod',
-          'subtitle': 'Volume across payment types',
-          'aggregation': 'count',
         },
         'listens': [
           {
@@ -536,29 +545,12 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'SaleBrowseList',
-        'linkedEntity': 'Sale',
+        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
-            },
-          ],
           'fields': [
             {
-              'variant': 'h4',
               'name': 'id',
+              'variant': 'h4',
               'icon': 'shopping-bag',
             },
             {
@@ -566,20 +558,37 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
               'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'paymentMethod',
+              'variant': 'badge',
             },
             {
               'name': 'total',
               'variant': 'caption',
             },
             {
-              'name': 'completedAt',
               'variant': 'caption',
+              'name': 'completedAt',
             },
           ],
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
           'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -627,9 +636,11 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SaleCreate',
-        'linkedEntity': 'Sale',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
+          'title': 'New Sale',
+          'mode': 'create',
           'fields': [
             'total',
             'status',
@@ -637,8 +648,6 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             'customerId',
             'cashierId',
           ],
-          'title': 'New Sale',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -657,8 +666,11 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SaleEdit',
-        'linkedEntity': 'Sale',
+        'linkedEntity': canonicalName,
         'config': {
+          'title': 'Edit Sale',
+          'mode': 'edit',
+          'icon': 'edit',
           'fields': [
             'total',
             'status',
@@ -667,9 +679,6 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             'cashierId',
             'completedAt',
           ],
-          'mode': 'edit',
-          'title': 'Edit Sale',
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -688,9 +697,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'SaleView',
-        'linkedEntity': 'Sale',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
+          'title': 'View Sale',
           'fields': [
             'total',
             'status',
@@ -699,7 +708,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             'cashierId',
             'completedAt',
           ],
-          'title': 'View Sale',
+          'icon': 'eye',
           'mode': 'edit',
         },
         'events': {
@@ -719,12 +728,12 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'SaleDelete',
-        'linkedEntity': 'Sale',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Sale',
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Sale',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -972,7 +981,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -984,6 +993,10 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1007,7 +1020,9 @@ export const StdRetailPosSaleOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'SaleAppLayout',
@@ -1044,20 +1059,23 @@ export function isStdRetailPosSaleOrbitalParams(p: object): p is StdRetailPosSal
 /**
  * Tunable params for the CheckoutOrbital orbital.
  *
- * Canonical entity: CheckoutSession (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: CheckoutSession — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRetailPosCheckoutOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1066,22 +1084,28 @@ export interface StdRetailPosCheckoutOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CheckoutAppLayout' | 'CheckoutTerminalBoard',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CheckoutOrbital orbital with consumer params. */
 export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'CheckoutSession';
+  const canonicalName = params.entityName ?? 'CheckoutSession';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'checkoutsessions');
   const built = makeOrbitalWithUses({
     name: 'CheckoutOrbital',
     uses: [
@@ -1096,7 +1120,7 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'checkoutsessions',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1184,33 +1208,33 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CheckoutAppLayout',
         'config': {
-          'notificationClickEvent': 'CHECKOUT_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'navItems': [
-            {
-              'icon': 'shopping-bag',
-              'label': 'Sales',
-              'href': '/sales',
-            },
-            {
-              'href': '/checkout',
-              'label': 'Checkout',
-              'icon': 'credit-card',
-            },
-            {
-              'icon': 'receipt',
-              'label': 'Receipts',
-              'href': '/receipts',
-            },
-            {
-              'href': '/customers',
-              'icon': 'users',
-              'label': 'Customers',
-            },
-          ],
-          'appName': 'Retail POS',
           'searchEvent': 'CHECKOUT_SEARCH',
           'contentTrait': '@trait.CheckoutTerminalBoard',
+          'appName': 'Retail POS',
+          'navItems': [
+            {
+              'label': 'Sales',
+              'href': '/sales',
+              'icon': 'shopping-bag',
+            },
+            {
+              'icon': 'credit-card',
+              'label': 'Checkout',
+              'href': '/checkout',
+            },
+            {
+              'label': 'Receipts',
+              'href': '/receipts',
+              'icon': 'receipt',
+            },
+            {
+              'icon': 'users',
+              'label': 'Customers',
+              'href': '/customers',
+            },
+          ],
+          'notifications': [],
+          'notificationClickEvent': 'CHECKOUT_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'CHECKOUT_SEARCH',
@@ -1242,7 +1266,7 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1254,6 +1278,10 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1277,7 +1305,9 @@ export const StdRetailPosCheckoutOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CheckoutAppLayout',
@@ -1304,20 +1334,23 @@ export function isStdRetailPosCheckoutOrbitalParams(p: object): p is StdRetailPo
 /**
  * Tunable params for the ReceiptOrbital orbital.
  *
- * Canonical entity: Receipt (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Receipt — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRetailPosReceiptOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1326,22 +1359,28 @@ export interface StdRetailPosReceiptOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ReceiptAppLayout' | 'ReceiptLedger',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ReceiptOrbital orbital with consumer params. */
 export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Receipt';
+  const canonicalName = params.entityName ?? 'Receipt';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'receipts');
   const built = makeOrbitalWithUses({
     name: 'ReceiptOrbital',
     uses: [
@@ -1356,7 +1395,7 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
     ],
     entity: {
       name: canonicalName,
-      collection: 'receipts',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1438,11 +1477,9 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ReceiptAppLayout',
         'config': {
-          'notifications': [],
-          'appName': 'Retail POS',
           'notificationClickEvent': 'RECEIPT_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ReceiptLedger',
           'searchEvent': 'RECEIPT_SEARCH',
+          'appName': 'Retail POS',
           'navItems': [
             {
               'href': '/sales',
@@ -1450,9 +1487,9 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
               'label': 'Sales',
             },
             {
-              'href': '/checkout',
               'icon': 'credit-card',
               'label': 'Checkout',
+              'href': '/checkout',
             },
             {
               'label': 'Receipts',
@@ -1460,11 +1497,13 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
               'icon': 'receipt',
             },
             {
-              'href': '/customers',
-              'icon': 'users',
               'label': 'Customers',
+              'icon': 'users',
+              'href': '/customers',
             },
           ],
+          'contentTrait': '@trait.ReceiptLedger',
+          'notifications': [],
         },
         'events': {
           'NOTIFY_CLICK': 'RECEIPT_NOTIFICATIONS_OPEN',
@@ -1496,7 +1535,7 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1508,6 +1547,10 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1531,7 +1574,9 @@ export const StdRetailPosReceiptOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ReceiptAppLayout',
@@ -1558,20 +1603,23 @@ export function isStdRetailPosReceiptOrbitalParams(p: object): p is StdRetailPos
 /**
  * Tunable params for the CustomerOrbital orbital.
  *
- * Canonical entity: CustomerAccount (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: CustomerAccount — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdRetailPosCustomerOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1580,22 +1628,28 @@ export interface StdRetailPosCustomerOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CustomerAppLayout' | 'CustomerDirectory',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CustomerOrbital orbital with consumer params. */
 export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'CustomerAccount';
+  const canonicalName = params.entityName ?? 'CustomerAccount';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'customeraccounts');
   const built = makeOrbitalWithUses({
     name: 'CustomerOrbital',
     uses: [
@@ -1610,7 +1664,7 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'customeraccounts',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1681,12 +1735,15 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CustomerAppLayout',
         'config': {
+          'notificationClickEvent': 'CUSTOMER_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.CustomerDirectory',
           'appName': 'Retail POS',
+          'notifications': [],
           'navItems': [
             {
-              'icon': 'shopping-bag',
-              'href': '/sales',
               'label': 'Sales',
+              'href': '/sales',
+              'icon': 'shopping-bag',
             },
             {
               'href': '/checkout',
@@ -1694,24 +1751,21 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
               'label': 'Checkout',
             },
             {
-              'label': 'Receipts',
-              'href': '/receipts',
               'icon': 'receipt',
+              'href': '/receipts',
+              'label': 'Receipts',
             },
             {
-              'label': 'Customers',
               'icon': 'users',
               'href': '/customers',
+              'label': 'Customers',
             },
           ],
-          'contentTrait': '@trait.CustomerDirectory',
           'searchEvent': 'CUSTOMER_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'CUSTOMER_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'CUSTOMER_NOTIFICATIONS_OPEN',
           'SEARCH': 'CUSTOMER_SEARCH',
+          'NOTIFY_CLICK': 'CUSTOMER_NOTIFICATIONS_OPEN',
         },
       }),
       makeTraitRef({
@@ -1739,7 +1793,7 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1751,6 +1805,10 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1774,7 +1832,9 @@ export const StdRetailPosCustomerOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CustomerAppLayout',

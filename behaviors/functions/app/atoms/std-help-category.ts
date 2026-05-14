@@ -29,37 +29,25 @@ const ALIAS = 'HelpCategory';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdHelpCategoryEventKey = 'ARCHIVE' | 'CREATE' | 'EDIT' | 'FILTER_STATUS' | 'HelpCategoryLoadFailed' | 'HelpCategoryLoaded' | 'INIT' | 'PUBLISH' | 'REFRESH' | 'REQUEST_DELETE' | 'SEARCH' | 'VIEW';
+export type StdHelpCategoryEventKey = 'ARCHIVE' | 'CLOSE_VIEW' | 'HelpCategoryLoadFailed' | 'HelpCategoryLoaded' | 'INIT' | 'OPEN_CATEGORY' | 'PUBLISH';
 
 /**
- * Payload shape for the `VIEW` event.
+ * Payload shape for the `OPEN_CATEGORY` event.
  */
-export interface StdHelpCategoryViewPayload {
+export interface StdHelpCategoryOpenCategoryPayload {
   id: string;
-  source?: string;
-}
-
-/**
- * Payload shape for the `EDIT` event.
- */
-export interface StdHelpCategoryEditPayload {
-  id: string;
-  source?: string;
-}
-
-/**
- * Payload shape for the `CREATE` event.
- */
-export interface StdHelpCategoryCreatePayload {
-  source?: string;
-}
-
-/**
- * Payload shape for the `REQUEST_DELETE` event.
- */
-export interface StdHelpCategoryRequestDeletePayload {
-  id: string;
-  source?: string;
+  row?: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    icon?: string;
+    sortOrder?: number;
+    articleCount?: number;
+    status?: string;
+    updatedAt?: string;
+    pendingId?: string;
+  };
 }
 
 /**
@@ -67,18 +55,6 @@ export interface StdHelpCategoryRequestDeletePayload {
  */
 export interface StdHelpCategoryPublishPayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    icon?: string;
-    sortOrder?: number;
-    articleCount?: number;
-    status?: string;
-    updatedAt?: string;
-    pendingId?: string;
-  };
 }
 
 /**
@@ -86,18 +62,6 @@ export interface StdHelpCategoryPublishPayload {
  */
 export interface StdHelpCategoryArchivePayload {
   id: string;
-  row?: {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    icon?: string;
-    sortOrder?: number;
-    articleCount?: number;
-    status?: string;
-    updatedAt?: string;
-    pendingId?: string;
-  };
 }
 
 /**

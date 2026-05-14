@@ -30,27 +30,30 @@ const ALIAS = 'Lms';
  * without modifying its state-machine topology.
  */
 export interface StdLmsConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
  * Tunable params for the CourseOrbital orbital.
  *
- * Canonical entity: Course (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Course — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdLmsCourseOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdLmsCourseOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'CourseAppLayout' | 'CourseSearch' | 'CourseFilter' | 'CourseStats' | 'CourseGraphs' | 'CourseGallery' | 'CourseCreateModal' | 'CourseEditModal' | 'CourseDeleteConfirm' | 'CourseThumbnailUpload' | 'CourseLessonVideo',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the CourseOrbital orbital with consumer params. */
 export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Course';
+  const canonicalName = params.entityName ?? 'Course';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'courses');
   const built = makeOrbitalWithUses({
     name: 'CourseOrbital',
     uses: [
@@ -125,7 +134,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
     ],
     entity: {
       name: canonicalName,
-      collection: 'courses',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -196,28 +205,28 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CourseAppLayout',
         'config': {
-          'appName': 'LMS',
-          'notificationClickEvent': 'COURSE_NOTIFICATIONS_OPEN',
-          'notifications': [],
           'navItems': [
             {
-              'icon': 'graduation-cap',
               'label': 'Courses',
+              'icon': 'graduation-cap',
               'href': '/courses',
             },
             {
-              'label': 'Enroll',
               'href': '/enroll',
+              'label': 'Enroll',
               'icon': 'user-plus',
             },
             {
-              'icon': 'trending-up',
               'href': '/progress',
               'label': 'Progress',
+              'icon': 'trending-up',
             },
           ],
           'searchEvent': 'COURSE_SEARCH',
+          'appName': 'LMS',
+          'notifications': [],
           'contentTrait': '@trait.CourseCatalog',
+          'notificationClickEvent': 'COURSE_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'COURSE_SEARCH',
@@ -422,19 +431,24 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                     'direction': 'vertical',
                     'children': [
                       {
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'direction': 'horizontal',
+                            'align': 'center',
                             'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'graduation-cap',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'Courses',
@@ -442,56 +456,51 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                                 'type': 'typography',
                               },
                             ],
-                            'gap': 'sm',
-                            'align': 'center',
                           },
                           {
                             'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
+                                'label': 'Create Course',
                                 'action': 'CREATE',
                                 'variant': 'primary',
-                                'label': 'Create Course',
                                 'icon': 'plus',
+                                'type': 'button',
                               },
                               {
-                                'action': 'EDIT_COURSE',
-                                'icon': 'edit',
-                                'variant': 'ghost',
-                                'type': 'button',
                                 'label': 'Edit Selected',
+                                'icon': 'edit',
+                                'type': 'button',
+                                'action': 'EDIT_COURSE',
+                                'variant': 'ghost',
                               },
                               {
-                                'icon': 'trash-2',
-                                'type': 'button',
-                                'label': 'Delete Selected',
-                                'action': 'DELETE_COURSE',
                                 'variant': 'danger',
+                                'label': 'Delete Selected',
+                                'type': 'button',
+                                'action': 'DELETE_COURSE',
+                                'icon': 'trash-2',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
-                        'justify': 'between',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'align': 'center',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           '@trait.CourseSearch',
                           '@trait.CourseFilter',
                         ],
-                        'align': 'center',
+                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       '@trait.CourseStats',
                       '@trait.CourseGraphs',
@@ -523,7 +532,8 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-8',
                     'children': [
                       {
                         'name': 'bell',
@@ -531,26 +541,25 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                       },
                       {
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'No notifications',
-                        'type': 'typography',
                       },
                       {
                         'type': 'typography',
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                         'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'label': 'Back to courses',
-                        'action': 'INIT',
                         'type': 'button',
                         'variant': 'ghost',
+                        'label': 'Back to courses',
+                        'action': 'INIT',
                       },
                     ],
                     'gap': 'md',
-                    'className': 'py-8',
-                    'align': 'center',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -585,18 +594,18 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
             {
               'field': 'category',
               'filterType': 'select',
+              'label': 'Category',
               'options': [
                 'programming',
                 'design',
                 'business',
                 'marketing',
               ],
-              'label': 'Category',
             },
             {
-              'filterType': 'select',
               'label': 'Level',
               'field': 'level',
+              'filterType': 'select',
               'options': [
                 'beginner',
                 'intermediate',
@@ -613,36 +622,36 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
         'config': {
           'metrics': [
             {
+              'label': 'Total Courses',
               'aggregation': 'count',
               'variant': 'primary',
               'format': 'number',
-              'label': 'Total Courses',
               'icon': 'graduation-cap',
             },
             {
               'label': 'Enrolled Students',
               'aggregation': 'sum',
+              'format': 'number',
+              'variant': 'info',
               'field': 'enrolledCount',
               'icon': 'users',
-              'variant': 'info',
-              'format': 'number',
             },
             {
               'label': 'Completion Rate',
-              'icon': 'check-circle',
-              'aggregation': 'avg',
               'variant': 'success',
-              'format': 'percent',
               'field': 'completionPct',
+              'aggregation': 'avg',
+              'icon': 'check-circle',
+              'format': 'percent',
             },
             {
-              'variant': 'default',
-              'suffix': 'h',
               'format': 'number',
-              'icon': 'clock',
-              'label': 'Avg Duration',
+              'suffix': 'h',
               'aggregation': 'avg',
+              'label': 'Avg Duration',
+              'icon': 'clock',
               'field': 'durationHours',
+              'variant': 'default',
             },
           ],
           'title': 'Course Stats',
@@ -662,13 +671,13 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'CourseGraphs',
         'config': {
-          'categoryField': 'category',
           'chartType': 'bar',
-          'title': 'Courses by Category',
+          'categoryField': 'category',
           'subtitle': 'Catalog distribution',
-          'aggregation': 'count',
           'height': 280,
+          'aggregation': 'count',
           'showLegend': true,
+          'title': 'Courses by Category',
         },
         'listens': [
           {
@@ -684,13 +693,13 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
       makeTraitRef({
         'ref': 'Gallery.traits.GalleryItemGallery',
         'name': 'CourseGallery',
-        'linkedEntity': 'Course',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 4,
           'gap': 'md',
           'imageField': 'thumbnail',
           'titleField': 'title',
           'subtitleField': 'instructor',
+          'cols': 4,
         },
         'listens': [
           {
@@ -731,11 +740,11 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CourseCreateModal',
-        'linkedEntity': 'Course',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
-          'mode': 'create',
           'title': 'Create Course',
+          'mode': 'create',
           'fields': [
             'title',
             'description',
@@ -764,10 +773,10 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CourseEditModal',
-        'linkedEntity': 'Course',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
           'mode': 'edit',
-          'title': 'Edit Course',
           'fields': [
             'title',
             'description',
@@ -778,7 +787,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
             'thumbnail',
             'videoId',
           ],
-          'icon': 'edit',
+          'title': 'Edit Course',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -797,12 +806,12 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'CourseDeleteConfirm',
-        'linkedEntity': 'Course',
+        'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
           'title': 'Delete Course',
-          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -1048,36 +1057,36 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
                         'children': [
                           {
-                            'name': 'image',
                             'type': 'icon',
+                            'name': 'image',
                           },
                           {
                             'variant': 'h3',
-                            'type': 'typography',
                             'content': 'Course Thumbnail',
+                            'type': 'typography',
                           },
                         ],
                         'type': 'stack',
-                        'gap': 'sm',
                         'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'input',
-                        'placeholder': 'Choose image...',
                         'inputType': 'text',
+                        'placeholder': 'Choose image...',
                       },
                       {
-                        'action': 'UPLOAD',
                         'icon': 'upload',
                         'label': 'Upload Thumbnail',
                         'type': 'button',
+                        'action': 'UPLOAD',
                         'variant': 'primary',
                       },
                     ],
@@ -1095,14 +1104,14 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
         'name': 'CourseThumbnailUpload',
         'config': {
           'bucket': 'course-thumbnails',
+          'acl': 'public',
           'allowedMimeTypes': [
             'image/png',
             'image/jpeg',
             'image/webp',
           ],
-          'acl': 'public',
-          'maxSize': 5242880,
           'uiTrait': '@trait.CourseThumbnailForm',
+          'maxSize': 5242880,
         },
         'listens': [
           {
@@ -1120,8 +1129,8 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
         'name': 'CourseLessonVideo',
         'config': {
           'autoplay': false,
-          'controls': true,
           'videoId': '',
+          'controls': true,
           'uiTrait': '@trait.CourseLessonPlayer',
         },
       }),
@@ -1197,77 +1206,75 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'button',
+                            'icon': 'chevron-left',
                             'label': 'Previous',
                             'action': 'PREV_LESSON',
                             'variant': 'ghost',
-                            'icon': 'chevron-left',
+                            'type': 'button',
                           },
                           {
                             'variant': 'h3',
-                            'content': '@entity.title',
                             'type': 'typography',
+                            'content': '@entity.title',
                           },
                           {
-                            'variant': 'ghost',
-                            'action': 'NEXT_LESSON',
                             'icon': 'chevron-right',
                             'type': 'button',
+                            'variant': 'ghost',
                             'label': 'Next',
+                            'action': 'NEXT_LESSON',
                           },
                         ],
+                        'direction': 'horizontal',
                         'justify': 'between',
-                        'align': 'center',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'card',
                         'children': [
                           {
+                            'gap': 'md',
                             'direction': 'vertical',
                             'type': 'stack',
                             'align': 'center',
-                            'gap': 'md',
                             'children': [
                               {
                                 'name': 'video',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'caption',
-                                'color': 'muted',
                                 'content': 'Lesson video',
+                                'color': 'muted',
                                 'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
-                                'variant': 'body',
-                                'type': 'typography',
                                 'content': '@config.videoId',
+                                'type': 'typography',
+                                'variant': 'body',
                               },
                             ],
                           },
                         ],
+                        'type': 'card',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
+                        'justify': 'between',
+                        'type': 'stack',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'input',
@@ -1279,24 +1286,26 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
                                 'content': 'Mark lesson complete',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
+                            'action': 'LESSON_COMPLETE',
                             'type': 'button',
+                            'label': 'Complete Lesson',
                             'variant': 'primary',
                             'icon': 'check',
-                            'label': 'Complete Lesson',
-                            'action': 'LESSON_COMPLETE',
                           },
                         ],
-                        'gap': 'sm',
-                        'type': 'stack',
                         'align': 'center',
-                        'justify': 'between',
                         'direction': 'horizontal',
                       },
                     ],
-                    'className': 'max-w-3xl mx-auto w-full',
                     'gap': 'md',
+                    'className': 'max-w-3xl mx-auto w-full',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
@@ -1405,7 +1414,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1417,6 +1426,10 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1440,7 +1453,9 @@ export const StdLmsCourseOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'CourseAppLayout',
@@ -1480,20 +1495,23 @@ export function isStdLmsCourseOrbitalParams(p: object): p is StdLmsCourseOrbital
 /**
  * Tunable params for the EnrollmentOrbital orbital.
  *
- * Canonical entity: Enrollment (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Enrollment — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdLmsEnrollmentOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1502,22 +1520,28 @@ export interface StdLmsEnrollmentOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'EnrollmentAppLayout',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the EnrollmentOrbital orbital with consumer params. */
 export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Enrollment';
+  const canonicalName = params.entityName ?? 'Enrollment';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'enrollments');
   const built = makeOrbitalWithUses({
     name: 'EnrollmentOrbital',
     uses: [
@@ -1528,7 +1552,7 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
     ],
     entity: {
       name: canonicalName,
-      collection: 'enrollments',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1578,35 +1602,35 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'EnrollmentAppLayout',
-        'linkedEntity': 'Enrollment',
+        'linkedEntity': canonicalName,
         'config': {
-          'appName': 'LMS',
-          'contentTrait': '@trait.EnrollmentWizard',
-          'notificationClickEvent': 'ENROLLMENT_NOTIFICATIONS_OPEN',
           'notifications': [],
-          'searchEvent': 'ENROLLMENT_SEARCH',
+          'notificationClickEvent': 'ENROLLMENT_NOTIFICATIONS_OPEN',
           'topBarActions': [],
+          'contentTrait': '@trait.EnrollmentWizard',
+          'appName': 'LMS',
           'navItems': [
             {
-              'href': '/courses',
               'label': 'Courses',
               'icon': 'graduation-cap',
+              'href': '/courses',
             },
             {
+              'icon': 'user-plus',
               'label': 'Enroll',
               'href': '/enroll',
-              'icon': 'user-plus',
             },
             {
               'href': '/progress',
-              'label': 'Progress',
               'icon': 'trending-up',
+              'label': 'Progress',
             },
           ],
+          'searchEvent': 'ENROLLMENT_SEARCH',
         },
         'events': {
-          'NOTIFY_CLICK': 'ENROLLMENT_NOTIFICATIONS_OPEN',
           'SEARCH': 'ENROLLMENT_SEARCH',
+          'NOTIFY_CLICK': 'ENROLLMENT_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -1824,66 +1848,66 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                         'type': 'stack',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'user-plus',
                           },
                           {
-                            'variant': 'h2',
                             'type': 'typography',
                             'content': 'Course Enrollment',
+                            'variant': 'h2',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
-                        'type': 'wizard-progress',
+                        'currentStep': 0,
                         'steps': [
                           'Student Info',
                           'Course Selection',
                           'Review',
                           'Confirm',
                         ],
-                        'currentStep': 0,
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Student Info',
                         'variant': 'h3',
+                        'content': 'Student Info',
                         'type': 'typography',
                       },
                       {
-                        'showCancel': false,
-                        'submitEvent': 'NEXT',
-                        'mode': 'create',
                         'type': 'form-section',
-                        'submitLabel': 'Continue',
+                        'submitEvent': 'NEXT',
+                        'showCancel': false,
+                        'mode': 'create',
                         'fields': [
                           {
+                            'name': 'studentName',
                             'min': 2,
                             'required': true,
-                            'name': 'studentName',
                           },
                           {
+                            'type': 'email',
                             'required': true,
                             'name': 'email',
-                            'type': 'email',
                           },
                         ],
+                        'submitLabel': 'Continue',
                       },
                     ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1912,35 +1936,33 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'user-plus',
                             'type': 'icon',
                           },
                           {
-                            'content': 'Course Enrollment',
                             'variant': 'h2',
+                            'content': 'Course Enrollment',
                             'type': 'typography',
                           },
                         ],
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
-                        'currentStep': 1,
                         'steps': [
                           'Student Info',
                           'Course Selection',
                           'Review',
                           'Confirm',
                         ],
+                        'currentStep': 1,
                         'type': 'wizard-progress',
                       },
                       {
@@ -1952,22 +1974,24 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                         'variant': 'h3',
                       },
                       {
-                        'submitEvent': 'NEXT',
-                        'cancelLabel': 'Back',
                         'entity': '@entity',
-                        'mode': 'edit',
+                        'cancelLabel': 'Back',
                         'type': 'form-section',
+                        'submitEvent': 'NEXT',
+                        'cancelEvent': 'PREV',
+                        'mode': 'edit',
+                        'submitLabel': 'Continue',
                         'fields': [
                           {
                             'name': 'courseId',
                             'required': true,
                           },
                         ],
-                        'submitLabel': 'Continue',
-                        'cancelEvent': 'PREV',
                       },
                     ],
                     'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1992,14 +2016,11 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'type': 'stack',
                         'children': [
                           {
@@ -2013,6 +2034,8 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                           },
                         ],
                         'gap': 'sm',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
                         'type': 'wizard-progress',
@@ -2028,23 +2051,21 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Review',
                         'variant': 'h3',
+                        'content': 'Review',
+                        'type': 'typography',
                       },
                       {
-                        'gap': 'sm',
                         'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'md',
-                            'justify': 'between',
                             'children': [
                               {
                                 'content': 'Student',
-                                'type': 'typography',
                                 'variant': 'caption',
+                                'type': 'typography',
                               },
                               {
                                 'variant': 'body',
@@ -2052,35 +2073,34 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                                 'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'type': 'stack',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'children': [
                               {
-                                'content': 'Email',
-                                'variant': 'caption',
                                 'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Email',
                               },
                               {
                                 'variant': 'body',
-                                'type': 'typography',
                                 'content': '@entity.email',
+                                'type': 'typography',
                               },
                             ],
-                            'gap': 'md',
-                          },
-                          {
-                            'gap': 'md',
                             'justify': 'between',
                             'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'typography',
                                 'variant': 'caption',
                                 'content': 'Course',
+                                'type': 'typography',
                               },
                               {
                                 'content': '@entity.courseId',
@@ -2088,34 +2108,38 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                                 'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                         ],
+                        'gap': 'sm',
                         'direction': 'vertical',
                       },
                       {
                         'gap': 'sm',
+                        'direction': 'horizontal',
                         'type': 'stack',
                         'justify': 'between',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'label': 'Back',
                             'icon': 'arrow-left',
                             'variant': 'ghost',
-                            'action': 'PREV',
+                            'label': 'Back',
                             'type': 'button',
+                            'action': 'PREV',
                           },
                           {
+                            'label': 'Continue',
                             'action': 'NEXT',
                             'variant': 'primary',
                             'icon': 'arrow-right',
-                            'label': 'Continue',
                             'type': 'button',
                           },
                         ],
                       },
                     ],
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2129,8 +2153,6 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
                     'type': 'stack',
                     'direction': 'vertical',
                     'children': [
@@ -2158,6 +2180,7 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                         'variant': 'h3',
                       },
                       {
+                        'entity': '@entity',
                         'fields': [
                           {
                             'required': true,
@@ -2166,18 +2189,19 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                           },
                           {
                             'type': 'email',
-                            'name': 'email',
                             'required': true,
+                            'name': 'email',
                           },
                         ],
+                        'mode': 'edit',
+                        'submitEvent': 'NEXT',
                         'type': 'form-section',
                         'submitLabel': 'Continue',
-                        'submitEvent': 'NEXT',
                         'showCancel': false,
-                        'entity': '@entity',
-                        'mode': 'edit',
                       },
                     ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2197,8 +2221,6 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'typography',
@@ -2206,109 +2228,111 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                         'variant': 'h2',
                       },
                       {
-                        'type': 'wizard-progress',
-                        'currentStep': 3,
                         'steps': [
                           'Student Info',
                           'Course Selection',
                           'Review',
                           'Confirm',
                         ],
+                        'type': 'wizard-progress',
+                        'currentStep': 3,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'info',
                         'type': 'alert',
+                        'variant': 'info',
                         'message': 'Please confirm your enrollment.',
                       },
                       {
                         'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'gap': 'md',
                             'children': [
                               {
-                                'content': 'Student',
-                                'variant': 'caption',
                                 'type': 'typography',
+                                'variant': 'caption',
+                                'content': 'Student',
                               },
                               {
                                 'variant': 'body',
-                                'content': '@entity.studentName',
                                 'type': 'typography',
+                                'content': '@entity.studentName',
                               },
                             ],
+                            'gap': 'md',
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                           },
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
+                                'type': 'typography',
                                 'variant': 'caption',
                                 'content': 'Email',
-                                'type': 'typography',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'body',
                                 'content': '@entity.email',
+                                'type': 'typography',
                               },
                             ],
+                            'type': 'stack',
                             'gap': 'md',
                             'justify': 'between',
-                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
+                                'content': 'Course',
                                 'variant': 'caption',
                                 'type': 'typography',
-                                'content': 'Course',
                               },
                               {
                                 'variant': 'body',
-                                'content': '@entity.courseId',
                                 'type': 'typography',
+                                'content': '@entity.courseId',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'justify': 'between',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'gap': 'sm',
                       },
                       {
-                        'justify': 'between',
                         'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
+                            'label': 'Back',
                             'type': 'button',
                             'icon': 'arrow-left',
-                            'variant': 'ghost',
-                            'label': 'Back',
                             'action': 'PREV',
+                            'variant': 'ghost',
                           },
                           {
                             'variant': 'primary',
-                            'label': 'Enroll',
-                            'icon': 'check',
                             'type': 'button',
                             'action': 'COMPLETE',
+                            'icon': 'check',
+                            'label': 'Enroll',
                           },
                         ],
-                        'gap': 'sm',
-                        'type': 'stack',
                       },
                     ],
-                    'gap': 'lg',
                     'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2323,17 +2347,15 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'main',
                   {
                     'type': 'stack',
-                    'gap': 'lg',
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'variant': 'h2',
                         'type': 'typography',
                         'content': 'Course Enrollment',
+                        'variant': 'h2',
                       },
                       {
-                        'currentStep': 1,
                         'type': 'wizard-progress',
+                        'currentStep': 1,
                         'steps': [
                           'Student Info',
                           'Course Selection',
@@ -2345,14 +2367,13 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Course Selection',
                       },
                       {
-                        'type': 'form-section',
-                        'entity': '@entity',
                         'cancelEvent': 'PREV',
+                        'type': 'form-section',
                         'cancelLabel': 'Back',
                         'fields': [
                           {
@@ -2360,12 +2381,15 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                             'name': 'courseId',
                           },
                         ],
+                        'submitEvent': 'NEXT',
+                        'entity': '@entity',
                         'mode': 'edit',
                         'submitLabel': 'Continue',
-                        'submitEvent': 'NEXT',
                       },
                     ],
                     'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2402,8 +2426,8 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'emit',
                   'ENROLLED',
                   {
-                    'courseId': '@entity.courseId',
                     'id': '@entity.id',
+                    'courseId': '@entity.courseId',
                   },
                 ],
                 [
@@ -2415,35 +2439,35 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'direction': 'vertical',
                     'className': 'max-w-xl mx-auto w-full py-12',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'check-circle',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Enrolled!',
+                        'type': 'typography',
                         'variant': 'h2',
                       },
                       {
-                        'variant': 'body',
                         'color': 'muted',
                         'content': 'You have been enrolled in the course.',
                         'type': 'typography',
+                        'variant': 'body',
                       },
                       {
                         'icon': 'rotate-ccw',
-                        'variant': 'ghost',
-                        'type': 'button',
-                        'label': 'Enroll another student',
                         'action': 'RESTART',
+                        'label': 'Enroll another student',
+                        'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'align': 'center',
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2457,57 +2481,57 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'content': 'Course Enrollment',
                         'variant': 'h2',
                         'type': 'typography',
+                        'content': 'Course Enrollment',
                       },
                       {
+                        'type': 'wizard-progress',
+                        'currentStep': 2,
                         'steps': [
                           'Student Info',
                           'Course Selection',
                           'Review',
                           'Confirm',
                         ],
-                        'type': 'wizard-progress',
-                        'currentStep': 2,
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Review',
-                        'variant': 'h3',
                       },
                       {
-                        'justify': 'between',
-                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
-                            'type': 'button',
-                            'icon': 'arrow-left',
-                            'variant': 'ghost',
                             'label': 'Back',
                             'action': 'PREV',
+                            'icon': 'arrow-left',
+                            'type': 'button',
+                            'variant': 'ghost',
                           },
                           {
-                            'icon': 'arrow-right',
                             'type': 'button',
+                            'label': 'Continue',
+                            'icon': 'arrow-right',
                             'action': 'NEXT',
                             'variant': 'primary',
-                            'label': 'Continue',
                           },
                         ],
-                        'type': 'stack',
                       },
                     ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
                     'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2547,15 +2571,16 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                   'main',
                   {
                     'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
+                        'type': 'typography',
                         'content': 'Course Enrollment',
                         'variant': 'h2',
-                        'type': 'typography',
                       },
                       {
-                        'type': 'wizard-progress',
                         'currentStep': 0,
+                        'type': 'wizard-progress',
                         'steps': [
                           'Student Info',
                           'Course Selection',
@@ -2567,33 +2592,32 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
                         'type': 'divider',
                       },
                       {
-                        'content': 'Student Info',
                         'type': 'typography',
+                        'content': 'Student Info',
                         'variant': 'h3',
                       },
                       {
+                        'type': 'form-section',
                         'mode': 'create',
                         'submitEvent': 'NEXT',
                         'submitLabel': 'Continue',
-                        'type': 'form-section',
+                        'showCancel': false,
                         'fields': [
                           {
+                            'min': 2,
                             'name': 'studentName',
                             'required': true,
-                            'min': 2,
                           },
                           {
                             'name': 'email',
-                            'required': true,
                             'type': 'email',
+                            'required': true,
                           },
                         ],
-                        'showCancel': false,
                       },
                     ],
-                    'direction': 'vertical',
-                    'className': 'max-w-xl mx-auto w-full',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2620,7 +2644,7 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2632,6 +2656,10 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2655,7 +2683,9 @@ export const StdLmsEnrollmentOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'EnrollmentAppLayout',
@@ -2682,20 +2712,23 @@ export function isStdLmsEnrollmentOrbitalParams(p: object): p is StdLmsEnrollmen
 /**
  * Tunable params for the ProgressOrbital orbital.
  *
- * Canonical entity: Progress (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Progress — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdLmsProgressOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2704,22 +2737,28 @@ export interface StdLmsProgressOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ProgressAppLayout' | 'ProgressBrowseList',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ProgressOrbital orbital with consumer params. */
 export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Progress';
+  const canonicalName = params.entityName ?? 'Progress';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'progresses');
   const built = makeOrbitalWithUses({
     name: 'ProgressOrbital',
     uses: [
@@ -2734,7 +2773,7 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
     ],
     entity: {
       name: canonicalName,
-      collection: 'progresses',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2794,30 +2833,30 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
       makeTraitRef({
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ProgressAppLayout',
-        'linkedEntity': 'Progress',
+        'linkedEntity': canonicalName,
         'config': {
+          'searchEvent': 'PROGRESS_SEARCH',
+          'contentTrait': '@trait.ProgressDisplay',
+          'appName': 'LMS',
+          'notifications': [],
           'navItems': [
             {
-              'label': 'Courses',
-              'href': '/courses',
               'icon': 'graduation-cap',
+              'href': '/courses',
+              'label': 'Courses',
             },
             {
+              'icon': 'user-plus',
               'label': 'Enroll',
               'href': '/enroll',
-              'icon': 'user-plus',
             },
             {
-              'href': '/progress',
-              'label': 'Progress',
               'icon': 'trending-up',
+              'label': 'Progress',
+              'href': '/progress',
             },
           ],
-          'searchEvent': 'PROGRESS_SEARCH',
-          'notifications': [],
-          'contentTrait': '@trait.ProgressDisplay',
           'topBarActions': [],
-          'appName': 'LMS',
           'notificationClickEvent': 'PROGRESS_NOTIFICATIONS_OPEN',
         },
         'events': {
@@ -2851,25 +2890,27 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'className': 'max-w-5xl mx-auto w-full',
                     'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'trending-up',
                             'type': 'icon',
+                            'name': 'trending-up',
                           },
                           {
                             'content': 'Progress',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
-                        'gap': 'sm',
                         'align': 'center',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -2881,8 +2922,6 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                       },
                       '@trait.ProgressBrowseList',
                     ],
-                    'direction': 'vertical',
-                    'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2971,8 +3010,8 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                   'Progress',
                   {
                     'emit': {
-                      'failure': 'ProgressLoadFailed',
                       'success': 'ProgressLoaded',
+                      'failure': 'ProgressLoadFailed',
                     },
                   },
                 ],
@@ -2984,38 +3023,38 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                     'gap': 'md',
                     'children': [
                       {
-                        'type': 'stat-display',
                         'variant': 'success',
-                        'value': 0,
                         'format': 'percent',
                         'icon': 'check-circle',
                         'label': 'Completion %',
+                        'value': 0,
+                        'type': 'stat-display',
                       },
                       {
                         'suffix': 'h',
-                        'label': 'Time Spent',
-                        'variant': 'info',
-                        'icon': 'clock',
-                        'type': 'stat-display',
                         'value': 0,
+                        'label': 'Time Spent',
+                        'type': 'stat-display',
+                        'variant': 'info',
                         'format': 'number',
+                        'icon': 'clock',
                       },
                       {
                         'variant': 'default',
-                        'value': 0,
-                        'label': 'Lessons Remaining',
-                        'type': 'stat-display',
-                        'icon': 'list',
                         'format': 'number',
+                        'value': 0,
+                        'type': 'stat-display',
+                        'label': 'Lessons Remaining',
+                        'icon': 'list',
                       },
                       {
-                        'format': 'number',
-                        'suffix': 'd',
-                        'value': 0,
-                        'type': 'stat-display',
                         'label': 'Streak',
+                        'format': 'number',
                         'icon': 'flame',
+                        'suffix': 'd',
                         'variant': 'warning',
+                        'type': 'stat-display',
+                        'value': 0,
                       },
                     ],
                     'cols': 4,
@@ -3037,36 +3076,36 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                     'cols': 4,
                     'children': [
                       {
-                        'type': 'stat-display',
-                        'variant': 'success',
                         'icon': 'check-circle',
+                        'variant': 'success',
                         'format': 'percent',
-                        'label': 'Completion %',
+                        'type': 'stat-display',
                         'value': 0,
+                        'label': 'Completion %',
                       },
                       {
                         'suffix': 'h',
                         'type': 'stat-display',
-                        'value': 0,
-                        'label': 'Time Spent',
                         'icon': 'clock',
+                        'label': 'Time Spent',
+                        'value': 0,
                         'variant': 'info',
                         'format': 'number',
                       },
                       {
-                        'value': 0,
-                        'label': 'Lessons Remaining',
-                        'icon': 'list',
-                        'type': 'stat-display',
-                        'variant': 'default',
                         'format': 'number',
+                        'type': 'stat-display',
+                        'icon': 'list',
+                        'label': 'Lessons Remaining',
+                        'variant': 'default',
+                        'value': 0,
                       },
                       {
-                        'label': 'Streak',
-                        'type': 'stat-display',
-                        'value': 0,
-                        'variant': 'warning',
                         'format': 'number',
+                        'variant': 'warning',
+                        'value': 0,
+                        'type': 'stat-display',
+                        'label': 'Streak',
                         'icon': 'flame',
                         'suffix': 'd',
                       },
@@ -3159,8 +3198,8 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                   'Progress',
                   {
                     'emit': {
-                      'failure': 'ProgressLoadFailed',
                       'success': 'ProgressLoaded',
+                      'failure': 'ProgressLoadFailed',
                     },
                   },
                 ],
@@ -3168,13 +3207,13 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                   'render-ui',
                   'main',
                   {
-                    'showLegend': true,
                     'title': 'Progress over time',
-                    'subtitle': 'Average completion % per week',
-                    'type': 'chart',
                     'chartType': 'line',
                     'data': [],
+                    'type': 'chart',
                     'height': 280,
+                    'showLegend': true,
+                    'subtitle': 'Average completion % per week',
                   },
                 ],
               ],
@@ -3188,13 +3227,13 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
                   'render-ui',
                   'main',
                   {
-                    'type': 'chart',
-                    'subtitle': 'Average completion % per week',
+                    'chartType': 'line',
                     'data': '@payload.data',
+                    'showLegend': true,
+                    'subtitle': 'Average completion % per week',
+                    'type': 'chart',
                     'height': 280,
                     'title': 'Progress over time',
-                    'showLegend': true,
-                    'chartType': 'line',
                   },
                 ],
               ],
@@ -3206,19 +3245,22 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ProgressBrowseList',
-        'linkedEntity': 'Progress',
+        'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [],
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
-              'label': 'Course',
-              'icon': 'book-open',
               'variant': 'h4',
               'name': 'courseName',
+              'icon': 'book-open',
+              'label': 'Course',
             },
             {
-              'label': 'Completion',
-              'variant': 'badge',
               'format': 'percent',
+              'variant': 'badge',
+              'label': 'Completion',
               'name': 'completionPct',
             },
             {
@@ -3227,20 +3269,17 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
               'variant': 'body',
             },
             {
-              'variant': 'body',
               'name': 'totalLessons',
               'label': 'Total Lessons',
+              'variant': 'body',
             },
             {
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
               'label': 'Last Activity',
               'name': 'lastActivity',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
-          'itemActions': [],
         },
         'listens': [
           {
@@ -3396,7 +3435,7 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -3408,6 +3447,10 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -3431,7 +3474,9 @@ export const StdLmsProgressOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ProgressAppLayout',

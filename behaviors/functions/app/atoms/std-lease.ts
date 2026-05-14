@@ -29,7 +29,26 @@ const ALIAS = 'Lease';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdLeaseEventKey = 'INIT' | 'LeaseLoadFailed' | 'LeaseLoaded' | 'RENEW_LEASE' | 'TERMINATE_LEASE';
+export type StdLeaseEventKey = 'CLOSE_VIEW' | 'INIT' | 'LeaseLoadFailed' | 'LeaseLoaded' | 'OPEN_LEASE' | 'RENEW_LEASE' | 'TERMINATE_LEASE';
+
+/**
+ * Payload shape for the `OPEN_LEASE` event.
+ */
+export interface StdLeaseOpenLeasePayload {
+  id: string;
+  row?: {
+    id: string;
+    tenantId: string;
+    tenantName?: string;
+    unitId?: string;
+    unitLabel?: string;
+    startDate: string;
+    endDate?: string;
+    monthlyRent?: number;
+    status?: string;
+    notes?: string;
+  };
+}
 
 /**
  * Payload shape for the `RENEW_LEASE` event.

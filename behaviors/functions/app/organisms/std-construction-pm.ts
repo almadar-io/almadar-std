@@ -30,257 +30,2073 @@ const ALIAS = 'ConstructionPm';
  * without modifying its state-machine topology.
  */
 export interface StdConstructionPmConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
- * Params for the std-construction-pm descriptor helpers.
+ * Tunable params for the ProjectOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: ConstructionProject — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdConstructionPmParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdConstructionPmProjectOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdConstructionPmConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ProjectAppLayout' | 'ProjectSearch' | 'ProjectFilter' | 'ProjectStats' | 'ProjectGraphs' | 'ProjectBrowseList' | 'ProjectCreate' | 'ProjectEdit' | 'ProjectView' | 'ProjectDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `ConstructionPm.traits.ProjectAppLayout`. */
-export function stdConstructionPmProjectAppLayoutTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectCatalog`. */
-export function stdConstructionPmProjectCatalogTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectSearch`. */
-export function stdConstructionPmProjectSearchTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectFilter`. */
-export function stdConstructionPmProjectFilterTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectStats`. */
-export function stdConstructionPmProjectStatsTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectGraphs`. */
-export function stdConstructionPmProjectGraphsTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectBrowseList`. */
-export function stdConstructionPmProjectBrowseListTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectCreate`. */
-export function stdConstructionPmProjectCreateTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectEdit`. */
-export function stdConstructionPmProjectEditTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectView`. */
-export function stdConstructionPmProjectViewTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectDelete`. */
-export function stdConstructionPmProjectDeleteTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `ConstructionPm.traits.ProjectPersistor`. */
-export function stdConstructionPmProjectPersistorTrait(params: StdConstructionPmParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.ProjectPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `ConstructionPm.pages.ProjectsPage`. */
-export function stdConstructionPmPage(params: StdConstructionPmParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ProjectsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdConstructionPm(params: StdConstructionPmParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the ProjectOrbital orbital with consumer params. */
+export function stdConstructionPmProjectOrbital(params: StdConstructionPmProjectOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ConstructionProject';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'constructionprojects');
+  const built = makeOrbitalWithUses({
     name: 'ProjectOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-rfi',
+        'as': 'Rfi',
+      },
+      {
+        'from': 'std/behaviors/std-submittal',
+        'as': 'Submittal',
+      },
+      {
+        'from': 'std/behaviors/std-change-order',
+        'as': 'ChangeOrder',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'jobNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'client',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'on-hold',
+              'completed',
+              'cancelled',
+            ],
+          },
+          {
+            'name': 'startDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'targetEndDate',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'budgetUsd',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'projectManager',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdConstructionPmProjectAppLayoutTrait(params),
-      stdConstructionPmProjectCatalogTrait(params),
-      stdConstructionPmProjectSearchTrait(params),
-      stdConstructionPmProjectFilterTrait(params),
-      stdConstructionPmProjectStatsTrait(params),
-      stdConstructionPmProjectGraphsTrait(params),
-      stdConstructionPmProjectBrowseListTrait(params),
-      stdConstructionPmProjectCreateTrait(params),
-      stdConstructionPmProjectEditTrait(params),
-      stdConstructionPmProjectViewTrait(params),
-      stdConstructionPmProjectDeleteTrait(params),
-      stdConstructionPmProjectPersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ProjectAppLayout',
+        'config': {
+          'appName': 'Construction PM',
+          'searchEvent': 'PROJECT_SEARCH',
+          'contentTrait': '@trait.ProjectCatalog',
+          'notificationClickEvent': 'PROJECT_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'navItems': [
+            {
+              'label': 'Projects',
+              'href': '/projects',
+              'icon': 'briefcase',
+            },
+            {
+              'icon': 'message-circle',
+              'label': 'RFIs',
+              'href': '/rfis',
+            },
+            {
+              'label': 'Submittals',
+              'href': '/submittals',
+              'icon': 'file-text',
+            },
+            {
+              'href': '/change-orders',
+              'icon': 'edit',
+              'label': 'Change Orders',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'PROJECT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'PROJECT_SEARCH',
+        },
+      }),
+      {
+        'name': 'ProjectCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'PROJECT_SEARCH',
+            'triggers': 'PROJECT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectAppLayout',
+            },
+          },
+          {
+            'event': 'PROJECT_NOTIFICATIONS_OPEN',
+            'triggers': 'PROJECT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'PROJECT_SEARCH',
+              'name': 'Project Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROJECT_NOTIFICATIONS_OPEN',
+              'name': 'Project Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'name': 'briefcase',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Projects',
+                              },
+                            ],
+                            'align': 'center',
+                          },
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'label': 'New Project',
+                                'icon': 'plus',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                        ],
+                        'gap': 'md',
+                        'align': 'center',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.ProjectSearch',
+                          '@trait.ProjectFilter',
+                        ],
+                      },
+                      '@trait.ProjectStats',
+                      '@trait.ProjectGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ProjectBrowseList',
+                    ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PROJECT_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'PROJECT_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                      },
+                      {
+                        'label': 'Back to projects',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'ProjectSearch',
+        'config': {
+          'placeholder': 'Search projects…',
+          'event': 'PROJECT_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'ProjectFilter',
+        'config': {
+          'event': 'PROJECT_FILTER',
+          'filters': [
+            {
+              'field': 'status',
+              'filterType': 'select',
+              'options': [
+                'active',
+                'on-hold',
+                'completed',
+                'cancelled',
+              ],
+              'label': 'Status',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'ProjectStats',
+        'config': {
+          'metrics': [
+            {
+              'variant': 'primary',
+              'icon': 'briefcase',
+              'format': 'number',
+              'label': 'Total',
+              'aggregation': 'count',
+            },
+            {
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'aggregation': 'count',
+              'label': 'Active',
+              'format': 'number',
+              'icon': 'check-circle',
+            },
+            {
+              'icon': 'pause-circle',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'on-hold',
+                ],
+              ],
+              'label': 'On Hold',
+              'aggregation': 'count',
+              'format': 'number',
+              'variant': 'warning',
+            },
+            {
+              'format': 'number',
+              'icon': 'dollar-sign',
+              'aggregation': 'sum',
+              'label': 'Total Budget',
+              'field': 'budgetUsd',
+              'variant': 'info',
+            },
+          ],
+          'title': 'Projects',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'ProjectGraphs',
+        'config': {
+          'chartType': 'bar',
+          'subtitle': 'Portfolio composition across project statuses',
+          'height': 240,
+          'aggregation': 'count',
+          'showLegend': false,
+          'title': 'Projects by Status',
+          'categoryField': 'status',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'ProjectBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+            {
+              'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 1,
+          'fields': [
+            {
+              'name': 'name',
+              'variant': 'h3',
+              'icon': 'briefcase',
+            },
+            {
+              'name': 'jobNumber',
+              'variant': 'caption',
+            },
+            {
+              'name': 'client',
+              'variant': 'caption',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'name': 'projectManager',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectFilter',
+            },
+          },
+          {
+            'event': 'PROJECT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectPersistor',
+            },
+          },
+          {
+            'event': 'PROJECT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectPersistor',
+            },
+          },
+          {
+            'event': 'PROJECT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ProjectCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'New Project',
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'fields': [
+            'name',
+            'jobNumber',
+            'client',
+            'status',
+            'startDate',
+            'targetEndDate',
+            'budgetUsd',
+            'projectManager',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ProjectEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'mode': 'edit',
+          'title': 'Edit Project',
+          'fields': [
+            'name',
+            'jobNumber',
+            'client',
+            'status',
+            'startDate',
+            'targetEndDate',
+            'budgetUsd',
+            'projectManager',
+          ],
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'ProjectView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'name',
+            'jobNumber',
+            'client',
+            'status',
+            'startDate',
+            'targetEndDate',
+            'budgetUsd',
+            'projectManager',
+          ],
+          'icon': 'eye',
+          'title': 'View Project',
+          'mode': 'edit',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'ProjectDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Project',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'ProjectPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'ConstructionProject',
+        'emits': [
+          {
+            'event': 'PROJECT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PROJECT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'PROJECT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'ProjectDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'PROJECT_CREATED',
+              'name': 'Project Created',
+            },
+            {
+              'key': 'PROJECT_UPDATED',
+              'name': 'Project Updated',
+            },
+            {
+              'key': 'PROJECT_DELETED',
+              'name': 'Project Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'ConstructionProject',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PROJECT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'ConstructionProject',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'PROJECT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'ConstructionProject',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'PROJECT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdConstructionPmPage(params),
+      {
+        'name': 'ProjectsPage',
+        'path': '/projects',
+        'traits': [
+          {
+            'ref': 'ProjectAppLayout',
+          },
+          {
+            'ref': 'ProjectCatalog',
+          },
+          {
+            'ref': 'ProjectSearch',
+          },
+          {
+            'ref': 'ProjectFilter',
+          },
+          {
+            'ref': 'ProjectStats',
+          },
+          {
+            'ref': 'ProjectGraphs',
+          },
+          {
+            'ref': 'ProjectBrowseList',
+          },
+          {
+            'ref': 'ProjectCreate',
+          },
+          {
+            'ref': 'ProjectEdit',
+          },
+          {
+            'ref': 'ProjectView',
+          },
+          {
+            'ref': 'ProjectDelete',
+          },
+          {
+            'ref': 'ProjectPersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdConstructionPmProjectOrbital. */
+export const StdConstructionPmProjectOrbitalManifest = {
+  organism: 'std-construction-pm',
+  orbitalName: 'ProjectOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ProjectAppLayout',
+    'ProjectSearch',
+    'ProjectFilter',
+    'ProjectStats',
+    'ProjectGraphs',
+    'ProjectBrowseList',
+    'ProjectCreate',
+    'ProjectEdit',
+    'ProjectView',
+    'ProjectDelete',
+  ] as const,
+  inlineTraitNames: [
+    'ProjectCatalog',
+    'ProjectPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdConstructionPmProjectOrbitalParams keys. */
+export function isStdConstructionPmProjectOrbitalParams(p: object): p is StdConstructionPmProjectOrbitalParams {
+  type _OverrideRecord = NonNullable<StdConstructionPmProjectOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdConstructionPmProjectOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the RfiPanelOrbital orbital.
+ *
+ * Canonical entity: Rfi — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdConstructionPmRfiPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'RfiAppLayout' | 'RfiPipelineView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the RfiPanelOrbital orbital with consumer params. */
+export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Rfi';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'rfis');
+  const built = makeOrbitalWithUses({
+    name: 'RfiPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-rfi',
+        'as': 'Rfi',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'rfiNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'subject',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'question',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'response',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'submitted',
+              'answered',
+              'closed',
+            ],
+          },
+          {
+            'name': 'raisedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'assignedTo',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'raisedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'dueAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'answeredAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'RfiAppLayout',
+        'config': {
+          'notificationClickEvent': 'RFI_NOTIFICATIONS_OPEN',
+          'appName': 'Construction PM',
+          'searchEvent': 'RFI_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.RfiPanel',
+          'navItems': [
+            {
+              'href': '/projects',
+              'icon': 'briefcase',
+              'label': 'Projects',
+            },
+            {
+              'href': '/rfis',
+              'icon': 'message-circle',
+              'label': 'RFIs',
+            },
+            {
+              'icon': 'file-text',
+              'href': '/submittals',
+              'label': 'Submittals',
+            },
+            {
+              'href': '/change-orders',
+              'icon': 'edit',
+              'label': 'Change Orders',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'RFI_SEARCH',
+          'NOTIFY_CLICK': 'RFI_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'RfiPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'message-circle',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'RFIs',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.RfiPipelineView',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Rfi.traits.RfiPipeline',
+        'name': 'RfiPipelineView',
+        'config': {
+          'title': 'Requests for Information',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'RfisPage',
+        'path': '/rfis',
+        'traits': [
+          {
+            'ref': 'RfiAppLayout',
+          },
+          {
+            'ref': 'RfiPanel',
+          },
+          {
+            'ref': 'RfiPipelineView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdConstructionPmRfiPanelOrbital. */
+export const StdConstructionPmRfiPanelOrbitalManifest = {
+  organism: 'std-construction-pm',
+  orbitalName: 'RfiPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'RfiAppLayout',
+    'RfiPipelineView',
+  ] as const,
+  inlineTraitNames: [
+    'RfiPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdConstructionPmRfiPanelOrbitalParams keys. */
+export function isStdConstructionPmRfiPanelOrbitalParams(p: object): p is StdConstructionPmRfiPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdConstructionPmRfiPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdConstructionPmRfiPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the SubmittalPanelOrbital orbital.
+ *
+ * Canonical entity: Submittal — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdConstructionPmSubmittalPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SubmittalAppLayout' | 'SubmittalReviewView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the SubmittalPanelOrbital orbital with consumer params. */
+export function stdConstructionPmSubmittalPanelOrbital(params: StdConstructionPmSubmittalPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Submittal';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'submittals');
+  const built = makeOrbitalWithUses({
+    name: 'SubmittalPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-submittal',
+        'as': 'Submittal',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'submittalNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'specSection',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'contractor',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'reviewer',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'submitted',
+              'in-review',
+              'approved',
+              'rejected',
+              'revise-resubmit',
+            ],
+          },
+          {
+            'name': 'revisionNumber',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'submittedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'reviewedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'comments',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'SubmittalAppLayout',
+        'config': {
+          'navItems': [
+            {
+              'icon': 'briefcase',
+              'label': 'Projects',
+              'href': '/projects',
+            },
+            {
+              'label': 'RFIs',
+              'href': '/rfis',
+              'icon': 'message-circle',
+            },
+            {
+              'label': 'Submittals',
+              'icon': 'file-text',
+              'href': '/submittals',
+            },
+            {
+              'href': '/change-orders',
+              'label': 'Change Orders',
+              'icon': 'edit',
+            },
+          ],
+          'notificationClickEvent': 'SUBMITTAL_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'Construction PM',
+          'contentTrait': '@trait.SubmittalPanel',
+          'searchEvent': 'SUBMITTAL_SEARCH',
+        },
+        'events': {
+          'SEARCH': 'SUBMITTAL_SEARCH',
+          'NOTIFY_CLICK': 'SUBMITTAL_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'SubmittalPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'align': 'center',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'file-text',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Submittals',
+                            'type': 'typography',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.SubmittalReviewView',
+                    ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Submittal.traits.SubmittalReview',
+        'name': 'SubmittalReviewView',
+        'config': {
+          'title': 'Submittal Log',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'SubmittalsPage',
+        'path': '/submittals',
+        'traits': [
+          {
+            'ref': 'SubmittalAppLayout',
+          },
+          {
+            'ref': 'SubmittalPanel',
+          },
+          {
+            'ref': 'SubmittalReviewView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdConstructionPmSubmittalPanelOrbital. */
+export const StdConstructionPmSubmittalPanelOrbitalManifest = {
+  organism: 'std-construction-pm',
+  orbitalName: 'SubmittalPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'SubmittalAppLayout',
+    'SubmittalReviewView',
+  ] as const,
+  inlineTraitNames: [
+    'SubmittalPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdConstructionPmSubmittalPanelOrbitalParams keys. */
+export function isStdConstructionPmSubmittalPanelOrbitalParams(p: object): p is StdConstructionPmSubmittalPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdConstructionPmSubmittalPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdConstructionPmSubmittalPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the ChangeOrderPanelOrbital orbital.
+ *
+ * Canonical entity: ChangeOrder — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdConstructionPmChangeOrderPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ChangeOrderAppLayout' | 'ChangeOrderLedgerView',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ChangeOrderPanelOrbital orbital with consumer params. */
+export function stdConstructionPmChangeOrderPanelOrbital(params: StdConstructionPmChangeOrderPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ChangeOrder';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'changeorders');
+  const built = makeOrbitalWithUses({
+    name: 'ChangeOrderPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-change-order',
+        'as': 'ChangeOrder',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'coNumber',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'reason',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'costImpact',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'scheduleImpactDays',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'pending-approval',
+              'approved',
+              'rejected',
+              'executed',
+            ],
+          },
+          {
+            'name': 'requestedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'approvedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'requestedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'approvedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ChangeOrderAppLayout',
+        'config': {
+          'notifications': [],
+          'searchEvent': 'CHANGE_ORDER_SEARCH',
+          'appName': 'Construction PM',
+          'notificationClickEvent': 'CHANGE_ORDER_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.ChangeOrderPanel',
+          'navItems': [
+            {
+              'href': '/projects',
+              'label': 'Projects',
+              'icon': 'briefcase',
+            },
+            {
+              'href': '/rfis',
+              'icon': 'message-circle',
+              'label': 'RFIs',
+            },
+            {
+              'icon': 'file-text',
+              'label': 'Submittals',
+              'href': '/submittals',
+            },
+            {
+              'icon': 'edit',
+              'label': 'Change Orders',
+              'href': '/change-orders',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'CHANGE_ORDER_SEARCH',
+          'NOTIFY_CLICK': 'CHANGE_ORDER_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'ChangeOrderPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'children': [
+                          {
+                            'name': 'edit',
+                            'type': 'icon',
+                          },
+                          {
+                            'variant': 'h2',
+                            'content': 'Change Orders',
+                            'type': 'typography',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.ChangeOrderLedgerView',
+                    ],
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'ChangeOrder.traits.ChangeOrderLedger',
+        'name': 'ChangeOrderLedgerView',
+        'config': {
+          'title': 'Change Order Ledger',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ChangeOrdersPage',
+        'path': '/change-orders',
+        'traits': [
+          {
+            'ref': 'ChangeOrderAppLayout',
+          },
+          {
+            'ref': 'ChangeOrderPanel',
+          },
+          {
+            'ref': 'ChangeOrderLedgerView',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdConstructionPmChangeOrderPanelOrbital. */
+export const StdConstructionPmChangeOrderPanelOrbitalManifest = {
+  organism: 'std-construction-pm',
+  orbitalName: 'ChangeOrderPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ChangeOrderAppLayout',
+    'ChangeOrderLedgerView',
+  ] as const,
+  inlineTraitNames: [
+    'ChangeOrderPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdConstructionPmChangeOrderPanelOrbitalParams keys. */
+export function isStdConstructionPmChangeOrderPanelOrbitalParams(p: object): p is StdConstructionPmChangeOrderPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdConstructionPmChangeOrderPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdConstructionPmChangeOrderPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-construction-pm — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdConstructionPmParams {
+  Project?: StdConstructionPmProjectOrbitalParams;
+  RfiPanel?: StdConstructionPmRfiPanelOrbitalParams;
+  SubmittalPanel?: StdConstructionPmSubmittalPanelOrbitalParams;
+  ChangeOrderPanel?: StdConstructionPmChangeOrderPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+export function stdConstructionPm(params: StdConstructionPmParams = {}): OrbitalDefinition[] {
+  return [
+    stdConstructionPmProjectOrbital(params.Project ?? {}),
+    stdConstructionPmRfiPanelOrbital(params.RfiPanel ?? {}),
+    stdConstructionPmSubmittalPanelOrbital(params.SubmittalPanel ?? {}),
+    stdConstructionPmChangeOrderPanelOrbital(params.ChangeOrderPanel ?? {}),
+  ];
 }

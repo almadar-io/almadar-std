@@ -35,301 +35,1476 @@ export interface StdNotesConfig {
 }
 
 /**
- * Params for the std-notes descriptor helpers.
+ * Tunable params for the NoteOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Note — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdNotesParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdNotesNoteOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdNotesConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'NoteAppLayout' | 'NoteSearch' | 'NoteFilter' | 'NoteStats' | 'NoteGraphs' | 'NoteBrowseList' | 'NotePageTree' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `Notes.traits.NoteAppLayout`. */
-export function stdNotesNoteAppLayoutTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteCatalog`. */
-export function stdNotesNoteCatalogTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteSearch`. */
-export function stdNotesNoteSearchTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteFilter`. */
-export function stdNotesNoteFilterTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteStats`. */
-export function stdNotesNoteStatsTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteGraphs`. */
-export function stdNotesNoteGraphsTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteBrowseList`. */
-export function stdNotesNoteBrowseListTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NotePageTree`. */
-export function stdNotesNotePageTreeTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NotePageTree`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteCreate`. */
-export function stdNotesNoteCreateTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteEdit`. */
-export function stdNotesNoteEditTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteView`. */
-export function stdNotesNoteViewTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NoteDelete`. */
-export function stdNotesNoteDeleteTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NoteDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Notes.traits.NotePersistor`. */
-export function stdNotesNotePersistorTrait(params: StdNotesParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.NotePersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Notes.pages.NotesPage`. */
-export function stdNotesNotesPagePage(params: StdNotesParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.NotesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Notes.pages.NotesTreePage`. */
-export function stdNotesNotesTreePagePage(params: StdNotesParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.NotesTreePage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Notes.pages.NotesEditorPage`. */
-export function stdNotesNotesEditorPagePage(params: StdNotesParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.NotesEditorPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Notes.pages.NotesFavoritesPage`. */
-export function stdNotesNotesFavoritesPagePage(params: StdNotesParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.NotesFavoritesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdNotes(params: StdNotesParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the NoteOrbital orbital with consumer params. */
+export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Note';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'notes');
+  const built = makeOrbitalWithUses({
     name: 'NoteOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-page-tree',
+        'as': 'PageTree',
+      },
+      {
+        'from': 'std/behaviors/std-rich-editor',
+        'as': 'RichEditor',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'content',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'blocksJson',
+            'type': 'array',
+            'items': {
+              'type': 'object',
+            },
+          },
+          {
+            'name': 'parentId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'path',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'icon',
+            'type': 'string',
+            'default': 'file-text',
+          },
+          {
+            'name': 'isFavorite',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'lastEditedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdNotesNoteAppLayoutTrait(params),
-      stdNotesNoteCatalogTrait(params),
-      stdNotesNoteSearchTrait(params),
-      stdNotesNoteFilterTrait(params),
-      stdNotesNoteStatsTrait(params),
-      stdNotesNoteGraphsTrait(params),
-      stdNotesNoteBrowseListTrait(params),
-      stdNotesNotePageTreeTrait(params),
-      stdNotesNoteCreateTrait(params),
-      stdNotesNoteEditTrait(params),
-      stdNotesNoteViewTrait(params),
-      stdNotesNoteDeleteTrait(params),
-      stdNotesNotePersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'NoteAppLayout',
+        'config': {
+          'contentTrait': '@trait.NoteCatalog',
+          'appName': 'Notes',
+          'navItems': [
+            {
+              'label': 'Notes',
+              'icon': 'file-text',
+              'href': '/notes',
+            },
+            {
+              'href': '/notes/tree',
+              'icon': 'list-tree',
+              'label': 'Tree',
+            },
+            {
+              'href': '/notes/editor',
+              'label': 'Editor',
+              'icon': 'edit',
+            },
+            {
+              'href': '/notes/favorites',
+              'icon': 'star',
+              'label': 'Favorites',
+            },
+          ],
+          'searchEvent': 'NOTE_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'NOTE_SEARCH',
+        },
+      }),
+      {
+        'name': 'NoteCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'NOTE_SEARCH',
+            'triggers': 'NOTE_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteAppLayout',
+            },
+          },
+          {
+            'event': 'NOTE_NOTIFICATIONS_OPEN',
+            'triggers': 'NOTE_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'NOTE_SEARCH',
+              'name': 'Note Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'NOTE_NOTIFICATIONS_OPEN',
+              'name': 'Note Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'file-text',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Notes',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'type': 'button',
+                                'label': 'New Note',
+                                'action': 'CREATE',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'children': [
+                          '@trait.NoteSearch',
+                          '@trait.NoteFilter',
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      '@trait.NoteStats',
+                      '@trait.NoteGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.NoteBrowseList',
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'NOTE_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'NOTE_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                      },
+                      {
+                        'type': 'button',
+                        'label': 'Back to notes',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'NoteSearch',
+        'config': {
+          'event': 'NOTE_FULLTEXT_SEARCH',
+          'placeholder': 'Search notes…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'NoteFilter',
+        'config': {
+          'event': 'NOTE_FILTER',
+          'filters': [
+            {
+              'label': 'Favorite',
+              'field': 'isFavorite',
+              'filterType': 'select',
+              'options': [
+                'true',
+                'false',
+              ],
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'NoteStats',
+        'config': {
+          'metrics': [
+            {
+              'variant': 'primary',
+              'format': 'number',
+              'icon': 'file-text',
+              'label': 'Total',
+              'aggregation': 'count',
+            },
+            {
+              'label': 'Favorites',
+              'aggregation': 'count',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.isFavorite',
+                  true,
+                ],
+              ],
+              'format': 'number',
+              'variant': 'warning',
+              'icon': 'star',
+            },
+            {
+              'variant': 'info',
+              'icon': 'folder',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.parentId',
+                  '',
+                ],
+              ],
+              'aggregation': 'count',
+              'label': 'Top-level',
+            },
+          ],
+          'title': 'Notes',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'NoteGraphs',
+        'config': {
+          'categoryField': 'icon',
+          'height': 240,
+          'chartType': 'bar',
+          'title': 'Notes by Icon',
+          'showLegend': false,
+          'aggregation': 'count',
+          'subtitle': 'Distribution of note icons across your tree',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'NoteBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'cols': 1,
+          'fields': [
+            {
+              'icon': 'file-text',
+              'variant': 'h3',
+              'name': 'title',
+            },
+            {
+              'variant': 'badge',
+              'name': 'icon',
+            },
+            {
+              'variant': 'badge',
+              'name': 'isFavorite',
+            },
+            {
+              'name': 'lastEditedAt',
+              'variant': 'caption',
+              'label': 'Edited',
+            },
+          ],
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteFilter',
+            },
+          },
+          {
+            'event': 'NOTE_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NotePersistor',
+            },
+          },
+          {
+            'event': 'NOTE_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NotePersistor',
+            },
+          },
+          {
+            'event': 'NOTE_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NotePersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'PageTree.traits.PageNodeBrowse',
+        'name': 'NotePageTree',
+        'config': {
+          'title': 'Note Tree',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'NoteCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Note',
+          'fields': [
+            'title',
+            'content',
+            'blocksJson',
+            'parentId',
+            'icon',
+            'isFavorite',
+          ],
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'NoteEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Edit Note',
+          'icon': 'edit',
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'content',
+            'blocksJson',
+            'parentId',
+            'icon',
+            'isFavorite',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'NoteView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'mode': 'edit',
+          'fields': [
+            'title',
+            'content',
+            'blocksJson',
+            'icon',
+            'isFavorite',
+            'lastEditedAt',
+          ],
+          'icon': 'eye',
+          'title': 'View Note',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'NoteDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'alert-triangle',
+          'title': 'Delete Note',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'NotePersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Note',
+        'emits': [
+          {
+            'event': 'NOTE_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'NOTE_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'NOTE_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'NoteDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'NOTE_CREATED',
+              'name': 'Note Created',
+            },
+            {
+              'key': 'NOTE_UPDATED',
+              'name': 'Note Updated',
+            },
+            {
+              'key': 'NOTE_DELETED',
+              'name': 'Note Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Note',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'NOTE_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Note',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'NOTE_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Note',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'NOTE_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdNotesNotesPagePage(params),
-      stdNotesNotesTreePagePage(params),
-      stdNotesNotesEditorPagePage(params),
-      stdNotesNotesFavoritesPagePage(params),
+      {
+        'name': 'NotesPage',
+        'path': '/notes',
+        'traits': [
+          {
+            'ref': 'NoteAppLayout',
+          },
+          {
+            'ref': 'NoteCatalog',
+          },
+          {
+            'ref': 'NoteSearch',
+          },
+          {
+            'ref': 'NoteFilter',
+          },
+          {
+            'ref': 'NoteStats',
+          },
+          {
+            'ref': 'NoteGraphs',
+          },
+          {
+            'ref': 'NoteBrowseList',
+          },
+          {
+            'ref': 'NoteCreate',
+          },
+          {
+            'ref': 'NoteEdit',
+          },
+          {
+            'ref': 'NoteView',
+          },
+          {
+            'ref': 'NoteDelete',
+          },
+          {
+            'ref': 'NotePersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'NotesTreePage',
+        'path': '/notes/tree',
+        'traits': [
+          {
+            'ref': 'NoteAppLayout',
+          },
+          {
+            'ref': 'NotePageTree',
+          },
+        ],
+      } as never,
+      {
+        'name': 'NotesEditorPage',
+        'path': '/notes/editor',
+        'traits': [
+          {
+            'ref': 'NoteAppLayout',
+          },
+          {
+            'ref': 'NoteCatalog',
+          },
+          {
+            'ref': 'NoteSearch',
+          },
+          {
+            'ref': 'NoteFilter',
+          },
+          {
+            'ref': 'NoteStats',
+          },
+          {
+            'ref': 'NoteGraphs',
+          },
+          {
+            'ref': 'NoteBrowseList',
+          },
+          {
+            'ref': 'NoteCreate',
+          },
+          {
+            'ref': 'NoteEdit',
+          },
+          {
+            'ref': 'NoteView',
+          },
+          {
+            'ref': 'NoteDelete',
+          },
+          {
+            'ref': 'NotePersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'NotesFavoritesPage',
+        'path': '/notes/favorites',
+        'traits': [
+          {
+            'ref': 'NoteAppLayout',
+          },
+          {
+            'ref': 'NoteCatalog',
+          },
+          {
+            'ref': 'NoteSearch',
+          },
+          {
+            'ref': 'NoteFilter',
+          },
+          {
+            'ref': 'NoteStats',
+          },
+          {
+            'ref': 'NoteGraphs',
+          },
+          {
+            'ref': 'NoteBrowseList',
+          },
+          {
+            'ref': 'NoteCreate',
+          },
+          {
+            'ref': 'NoteEdit',
+          },
+          {
+            'ref': 'NoteView',
+          },
+          {
+            'ref': 'NoteDelete',
+          },
+          {
+            'ref': 'NotePersistor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdNotesNoteOrbital. */
+export const StdNotesNoteOrbitalManifest = {
+  organism: 'std-notes',
+  orbitalName: 'NoteOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'NoteAppLayout',
+    'NoteSearch',
+    'NoteFilter',
+    'NoteStats',
+    'NoteGraphs',
+    'NoteBrowseList',
+    'NotePageTree',
+    'NoteCreate',
+    'NoteEdit',
+    'NoteView',
+    'NoteDelete',
+  ] as const,
+  inlineTraitNames: [
+    'NoteCatalog',
+    'NotePersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdNotesNoteOrbitalParams keys. */
+export function isStdNotesNoteOrbitalParams(p: object): p is StdNotesNoteOrbitalParams {
+  type _OverrideRecord = NonNullable<StdNotesNoteOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdNotesNoteOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the RichEditorPanelOrbital orbital.
+ *
+ * Canonical entity: Document — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdNotesRichEditorPanelOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'RichEditorAppLayout' | 'RichEditorDocumentEdit',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the RichEditorPanelOrbital orbital with consumer params. */
+export function stdNotesRichEditorPanelOrbital(params: StdNotesRichEditorPanelOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Document';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'documents');
+  const built = makeOrbitalWithUses({
+    name: 'RichEditorPanelOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-rich-editor',
+        'as': 'RichEditor',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'blocksJson',
+            'type': 'array',
+            'items': {
+              'type': 'object',
+            },
+          },
+          {
+            'name': 'authorId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'parentId',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'kind',
+            'type': 'string',
+            'default': 'page',
+            'values': [
+              'page',
+              'doc',
+              'post',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'published',
+              'archived',
+            ],
+          },
+          {
+            'name': 'version',
+            'type': 'number',
+            'default': 1,
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'RichEditorAppLayout',
+        'config': {
+          'appName': 'Notes',
+          'notificationClickEvent': 'RICH_EDITOR_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'contentTrait': '@trait.RichEditorPanel',
+          'searchEvent': 'RICH_EDITOR_SEARCH',
+          'navItems': [
+            {
+              'label': 'Notes',
+              'href': '/notes',
+              'icon': 'file-text',
+            },
+            {
+              'label': 'Tree',
+              'href': '/notes/tree',
+              'icon': 'list-tree',
+            },
+            {
+              'icon': 'edit',
+              'label': 'Editor',
+              'href': '/notes/editor',
+            },
+            {
+              'href': '/notes/favorites',
+              'icon': 'star',
+              'label': 'Favorites',
+            },
+            {
+              'label': 'Editor',
+              'href': '/editor',
+              'icon': 'edit',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'RICH_EDITOR_NOTIFICATIONS_OPEN',
+          'SEARCH': 'RICH_EDITOR_SEARCH',
+        },
+      }),
+      {
+        'name': 'RichEditorPanel',
+        'category': 'interaction',
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'edit',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Rich Editor',
+                          },
+                        ],
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.RichEditorDocumentEdit',
+                    ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'RichEditor.traits.DocumentEdit',
+        'name': 'RichEditorDocumentEdit',
+        'config': {
+          'title': 'Documents',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'EditorPage',
+        'path': '/editor',
+        'traits': [
+          {
+            'ref': 'RichEditorAppLayout',
+          },
+          {
+            'ref': 'RichEditorPanel',
+          },
+          {
+            'ref': 'RichEditorDocumentEdit',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdNotesRichEditorPanelOrbital. */
+export const StdNotesRichEditorPanelOrbitalManifest = {
+  organism: 'std-notes',
+  orbitalName: 'RichEditorPanelOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'RichEditorAppLayout',
+    'RichEditorDocumentEdit',
+  ] as const,
+  inlineTraitNames: [
+    'RichEditorPanel',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdNotesRichEditorPanelOrbitalParams keys. */
+export function isStdNotesRichEditorPanelOrbitalParams(p: object): p is StdNotesRichEditorPanelOrbitalParams {
+  type _OverrideRecord = NonNullable<StdNotesRichEditorPanelOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdNotesRichEditorPanelOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-notes — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdNotesParams {
+  Note?: StdNotesNoteOrbitalParams;
+  RichEditorPanel?: StdNotesRichEditorPanelOrbitalParams;
+}
+
+/** Whole-organism descriptor (2 orbitals). Composes per-orbital factories. */
+export function stdNotes(params: StdNotesParams = {}): OrbitalDefinition[] {
+  return [
+    stdNotesNoteOrbital(params.Note ?? {}),
+    stdNotesRichEditorPanelOrbital(params.RichEditorPanel ?? {}),
+  ];
 }

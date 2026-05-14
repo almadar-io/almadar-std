@@ -30,27 +30,30 @@ const ALIAS = 'Listings';
  * without modifying its state-machine topology.
  */
 export interface StdListingsConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
  * Tunable params for the ListingOrbital orbital.
  *
- * Canonical entity: Listing (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Listing — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdListingsListingOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdListingsListingOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ListingAppLayout' | 'ListingGeoSearch' | 'ListingFilter' | 'ListingTags' | 'ListingSavedSearch' | 'ListingImages' | 'ListingStats' | 'ListingBrowse' | 'ListingCreate' | 'ListingEdit' | 'ListingView' | 'ListingDelete' | 'ListingInquiryThread',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ListingOrbital orbital with consumer params. */
 export function stdListingsListingOrbital(params: StdListingsListingOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Listing';
+  const canonicalName = params.entityName ?? 'Listing';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'listings');
   const built = makeOrbitalWithUses({
     name: 'ListingOrbital',
     uses: [
@@ -125,7 +134,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
     ],
     entity: {
       name: canonicalName,
-      collection: 'listings',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -212,32 +221,32 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ListingAppLayout',
         'config': {
+          'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
           'appName': 'Listings',
-          'navItems': [
-            {
-              'label': 'Browse',
-              'href': '/listings',
-              'icon': 'list',
-            },
-            {
-              'href': '/saved',
-              'label': 'Saved',
-              'icon': 'bookmark',
-            },
-            {
-              'href': '/inquiries',
-              'icon': 'message-circle',
-              'label': 'Inquiries',
-            },
-          ],
           'contentTrait': '@trait.ListingCatalog',
           'searchEvent': 'LISTING_SEARCH',
           'notifications': [],
-          'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/listings',
+              'icon': 'list',
+              'label': 'Browse',
+            },
+            {
+              'icon': 'bookmark',
+              'label': 'Saved',
+              'href': '/saved',
+            },
+            {
+              'icon': 'message-circle',
+              'href': '/inquiries',
+              'label': 'Inquiries',
+            },
+          ],
         },
         'events': {
-          'SEARCH': 'LISTING_SEARCH',
           'NOTIFY_CLICK': 'LISTING_NOTIFICATIONS_OPEN',
+          'SEARCH': 'LISTING_SEARCH',
         },
       }),
       {
@@ -334,13 +343,10 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
                             'children': [
@@ -355,32 +361,35 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                               },
                             ],
                             'gap': 'sm',
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
                           },
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'icon': 'bookmark',
-                                'variant': 'secondary',
-                                'action': 'SAVE_SEARCH',
                                 'label': 'Save Search',
+                                'action': 'SAVE_SEARCH',
+                                'icon': 'bookmark',
                                 'type': 'button',
+                                'variant': 'secondary',
                               },
                               {
+                                'type': 'button',
+                                'label': 'New Listing',
                                 'action': 'CREATE',
                                 'icon': 'plus',
-                                'label': 'New Listing',
-                                'type': 'button',
                                 'variant': 'primary',
                               },
                             ],
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'md',
                         'justify': 'between',
                       },
@@ -390,12 +399,12 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                       '@trait.ListingGeoSearch',
                       {
                         'type': 'stack',
-                        'align': 'start',
                         'direction': 'horizontal',
                         'children': [
                           '@trait.ListingFilter',
                           '@trait.ListingTags',
                         ],
+                        'align': 'start',
                         'gap': 'md',
                       },
                       '@trait.ListingStats',
@@ -423,7 +432,9 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
@@ -435,10 +446,10 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                         'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
                         'type': 'typography',
-                        'color': 'muted',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'variant': 'ghost',
@@ -447,10 +458,8 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                         'label': 'Back to listings',
                       },
                     ],
-                    'direction': 'vertical',
-                    'className': 'py-8',
-                    'type': 'stack',
                     'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -463,36 +472,36 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'ref': 'GeoSearch.traits.GeoSearchResultSearch',
         'name': 'ListingGeoSearch',
         'config': {
-          'placeholder': 'Search nearby listings…',
-          'event': 'LISTING_GEO_SEARCH',
           'defaultRadiusKm': 25,
+          'event': 'LISTING_GEO_SEARCH',
+          'placeholder': 'Search nearby listings…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ListingFilter',
         'config': {
-          'event': 'LISTING_FILTER',
           'filters': [
             {
-              'filterType': 'select',
-              'label': 'Status',
-              'field': 'status',
               'options': [
                 'active',
                 'sold',
                 'expired',
               ],
+              'field': 'status',
+              'filterType': 'select',
+              'label': 'Status',
             },
           ],
+          'event': 'LISTING_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Tags.traits.TagBrowse',
         'name': 'ListingTags',
         'config': {
-          'title': 'Categories',
           'allowEdit': false,
+          'title': 'Categories',
         },
       }),
       makeTraitRef({
@@ -507,30 +516,28 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'name': 'ListingImages',
         'config': {
           'maxImages': 10,
+          'maxBytesPerImage': 10485760,
           'accept': 'image/*',
           'title': 'Listing Photos',
-          'maxBytesPerImage': 10485760,
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'ListingStats',
         'config': {
-          'title': 'Listings',
           'metrics': [
             {
               'aggregation': 'count',
+              'format': 'number',
               'label': 'Total',
               'icon': 'list',
               'variant': 'primary',
-              'format': 'number',
             },
             {
-              'variant': 'success',
-              'icon': 'check-circle',
-              'aggregation': 'count',
-              'format': 'number',
               'label': 'Active',
+              'variant': 'success',
+              'format': 'number',
+              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -540,8 +547,11 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'active',
                 ],
               ],
+              'icon': 'check-circle',
             },
             {
+              'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -551,21 +561,20 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
                   'sold',
                 ],
               ],
-              'label': 'Sold',
-              'icon': 'tag',
-              'aggregation': 'count',
               'variant': 'info',
-              'format': 'number',
+              'icon': 'tag',
+              'label': 'Sold',
             },
             {
-              'format': 'number',
-              'label': 'Avg Price',
               'icon': 'trending-up',
               'aggregation': 'avg',
               'field': 'price',
               'variant': 'warning',
+              'label': 'Avg Price',
+              'format': 'number',
             },
           ],
+          'title': 'Listings',
         },
         'listens': [
           {
@@ -581,7 +590,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ListingBrowse',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
           'itemActions': [
             {
@@ -595,18 +604,17 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
               'label': 'Edit',
             },
             {
+              'label': 'Inquire',
               'event': 'INQUIRE',
               'variant': 'secondary',
-              'label': 'Inquire',
             },
             {
               'event': 'DELETE',
-              'variant': 'danger',
               'label': 'Delete',
+              'variant': 'danger',
             },
           ],
           'cols': 1,
-          'gap': 'sm',
           'fields': [
             {
               'name': 'title',
@@ -618,18 +626,19 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
               'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'name': 'location',
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'description',
+              'variant': 'caption',
             },
           ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -677,9 +686,8 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ListingCreate',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'fields': [
             'title',
             'description',
@@ -688,6 +696,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
             'status',
           ],
           'icon': 'plus-circle',
+          'mode': 'create',
           'title': 'New Listing',
         },
         'events': {
@@ -707,11 +716,8 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ListingEdit',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'title': 'Edit Listing',
-          'icon': 'edit',
           'fields': [
             'title',
             'description',
@@ -719,6 +725,9 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
             'location',
             'status',
           ],
+          'title': 'Edit Listing',
+          'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -737,7 +746,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ListingView',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -746,9 +755,9 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
             'location',
             'status',
           ],
-          'icon': 'eye',
           'mode': 'edit',
           'title': 'View Listing',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -767,12 +776,12 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ListingDelete',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Listing',
-          'confirmLabel': 'Delete',
-          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Listing',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -793,8 +802,8 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
         'ref': 'Thread.traits.ThreadPostBrowse',
         'name': 'ListingInquiryThread',
         'config': {
-          'flat': true,
           'threadRootId': '',
+          'flat': true,
         },
       }),
       {
@@ -1037,7 +1046,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1049,6 +1058,10 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1072,7 +1085,9 @@ export const StdListingsListingOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ListingAppLayout',
@@ -1112,20 +1127,23 @@ export function isStdListingsListingOrbitalParams(p: object): p is StdListingsLi
 /**
  * Tunable params for the InquiryOrbital orbital.
  *
- * Canonical entity: Inquiry (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Inquiry — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdListingsInquiryOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -1134,22 +1152,28 @@ export interface StdListingsInquiryOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'InquiryCreate',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the InquiryOrbital orbital with consumer params. */
 export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Inquiry';
+  const canonicalName = params.entityName ?? 'Inquiry';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'inquiries');
   const built = makeOrbitalWithUses({
     name: 'InquiryOrbital',
     uses: [
@@ -1160,7 +1184,7 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
     ],
     entity: {
       name: canonicalName,
-      collection: 'inquiries',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1387,8 +1411,8 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'Inquiry',
                   {
                     'emit': {
-                      'success': 'InquiryLoaded',
                       'failure': 'InquiryLoadFailed',
+                      'success': 'InquiryLoaded',
                     },
                   },
                 ],
@@ -1396,22 +1420,22 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'gap': 'md',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'type': 'typography',
+                        'color': 'muted',
                         'content': 'Loading inquiries…',
                         'variant': 'caption',
-                        'color': 'muted',
                       },
                     ],
-                    'align': 'center',
-                    'type': 'stack',
-                    'gap': 'md',
-                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1425,15 +1449,19 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
                         'justify': 'between',
-                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'message-circle',
@@ -1445,59 +1473,55 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                                 'variant': 'h2',
                               },
                             ],
-                            'align': 'center',
                             'gap': 'sm',
                           },
                           {
-                            'label': 'New Inquiry',
                             'icon': 'edit',
-                            'variant': 'primary',
-                            'type': 'button',
                             'action': 'CREATE',
+                            'type': 'button',
+                            'variant': 'primary',
+                            'label': 'New Inquiry',
                           },
                         ],
-                        'align': 'center',
-                        'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'variant': 'card',
                         'fields': [
                           {
-                            'icon': 'message-circle',
                             'name': 'subject',
                             'variant': 'h4',
+                            'icon': 'message-circle',
                           },
                           {
-                            'name': 'message',
                             'variant': 'body',
+                            'name': 'message',
                           },
                           {
                             'name': 'status',
                             'variant': 'badge',
                           },
                           {
-                            'name': 'createdAt',
                             'format': 'date',
+                            'name': 'createdAt',
                             'variant': 'caption',
                           },
                         ],
+                        'gap': 'sm',
                         'type': 'data-list',
-                        'variant': 'card',
                         'entity': '@payload.data',
                         'itemActions': [
                           {
-                            'label': 'Open',
-                            'variant': 'ghost',
                             'event': 'VIEW',
+                            'variant': 'ghost',
+                            'label': 'Open',
                           },
                         ],
-                        'gap': 'sm',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'lg',
                     'className': 'max-w-5xl mx-auto w-full',
                   },
@@ -1513,11 +1537,9 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'align': 'center',
                     'type': 'stack',
-                    'direction': 'vertical',
                     'className': 'py-12',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'icon',
@@ -1526,23 +1548,25 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                       },
                       {
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Failed to load inquiries',
-                        'type': 'typography',
                       },
                       {
-                        'content': '@payload.error',
-                        'color': 'muted',
                         'variant': 'body',
+                        'content': '@payload.error',
                         'type': 'typography',
+                        'color': 'muted',
                       },
                       {
-                        'type': 'button',
-                        'icon': 'rotate-ccw',
-                        'action': 'INIT',
-                        'label': 'Retry',
                         'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'INIT',
                       },
                     ],
+                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -1557,8 +1581,8 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
                   'Inquiry',
                   {
                     'emit': {
-                      'failure': 'InquiryLoadFailed',
                       'success': 'InquiryLoaded',
+                      'failure': 'InquiryLoadFailed',
                     },
                   },
                 ],
@@ -1602,11 +1626,11 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'InquiryCreate',
-        'linkedEntity': 'Inquiry',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'title': 'New Inquiry',
           'mode': 'create',
-          'icon': 'plus-circle',
           'fields': [
             'listingId',
             'subject',
@@ -1732,7 +1756,7 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1744,6 +1768,10 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1767,7 +1795,9 @@ export const StdListingsInquiryOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'InquiryCreate',

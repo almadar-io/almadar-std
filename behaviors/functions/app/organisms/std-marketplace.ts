@@ -30,27 +30,30 @@ const ALIAS = 'Marketplace';
  * without modifying its state-machine topology.
  */
 export interface StdMarketplaceConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
  * Tunable params for the VendorOrbital orbital.
  *
- * Canonical entity: Vendor (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Vendor — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdMarketplaceVendorOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -59,22 +62,28 @@ export interface StdMarketplaceVendorOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'VendorAppLayout' | 'VendorBrowseList' | 'VendorPayoutLedger' | 'VendorCreate' | 'VendorEdit' | 'VendorView' | 'VendorDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the VendorOrbital orbital with consumer params. */
 export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Vendor';
+  const canonicalName = params.entityName ?? 'Vendor';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'vendors');
   const built = makeOrbitalWithUses({
     name: 'VendorOrbital',
     uses: [
@@ -101,7 +110,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
     ],
     entity: {
       name: canonicalName,
-      collection: 'vendors',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -163,15 +172,12 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'VendorAppLayout',
         'config': {
-          'searchEvent': 'VENDOR_SEARCH',
-          'notificationClickEvent': 'VENDOR_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.VendorCatalog',
-          'notifications': [],
           'navItems': [
             {
-              'href': '/vendors',
               'icon': 'store',
               'label': 'Vendors',
+              'href': '/vendors',
             },
             {
               'label': 'Listings',
@@ -179,16 +185,19 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
               'icon': 'package',
             },
             {
+              'label': 'Orders',
               'icon': 'shopping-cart',
               'href': '/orders',
-              'label': 'Orders',
             },
           ],
           'appName': 'Marketplace',
+          'notifications': [],
+          'searchEvent': 'VENDOR_SEARCH',
+          'notificationClickEvent': 'VENDOR_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'VENDOR_SEARCH',
           'NOTIFY_CLICK': 'VENDOR_NOTIFICATIONS_OPEN',
+          'SEARCH': 'VENDOR_SEARCH',
         },
       }),
       {
@@ -271,17 +280,16 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
                         'gap': 'md',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'type': 'stack',
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'name': 'store',
@@ -295,23 +303,23 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                             ],
                           },
                           {
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'button',
-                                'icon': 'plus',
                                 'label': 'New Vendor',
-                                'action': 'CREATE',
                                 'variant': 'primary',
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'icon': 'plus',
                               },
                             ],
                             'gap': 'sm',
-                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                         ],
-                        'align': 'center',
+                        'justify': 'between',
                         'type': 'stack',
-                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -322,8 +330,9 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                       },
                       '@trait.VendorPayoutLedger',
                     ],
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -342,34 +351,34 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'align': 'center',
-                    'type': 'stack',
                     'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
-                        'color': 'muted',
+                        'variant': 'caption',
                         'type': 'typography',
                         'content': 'You\'re all caught up.',
-                        'variant': 'caption',
+                        'color': 'muted',
                       },
                       {
+                        'label': 'Back to vendors',
                         'action': 'INIT',
                         'variant': 'ghost',
                         'type': 'button',
-                        'label': 'Back to vendors',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -381,45 +390,45 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'VendorBrowseList',
-        'linkedEntity': 'Vendor',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'itemActions': [
             {
-              'event': 'VIEW',
               'label': 'View',
+              'event': 'VIEW',
               'variant': 'ghost',
             },
             {
-              'variant': 'ghost',
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
             },
             {
-              'label': 'Delete',
               'variant': 'danger',
               'event': 'DELETE',
+              'label': 'Delete',
             },
           ],
           'cols': 1,
-          'gap': 'sm',
           'fields': [
             {
               'variant': 'h3',
-              'icon': 'store',
               'name': 'name',
+              'icon': 'store',
             },
             {
-              'variant': 'body',
               'name': 'businessName',
+              'variant': 'body',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'totalSales',
-              'variant': 'caption',
               'format': 'currency',
+              'variant': 'caption',
             },
             {
               'variant': 'caption',
@@ -458,15 +467,17 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'ref': 'Payout.traits.PayoutLedger',
         'name': 'VendorPayoutLedger',
         'config': {
-          'title': 'Vendor Payouts',
           'minimumWithdrawal': 50,
+          'title': 'Vendor Payouts',
         },
       }),
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'VendorCreate',
-        'linkedEntity': 'Vendor',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
           'fields': [
             'name',
             'businessName',
@@ -475,8 +486,6 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
             'rating',
           ],
           'title': 'New Vendor',
-          'mode': 'create',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -495,11 +504,11 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'VendorEdit',
-        'linkedEntity': 'Vendor',
+        'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
           'mode': 'edit',
           'title': 'Edit Vendor',
-          'icon': 'edit',
           'fields': [
             'name',
             'businessName',
@@ -525,10 +534,10 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'VendorView',
-        'linkedEntity': 'Vendor',
+        'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'icon': 'eye',
+          'title': 'View Vendor',
           'fields': [
             'name',
             'businessName',
@@ -536,7 +545,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
             'totalSales',
             'rating',
           ],
-          'title': 'View Vendor',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -555,16 +564,16 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'VendorDelete',
-        'linkedEntity': 'Vendor',
+        'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'title': 'Delete Vendor',
           'confirmLabel': 'Delete',
+          'title': 'Delete Vendor',
+          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -799,7 +808,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -811,6 +820,10 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -834,7 +847,9 @@ export const StdMarketplaceVendorOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'VendorAppLayout',
@@ -868,20 +883,23 @@ export function isStdMarketplaceVendorOrbitalParams(p: object): p is StdMarketpl
 /**
  * Tunable params for the ListingOrbital orbital.
  *
- * Canonical entity: Listing (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Listing — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdMarketplaceListingOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -890,22 +908,28 @@ export interface StdMarketplaceListingOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'ListingAppLayout' | 'ListingSearch' | 'ListingFilter' | 'ListingStats' | 'ListingTags' | 'ListingBrowseList' | 'ListingImages' | 'ListingRating' | 'ListingFlag' | 'ListingModQueue' | 'ListingCreate' | 'ListingEdit' | 'ListingView' | 'ListingDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the ListingOrbital orbital with consumer params. */
 export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Listing';
+  const canonicalName = params.entityName ?? 'Listing';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'listings');
   const built = makeOrbitalWithUses({
     name: 'ListingOrbital',
     uses: [
@@ -960,7 +984,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
     ],
     entity: {
       name: canonicalName,
-      collection: 'listings',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -1054,16 +1078,17 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingAppLayout',
         'config': {
           'appName': 'Marketplace',
+          'contentTrait': '@trait.ListingCatalog',
           'navItems': [
             {
               'href': '/vendors',
-              'icon': 'store',
               'label': 'Vendors',
+              'icon': 'store',
             },
             {
+              'icon': 'package',
               'label': 'Listings',
               'href': '/listings',
-              'icon': 'package',
             },
             {
               'href': '/orders',
@@ -1071,10 +1096,9 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
               'label': 'Orders',
             },
           ],
-          'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
           'searchEvent': 'LISTING_SEARCH',
           'notifications': [],
-          'contentTrait': '@trait.ListingCatalog',
+          'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'LISTING_NOTIFICATIONS_OPEN',
@@ -1161,61 +1185,62 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
                         'children': [
                           {
                             'gap': 'sm',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'package',
-                              },
-                              {
-                                'variant': 'h2',
-                                'type': 'typography',
-                                'content': 'Listings',
-                              },
-                            ],
                             'type': 'stack',
                             'align': 'center',
+                            'children': [
+                              {
+                                'name': 'package',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Listings',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
                                 'label': 'New Listing',
-                                'icon': 'plus',
                                 'action': 'CREATE',
+                                'icon': 'plus',
                                 'variant': 'primary',
+                                'type': 'button',
                               },
                             ],
+                            'type': 'stack',
                           },
                         ],
+                        'gap': 'md',
+                        'align': 'center',
+                        'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
                         'gap': 'md',
                         'children': [
                           '@trait.ListingSearch',
                           '@trait.ListingFilter',
                         ],
-                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       '@trait.ListingStats',
                       '@trait.ListingTags',
@@ -1240,7 +1265,6 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                       },
                       '@trait.ListingModQueue',
                     ],
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1259,15 +1283,11 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'className': 'py-8',
                     'align': 'center',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
                         'variant': 'h3',
@@ -1276,17 +1296,21 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                       },
                       {
                         'variant': 'caption',
-                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'button',
-                        'label': 'Back to listings',
                         'variant': 'ghost',
                         'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to listings',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1299,38 +1323,38 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ListingSearch',
         'config': {
-          'event': 'LISTING_SEARCH',
           'placeholder': 'Search listings…',
+          'event': 'LISTING_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ListingFilter',
         'config': {
+          'event': 'LISTING_FILTER',
           'filters': [
             {
-              'filterType': 'select',
-              'field': 'status',
               'options': [
                 'draft',
                 'active',
                 'sold',
                 'removed',
               ],
+              'field': 'status',
+              'filterType': 'select',
               'label': 'Status',
             },
             {
+              'filterType': 'select',
+              'field': 'currency',
+              'label': 'Currency',
               'options': [
                 'USD',
                 'EUR',
                 'GBP',
               ],
-              'label': 'Currency',
-              'filterType': 'select',
-              'field': 'currency',
             },
           ],
-          'event': 'LISTING_FILTER',
         },
       }),
       makeTraitRef({
@@ -1340,16 +1364,13 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
           'title': 'Listings',
           'metrics': [
             {
-              'label': 'Total',
-              'format': 'number',
               'aggregation': 'count',
-              'icon': 'package',
+              'format': 'number',
               'variant': 'primary',
+              'label': 'Total',
+              'icon': 'package',
             },
             {
-              'label': 'Active',
-              'variant': 'success',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -1359,12 +1380,16 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'active',
                 ],
               ],
-              'icon': 'check-circle',
+              'label': 'Active',
               'aggregation': 'count',
+              'icon': 'check-circle',
+              'variant': 'success',
+              'format': 'number',
             },
             {
+              'aggregation': 'count',
               'format': 'number',
-              'icon': 'edit',
+              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -1374,9 +1399,8 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'draft',
                 ],
               ],
-              'aggregation': 'count',
+              'icon': 'edit',
               'label': 'Draft',
-              'variant': 'warning',
             },
           ],
         },
@@ -1402,22 +1426,24 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ListingBrowseList',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
+              'variant': 'h3',
               'icon': 'package',
               'name': 'title',
-              'variant': 'h3',
             },
             {
-              'variant': 'h4',
               'name': 'price',
+              'variant': 'h4',
               'format': 'currency',
             },
             {
-              'name': 'currency',
               'variant': 'badge',
+              'name': 'currency',
             },
             {
               'name': 'status',
@@ -1428,15 +1454,14 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'reviewCount',
+              'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'description',
+              'variant': 'caption',
             },
           ],
-          'cols': 1,
           'itemActions': [
             {
               'event': 'VIEW',
@@ -1449,12 +1474,11 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
               'variant': 'ghost',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -1504,26 +1528,27 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingImages',
         'config': {
           'accept': 'image/*',
-          'title': 'Listing Images',
-          'maxImages': 10,
           'maxBytesPerImage': 10485760,
+          'maxImages': 10,
+          'title': 'Listing Images',
         },
       }),
       makeTraitRef({
         'ref': 'RatingReview.traits.RatingReviewSubmit',
         'name': 'ListingRating',
         'config': {
-          'allowComment': true,
           'allowPhotos': false,
-          'maxStars': 5,
           'title': 'Rate this listing',
           'submitEvent': 'SUBMIT_REVIEW',
+          'maxStars': 5,
+          'allowComment': true,
         },
       }),
       makeTraitRef({
         'ref': 'Flag.traits.FlagReport',
         'name': 'ListingFlag',
         'config': {
+          'title': 'Report listing',
           'reasons': [
             'spam',
             'abuse',
@@ -1532,7 +1557,6 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
             'nsfw',
             'other',
           ],
-          'title': 'Report listing',
         },
       }),
       makeTraitRef({
@@ -1546,11 +1570,11 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ListingCreate',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
-          'mode': 'create',
           'title': 'New Listing',
+          'mode': 'create',
           'fields': [
             'vendorId',
             'title',
@@ -1577,11 +1601,8 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ListingEdit',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'edit',
-          'title': 'Edit Listing',
           'fields': [
             'vendorId',
             'title',
@@ -1590,6 +1611,9 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
             'currency',
             'status',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Listing',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1608,9 +1632,8 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ListingView',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Listing',
           'fields': [
             'vendorId',
             'title',
@@ -1619,8 +1642,9 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
             'currency',
             'status',
           ],
-          'mode': 'edit',
           'icon': 'eye',
+          'mode': 'edit',
+          'title': 'View Listing',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1639,16 +1663,16 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'ListingDelete',
-        'linkedEntity': 'Listing',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Listing',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Listing',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1904,7 +1928,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -1916,6 +1940,10 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -1939,7 +1967,9 @@ export const StdMarketplaceListingOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'ListingAppLayout',
@@ -1980,20 +2010,23 @@ export function isStdMarketplaceListingOrbitalParams(p: object): p is StdMarketp
 /**
  * Tunable params for the OrderOrbital orbital.
  *
- * Canonical entity: Order (locked — not overridable).
- * The factory hardcodes `linkedEntity` to the canonical entity on
- * every trait/page; renaming the entity would desync those references.
+ * Canonical entity: Order — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
  *
- * Override surface (narrow):
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
  *   persistence    — entity persistence mode
- *   traitOverrides — per-imported-trait `config` + `linkedEntity`.
- *                    Mirrors `.lolo`'s trait-composition surface 1:1.
- *                    Free-form authoring (events / effects / listens /
- *                    emitsScope / state-machine splices) is NOT exposed;
- *                    anything that needs those becomes a canonical-atom
- *                    gap surfaced in evals.
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
 export interface StdMarketplaceOrderOrbitalParams {
   /** Extra fields appended to the canonical entity. */
@@ -2002,22 +2035,28 @@ export interface StdMarketplaceOrderOrbitalParams {
   pagePath?: string;
   /** Override the canonical entity persistence mode. */
   persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
   /**
-   * Per-imported-trait override surface. Keyed on each imported
-   * trait's local `name`. Only `config` (typed to the atom's
-   * declared config schema by convention) and `linkedEntity` are
-   * accepted. State machine topology, events, effects, listens,
-   * and emit scope are atom-owned and not overridable per call.
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
     'OrderAppLayout' | 'OrderBrowseList' | 'OrderCart' | 'OrderCartAdd' | 'OrderCartRemove' | 'OrderCartPersistor' | 'OrderCreate' | 'OrderEdit' | 'OrderView' | 'OrderDelete',
-    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity'>
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the OrderOrbital orbital with consumer params. */
 export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = 'Order';
+  const canonicalName = params.entityName ?? 'Order';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'orders');
   const built = makeOrbitalWithUses({
     name: 'OrderOrbital',
     uses: [
@@ -2044,7 +2083,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
     ],
     entity: {
       name: canonicalName,
-      collection: 'orders',
+      collection: collectionName,
       persistence: params.persistence ?? 'persistent',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
@@ -2107,32 +2146,32 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'OrderAppLayout',
         'config': {
+          'notificationClickEvent': 'ORDER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'label': 'Vendors',
               'icon': 'store',
+              'label': 'Vendors',
               'href': '/vendors',
             },
             {
-              'label': 'Listings',
               'icon': 'package',
+              'label': 'Listings',
               'href': '/listings',
             },
             {
+              'icon': 'shopping-cart',
               'label': 'Orders',
               'href': '/orders',
-              'icon': 'shopping-cart',
             },
           ],
-          'appName': 'Marketplace',
-          'notificationClickEvent': 'ORDER_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.OrderCatalog',
           'searchEvent': 'ORDER_SEARCH',
+          'appName': 'Marketplace',
           'notifications': [],
+          'contentTrait': '@trait.OrderCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'ORDER_NOTIFICATIONS_OPEN',
           'SEARCH': 'ORDER_SEARCH',
+          'NOTIFY_CLICK': 'ORDER_NOTIFICATIONS_OPEN',
         },
       }),
       {
@@ -2215,46 +2254,49 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'type': 'stack',
+                        'justify': 'between',
                         'align': 'center',
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'align': 'center',
                             'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'shopping-cart',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Orders',
+                                'variant': 'h2',
                               },
                             ],
                           },
                           {
-                            'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
                                 'variant': 'primary',
                                 'icon': 'plus',
-                                'action': 'CREATE',
-                                'label': 'New Order',
                                 'type': 'button',
+                                'label': 'New Order',
+                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
                         'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
@@ -2265,9 +2307,6 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                       },
                       '@trait.OrderCart',
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2286,6 +2325,11 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
                     'children': [
                       {
                         'name': 'bell',
@@ -2297,23 +2341,18 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                         'content': 'No notifications',
                       },
                       {
-                        'color': 'muted',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                       },
                       {
+                        'type': 'button',
+                        'variant': 'ghost',
                         'label': 'Back to orders',
                         'action': 'INIT',
-                        'variant': 'ghost',
-                        'type': 'button',
                       },
                     ],
-                    'align': 'center',
-                    'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -2325,25 +2364,24 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'OrderBrowseList',
-        'linkedEntity': 'Order',
+        'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
           'fields': [
             {
-              'variant': 'caption',
               'name': 'buyerId',
+              'variant': 'caption',
             },
             {
               'name': 'listingId',
               'variant': 'caption',
             },
             {
-              'name': 'quantity',
               'variant': 'caption',
+              'name': 'quantity',
             },
             {
-              'format': 'currency',
               'name': 'totalAmount',
+              'format': 'currency',
               'variant': 'h4',
             },
             {
@@ -2351,11 +2389,12 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
               'name': 'status',
             },
           ],
+          'gap': 'sm',
           'itemActions': [
             {
               'label': 'View',
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
               'label': 'Edit',
@@ -2363,12 +2402,12 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
               'variant': 'ghost',
             },
             {
+              'event': 'DELETE',
               'variant': 'danger',
               'label': 'Delete',
-              'event': 'DELETE',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -2416,11 +2455,10 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'OrderCreate',
-        'linkedEntity': 'Order',
+        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
-          'icon': 'plus-circle',
           'title': 'New Order',
+          'mode': 'create',
           'fields': [
             'buyerId',
             'listingId',
@@ -2428,6 +2466,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
             'totalAmount',
             'status',
           ],
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2446,9 +2485,10 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'OrderEdit',
-        'linkedEntity': 'Order',
+        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Order',
+          'icon': 'edit',
+          'mode': 'edit',
           'fields': [
             'buyerId',
             'listingId',
@@ -2456,8 +2496,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
             'totalAmount',
             'status',
           ],
-          'icon': 'edit',
-          'mode': 'edit',
+          'title': 'Edit Order',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2476,11 +2515,11 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'OrderView',
-        'linkedEntity': 'Order',
+        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'title': 'View Order',
           'mode': 'edit',
+          'title': 'View Order',
+          'icon': 'eye',
           'fields': [
             'buyerId',
             'listingId',
@@ -2506,16 +2545,16 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'OrderDelete',
-        'linkedEntity': 'Order',
+        'linkedEntity': canonicalName,
         'config': {
           'title': 'Delete Order',
-          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -2759,7 +2798,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
   });
   type _OrbTrait = OrbitalDefinition["traits"][number];
   type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
-  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity">;
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
@@ -2771,6 +2810,10 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
       const merged: TraitReference = { ...tr };
       if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
       return merged;
     });
   }
@@ -2794,7 +2837,9 @@ export const StdMarketplaceOrderOrbitalManifest = {
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
     { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
-    { name: 'traitOverrides', type: 'Partial<Record<TraitName, { config?, linkedEntity? }>>', description: 'Per-imported-trait config and entity binding (.lolo-equivalent surface). Atom-owned: topology, events, effects, listens, emit scope.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
     'OrderAppLayout',

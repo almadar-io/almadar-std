@@ -97,16 +97,16 @@ export interface StdRatingReviewRatingReviewSubmitFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRatingReviewConfig {
+  /** Default: `false` */
+  allowPhotos?: boolean;
+  /** Default: `5` */
+  maxStars?: number;
+  /** Default: `true` */
+  allowComment?: boolean;
   /** Default: `"Rate this"` */
   title?: string;
   /** Default: `"SUBMIT_REVIEW"` */
   submitEvent?: string;
-  /** Default: `false` */
-  allowPhotos?: boolean;
-  /** Default: `true` */
-  allowComment?: boolean;
-  /** Default: `5` */
-  maxStars?: number;
 }
 
 /**

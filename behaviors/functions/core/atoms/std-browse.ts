@@ -96,20 +96,20 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
+  /** Default: `10` */
+  displayPageSize?: number;
+  /** Default: `[]` */
+  itemActions?: TraitConfig[];
+  /** Default: `"md"` */
+  gap?: string;
   /** Default: `""` */
   imageField?: string;
   /** Default: `1` */
   cols?: number;
+  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Description","variant":"caption","name":"description"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: TraitConfig[];
   /** Default: `10` */
   pageSize?: number;
-  /** Default: `"md"` */
-  gap?: string;
-  /** Default: `10` */
-  displayPageSize?: number;
-  /** Default: `[{"name":"name","variant":"h4","label":"Name"},{"label":"Description","variant":"caption","name":"description"},{"name":"status","variant":"badge","label":"Status"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

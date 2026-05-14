@@ -29,7 +29,25 @@ const ALIAS = 'InterviewSlot';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdInterviewSlotEventKey = 'CANCEL_INTERVIEW' | 'COMPLETE_INTERVIEW' | 'INIT' | 'InterviewSlotLoadFailed' | 'InterviewSlotLoaded';
+export type StdInterviewSlotEventKey = 'CANCEL_INTERVIEW' | 'CLOSE_VIEW' | 'COMPLETE_INTERVIEW' | 'INIT' | 'InterviewSlotLoadFailed' | 'InterviewSlotLoaded' | 'OPEN_INTERVIEW';
+
+/**
+ * Payload shape for the `OPEN_INTERVIEW` event.
+ */
+export interface StdInterviewSlotOpenInterviewPayload {
+  id: string;
+  row?: {
+    id: string;
+    applicantId: string;
+    applicantName?: string;
+    interviewerName?: string;
+    scheduledAt: string;
+    durationMinutes?: number;
+    format?: string;
+    status?: string;
+    notes?: string;
+  };
+}
 
 /**
  * Payload shape for the `COMPLETE_INTERVIEW` event.

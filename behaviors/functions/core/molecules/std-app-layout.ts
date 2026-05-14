@@ -67,17 +67,17 @@ export interface StdAppLayoutAppLayoutStateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAppLayoutConfig {
-  /** Default: `"SEARCH"` */
-  searchEvent?: string;
-  contentTrait?: TraitFieldRef;
-  /** Default: `[]` */
-  navItems?: TraitConfig[];
-  /** Default: `[]` */
-  topBarActions?: TraitConfig[];
   /** Default: `"App"` */
   appName?: string;
+  contentTrait?: TraitFieldRef;
+  /** Default: `[]` */
+  topBarActions?: TraitConfig[];
   /** Default: `[]` */
   notifications?: TraitConfig[];
+  /** Default: `"SEARCH"` */
+  searchEvent?: string;
+  /** Default: `[]` */
+  navItems?: TraitConfig[];
   /** Default: `"NOTIFY_CLICK"` */
   notificationClickEvent?: string;
 }
