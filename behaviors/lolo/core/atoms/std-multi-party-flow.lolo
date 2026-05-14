@@ -1,0 +1,157 @@
+app std-multi-party-flow "1.0.0"
+"std-multi-party-flow — generic N-party transactional state machine (escrow, signing, multi-stakeholder approval). `config.parties` is an array of party definitions; @entity.currentPartyIndex walks through them; PARTY_CONFIRM self-loops, FINALIZE moves to funded, RELEASE/DISPUTE/CANCEL terminate. Topology = loading / awaiting / funded / released / disputed / cancelled / error — the awaiting state owns N via data, not states."
+
+orbital MultiPartyFlowOrbital {
+  type PartyView = {
+    key         : string!
+    label       : string!
+    description : string
+    icon        : string
+    actionLabel : string
+    actionIcon  : string
+    status      : "waiting" | "ready" | "completed"
+  }
+
+  type AuditEvent = {
+    id          : string!
+    actor       : string
+    action      : string!
+    timestamp   : string
+  }
+
+  entity MultiPartyView [runtime] {
+    id                  : string!
+    parties             : [PartyView] = []
+    currentPartyIndex   : number = 0
+    totalParties        : number = 0
+    audit               : [AuditEvent] = []
+    disputeReason       : string = ""
+    cancelReason        : string = ""
+    errorMessage        : string = ""
+  }
+
+  type FlowLoaded     = Event { data : [object] }                "Fired when flow context finishes loading"
+  type FlowLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
+  type FlowSaved      = Event { row : object }                   "Fired when a transition has been persisted"
+  type FlowSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
+
+  trait MultiPartyTransaction -> MultiPartyView [interaction, instance] {
+    config {
+      title          : string = "Multi-Party Transaction"
+      parties        : [object] = [
+        { key: "buyer",  label: "Buyer",  description: "Initiates transaction", icon: "user",       actionLabel: "Confirm", actionIcon: "check" },
+        { key: "seller", label: "Seller", description: "Fulfills transaction",  icon: "user-check", actionLabel: "Confirm", actionIcon: "check" }
+      ]
+      releaseLabel   : string = "Release Escrow"
+      releaseIcon    : string = "unlock"
+      disputeLabel   : string = "Open Dispute"
+      disputeIcon    : string = "alert-triangle"
+      cancelLabel    : string = "Cancel Transaction"
+      cancelIcon     : string = "x"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch MultiPartyView { emit: { success: "FlowLoaded", failure: "FlowLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading transaction…" })
+      FlowLoaded -> awaiting
+        (set @entity.currentPartyIndex 0)
+        (set @entity.totalParties (array/len @config.parties))
+        (set @entity.parties (array/map @config.parties ["fn", "party", {
+          key:         (object/get @party "key"),
+          label:       (object/get @party "label"),
+          description: (object/get @party "description" ""),
+          icon:        (object/get @party "icon" "user"),
+          actionLabel: (object/get @party "actionLabel" "Confirm"),
+          actionIcon:  (object/get @party "actionIcon" "check"),
+          status:      "ready"
+        }]))
+        (set @entity.audit (array/map @payload.data ["fn", "row", {
+          id:        (object/get @row "id" ""),
+          actor:     (object/get @row "actor" "system"),
+          action:    (object/get @row "action" ""),
+          timestamp: (object/get @row "createdAt" "")
+        }]))
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-pull-request" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.parties", gap: "sm", fields: [], renderItem: ["fn", "party", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@party.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@party.label", variant: "h4" }, { type: "typography", content: "@party.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@party.status", variant: "primary" }, { type: "button", label: "@party.actionLabel", variant: "primary", action: "PARTY_CONFIRM", actionPayload: { partyKey: "@party.key" }, icon: "@party.actionIcon" }] }] }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Audit Log" }, { type: "data-list", entity: "@entity.audit", gap: "sm", fields: [], renderItem: ["fn", "ev", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@ev.action", variant: "h4" }, { type: "typography", content: "@ev.timestamp", variant: "caption", color: "muted" }] }, { type: "badge", label: "@ev.actor", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Mark Funded", variant: "success", action: "FINALIZE", icon: "lock" }, { type: "button", label: "@config.disputeLabel", variant: "danger", action: "OPEN_DISPUTE", icon: "@config.disputeIcon" }, { type: "button", label: "@config.cancelLabel", variant: "ghost", action: "CANCEL_TRANSACTION", icon: "@config.cancelIcon" }] }] })
+      FlowLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
+      FlowSaved -> awaiting
+        (render-ui main { type: "loading-state", title: "Refreshing…" })
+      FlowSaveFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
+    }
+    state awaiting {
+      PARTY_CONFIRM -> awaiting
+        (set @entity.currentPartyIndex (+ @entity.currentPartyIndex 1))
+        (set @entity.parties (array/map @config.parties ["fn", "party", {
+          key:         (object/get @party "key"),
+          label:       (object/get @party "label"),
+          description: (object/get @party "description" ""),
+          icon:        (object/get @party "icon" "user"),
+          actionLabel: (object/get @party "actionLabel" "Confirm"),
+          actionIcon:  (object/get @party "actionIcon" "check"),
+          status:      "completed"
+        }]))
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-pull-request" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.parties", gap: "sm", fields: [], renderItem: ["fn", "party", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@party.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@party.label", variant: "h4" }, { type: "typography", content: "@party.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@party.status", variant: "primary" }, { type: "button", label: "@party.actionLabel", variant: "primary", action: "PARTY_CONFIRM", actionPayload: { partyKey: "@party.key" }, icon: "@party.actionIcon" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Mark Funded", variant: "success", action: "FINALIZE", icon: "lock" }, { type: "button", label: "@config.disputeLabel", variant: "danger", action: "OPEN_DISPUTE", icon: "@config.disputeIcon" }, { type: "button", label: "@config.cancelLabel", variant: "ghost", action: "CANCEL_TRANSACTION", icon: "@config.cancelIcon" }] }] })
+      FINALIZE -> funded
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "lock" }, { type: "typography", content: "Funded", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "All parties have confirmed. Awaiting release." }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "@config.releaseLabel", variant: "primary", action: "RELEASE", icon: "@config.releaseIcon" }, { type: "button", label: "@config.disputeLabel", variant: "danger", action: "OPEN_DISPUTE", icon: "@config.disputeIcon" }] }] })
+      OPEN_DISPUTE -> disputed
+        (set @entity.disputeReason @payload.reason)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Disputed", variant: "h3" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.disputeReason" }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      CANCEL_TRANSACTION -> cancelled
+        (set @entity.cancelReason @payload.reason)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Cancelled", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "Transaction cancelled." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+    }
+    state funded {
+      RELEASE -> released
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Released", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "Funds released. Transaction complete." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      OPEN_DISPUTE -> disputed
+        (set @entity.disputeReason @payload.reason)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Disputed", variant: "h3" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.disputeReason" }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+    }
+    state released {
+      RESTART -> loading
+        (set @entity.currentPartyIndex 0)
+        (render-ui main { type: "loading-state", title: "Restarting…" })
+    }
+    state disputed {
+      RESTART -> loading
+        (set @entity.currentPartyIndex 0)
+        (render-ui main { type: "loading-state", title: "Restarting…" })
+    }
+    state cancelled {
+      RESTART -> loading
+        (set @entity.currentPartyIndex 0)
+        (render-ui main { type: "loading-state", title: "Restarting…" })
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      PARTY_CONFIRM          { partyKey : string }
+      FINALIZE               { }
+      RELEASE                { }
+      OPEN_DISPUTE           { reason : string }
+      CANCEL_TRANSACTION     { reason : string }
+      RESTART                { }
+      FlowLoaded             { data : [object] }
+      FlowLoadFailed         { error : string, code : string }
+    }
+    listens {
+      PARTY_CONFIRM          { partyKey : string }
+      FINALIZE               { }
+      RELEASE                { }
+      OPEN_DISPUTE           { reason : string }
+      CANCEL_TRANSACTION     { reason : string }
+      RESTART                { }
+      FlowLoaded             { data : [object] }
+      FlowLoadFailed         { error : string, code : string }
+      FlowSaved              { row : object }
+      FlowSaveFailed         { error : string, code : string }
+    }
+  }
+  page "/multi-party-flow" as MultiPartyFlowPage -> MultiPartyTransaction
+}

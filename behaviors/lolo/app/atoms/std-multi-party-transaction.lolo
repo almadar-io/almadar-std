@@ -1,8 +1,8 @@
-app std-multi-party-transaction "1.0.0"
-"std-multi-party-transaction — domain-specific buyer/seller escrow flow. Composes std-two-sided-flow with persisted MarketTransaction entity (amount, currency, buyerId, sellerId, listingId). Lights up std-marketplace, std-ecommerce checkout, std-listings offer+accept."
+app std-multi-party-transaction "2.0.0"
+"std-multi-party-transaction — domain-specific N-party escrow flow. Composes std-multi-party-flow with persisted MarketTransaction entity (amount, currency, ids per role, listingId). Lights up std-marketplace, std-ecommerce checkout, std-listings offer+accept; configure `config.parties` for any number of stakeholders."
 
 orbital MultiPartyTransactionOrbital {
-  uses Flow from "std/behaviors/std-two-sided-flow"
+  uses Flow from "std/behaviors/std-multi-party-flow"
 
   entity MarketTransaction [persistent: market_transactions] {
     id          : string!
@@ -13,21 +13,18 @@ orbital MultiPartyTransactionOrbital {
     sellerId    : string  = ""
     listingId   : string  = ""
     action      : string  = ""
+    actor       : string  = ""
     notes       : string  = ""
     createdAt   : string  = ""
   }
 
-  trait MarketEscrow = Flow.traits.TwoSidedTransaction -> MarketTransaction {
+  trait MarketEscrow = Flow.traits.MultiPartyTransaction -> MarketTransaction {
     config: {
-      title:           "Marketplace Transaction",
-      partyALabel:     "Buyer",
-      partyAIcon:      "shopping-cart",
-      partyAAction:    "Fund Escrow",
-      partyAActionIcon: "credit-card",
-      partyBLabel:     "Seller",
-      partyBIcon:      "package",
-      partyBAction:    "Ship Item",
-      partyBActionIcon: "truck",
+      title: "Marketplace Transaction",
+      parties: [
+        { key: "buyer",  label: "Buyer",  description: "Funds the escrow", icon: "shopping-cart", actionLabel: "Fund Escrow", actionIcon: "credit-card" },
+        { key: "seller", label: "Seller", description: "Ships the item",   icon: "package",       actionLabel: "Ship Item",   actionIcon: "truck" }
+      ],
       releaseLabel:    "Release Funds",
       releaseIcon:     "unlock",
       disputeLabel:    "Open Dispute",

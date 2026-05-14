@@ -1,5 +1,5 @@
-app std-approval-chain "1.0.0"
-"std-approval-chain — domain-specific 3-step approval workflow. Composes std-step-flow with persisted ApprovalRequest entity carrying domain fields (requestType, amount, requester, approver fields per step). Lights up std-legal-case, std-ap-bill, std-change-order, std-application (hr-portal) — each rebinds std-step-flow + adds its own request entity."
+app std-approval-chain "2.0.0"
+"std-approval-chain — domain-specific N-step approval workflow. Composes std-step-flow with persisted ApprovalRequest entity carrying domain fields (requestType, amount, requester). Lights up std-legal-case, std-ap-bill, std-change-order, std-application (hr-portal) — each rebinds std-step-flow + sets its own `config.steps` array."
 
 orbital ApprovalChainOrbital {
   uses Flow from "std/behaviors/std-step-flow"
@@ -16,19 +16,12 @@ orbital ApprovalChainOrbital {
 
   trait ApprovalReview = Flow.traits.StepFlowReview -> ApprovalRequest {
     config: {
-      title:      "Approval Request",
-      step1Key:   "manager",
-      step1Label: "Manager Review",
-      step1Desc:  "Direct manager reviews the request and verifies budget impact",
-      step1Icon:  "user-check",
-      step2Key:   "finance",
-      step2Label: "Finance Approval",
-      step2Desc:  "Finance team checks compliance with company policy",
-      step2Icon:  "calculator",
-      step3Key:   "executive",
-      step3Label: "Executive Sign-off",
-      step3Desc:  "Final executive approval before commitment",
-      step3Icon:  "shield-check"
+      title: "Approval Request",
+      steps: [
+        { key: "manager",   label: "Manager Review",     description: "Direct manager reviews the request and verifies budget impact", icon: "user-check" },
+        { key: "finance",   label: "Finance Approval",   description: "Finance team checks compliance with company policy",            icon: "calculator" },
+        { key: "executive", label: "Executive Sign-off", description: "Final executive approval before commitment",                    icon: "shield-check" }
+      ]
     }
   }
 

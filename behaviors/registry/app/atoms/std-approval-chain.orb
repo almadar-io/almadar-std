@@ -1,7 +1,7 @@
 {
   "name": "std-approval-chain",
-  "version": "1.0.0",
-  "description": "std-approval-chain — domain-specific 3-step approval workflow. Composes std-step-flow with persisted ApprovalRequest entity carrying domain fields (requestType, amount, requester, approver fields per step). Lights up std-legal-case, std-ap-bill, std-change-order, std-application (hr-portal) — each rebinds std-step-flow + adds its own request entity.",
+  "version": "2.0.0",
+  "description": "std-approval-chain — domain-specific N-step approval workflow. Composes std-step-flow with persisted ApprovalRequest entity carrying domain fields (requestType, amount, requester). Lights up std-legal-case, std-ap-bill, std-change-order, std-application (hr-portal) — each rebinds std-step-flow + sets its own `config.steps` array.",
   "orbitals": [
     {
       "name": "ApprovalChainOrbital",
@@ -66,19 +66,27 @@
           "name": "ApprovalReview",
           "linkedEntity": "ApprovalRequest",
           "config": {
-            "step1Label": "Manager Review",
-            "step2Key": "finance",
-            "step1Key": "manager",
-            "step1Icon": "user-check",
-            "step2Label": "Finance Approval",
-            "step1Desc": "Direct manager reviews the request and verifies budget impact",
-            "title": "Approval Request",
-            "step2Icon": "calculator",
-            "step3Label": "Executive Sign-off",
-            "step3Desc": "Final executive approval before commitment",
-            "step3Icon": "shield-check",
-            "step3Key": "executive",
-            "step2Desc": "Finance team checks compliance with company policy"
+            "steps": [
+              {
+                "description": "Direct manager reviews the request and verifies budget impact",
+                "key": "manager",
+                "label": "Manager Review",
+                "icon": "user-check"
+              },
+              {
+                "label": "Finance Approval",
+                "key": "finance",
+                "icon": "calculator",
+                "description": "Finance team checks compliance with company policy"
+              },
+              {
+                "label": "Executive Sign-off",
+                "description": "Final executive approval before commitment",
+                "key": "executive",
+                "icon": "shield-check"
+              }
+            ],
+            "title": "Approval Request"
           }
         }
       ],
