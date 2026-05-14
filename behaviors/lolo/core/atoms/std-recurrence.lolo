@@ -1,29 +1,34 @@
-app std-recurrence "1.0.0"
-"std-recurrence — generic rule-based occurrence generator. Topology = defining_rule / generating_occurrences / viewing_calendar / awaiting_exception_decision / cancelled / error — adds SKIP_OCCURRENCE / RESCHEDULE_OCCURRENCE / END_AFTER_N / END_ON_DATE transitions a pure-CRUD atom can't express. Renders rule editor + calendar overview of generated occurrences + per-occurrence exception modal."
+app std-recurrence "2.1.0"
+"std-recurrence — recurring-rule definition + upcoming runs (Stripe Subscriptions / Cron Hub style). The viewing state shows a plain-English rule sentence and the next N dated runs as an agenda timeline. Per-run exception modal supports skip / reschedule. Topology = loading / defining_rule / viewing / awaiting_exception_decision / cancelled / error."
 
 orbital RecurrenceOrbital {
   type OccurrenceItem = {
     id          : string!
+    title       : string!
+    description : string
     date        : string
-    status      : "scheduled" | "skipped" | "completed" | "rescheduled"
-    label       : string
-    notes       : string
+    status      : "complete" | "active" | "pending" | "error"
+    rawStatus   : "scheduled" | "skipped" | "completed" | "rescheduled"
   }
 
   entity RecurrenceView [runtime] {
-    id                   : string!
-    occurrences          : [OccurrenceItem] = []
-    frequency            : "daily" | "weekly" | "monthly" | "yearly" = "weekly"
-    interval             : number = 1
-    startDate            : string = ""
-    endDate              : string = ""
-    endAfterCount        : number = 0
-    currentOccurrenceId  : string = ""
-    currentOccurrenceDate: string = ""
-    currentOccurrenceLabel: string = ""
-    rescheduleDate       : string = ""
-    skipReason           : string = ""
-    errorMessage         : string = ""
+    id                     : string!
+    title                  : string = ""
+    notes                  : string = ""
+    date                   : string = ""
+    occurrences            : [OccurrenceItem] = []
+    frequency              : "daily" | "weekly" | "monthly" | "yearly" = "weekly"
+    interval               : number = 1
+    startDate              : string = ""
+    endDate                : string = ""
+    endAfterCount          : number = 0
+    summaryText            : string = ""
+    currentOccurrenceId    : string = ""
+    currentOccurrenceDate  : string = ""
+    currentOccurrenceLabel : string = ""
+    rescheduleDate         : string = ""
+    skipReason             : string = ""
+    errorMessage           : string = ""
   }
 
   type RecurrenceLoaded     = Event { data : [object] }                "Fired when occurrences finish loading"
@@ -33,61 +38,73 @@ orbital RecurrenceOrbital {
 
   trait RecurrenceEditor -> RecurrenceView [interaction, instance] {
     config {
-      title         : string = "Recurring Schedule"
-      itemLabelField : string = "label"
-      formFields    : [string] = ["frequency", "interval", "startDate", "endDate", "endAfterCount"]
+      title       : string   = "Schedule"
+      formFields  : [string] = ["frequency", "interval", "startDate", "endDate", "endAfterCount"]
     }
     initial: loading
     state loading {
       INIT -> loading
         (fetch RecurrenceView { emit: { success: "RecurrenceLoaded", failure: "RecurrenceLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Loading schedule…" })
-      RecurrenceLoaded -> viewing_calendar
+      RecurrenceLoaded -> viewing
+        (set @entity.frequency (object/get (array/first @payload.data) "frequency" "weekly"))
+        (set @entity.interval (object/get (array/first @payload.data) "interval" 1))
+        (set @entity.startDate (object/get (array/first @payload.data) "startDate" ""))
+        (set @entity.endDate (object/get (array/first @payload.data) "endDate" ""))
+        (set @entity.endAfterCount (object/get (array/first @payload.data) "endAfterCount" 0))
         (set @entity.occurrences (array/map @payload.data ["fn", "row", {
-          id:     (object/get @row "id" ""),
-          date:   (object/get @row "date" ""),
-          status: "scheduled",
-          label:  (object/get @row "label" ""),
-          notes:  (object/get @row "notes" "")
+          id:          (object/get @row "id" ""),
+          title:       (object/get @row "title" "Occurrence"),
+          description: (object/get @row "notes" ""),
+          date:        (object/get @row "date" ""),
+          status:      "active",
+          rawStatus:   "scheduled"
         }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.occurrences", gap: "sm", fields: [], renderItem: ["fn", "occ", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@occ.label", variant: "h4" }, { type: "typography", content: "@occ.date", variant: "caption", color: "muted" }] }, { type: "badge", label: "@occ.status", variant: "primary" }, { type: "button", label: "Edit", variant: "ghost", action: "OPEN_EXCEPTION", actionPayload: { id: "@occ.id", row: "@occ" }, icon: "edit" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Edit Rule", variant: "secondary", action: "EDIT_RULE", icon: "settings" }, { type: "button", label: "End Schedule", variant: "danger", action: "CANCEL_SCHEDULE", icon: "x-circle" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "badge", label: "Active", variant: "success" }, { type: "button", label: "Edit rule", variant: "primary", action: "EDIT_RULE", icon: "settings" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "typography", content: "Repeats every", color: "muted" }, { type: "typography", content: "@entity.interval", weight: "bold" }, { type: "typography", content: "@entity.frequency", weight: "bold" }] }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "typography", content: "Starts", color: "muted" }, { type: "typography", content: "@entity.startDate", weight: "bold" }, { type: "typography", content: "·", color: "muted" }, { type: "typography", content: "Ends", color: "muted" }, { type: "typography", content: "@entity.endDate", weight: "bold" }] }] }] }, { type: "typography", content: "Next runs", variant: "h4" }, { type: "timeline", entity: "@entity.occurrences", fields: ["title", "description", "date", "status"], itemActions: [{ label: "Manage", event: "OPEN_EXCEPTION" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "End schedule", variant: "danger", action: "CANCEL_SCHEDULE", icon: "x-circle" }] }] })
       RecurrenceLoadFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
-      RecurrenceSaved -> viewing_calendar
+      RecurrenceSaved -> loading
+        (fetch RecurrenceView { emit: { success: "RecurrenceLoaded", failure: "RecurrenceLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Refreshing…" })
       RecurrenceSaveFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
     }
-    state viewing_calendar {
+    state viewing {
       EDIT_RULE -> defining_rule
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CANCEL_RULE", icon: "arrow-left" }, { type: "icon", name: "settings" }, { type: "typography", content: "Recurrence Rule", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SAVE_RULE", cancelEvent: "CANCEL_RULE", fields: "@config.formFields" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CANCEL_RULE", icon: "arrow-left" }, { type: "icon", name: "settings" }, { type: "typography", content: "Edit recurrence rule", variant: "h3" }] }, { type: "card", children: [{ type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SAVE_RULE", cancelEvent: "CANCEL_RULE", fields: "@config.formFields" }] }] })
       OPEN_EXCEPTION -> awaiting_exception_decision
-        (set @entity.currentOccurrenceId @payload.id)
+        (set @entity.currentOccurrenceId @payload.row.id)
         (set @entity.currentOccurrenceDate @payload.row.date)
-        (set @entity.currentOccurrenceLabel @payload.row.label)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_EXCEPTION", icon: "arrow-left" }, { type: "icon", name: "calendar-x" }, { type: "typography", content: "@entity.currentOccurrenceLabel", variant: "h3" }, { type: "badge", label: "@entity.currentOccurrenceDate", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Skip", variant: "secondary", action: "SKIP_OCCURRENCE", actionPayload: { id: "@entity.currentOccurrenceId" }, icon: "skip-forward" }, { type: "button", label: "Reschedule", variant: "primary", action: "RESCHEDULE_OCCURRENCE", actionPayload: { id: "@entity.currentOccurrenceId" }, icon: "calendar-clock" }] }] })
+        (set @entity.currentOccurrenceLabel @payload.row.title)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_EXCEPTION", icon: "arrow-left" }, { type: "icon", name: "calendar-clock" }, { type: "typography", content: "@entity.currentOccurrenceLabel", variant: "h3" }, { type: "badge", label: "@entity.currentOccurrenceDate", variant: "primary" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "What would you like to do with this occurrence?", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Skip", variant: "secondary", action: "SKIP_OCCURRENCE", actionPayload: { id: "@entity.currentOccurrenceId" }, icon: "skip-forward" }, { type: "button", label: "Reschedule", variant: "primary", action: "RESCHEDULE_OCCURRENCE", actionPayload: { id: "@entity.currentOccurrenceId" }, icon: "calendar-clock" }] }] }] }] })
       CANCEL_SCHEDULE -> cancelled
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Schedule Ended", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "This recurring schedule has been cancelled." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Schedule ended", variant: "h2", align: "center" }, { type: "typography", content: "This recurring schedule has been cancelled. No further occurrences will fire.", variant: "body", color: "muted", align: "center" }, { type: "button", label: "Start a new schedule", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
     }
     state defining_rule {
       SAVE_RULE -> loading
+        (persist update RecurrenceView @payload.data { emit: { success: "RecurrenceSaved", failure: "RecurrenceSaveFailed" } })
         (render-ui main { type: "loading-state", title: "Saving rule…" })
-      CANCEL_RULE -> viewing_calendar
-        (render-ui main { type: "loading-state", title: "Cancelling edit…" })
+      CANCEL_RULE -> loading
+        (fetch RecurrenceView { emit: { success: "RecurrenceLoaded", failure: "RecurrenceLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Cancelling…" })
     }
     state awaiting_exception_decision {
       SKIP_OCCURRENCE -> loading
-        (render-ui main { type: "loading-state", title: "Skipping occurrence…" })
+        (persist update RecurrenceView { id: @payload.id, status: "skipped" } { emit: { success: "RecurrenceSaved", failure: "RecurrenceSaveFailed" } })
+        (render-ui main { type: "loading-state", title: "Skipping…" })
       RESCHEDULE_OCCURRENCE -> loading
         (set @entity.rescheduleDate @payload.newDate)
+        (persist update RecurrenceView { id: @payload.id, status: "rescheduled", date: @payload.newDate } { emit: { success: "RecurrenceSaved", failure: "RecurrenceSaveFailed" } })
         (render-ui main { type: "loading-state", title: "Rescheduling…" })
-      CLOSE_EXCEPTION -> viewing_calendar
+      CLOSE_EXCEPTION -> loading
+        (fetch RecurrenceView { emit: { success: "RecurrenceLoaded", failure: "RecurrenceLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Closing…" })
     }
     state cancelled {
       RESTART -> loading
+        (fetch RecurrenceView { emit: { success: "RecurrenceLoaded", failure: "RecurrenceLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Restarting…" })
     }
     state error {
@@ -98,7 +115,7 @@ orbital RecurrenceOrbital {
       EDIT_RULE             { }
       SAVE_RULE             { data : object }
       CANCEL_RULE           { }
-      OPEN_EXCEPTION        { id : string, row : object! }
+      OPEN_EXCEPTION        { row : object! }
       CLOSE_EXCEPTION       { }
       SKIP_OCCURRENCE       { id : string }
       RESCHEDULE_OCCURRENCE { id : string, newDate : string }
@@ -106,12 +123,14 @@ orbital RecurrenceOrbital {
       RESTART               { }
       RecurrenceLoaded      { data : [object] }
       RecurrenceLoadFailed  { error : string, code : string }
+      RecurrenceSaved       { row : object }
+      RecurrenceSaveFailed  { error : string, code : string }
     }
     listens {
       EDIT_RULE             { }
       SAVE_RULE             { data : object }
       CANCEL_RULE           { }
-      OPEN_EXCEPTION        { id : string, row : object! }
+      OPEN_EXCEPTION        { row : object! }
       CLOSE_EXCEPTION       { }
       SKIP_OCCURRENCE       { id : string }
       RESCHEDULE_OCCURRENCE { id : string, newDate : string }
