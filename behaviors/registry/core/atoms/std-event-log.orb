@@ -1,7 +1,7 @@
 {
   "name": "std-event-log",
-  "version": "1.0.0",
-  "description": "std-event-log — generic chronological event feed. Topology = loading / viewing / filtering / backfilling / error — adds a backfilling state for retroactive entries that pure-CRUD atoms can't express. Renders a timeline of events with filter controls and a backfill form.",
+  "version": "2.1.0",
+  "description": "std-event-log — generic chronological event feed (Stripe activity log / GitHub PR timeline / Linear event feed style). Renders a vertical `timeline` with type-coded dots, a single horizontal chip-bar of kind filters (All + per-kind), reverse-chronological sort, and an inline form for logging events that weren't auto-captured. `config.kindOptions` maps each kind → status/icon/label so consuming molecules/organisms get type-coded visuals without re-implementing topology. Topology = loading / viewing / backfilling / error.",
   "orbitals": [
     {
       "name": "EventLogOrbital",
@@ -15,7 +15,33 @@
             "required": true
           },
           {
-            "name": "entries",
+            "name": "title",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "default": "created",
+            "values": [
+              "created",
+              "updated",
+              "approved",
+              "rejected"
+            ]
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "allEntries",
             "type": "array",
             "default": [],
             "items": {
@@ -23,29 +49,13 @@
               "properties": {
                 "kind": {
                   "name": "kind",
-                  "type": "string"
-                },
-                "status": {
-                  "name": "status",
                   "type": "string",
                   "values": [
-                    "info",
-                    "success",
-                    "warning",
-                    "error"
+                    "created",
+                    "updated",
+                    "approved",
+                    "rejected"
                   ]
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string"
-                },
-                "date": {
-                  "name": "date",
-                  "type": "string"
                 },
                 "title": {
                   "name": "title",
@@ -53,6 +63,92 @@
                 },
                 "description": {
                   "name": "description",
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "date": {
+                  "name": "date",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "name": "entries",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "name": "date",
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "status": {
+                  "name": "status",
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                },
+                "kind": {
+                  "name": "kind",
+                  "type": "string",
+                  "values": [
+                    "created",
+                    "updated",
+                    "approved",
+                    "rejected"
+                  ]
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "name": "filterChips",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "type": "string"
                 }
               }
@@ -97,22 +193,16 @@
           "linkedEntity": "EventLogView",
           "emits": [
             {
-              "event": "OPEN_FILTER"
-            },
-            {
-              "event": "OPEN_BACKFILL"
-            },
-            {
               "event": "APPLY_FILTER",
               "payloadSchema": [
                 {
-                  "name": "filterKind",
+                  "name": "tabId",
                   "type": "string"
                 }
               ]
             },
             {
-              "event": "CLOSE_FILTER"
+              "event": "OPEN_BACKFILL"
             },
             {
               "event": "SAVE_BACKFILL",
@@ -147,6 +237,28 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "EventLogSaved",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "EventLogSaveFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -157,9 +269,6 @@
               },
               {
                 "name": "viewing"
-              },
-              {
-                "name": "filtering"
               },
               {
                 "name": "backfilling"
@@ -222,26 +331,18 @@
                 ]
               },
               {
-                "key": "OPEN_FILTER",
-                "name": "Open Filter"
-              },
-              {
-                "key": "OPEN_BACKFILL",
-                "name": "Open Backfill"
-              },
-              {
                 "key": "APPLY_FILTER",
                 "name": "Apply Filter",
                 "payloadSchema": [
                   {
-                    "name": "filterKind",
+                    "name": "tabId",
                     "type": "string"
                   }
                 ]
               },
               {
-                "key": "CLOSE_FILTER",
-                "name": "Close Filter"
+                "key": "OPEN_BACKFILL",
+                "name": "Open Backfill"
               },
               {
                 "key": "SAVE_BACKFILL",
@@ -269,8 +370,8 @@
                     "EventLogView",
                     {
                       "emit": {
-                        "success": "EventLogLoaded",
-                        "failure": "EventLogLoadFailed"
+                        "failure": "EventLogLoadFailed",
+                        "success": "EventLogLoaded"
                       }
                     }
                   ],
@@ -291,157 +392,261 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.filterChips",
+                    [
+                      "array/prepend",
+                      [
+                        "array/map",
+                        "@config.kindOptions",
+                        [
+                          "fn",
+                          "k",
+                          {
+                            "icon": [
+                              "object/get",
+                              "@k",
+                              "icon",
+                              "circle"
+                            ],
+                            "id": [
+                              "object/get",
+                              "@k",
+                              "key"
+                            ],
+                            "label": [
+                              "object/get",
+                              "@k",
+                              "label"
+                            ]
+                          }
+                        ]
+                      ],
+                      {
+                        "icon": "list",
+                        "label": "All",
+                        "id": ""
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.allEntries",
+                    [
+                      "array/sort",
+                      [
+                        "array/map",
+                        "@payload.data",
+                        [
+                          "fn",
+                          "row",
+                          {
+                            "date": [
+                              "object/get",
+                              "@row",
+                              "createdAt",
+                              [
+                                "object/get",
+                                "@row",
+                                "date",
+                                ""
+                              ]
+                            ],
+                            "id": [
+                              "object/get",
+                              "@row",
+                              "id",
+                              ""
+                            ],
+                            "kind": [
+                              "object/get",
+                              "@row",
+                              "kind",
+                              ""
+                            ],
+                            "title": [
+                              "object/get",
+                              "@row",
+                              "title",
+                              ""
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
+                              ""
+                            ],
+                            "status": [
+                              "object/get",
+                              [
+                                "or",
+                                [
+                                  "array/find",
+                                  "@config.kindOptions",
+                                  [
+                                    "fn",
+                                    "k",
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@k",
+                                        "key"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@row",
+                                        "kind",
+                                        ""
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {}
+                              ],
+                              "status",
+                              "pending"
+                            ]
+                          }
+                        ]
+                      ],
+                      "date",
+                      "desc"
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.entries",
                     [
-                      "array/map",
-                      "@payload.data",
+                      "array/sort",
                       [
-                        "fn",
-                        "row",
-                        {
-                          "status": "@config.itemStatus",
-                          "icon": "@config.itemIcon",
-                          "kind": [
-                            "object/get",
-                            "@row",
-                            "kind",
-                            ""
-                          ],
-                          "title": [
-                            "object/get",
-                            "@row",
-                            "title",
-                            ""
-                          ],
-                          "id": [
-                            "object/get",
-                            "@row",
-                            "id",
-                            ""
-                          ],
-                          "description": [
-                            "object/get",
-                            "@row",
-                            "description",
-                            ""
-                          ],
-                          "date": [
-                            "object/get",
-                            "@row",
-                            "createdAt",
-                            ""
-                          ]
-                        }
-                      ]
+                        "array/map",
+                        "@payload.data",
+                        [
+                          "fn",
+                          "row",
+                          {
+                            "date": [
+                              "object/get",
+                              "@row",
+                              "createdAt",
+                              [
+                                "object/get",
+                                "@row",
+                                "date",
+                                ""
+                              ]
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
+                              ""
+                            ],
+                            "id": [
+                              "object/get",
+                              "@row",
+                              "id",
+                              ""
+                            ],
+                            "title": [
+                              "object/get",
+                              "@row",
+                              "title",
+                              ""
+                            ],
+                            "status": [
+                              "object/get",
+                              [
+                                "or",
+                                [
+                                  "array/find",
+                                  "@config.kindOptions",
+                                  [
+                                    "fn",
+                                    "k",
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@k",
+                                        "key"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@row",
+                                        "kind",
+                                        ""
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {}
+                              ],
+                              "status",
+                              "pending"
+                            ],
+                            "kind": [
+                              "object/get",
+                              "@row",
+                              "kind",
+                              ""
+                            ]
+                          }
+                        ]
+                      ],
+                      "date",
+                      "desc"
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "history"
+                              "name": "history",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Log event",
+                              "variant": "primary",
+                              "action": "OPEN_BACKFILL",
+                              "icon": "plus"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
-                          "type": "divider"
+                          "tabChangeEvent": "APPLY_FILTER",
+                          "activeTab": "@entity.filterKind",
+                          "type": "tabs",
+                          "tabs": "@entity.filterChips"
                         },
                         {
                           "entity": "@entity.entries",
-                          "fields": [],
-                          "renderItem": [
-                            "fn",
-                            "entry",
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "@entry.icon"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "content": "@entry.title",
-                                          "type": "typography",
-                                          "variant": "h4"
-                                        },
-                                        {
-                                          "content": "@entry.description",
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted"
-                                        },
-                                        {
-                                          "variant": "caption",
-                                          "content": "@entry.date",
-                                          "color": "muted",
-                                          "type": "typography"
-                                        }
-                                      ],
-                                      "type": "stack",
-                                      "direction": "vertical",
-                                      "gap": "xs"
-                                    },
-                                    {
-                                      "label": "@entry.kind",
-                                      "type": "badge",
-                                      "variant": "primary"
-                                    }
-                                  ],
-                                  "align": "center",
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "direction": "horizontal"
-                                }
-                              ]
-                            }
+                          "fields": [
+                            "title",
+                            "description",
+                            "date",
+                            "status"
                           ],
-                          "type": "data-list",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "label": "Filter",
-                              "action": "OPEN_FILTER",
-                              "variant": "secondary",
-                              "icon": "filter",
-                              "type": "button"
-                            },
-                            {
-                              "icon": "plus",
-                              "label": "Add Entry",
-                              "type": "button",
-                              "variant": "primary",
-                              "action": "OPEN_BACKFILL"
-                            }
-                          ]
+                          "type": "timeline"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -469,15 +674,25 @@
               },
               {
                 "from": "loading",
-                "to": "viewing",
+                "to": "loading",
                 "event": "EventLogSaved",
                 "effects": [
+                  [
+                    "fetch",
+                    "EventLogView",
+                    {
+                      "emit": {
+                        "success": "EventLogLoaded",
+                        "failure": "EventLogLoadFailed"
+                      }
+                    }
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "title": "Refreshing…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Refreshing…"
                     }
                   ]
                 ]
@@ -496,64 +711,101 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "error-state",
                       "title": "Save failed",
-                      "message": "@entity.errorMessage",
-                      "type": "error-state"
+                      "message": "@entity.errorMessage"
                     }
                   ]
                 ]
               },
               {
                 "from": "viewing",
-                "to": "filtering",
-                "event": "OPEN_FILTER",
+                "to": "viewing",
+                "event": "APPLY_FILTER",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.filterKind",
+                    "@payload.tabId"
+                  ],
+                  [
+                    "set",
+                    "@entity.entries",
+                    [
+                      "array/filter",
+                      "@entity.allEntries",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "or",
+                          [
+                            "=",
+                            "@payload.tabId",
+                            ""
+                          ],
+                          [
+                            "=",
+                            [
+                              "object/get",
+                              "@e",
+                              "kind"
+                            ],
+                            "@payload.tabId"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "action": "CLOSE_FILTER",
-                              "label": "Back",
-                              "type": "button",
-                              "icon": "arrow-left"
+                              "name": "history",
+                              "type": "icon"
                             },
                             {
-                              "type": "icon",
-                              "name": "filter"
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
-                              "content": "Filter Activity",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "primary",
+                              "action": "OPEN_BACKFILL",
+                              "icon": "plus",
+                              "label": "Log event",
+                              "type": "button"
                             }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "cancelEvent": "CLOSE_FILTER",
-                          "fields": [
-                            "filterKind"
                           ],
-                          "mode": "edit",
-                          "submitEvent": "APPLY_FILTER",
-                          "type": "form-section",
-                          "entity": "@entity"
+                          "gap": "sm"
+                        },
+                        {
+                          "tabs": "@entity.filterChips",
+                          "tabChangeEvent": "APPLY_FILTER",
+                          "type": "tabs",
+                          "activeTab": "@entity.filterKind"
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "@entity.entries",
+                          "fields": [
+                            "title",
+                            "description",
+                            "date",
+                            "status"
+                          ]
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -587,27 +839,30 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
-                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "action": "CANCEL_BACKFILL",
+                              "icon": "arrow-left",
                               "variant": "ghost",
-                              "icon": "x",
+                              "label": "Back",
                               "type": "button",
-                              "label": "Cancel"
+                              "action": "CANCEL_BACKFILL"
                             },
                             {
-                              "name": "plus",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
-                              "content": "Add Retroactive Entry",
                               "type": "typography",
+                              "content": "Log event",
                               "variant": "h3"
                             }
                           ]
@@ -616,52 +871,19 @@
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "submitEvent": "SAVE_BACKFILL",
-                          "fields": "@config.formFields",
-                          "mode": "create",
-                          "entity": "@entity",
-                          "cancelEvent": "CANCEL_BACKFILL"
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "form-section",
+                              "cancelEvent": "CANCEL_BACKFILL",
+                              "fields": "@config.formFields",
+                              "entity": "@entity",
+                              "submitEvent": "SAVE_BACKFILL",
+                              "mode": "create"
+                            }
+                          ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "filtering",
-                "to": "loading",
-                "event": "APPLY_FILTER",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.filterKind",
-                    "@payload.filterKind"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Filtering…",
-                      "type": "loading-state"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "filtering",
-                "to": "viewing",
-                "event": "CLOSE_FILTER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Closing filter…"
+                      ]
                     }
                   ]
                 ]
@@ -671,6 +893,18 @@
                 "to": "loading",
                 "event": "SAVE_BACKFILL",
                 "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "EventLogView",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "EventLogSaved",
+                        "failure": "EventLogSaveFailed"
+                      }
+                    }
+                  ],
                   [
                     "render-ui",
                     "main",
@@ -690,8 +924,51 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Cancelling…"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "history",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "Log event",
+                              "variant": "primary",
+                              "icon": "plus",
+                              "action": "OPEN_BACKFILL",
+                              "type": "button"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "tabChangeEvent": "APPLY_FILTER",
+                          "activeTab": "@entity.filterKind",
+                          "type": "tabs",
+                          "tabs": "@entity.filterChips"
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "@entity.entries",
+                          "fields": [
+                            "title",
+                            "description",
+                            "date",
+                            "status"
+                          ]
+                        }
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -714,47 +991,46 @@
             ]
           },
           "config": {
+            "formFields": {
+              "type": "[string]",
+              "default": [
+                "backfillTitle",
+                "backfillDescription",
+                "backfillKind",
+                "backfillDate"
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Activity"
             },
-            "kindField": {
-              "type": "string",
-              "default": "kind"
-            },
-            "dateField": {
-              "type": "string",
-              "default": "createdAt"
-            },
-            "bodyField": {
-              "type": "string",
-              "default": "description"
-            },
-            "itemStatus": {
-              "type": "string",
-              "default": "info",
-              "values": [
-                "info",
-                "success",
-                "warning",
-                "error"
-              ]
-            },
-            "itemIcon": {
-              "type": "string",
-              "default": "activity"
-            },
-            "titleField": {
-              "type": "string",
-              "default": "title"
-            },
-            "formFields": {
-              "type": "[string]",
+            "kindOptions": {
+              "type": "[object]",
               "default": [
-                "title",
-                "description",
-                "kind",
-                "date"
+                {
+                  "key": "created",
+                  "label": "Created",
+                  "status": "active",
+                  "icon": "plus-circle"
+                },
+                {
+                  "icon": "edit-3",
+                  "status": "pending",
+                  "key": "updated",
+                  "label": "Updated"
+                },
+                {
+                  "key": "approved",
+                  "label": "Approved",
+                  "icon": "check-circle",
+                  "status": "complete"
+                },
+                {
+                  "label": "Rejected",
+                  "key": "rejected",
+                  "status": "error",
+                  "icon": "x-circle"
+                }
               ]
             }
           },
