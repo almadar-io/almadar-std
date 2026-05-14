@@ -1,24 +1,29 @@
-app std-step-flow "2.0.0"
-"std-step-flow — generic N-step sequential decision chain (approval/review/sign-off). `config.steps` is an array of step definitions; @entity.currentStepIndex walks through them; ADVANCE self-loops to the next step, COMPLETE/REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error — the running state owns N via data, not states."
+app std-step-flow "3.1.0"
+"std-step-flow — generic N-step sequential decision chain (Stripe Connect / TurboTax / Vercel deploy style). `config.steps` is an array of step definitions; the trait projects the current step into a prominent body card and a `wizard-progress` stepper bar at the top. One primary button ADVANCEs along the chain; at the last step the same button finalizes (label/icon/variant swap via entity binding, state routed via guard). REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error."
 
 orbital StepFlowOrbital {
-  type StepView = {
-    key         : string!
-    label       : string!
+  type WizardStep = {
+    id          : string!
+    title       : string!
     description : string
-    icon        : string
-    number      : number
-    status      : "pending" | "current" | "approved"
   }
 
   entity StepFlowView [runtime] {
-    id                  : string!
-    steps               : [StepView] = []
-    currentStepIndex    : number = 0
-    totalSteps          : number = 0
-    finalStatus         : "approved" | "rejected" | "escalated" | "" = ""
-    rejectionReason     : string = ""
-    errorMessage        : string = ""
+    id                    : string!
+    wizardSteps           : [WizardStep] = []
+    currentStepIndex      : number = 0
+    totalSteps            : number = 0
+    currentStepLabel      : string = ""
+    currentStepDescription: string = ""
+    currentStepIcon       : string = "user"
+    isFirstStep           : boolean = true
+    isLastStep            : boolean = false
+    primaryActionLabel    : string = "Approve & Continue"
+    primaryActionVariant  : string = "primary"
+    primaryActionIcon     : string = "chevron-right"
+    finalStatus           : "approved" | "rejected" | "escalated" | "" = ""
+    rejectionReason       : string = ""
+    errorMessage          : string = ""
   }
 
   type StepItemsLoaded     = Event { data : [object] }                "Fired when the source item finishes loading"
@@ -43,59 +48,67 @@ orbital StepFlowOrbital {
       StepItemsLoaded -> running
         (set @entity.currentStepIndex 0)
         (set @entity.totalSteps (array/len @config.steps))
-        (set @entity.steps (array/map @config.steps ["fn", "step", {
-          key:         (object/get @step "key"),
-          label:       (object/get @step "label"),
-          description: (object/get @step "description" ""),
-          icon:        (object/get @step "icon" "user"),
-          number:      1,
-          status:      "current"
+        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
+          id:          (object/get @step "key"),
+          title:       (object/get @step "label"),
+          description: (object/get @step "description" "")
         }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Approve Step", variant: "primary", action: "ADVANCE", icon: "check" }, { type: "button", label: "Finalize Approval", variant: "success", action: "COMPLETE", icon: "check-circle" }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "secondary", action: "ESCALATE", icon: "alert-triangle" }] }] })
+        (set @entity.currentStepLabel       (object/get (array/nth @config.steps 0) "label"))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps 0) "description" ""))
+        (set @entity.currentStepIcon        (object/get (array/nth @config.steps 0) "icon" "user"))
+        (set @entity.isFirstStep true)
+        (set @entity.isLastStep  (= (array/len @config.steps) 1))
+        (set @entity.primaryActionLabel   (if (= (array/len @config.steps) 1) "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if (= (array/len @config.steps) 1) "success" "primary"))
+        (set @entity.primaryActionIcon    (if (= (array/len @config.steps) 1) "check-circle" "chevron-right"))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entity.currentStepIcon", size: "lg" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entity.currentStepLabel", variant: "h2" }, { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }] }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "BACK", icon: "chevron-left", disabled: "@entity.isFirstStep" }, { type: "button", label: "Reject", variant: "ghost", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "ghost", action: "ESCALATE", icon: "alert-triangle" }, { type: "button", label: "@entity.primaryActionLabel", variant: "@entity.primaryActionVariant", action: "ADVANCE", icon: "@entity.primaryActionIcon" }] }] })
       StepItemsLoadFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
       StepItemsSaved -> running
-        (render-ui main { type: "loading-state", title: "Refreshing…" })
       StepItemsSaveFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
     }
     state running {
-      ADVANCE -> running
+      ADVANCE -> running when (not @entity.isLastStep)
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.steps (array/map @config.steps ["fn", "step", {
-          key:         (object/get @step "key"),
-          label:       (object/get @step "label"),
-          description: (object/get @step "description" ""),
-          icon:        (object/get @step "icon" "user"),
-          number:      1,
-          status:      "current"
-        }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Approve Step", variant: "primary", action: "ADVANCE", icon: "check" }, { type: "button", label: "Finalize Approval", variant: "success", action: "COMPLETE", icon: "check-circle" }, { type: "button", label: "Reject", variant: "danger", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "secondary", action: "ESCALATE", icon: "alert-triangle" }] }] })
-      COMPLETE -> approved
+        (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
+        (set @entity.currentStepIcon        (object/get (array/nth @config.steps @entity.currentStepIndex) "icon" "user"))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep  (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel   (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
+        (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entity.currentStepIcon", size: "lg" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entity.currentStepLabel", variant: "h2" }, { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }] }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "BACK", icon: "chevron-left", disabled: "@entity.isFirstStep" }, { type: "button", label: "Reject", variant: "ghost", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "ghost", action: "ESCALATE", icon: "alert-triangle" }, { type: "button", label: "@entity.primaryActionLabel", variant: "@entity.primaryActionVariant", action: "ADVANCE", icon: "@entity.primaryActionIcon" }] }] })
+      ADVANCE -> approved when @entity.isLastStep
         (set @entity.finalStatus "approved")
-        (set @entity.steps (array/map @config.steps ["fn", "step", {
-          key:         (object/get @step "key"),
-          label:       (object/get @step "label"),
-          description: (object/get @step "description" ""),
-          icon:        (object/get @step "icon" "user"),
-          number:      1,
-          status:      "approved"
-        }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Approved", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "success" }] }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Approved", variant: "h2", align: "center" }, { type: "typography", content: "All review steps completed successfully.", variant: "body", color: "muted", align: "center" }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.totalSteps", allowNavigation: false }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+      BACK -> running
+        (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
+        (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
+        (set @entity.currentStepIcon        (object/get (array/nth @config.steps @entity.currentStepIndex) "icon" "user"))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep  (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel   (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Finalize Approval" "Approve & Continue"))
+        (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
+        (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entity.currentStepIcon", size: "lg" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entity.currentStepLabel", variant: "h2" }, { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }] }] }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "BACK", icon: "chevron-left", disabled: "@entity.isFirstStep" }, { type: "button", label: "Reject", variant: "ghost", action: "REJECT", icon: "x" }, { type: "button", label: "Escalate", variant: "ghost", action: "ESCALATE", icon: "alert-triangle" }, { type: "button", label: "@entity.primaryActionLabel", variant: "@entity.primaryActionVariant", action: "ADVANCE", icon: "@entity.primaryActionIcon" }] }] })
       REJECT -> rejected
         (set @entity.finalStatus "rejected")
         (set @entity.rejectionReason @payload.reason)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Rejected", variant: "h3" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.rejectionReason" }] }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Rejected", variant: "h2", align: "center" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.rejectionReason" }] }] }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
       ESCALATE -> escalated
         (set @entity.finalStatus "escalated")
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "Escalated", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "This item has been escalated for further review." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Escalated", variant: "h2", align: "center" }, { type: "typography", content: "This item has been escalated for further review.", variant: "body", color: "muted", align: "center" }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
     }
     state approved {
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
+        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Restarting…" })
     }
     state rejected {
@@ -103,12 +116,14 @@ orbital StepFlowOrbital {
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
         (set @entity.rejectionReason "")
+        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Restarting…" })
     }
     state escalated {
       RESTART -> loading
         (set @entity.finalStatus "")
         (set @entity.currentStepIndex 0)
+        (fetch StepFlowView { emit: { success: "StepItemsLoaded", failure: "StepItemsLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Restarting…" })
     }
     state error {
@@ -117,7 +132,7 @@ orbital StepFlowOrbital {
     }
     emits {
       ADVANCE                { id : string, stepKey : string }
-      COMPLETE               { id : string }
+      BACK                   { id : string }
       REJECT                 { id : string, reason : string }
       ESCALATE               { id : string, reason : string }
       RESTART                { id : string }
@@ -126,7 +141,7 @@ orbital StepFlowOrbital {
     }
     listens {
       ADVANCE                { id : string, stepKey : string }
-      COMPLETE               { id : string }
+      BACK                   { id : string }
       REJECT                 { id : string, reason : string }
       ESCALATE               { id : string, reason : string }
       RESTART                { id : string }

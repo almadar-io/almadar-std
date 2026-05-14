@@ -1,7 +1,7 @@
 {
   "name": "std-step-flow",
-  "version": "2.0.0",
-  "description": "std-step-flow — generic N-step sequential decision chain (approval/review/sign-off). `config.steps` is an array of step definitions; @entity.currentStepIndex walks through them; ADVANCE self-loops to the next step, COMPLETE/REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error — the running state owns N via data, not states.",
+  "version": "3.1.0",
+  "description": "std-step-flow — generic N-step sequential decision chain (Stripe Connect / TurboTax / Vercel deploy style). `config.steps` is an array of step definitions; the trait projects the current step into a prominent body card and a `wizard-progress` stepper bar at the top. One primary button ADVANCEs along the chain; at the last step the same button finalizes (label/icon/variant swap via entity binding, state routed via guard). REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error.",
   "orbitals": [
     {
       "name": "StepFlowOrbital",
@@ -15,40 +15,23 @@
             "required": true
           },
           {
-            "name": "steps",
+            "name": "wizardSteps",
             "type": "array",
             "default": [],
             "items": {
               "type": "object",
               "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string"
+                },
                 "description": {
                   "name": "description",
                   "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string"
-                },
-                "number": {
-                  "name": "number",
-                  "type": "number"
-                },
-                "status": {
-                  "name": "status",
-                  "type": "string",
-                  "values": [
-                    "pending",
-                    "current",
-                    "approved"
-                  ]
                 }
               }
             }
@@ -62,6 +45,46 @@
             "name": "totalSteps",
             "type": "number",
             "default": 0.0
+          },
+          {
+            "name": "currentStepLabel",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStepDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStepIcon",
+            "type": "string",
+            "default": "user"
+          },
+          {
+            "name": "isFirstStep",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "isLastStep",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "primaryActionLabel",
+            "type": "string",
+            "default": "Approve & Continue"
+          },
+          {
+            "name": "primaryActionVariant",
+            "type": "string",
+            "default": "primary"
+          },
+          {
+            "name": "primaryActionIcon",
+            "type": "string",
+            "default": "chevron-right"
           },
           {
             "name": "finalStatus",
@@ -106,7 +129,7 @@
               ]
             },
             {
-              "event": "COMPLETE",
+              "event": "BACK",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -262,8 +285,8 @@
                 ]
               },
               {
-                "key": "COMPLETE",
-                "name": "Complete",
+                "key": "BACK",
+                "name": "Back",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -330,8 +353,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Loading review…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Loading review…"
                     }
                   ]
                 ]
@@ -356,7 +379,7 @@
                   ],
                   [
                     "set",
-                    "@entity.steps",
+                    "@entity.wizardSteps",
                     [
                       "array/map",
                       "@config.steps",
@@ -364,149 +387,247 @@
                         "fn",
                         "step",
                         {
-                          "key": [
-                            "object/get",
-                            "@step",
-                            "key"
-                          ],
-                          "label": [
-                            "object/get",
-                            "@step",
-                            "label"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@step",
-                            "icon",
-                            "user"
-                          ],
-                          "number": 1.0,
                           "description": [
                             "object/get",
                             "@step",
                             "description",
                             ""
                           ],
-                          "status": "current"
+                          "id": [
+                            "object/get",
+                            "@step",
+                            "key"
+                          ],
+                          "title": [
+                            "object/get",
+                            "@step",
+                            "label"
+                          ]
                         }
                       ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        0.0
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepDescription",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        0.0
+                      ],
+                      "description",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepIcon",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        0.0
+                      ],
+                      "icon",
+                      "user"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirstStep",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.isLastStep",
+                    [
+                      "=",
+                      [
+                        "array/len",
+                        "@config.steps"
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionLabel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@config.steps"
+                        ],
+                        1.0
+                      ],
+                      "Finalize Approval",
+                      "Approve & Continue"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionVariant",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@config.steps"
+                        ],
+                        1.0
+                      ],
+                      "success",
+                      "primary"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionIcon",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@config.steps"
+                        ],
+                        1.0
+                      ],
+                      "check-circle",
+                      "chevron-right"
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
-                              "name": "shield-check",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "shield-check"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
+                          "type": "stack",
+                          "align": "center",
                           "gap": "sm"
                         },
                         {
-                          "type": "divider"
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStepIndex",
+                          "steps": "@entity.wizardSteps",
+                          "allowNavigation": false
                         },
                         {
-                          "gap": "sm",
-                          "fields": [],
-                          "entity": "@entity.steps",
-                          "type": "data-list",
-                          "renderItem": [
-                            "fn",
-                            "step",
+                          "type": "card",
+                          "children": [
                             {
-                              "type": "card",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "icon",
-                                      "name": "@step.icon"
+                                      "name": "@entity.currentStepIcon",
+                                      "size": "lg"
                                     },
                                     {
-                                      "gap": "xs",
-                                      "type": "stack",
-                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "content": "@step.label",
                                           "type": "typography",
-                                          "variant": "h4"
+                                          "content": "@entity.currentStepLabel",
+                                          "variant": "h2"
                                         },
                                         {
-                                          "variant": "caption",
-                                          "content": "@step.description",
                                           "type": "typography",
-                                          "color": "muted"
+                                          "color": "muted",
+                                          "content": "@entity.currentStepDescription",
+                                          "variant": "body"
                                         }
-                                      ]
-                                    },
-                                    {
-                                      "variant": "primary",
-                                      "type": "badge",
-                                      "label": "@step.status"
+                                      ],
+                                      "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs"
                                     }
-                                  ],
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
+                          "align": "center",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "action": "ADVANCE",
-                              "variant": "primary",
+                              "action": "BACK",
+                              "icon": "chevron-left",
+                              "disabled": "@entity.isFirstStep",
                               "type": "button",
-                              "label": "Approve Step",
-                              "icon": "check"
+                              "label": "Back",
+                              "variant": "ghost"
                             },
                             {
-                              "icon": "check-circle",
-                              "label": "Finalize Approval",
-                              "action": "COMPLETE",
-                              "type": "button",
-                              "variant": "success"
-                            },
-                            {
-                              "label": "Reject",
-                              "variant": "danger",
                               "type": "button",
                               "action": "REJECT",
+                              "variant": "ghost",
+                              "label": "Reject",
                               "icon": "x"
                             },
                             {
-                              "variant": "secondary",
+                              "variant": "ghost",
                               "type": "button",
+                              "label": "Escalate",
                               "action": "ESCALATE",
-                              "icon": "alert-triangle",
-                              "label": "Escalate"
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "type": "button",
+                              "label": "@entity.primaryActionLabel",
+                              "variant": "@entity.primaryActionVariant",
+                              "action": "ADVANCE",
+                              "icon": "@entity.primaryActionIcon"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -525,9 +646,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@entity.errorMessage",
                       "title": "Failed to load",
-                      "type": "error-state",
-                      "message": "@entity.errorMessage"
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -535,17 +656,7 @@
               {
                 "from": "loading",
                 "to": "running",
-                "event": "StepItemsSaved",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Refreshing…",
-                      "type": "loading-state"
-                    }
-                  ]
-                ]
+                "event": "StepItemsSaved"
               },
               {
                 "from": "loading",
@@ -572,6 +683,10 @@
                 "from": "running",
                 "to": "running",
                 "event": "ADVANCE",
+                "guard": [
+                  "not",
+                  "@entity.isLastStep"
+                ],
                 "effects": [
                   [
                     "set",
@@ -584,40 +699,119 @@
                   ],
                   [
                     "set",
-                    "@entity.steps",
+                    "@entity.currentStepLabel",
                     [
-                      "array/map",
-                      "@config.steps",
+                      "object/get",
                       [
-                        "fn",
-                        "step",
-                        {
-                          "label": [
-                            "object/get",
-                            "@step",
-                            "label"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@step",
-                            "icon",
-                            "user"
-                          ],
-                          "key": [
-                            "object/get",
-                            "@step",
-                            "key"
-                          ],
-                          "number": 1.0,
-                          "status": "current",
-                          "description": [
-                            "object/get",
-                            "@step",
-                            "description",
-                            ""
-                          ]
-                        }
+                        "array/nth",
+                        "@config.steps",
+                        "@entity.currentStepIndex"
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepDescription",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        "@entity.currentStepIndex"
+                      ],
+                      "description",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepIcon",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        "@entity.currentStepIndex"
+                      ],
+                      "icon",
+                      "user"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirstStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      0.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isLastStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      [
+                        "-",
+                        "@entity.totalSteps",
+                        1.0
                       ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionLabel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "Finalize Approval",
+                      "Approve & Continue"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionVariant",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "success",
+                      "primary"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionIcon",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "check-circle",
+                      "chevron-right"
                     ]
                   ],
                   [
@@ -625,231 +819,59 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
                           "children": [
                             {
                               "name": "shield-check",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
+                          "align": "center",
+                          "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "divider"
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStepIndex",
+                          "allowNavigation": false,
+                          "steps": "@entity.wizardSteps"
                         },
                         {
-                          "type": "data-list",
-                          "gap": "sm",
-                          "fields": [],
-                          "renderItem": [
-                            "fn",
-                            "step",
+                          "children": [
                             {
-                              "type": "card",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
                                   "children": [
                                     {
-                                      "name": "@step.icon",
-                                      "type": "icon"
+                                      "type": "icon",
+                                      "name": "@entity.currentStepIcon",
+                                      "size": "lg"
                                     },
                                     {
                                       "gap": "xs",
-                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "variant": "h4",
-                                          "type": "typography",
-                                          "content": "@step.label"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "color": "muted",
-                                          "content": "@step.description",
-                                          "variant": "caption"
-                                        }
-                                      ],
-                                      "type": "stack"
-                                    },
-                                    {
-                                      "variant": "primary",
-                                      "label": "@step.status",
-                                      "type": "badge"
-                                    }
-                                  ],
-                                  "gap": "sm"
-                                }
-                              ]
-                            }
-                          ],
-                          "entity": "@entity.steps"
-                        },
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "button",
-                              "variant": "primary",
-                              "icon": "check",
-                              "label": "Approve Step",
-                              "action": "ADVANCE"
-                            },
-                            {
-                              "label": "Finalize Approval",
-                              "icon": "check-circle",
-                              "action": "COMPLETE",
-                              "type": "button",
-                              "variant": "success"
-                            },
-                            {
-                              "icon": "x",
-                              "variant": "danger",
-                              "type": "button",
-                              "action": "REJECT",
-                              "label": "Reject"
-                            },
-                            {
-                              "icon": "alert-triangle",
-                              "variant": "secondary",
-                              "label": "Escalate",
-                              "action": "ESCALATE",
-                              "type": "button"
-                            }
-                          ],
-                          "align": "center"
-                        }
-                      ],
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "running",
-                "to": "approved",
-                "event": "COMPLETE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.finalStatus",
-                    "approved"
-                  ],
-                  [
-                    "set",
-                    "@entity.steps",
-                    [
-                      "array/map",
-                      "@config.steps",
-                      [
-                        "fn",
-                        "step",
-                        {
-                          "label": [
-                            "object/get",
-                            "@step",
-                            "label"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@step",
-                            "icon",
-                            "user"
-                          ],
-                          "status": "approved",
-                          "key": [
-                            "object/get",
-                            "@step",
-                            "key"
-                          ],
-                          "description": [
-                            "object/get",
-                            "@step",
-                            "description",
-                            ""
-                          ],
-                          "number": 1.0
-                        }
-                      ]
-                    ]
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "check-circle"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Approved"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-list",
-                          "entity": "@entity.steps",
-                          "fields": [],
-                          "renderItem": [
-                            "fn",
-                            "step",
-                            {
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "name": "@step.icon",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "direction": "vertical",
-                                      "type": "stack",
-                                      "children": [
-                                        {
-                                          "content": "@step.label",
-                                          "variant": "h4",
+                                          "content": "@entity.currentStepLabel",
+                                          "variant": "h2",
                                           "type": "typography"
                                         },
                                         {
+                                          "content": "@entity.currentStepDescription",
+                                          "variant": "body",
                                           "color": "muted",
-                                          "content": "@step.description",
-                                          "type": "typography",
-                                          "variant": "caption"
+                                          "type": "typography"
                                         }
                                       ],
-                                      "gap": "xs"
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "variant": "success",
-                                      "label": "@step.status"
+                                      "direction": "vertical",
+                                      "type": "stack"
                                     }
                                   ],
                                   "gap": "sm",
@@ -858,21 +880,355 @@
                                   "align": "center"
                                 }
                               ],
-                              "type": "card"
+                              "gap": "md",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "card"
                         },
                         {
-                          "variant": "secondary",
-                          "action": "RESTART",
-                          "type": "button",
-                          "label": "Restart",
-                          "icon": "rotate-ccw"
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "icon": "chevron-left",
+                              "disabled": "@entity.isFirstStep",
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "BACK"
+                            },
+                            {
+                              "action": "REJECT",
+                              "type": "button",
+                              "icon": "x",
+                              "label": "Reject",
+                              "variant": "ghost"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Escalate",
+                              "action": "ESCALATE"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "@entity.primaryActionVariant",
+                              "label": "@entity.primaryActionLabel",
+                              "icon": "@entity.primaryActionIcon",
+                              "action": "ADVANCE"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
                       ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "approved",
+                "event": "ADVANCE",
+                "guard": "@entity.isLastStep",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.finalStatus",
+                    "approved"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "lg",
+                          "type": "icon",
+                          "name": "check-circle"
+                        },
+                        {
+                          "align": "center",
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "Approved"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "All review steps completed successfully.",
+                          "align": "center"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "allowNavigation": false,
+                          "steps": "@entity.wizardSteps",
+                          "currentStep": "@entity.totalSteps"
+                        },
+                        {
+                          "action": "RESTART",
+                          "label": "Start a new review",
+                          "icon": "rotate-ccw",
+                          "variant": "secondary",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "running",
+                "event": "BACK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStepIndex",
+                    [
+                      "-",
+                      "@entity.currentStepIndex",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        "@entity.currentStepIndex"
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepDescription",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        "@entity.currentStepIndex"
+                      ],
+                      "description",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepIcon",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@config.steps",
+                        "@entity.currentStepIndex"
+                      ],
+                      "icon",
+                      "user"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirstStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      0.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isLastStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      [
+                        "-",
+                        "@entity.totalSteps",
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionLabel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "Finalize Approval",
+                      "Approve & Continue"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionVariant",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "success",
+                      "primary"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionIcon",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "check-circle",
+                      "chevron-right"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "shield-check"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "steps": "@entity.wizardSteps",
+                          "currentStep": "@entity.currentStepIndex",
+                          "allowNavigation": false,
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "@entity.currentStepIcon",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "direction": "vertical",
+                                      "type": "stack",
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "variant": "h2",
+                                          "type": "typography",
+                                          "content": "@entity.currentStepLabel"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "content": "@entity.currentStepDescription",
+                                          "color": "muted",
+                                          "variant": "body"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "gap": "sm"
+                                }
+                              ],
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "label": "Back",
+                              "type": "button",
+                              "action": "BACK",
+                              "icon": "chevron-left",
+                              "disabled": "@entity.isFirstStep"
+                            },
+                            {
+                              "action": "REJECT",
+                              "icon": "x",
+                              "type": "button",
+                              "label": "Reject",
+                              "variant": "ghost"
+                            },
+                            {
+                              "action": "ESCALATE",
+                              "icon": "alert-triangle",
+                              "type": "button",
+                              "label": "Escalate",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "@entity.primaryActionLabel",
+                              "variant": "@entity.primaryActionVariant",
+                              "action": "ADVANCE",
+                              "icon": "@entity.primaryActionIcon"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -898,59 +1254,51 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "name": "x-circle",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Rejected"
-                            }
-                          ],
-                          "gap": "sm",
-                          "align": "center"
+                          "name": "x-circle",
+                          "type": "icon",
+                          "size": "lg"
                         },
                         {
-                          "type": "divider"
+                          "variant": "h2",
+                          "content": "Rejected",
+                          "type": "typography",
+                          "align": "center"
                         },
                         {
                           "type": "card",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "color": "muted",
-                                  "content": "Reason"
+                                  "variant": "caption",
+                                  "content": "Reason",
+                                  "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.rejectionReason",
-                                  "type": "typography"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "vertical"
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ]
                         },
                         {
-                          "action": "RESTART",
-                          "type": "button",
-                          "label": "Restart",
                           "variant": "secondary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "label": "Start a new review",
+                          "action": "RESTART"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -969,43 +1317,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "gap": "lg",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "alert-triangle"
-                            },
-                            {
-                              "content": "Escalated",
-                              "type": "typography",
-                              "variant": "h3"
-                            }
-                          ],
-                          "type": "stack",
-                          "align": "center"
+                          "size": "lg",
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
-                          "type": "divider"
+                          "variant": "h2",
+                          "align": "center",
+                          "type": "typography",
+                          "content": "Escalated"
                         },
                         {
                           "variant": "body",
                           "content": "This item has been escalated for further review.",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "align": "center"
                         },
                         {
-                          "variant": "secondary",
-                          "label": "Restart",
                           "action": "RESTART",
+                          "type": "button",
                           "icon": "rotate-ccw",
-                          "type": "button"
+                          "variant": "secondary",
+                          "label": "Start a new review"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1026,11 +1368,21 @@
                     0.0
                   ],
                   [
+                    "fetch",
+                    "StepFlowView",
+                    {
+                      "emit": {
+                        "success": "StepItemsLoaded",
+                        "failure": "StepItemsLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "title": "Restarting…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Restarting…"
                     }
                   ]
                 ]
@@ -1054,6 +1406,16 @@
                     "set",
                     "@entity.rejectionReason",
                     ""
+                  ],
+                  [
+                    "fetch",
+                    "StepFlowView",
+                    {
+                      "emit": {
+                        "success": "StepItemsLoaded",
+                        "failure": "StepItemsLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -1081,6 +1443,16 @@
                     0.0
                   ],
                   [
+                    "fetch",
+                    "StepFlowView",
+                    {
+                      "emit": {
+                        "success": "StepItemsLoaded",
+                        "failure": "StepItemsLoadFailed"
+                      }
+                    }
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1099,8 +1471,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1108,32 +1480,32 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Review"
+            },
             "steps": {
               "type": "[object]",
               "default": [
                 {
                   "label": "Manager Review",
-                  "description": "Initial review by direct manager",
+                  "icon": "user",
                   "key": "manager",
-                  "icon": "user"
+                  "description": "Initial review by direct manager"
                 },
                 {
-                  "label": "Director Approval",
-                  "description": "Department director sign-off",
                   "icon": "users",
-                  "key": "director"
+                  "label": "Director Approval",
+                  "key": "director",
+                  "description": "Department director sign-off"
                 },
                 {
+                  "icon": "shield",
                   "key": "executive",
                   "label": "Executive Sign-off",
-                  "description": "Final executive approval",
-                  "icon": "shield"
+                  "description": "Final executive approval"
                 }
               ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Review"
             }
           },
           "scope": "instance"
