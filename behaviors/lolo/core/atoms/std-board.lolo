@@ -8,6 +8,7 @@ orbital BoardOrbital {
     description : string
     stage       : string
     notes       : string
+    position    : number
   }
 
   type BoardColumn = {
@@ -19,8 +20,13 @@ orbital BoardOrbital {
     items   : [BoardItem]
   }
 
-  entity BoardView [runtime] {
+  entity BoardView [persistent: board_items] {
     id                  : string!
+    title               : string!
+    description         : string = ""
+    stage               : "todo" | "doing" | "done" = "todo"
+    notes               : string = ""
+    position            : number = 0
     boards              : [BoardColumn] = []
     currentId           : string = ""
     currentTitle        : string = ""
@@ -58,14 +64,12 @@ orbital BoardOrbital {
           icon:    (object/get @col "icon" "circle"),
           variant: (object/get @col "variant" "default"),
           count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])),
-          items:   (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])
+          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))]) "position")
         }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "kanban-square" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "md", fields: [], renderItem: ["fn", "col", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "icon", name: "@col.icon" }, { type: "typography", content: "@col.label", variant: "h4" }, { type: "badge", label: "@col.count", variant: "@col.variant" }] }, { type: "data-list", entity: "@col.items", gap: "sm", fields: [], renderItem: ["fn", "item", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@item.title", variant: "h4" }, { type: "typography", content: "@item.description", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "button", label: "Open", variant: "ghost", action: "OPEN_CARD", actionPayload: { id: "@item.id", row: "@item" }, icon: "arrow-right" }] }] }] }] }] }] }] }, { type: "floating-action-button", label: "Add item", action: "ADD_CARD", icon: "plus", variant: "primary" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "kanban-square" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@entity.boards", cols: "@config.gridCols", gap: "md", fields: [], dndRoot: true, renderItem: ["fn", "col", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "icon", name: "@col.icon" }, { type: "typography", content: "@col.label", variant: "h4" }, { type: "badge", label: "@col.count", variant: "@col.variant" }] }, { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION", renderItem: ["fn", "item", { type: "card", children: [{ type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@item.title", variant: "h4" }, { type: "typography", content: "@item.description", variant: "caption", color: "muted" }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "button", label: "Open", variant: "ghost", action: "OPEN_CARD", actionPayload: { id: "@item.id", row: "@item" }, icon: "arrow-right" }] }] }] }] }] }] }] }, { type: "floating-action-button", label: "Add item", action: "ADD_CARD", icon: "plus", variant: "primary" }] })
       BoardItemsLoadFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Failed to load board", message: "@entity.errorMessage" })
-      BoardItemsSaved -> viewing_board
-        (render-ui main { type: "loading-state", title: "Refreshing board…" })
       BoardItemsSaveFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
@@ -77,7 +81,7 @@ orbital BoardOrbital {
         (set @entity.currentDescription @payload.row.description)
         (set @entity.currentStage @payload.row.stage)
         (set @entity.currentNotes @payload.row.notes)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_CARD", icon: "arrow-left" }, { type: "icon", name: "credit-card" }, { type: "typography", content: "@entity.currentTitle", variant: "h3" }, { type: "badge", label: "@entity.currentStage", variant: "primary" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.currentDescription" }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.currentNotes" }] }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Move to stage:" }, { type: "data-list", entity: "@entity.boards", gap: "sm", variant: "default", fields: [], renderItem: ["fn", "col", { type: "button", label: "@col.label", variant: "secondary", action: "MOVE_CARD", actionPayload: { id: "@entity.currentId", targetStage: "@col.key" }, icon: "@col.icon" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "DELETE_CARD", actionPayload: { id: "@entity.currentId" }, icon: "trash-2" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_CARD", icon: "arrow-left" }, { type: "icon", name: "credit-card" }, { type: "typography", content: "@entity.currentTitle", variant: "h3" }, { type: "badge", label: "@entity.currentStage", variant: "primary" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.currentDescription" }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Notes" }, { type: "typography", variant: "body", content: "@entity.currentNotes" }] }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Move to stage:" }, { type: "data-list", entity: "@entity.boards", gap: "sm", variant: "default", fields: [], renderItem: ["fn", "col", { type: "button", label: "@col.label", variant: "secondary", action: "MOVE_CARD", actionPayload: { id: "@entity.currentId", targetGroup: "@col.key" }, icon: "@col.icon" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Delete", variant: "danger", action: "DELETE_CARD", actionPayload: { id: "@entity.currentId" }, icon: "trash-2" }] }] })
       ADD_CARD -> adding
         (set @entity.currentId "")
         (set @entity.currentTitle "")
@@ -85,17 +89,37 @@ orbital BoardOrbital {
         (set @entity.currentStage "")
         (set @entity.currentNotes "")
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Cancel", variant: "ghost", action: "CANCEL_ADD", icon: "x" }, { type: "icon", name: "plus" }, { type: "typography", content: "New board item", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "create", submitEvent: "SAVE_CARD", cancelEvent: "CANCEL_ADD", fields: "@config.formFields" }] })
+      MOVE_CARD -> viewing_board
+        (persist update BoardView { id: @payload.id, stage: @payload.targetGroup } { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
+      REORDER_CARD -> viewing_board
+      REORDER_POSITION -> viewing_board
+        (persist update BoardView { id: @payload.id, position: @payload.position } { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
+      BoardItemsSaved -> viewing_board
+        (fetch BoardView { emit: { success: "BoardItemsLoaded", failure: "BoardItemsLoadFailed" } })
+      BoardItemsLoaded -> viewing_board
+        (set @entity.boards (array/map @config.columns ["fn", "col", {
+          key:     (object/get @col "key"),
+          label:   (object/get @col "label"),
+          icon:    (object/get @col "icon" "circle"),
+          variant: (object/get @col "variant" "default"),
+          count:   (array/len (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))])),
+          items:   (array/sort (array/filter @payload.data ["fn", "item", (= (object/get @item "stage") (object/get @col "key"))]) "position")
+        }]))
     }
     state viewing_card {
-      CLOSE_CARD -> viewing_board
+      CLOSE_CARD -> loading
+        (fetch BoardView { emit: { success: "BoardItemsLoaded", failure: "BoardItemsLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Refreshing board…" })
       MOVE_CARD -> loading
+        (persist update BoardView { id: @payload.id, stage: @payload.targetGroup } { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
         (render-ui main { type: "loading-state", title: "Moving item…" })
       DELETE_CARD -> loading
+        (persist delete BoardView @payload.id { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
         (render-ui main { type: "loading-state", title: "Deleting item…" })
     }
     state adding {
       SAVE_CARD -> loading
+        (persist create BoardView @payload.data { emit: { success: "BoardItemsSaved", failure: "BoardItemsSaveFailed" } })
         (render-ui main { type: "loading-state", title: "Saving…" })
       CANCEL_ADD -> viewing_board
         (render-ui main { type: "loading-state", title: "Cancelling…" })
@@ -110,10 +134,13 @@ orbital BoardOrbital {
       ADD_CARD               { }
       CANCEL_ADD             { }
       SAVE_CARD              { data : object! }
-      MOVE_CARD              { id : string!, targetStage : string! }
+      MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
+      REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
       DELETE_CARD            { id : string! }
       BoardItemsLoaded       { data : [object] }
       BoardItemsLoadFailed   { error : string, code : string }
+      BoardItemsSaved        { row : object }
+      BoardItemsSaveFailed   { error : string, code : string }
     }
     listens {
       OPEN_CARD              { id : string!, row : object! }
@@ -121,7 +148,9 @@ orbital BoardOrbital {
       ADD_CARD               { }
       CANCEL_ADD             { }
       SAVE_CARD              { data : object! }
-      MOVE_CARD              { id : string!, targetStage : string! }
+      MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
+      REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
+      REORDER_POSITION       { id : string!, position : number! }
       DELETE_CARD            { id : string! }
       BoardItemsLoaded       { data : [object] }
       BoardItemsLoadFailed   { error : string, code : string }
