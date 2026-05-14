@@ -1,24 +1,34 @@
-app std-wizard "2.0.0"
-"std-wizard — generic N-step branching wizard. `config.steps` is an array of step definitions (each with its own `fields` list); @entity.currentStepIndex walks through them; ADVANCE/RETREAT self-loop, COMPLETE/CANCEL terminate. Topology = loading / running / completed / cancelled / error — running state owns N via data, not states."
+app std-wizard "3.0.0"
+"std-wizard — generic N-step data-collection wizard (Vercel deploy / GitHub repo create / Stripe Connect onboarding style). Each step has its own form fields. Topology = loading / running / completed / cancelled / error. ADVANCE is guard-routed: not-last-step advances; last-step transitions to completed. Distinct from std-step-flow (approval-decision) — wizard collects data via form-section per step, step-flow collects yes/no decisions."
 
 orbital WizardOrbital {
-  type StepView = {
-    key         : string!
-    label       : string!
+  type WizardStep = {
+    id          : string!
+    title       : string!
     description : string
-    icon        : string
-    number      : number
-    status      : "pending" | "current" | "completed"
   }
 
   entity WizardView [runtime] {
-    id                  : string!
-    steps               : [StepView] = []
-    currentStepIndex    : number = 0
-    totalSteps          : number = 0
-    completionMessage   : string = ""
-    cancelReason        : string = ""
-    errorMessage        : string = ""
+    id                    : string!
+    title                 : string = ""
+    description           : string = ""
+    category              : string = ""
+    priority              : string = ""
+    notes                 : string = ""
+    wizardSteps           : [WizardStep] = []
+    currentStepIndex      : number = 0
+    totalSteps            : number = 0
+    currentStepLabel      : string = ""
+    currentStepDescription: string = ""
+    currentStepIcon       : string = "circle"
+    currentFields         : [string] = []
+    isFirstStep           : boolean = true
+    isLastStep            : boolean = false
+    primaryActionLabel    : string = "Next"
+    primaryActionIcon     : string = "chevron-right"
+    completionMessage     : string = ""
+    cancelReason          : string = ""
+    errorMessage          : string = ""
   }
 
   type WizardLoaded     = Event { data : [object] }                "Fired when wizard context finishes loading"
@@ -30,11 +40,10 @@ orbital WizardOrbital {
     config {
       title    : string   = "Wizard"
       steps    : [object] = [
-        { key: "details", label: "Details", description: "Basic information",      icon: "file-text",    fields: ["title", "description"] },
-        { key: "options", label: "Options", description: "Configure preferences",  icon: "settings",     fields: ["category", "priority"] },
-        { key: "review",  label: "Review",  description: "Confirm and submit",     icon: "check-circle", fields: ["notes"] }
+        { key: "details", label: "Details", description: "Basic information",     icon: "file-text",    fields: ["title", "description"] },
+        { key: "options", label: "Options", description: "Configure preferences", icon: "settings",     fields: ["category", "priority"] },
+        { key: "review",  label: "Review",  description: "Confirm and submit",    icon: "check-circle", fields: ["notes"] }
       ]
-      currentFields : [string] = ["title", "description"]
     }
     initial: loading
     state loading {
@@ -44,65 +53,73 @@ orbital WizardOrbital {
       WizardLoaded -> running
         (set @entity.currentStepIndex 0)
         (set @entity.totalSteps (array/len @config.steps))
-        (set @entity.steps (array/map @config.steps ["fn", "step", {
-          key:         (object/get @step "key"),
-          label:       (object/get @step "label"),
-          description: (object/get @step "description" ""),
-          icon:        (object/get @step "icon" "circle"),
-          number:      1,
-          status:      "current"
+        (set @entity.wizardSteps (array/map @config.steps ["fn", "step", {
+          id:          (object/get @step "key"),
+          title:       (object/get @step "label"),
+          description: (object/get @step "description" "")
         }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "ADVANCE", cancelEvent: "CANCEL", fields: "@config.currentFields" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "RETREAT", icon: "arrow-left" }, { type: "button", label: "Skip", variant: "secondary", action: "SKIP", icon: "skip-forward" }, { type: "button", label: "Submit", variant: "success", action: "COMPLETE", icon: "check-circle" }, { type: "button", label: "Cancel", variant: "ghost", action: "CANCEL", icon: "x" }] }] })
+        (set @entity.currentStepLabel       (object/get (array/nth @config.steps 0) "label"))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps 0) "description" ""))
+        (set @entity.currentStepIcon        (object/get (array/nth @config.steps 0) "icon" "circle"))
+        (set @entity.currentFields          (object/get (array/nth @config.steps 0) "fields" []))
+        (set @entity.isFirstStep true)
+        (set @entity.isLastStep  (= (array/len @config.steps) 1))
+        (set @entity.primaryActionLabel (if (= (array/len @config.steps) 1) "Submit" "Next"))
+        (set @entity.primaryActionIcon  (if (= (array/len @config.steps) 1) "check-circle" "chevron-right"))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entity.currentStepIcon", size: "lg" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entity.currentStepLabel", variant: "h2" }, { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }] }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "ADVANCE", cancelEvent: "CANCEL", fields: "@entity.currentFields", showSubmit: false, showCancel: false }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "RETREAT", icon: "chevron-left", disabled: "@entity.isFirstStep" }, { type: "button", label: "Cancel wizard", variant: "ghost", action: "CANCEL", icon: "x" }, { type: "button", label: "@entity.primaryActionLabel", variant: "primary", action: "ADVANCE", icon: "@entity.primaryActionIcon" }] }] })
       WizardLoadFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
-      WizardSaved -> running
+      WizardSaved -> loading
+        (fetch WizardView { emit: { success: "WizardLoaded", failure: "WizardLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Refreshing…" })
       WizardSaveFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
     }
     state running {
-      ADVANCE -> running
+      ADVANCE -> running when (not @entity.isLastStep)
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (set @entity.steps (array/map @config.steps ["fn", "step", {
-          key:         (object/get @step "key"),
-          label:       (object/get @step "label"),
-          description: (object/get @step "description" ""),
-          icon:        (object/get @step "icon" "circle"),
-          number:      1,
-          status:      "current"
-        }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "primary" }] }] }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "ADVANCE", cancelEvent: "CANCEL", fields: "@config.currentFields" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "RETREAT", icon: "arrow-left" }, { type: "button", label: "Skip", variant: "secondary", action: "SKIP", icon: "skip-forward" }, { type: "button", label: "Submit", variant: "success", action: "COMPLETE", icon: "check-circle" }, { type: "button", label: "Cancel", variant: "ghost", action: "CANCEL", icon: "x" }] }] })
+        (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
+        (set @entity.currentStepIcon        (object/get (array/nth @config.steps @entity.currentStepIndex) "icon" "circle"))
+        (set @entity.currentFields          (object/get (array/nth @config.steps @entity.currentStepIndex) "fields" []))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep  (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Submit" "Next"))
+        (set @entity.primaryActionIcon  (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entity.currentStepIcon", size: "lg" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entity.currentStepLabel", variant: "h2" }, { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }] }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "ADVANCE", cancelEvent: "CANCEL", fields: "@entity.currentFields", showSubmit: false, showCancel: false }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "RETREAT", icon: "chevron-left", disabled: "@entity.isFirstStep" }, { type: "button", label: "Cancel wizard", variant: "ghost", action: "CANCEL", icon: "x" }, { type: "button", label: "@entity.primaryActionLabel", variant: "primary", action: "ADVANCE", icon: "@entity.primaryActionIcon" }] }] })
+      ADVANCE -> completed when @entity.isLastStep
+        (set @entity.completionMessage "All steps completed. Your submission has been recorded.")
+        (persist update WizardView @payload.data { emit: { success: "WizardSaved", failure: "WizardSaveFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Complete", variant: "h2", align: "center" }, { type: "typography", content: "@entity.completionMessage", variant: "body", color: "muted", align: "center" }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.totalSteps", allowNavigation: false }, { type: "button", label: "Start a new wizard", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
       RETREAT -> running
         (set @entity.currentStepIndex (- @entity.currentStepIndex 1))
-        (render-ui main { type: "loading-state", title: "Going back…" })
-      SKIP -> running
-        (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
-        (render-ui main { type: "loading-state", title: "Skipping…" })
-      COMPLETE -> completed
-        (set @entity.completionMessage "All steps completed")
-        (set @entity.steps (array/map @config.steps ["fn", "step", {
-          key:         (object/get @step "key"),
-          label:       (object/get @step "label"),
-          description: (object/get @step "description" ""),
-          icon:        (object/get @step "icon" "circle"),
-          number:      1,
-          status:      "completed"
-        }]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "Complete", variant: "h3" }] }, { type: "divider" }, { type: "data-list", entity: "@entity.steps", gap: "sm", fields: [], renderItem: ["fn", "step", { type: "card", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@step.icon" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@step.label", variant: "h4" }, { type: "typography", content: "@step.description", variant: "caption", color: "muted" }] }, { type: "badge", label: "@step.status", variant: "success" }] }] }] }, { type: "card", children: [{ type: "typography", variant: "body", content: "@entity.completionMessage" }] }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+        (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
+        (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
+        (set @entity.currentStepIcon        (object/get (array/nth @config.steps @entity.currentStepIndex) "icon" "circle"))
+        (set @entity.currentFields          (object/get (array/nth @config.steps @entity.currentStepIndex) "fields" []))
+        (set @entity.isFirstStep (= @entity.currentStepIndex 0))
+        (set @entity.isLastStep  (= @entity.currentStepIndex (- @entity.totalSteps 1)))
+        (set @entity.primaryActionLabel (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "Submit" "Next"))
+        (set @entity.primaryActionIcon  (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-checks" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.currentStepIndex", allowNavigation: false }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@entity.currentStepIcon", size: "lg" }, { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "typography", content: "@entity.currentStepLabel", variant: "h2" }, { type: "typography", content: "@entity.currentStepDescription", variant: "body", color: "muted" }] }] }, { type: "divider" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "ADVANCE", cancelEvent: "CANCEL", fields: "@entity.currentFields", showSubmit: false, showCancel: false }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "RETREAT", icon: "chevron-left", disabled: "@entity.isFirstStep" }, { type: "button", label: "Cancel wizard", variant: "ghost", action: "CANCEL", icon: "x" }, { type: "button", label: "@entity.primaryActionLabel", variant: "primary", action: "ADVANCE", icon: "@entity.primaryActionIcon" }] }] })
       CANCEL -> cancelled
         (set @entity.cancelReason @payload.reason)
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Cancelled", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "body", content: "Wizard cancelled." }, { type: "button", label: "Restart", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Cancelled", variant: "h2", align: "center" }, { type: "typography", content: "The wizard was cancelled. No data was submitted.", variant: "body", color: "muted", align: "center" }, { type: "button", label: "Start a new wizard", variant: "secondary", action: "RESTART", icon: "rotate-ccw" }] })
     }
     state completed {
       RESTART -> loading
         (set @entity.currentStepIndex 0)
+        (set @entity.completionMessage "")
+        (fetch WizardView { emit: { success: "WizardLoaded", failure: "WizardLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Restarting…" })
     }
     state cancelled {
       RESTART -> loading
         (set @entity.currentStepIndex 0)
+        (set @entity.cancelReason "")
+        (fetch WizardView { emit: { success: "WizardLoaded", failure: "WizardLoadFailed" } })
         (render-ui main { type: "loading-state", title: "Restarting…" })
     }
     state error {
@@ -112,18 +129,16 @@ orbital WizardOrbital {
     emits {
       ADVANCE                { data : object }
       RETREAT                { }
-      SKIP                   { }
-      COMPLETE               { data : object }
       CANCEL                 { reason : string }
       RESTART                { }
       WizardLoaded           { data : [object] }
       WizardLoadFailed       { error : string, code : string }
+      WizardSaved            { row : object }
+      WizardSaveFailed       { error : string, code : string }
     }
     listens {
       ADVANCE                { data : object }
       RETREAT                { }
-      SKIP                   { }
-      COMPLETE               { data : object }
       CANCEL                 { reason : string }
       RESTART                { }
       WizardLoaded           { data : [object] }
