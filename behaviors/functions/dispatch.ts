@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition } from '@almadar/core/types';
+import type { OrbitalDefinition, TraitReference } from '@almadar/core/types';
 
 import {
   stdAgentAssistantAssistantOrbital,
@@ -2278,19 +2278,53 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
 ]);
 
 /**
+ * One trait reference appended via `params.extraTraits[]`. Phase 2
+ * (Mechanism 2). `from` + `as` are required because the dispatcher
+ * merges into `uses[]` verbatim — no JS-side name transforms.
+ * Mirrors `ExtraTraitRef` from @almadar-io/agent — kept structural
+ * (no inter-package type dep) but type-compatible.
+ */
+export interface DispatchExtraTrait
+  extends Pick<TraitReference, 'ref' | 'name' | 'linkedEntity' | 'config' | 'events' | 'listens' | 'emitsScope'>
+{
+  from: string;
+  as: string;
+}
+
+/**
  * Look up the per-orbital factory by (organism, orbitalName) and call
  * it with the supplied params. Returns null when no factory exists.
  * Throws TypeError when params fail the factory's typed guard
  * (caught by the agent's instantiate-orbital surface).
+ *
+ * `params.extraTraits` (Phase 2) is orthogonal to factory-specific
+ * params: it's separated out BEFORE the typed guard runs and appended
+ * to `def.traits[]` (with corresponding `uses[]` entries merged) AFTER
+ * the factory returns. Strictly additive — never replaces factory
+ * traits.
  */
 export function dispatchOrbitalFactory(
   organism: string,
   orbitalName: string,
-  params: object,
+  params: object & { extraTraits?: DispatchExtraTrait[] },
 ): OrbitalDefinition | null {
   const entry = REGISTRY.get(`${organism}::${orbitalName}`);
   if (!entry) return null;
-  return entry.factory(params);
+  const { extraTraits, ...factoryParams } = params;
+  const def = entry.factory(factoryParams);
+  if (extraTraits && extraTraits.length > 0) {
+    if (!def.uses) def.uses = [];
+    if (!def.traits) def.traits = [];
+    for (const extra of extraTraits) {
+      const alreadyUsed = def.uses.some((u) => u.from === extra.from);
+      if (!alreadyUsed) {
+        def.uses.push({ from: extra.from, as: extra.as });
+      }
+      const { from: _from, as: _as, ...traitFields } = extra;
+      def.traits.push(traitFields);
+    }
+  }
+  return def;
 }
 
 /**

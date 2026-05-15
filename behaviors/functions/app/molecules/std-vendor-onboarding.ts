@@ -41,14 +41,26 @@ export type StdVendorOnboardingListenKey = 'VendorUpdated' | 'VendorSubmitted';
  * Payload shape for the `NEXT_STEP` event.
  */
 export interface StdVendorOnboardingNextStepPayload {
-  data: EntityRow;
+  data?: EntityRow;
+  currentStep?: number;
+  totalSteps?: number;
+}
+
+/**
+ * Payload shape for the `BACK_STEP` event.
+ */
+export interface StdVendorOnboardingBackStepPayload {
+  currentStep?: number;
+  totalSteps?: number;
 }
 
 /**
  * Payload shape for the `SUBMIT` event.
  */
 export interface StdVendorOnboardingSubmitPayload {
-  submittedAt: string;
+  submittedAt?: string;
+  currentStep?: number;
+  totalSteps?: number;
 }
 
 /**

@@ -29,7 +29,7 @@ const ALIAS = 'ApprovalRequest';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdApprovalRequestEventKey = 'APPROVE' | 'ApprovalRequestLoadFailed' | 'ApprovalRequestLoaded' | 'CLOSE_REQUEST' | 'INIT' | 'OPEN_REQUEST' | 'REJECT' | 'REQUEST_INFO' | 'WITHDRAW';
+export type StdApprovalRequestEventKey = 'APPROVE' | 'ApprovalRequestLoadFailed' | 'ApprovalRequestLoaded' | 'CANCEL_REJECTION' | 'CLOSE_REQUEST' | 'EDIT_COMMENT' | 'INIT' | 'OPEN_REQUEST' | 'REJECT' | 'REQUEST_INFO' | 'SUBMIT_REJECTION' | 'WITHDRAW';
 
 /**
  * Payload shape for the `OPEN_REQUEST` event.
@@ -81,6 +81,21 @@ export interface StdApprovalRequestWithdrawPayload {
 }
 
 /**
+ * Payload shape for the `EDIT_COMMENT` event.
+ */
+export interface StdApprovalRequestEditCommentPayload {
+  comment?: string;
+}
+
+/**
+ * Payload shape for the `SUBMIT_REJECTION` event.
+ */
+export interface StdApprovalRequestSubmitRejectionPayload {
+  id: string;
+  comment?: string;
+}
+
+/**
  * Payload shape for the `ApprovalRequestLoaded` event.
  */
 export interface StdApprovalRequestApprovalRequestLoadedPayload {
@@ -104,6 +119,8 @@ export interface StdApprovalRequestApprovalRequestLoadFailedPayload {
 export interface StdApprovalRequestConfig {
   /** Default: `"Approval Requests"` */
   title?: string;
+  /** Default: `false` */
+  requireCommentOnReject?: boolean;
 }
 
 /**

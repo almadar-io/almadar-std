@@ -32,6 +32,32 @@ const ALIAS = 'WizardForm';
 export type StdWizardFormEventKey = 'COMPLETE' | 'INIT' | 'NEXT' | 'PREV' | 'RESTART' | 'WizardFormEntryLoadFailed' | 'WizardFormEntryLoaded' | 'WizardFormSaveFailed' | 'WizardFormSaved';
 
 /**
+ * Payload shape for the `NEXT` event.
+ */
+export interface StdWizardFormNextPayload {
+  data?: EntityRow;
+  currentStep?: number;
+  totalSteps?: number;
+}
+
+/**
+ * Payload shape for the `PREV` event.
+ */
+export interface StdWizardFormPrevPayload {
+  currentStep?: number;
+  totalSteps?: number;
+}
+
+/**
+ * Payload shape for the `COMPLETE` event.
+ */
+export interface StdWizardFormCompletePayload {
+  data?: EntityRow;
+  currentStep?: number;
+  totalSteps?: number;
+}
+
+/**
  * Payload shape for the `WizardFormSaved` event.
  */
 export interface StdWizardFormWizardFormSavedPayload {
