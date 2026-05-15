@@ -1,0 +1,157 @@
+{
+  "name": "std-date-range",
+  "version": "1.0.0",
+  "description": "std-date-range — single primitive: date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to (matching DateRangePicker's emit shape) so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery).",
+  "orbitals": [
+    {
+      "name": "DateRangeOrbital",
+      "entity": {
+        "name": "DateRange",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "from",
+            "type": "string"
+          },
+          {
+            "name": "to",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DateRangeFilter",
+          "category": "interaction",
+          "linkedEntity": "DateRange",
+          "emits": [
+            {
+              "event": "DATE_RANGE_CHANGED",
+              "payloadSchema": [
+                {
+                  "name": "from",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "to",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DATE_RANGE_CHANGED",
+                "name": "Date Range Changed",
+                "payloadSchema": [
+                  {
+                    "name": "from",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "to",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "toLabel": "@config.toLabel",
+                      "fromLabel": "@config.fromLabel",
+                      "event": "@config.event",
+                      "type": "date-range-picker"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DATE_RANGE_CHANGED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.from",
+                    "@payload.from"
+                  ],
+                  [
+                    "set",
+                    "@entity.to",
+                    "@payload.to"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "date-range-picker",
+                      "toLabel": "@config.toLabel",
+                      "to": "@entity.to",
+                      "event": "@config.event",
+                      "from": "@entity.from",
+                      "fromLabel": "@config.fromLabel"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "event": {
+              "type": "string",
+              "default": "DATE_RANGE_CHANGED"
+            },
+            "toLabel": {
+              "type": "string",
+              "default": "To"
+            },
+            "fromLabel": {
+              "type": "string",
+              "default": "From"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DateRangeFilterPage",
+          "path": "/dateranges/filter",
+          "traits": [
+            {
+              "ref": "DateRangeFilter"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

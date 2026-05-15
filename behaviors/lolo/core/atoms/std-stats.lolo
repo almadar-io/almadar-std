@@ -1,19 +1,22 @@
-app std-stats "2.0.0"
-"std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max with optional filter, format, icon, max, target, trend) and renders one stat-display per entry. Drop into a dashboard alongside std-browse / std-search / std-filter."
+app std-stats "3.0.0"
+"std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter."
 
 orbital StatsItemOrbital {
   type StatCard = {
-    label         : string!
-    value         : number
-    icon          : string
-    format        : "number" | "currency" | "percent"
-    variant       : "default" | "primary" | "success" | "warning" | "error" | "info"
-    prefix        : string
-    suffix        : string
-    max           : number
-    target        : number
-    trend         : number
-    trendPolarity : "higher-is-better" | "lower-is-better"
+    label          : string!
+    value          : number
+    icon           : string
+    format         : "number" | "currency" | "percent"
+    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
+    prefix         : string
+    suffix         : string
+    max            : number
+    target         : number
+    trend          : number
+    trendPolarity  : "higher-is-better" | "lower-is-better"
+    trendFormat    : "absolute" | "percent"
+    sparklineData  : [number]
+    clickEvent     : string
   }
 
   entity StatsItem [runtime] {
@@ -35,8 +38,9 @@ orbital StatsItemOrbital {
       INIT -> idle
         ;; Pre-seed cards from @config.metrics so the atom renders a
         ;; visible skeleton on initial mount even before any upstream
-        ;; ITEMS_LOADED fires. value=0 acts as a placeholder; real
-        ;; aggregations replace these once data arrives.
+        ;; ITEMS_LOADED fires. If a metric defines a static `value`,
+        ;; honor it (useful for default / standalone previews); otherwise
+        ;; render 0 until ITEMS_LOADED recomputes.
         (set @entity.cards (array/map @config.metrics ["fn", "metric", {
           label:         (object/get @metric "label"),
           icon:          (object/get @metric "icon" ""),
@@ -48,9 +52,12 @@ orbital StatsItemOrbital {
           target:        (object/get @metric "target" 0),
           trend:         (object/get @metric "trend" 0),
           trendPolarity: (object/get @metric "trendPolarity" "higher-is-better"),
-          value:         0
+          trendFormat:   (object/get @metric "trendFormat" "absolute"),
+          sparklineData: (object/get @metric "sparklineData" []),
+          clickEvent:    (object/get @metric "clickEvent" ""),
+          value:         (object/get @metric "value" 0)
         }]))
-        (render-ui main { type: "data-grid", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max" }] })
+        (render-ui main { type: "data-grid", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
       ITEMS_LOADED -> idle
         (set @entity.cards (array/map @config.metrics ["fn", "metric", {
           label:         (object/get @metric "label"),
@@ -61,19 +68,31 @@ orbital StatsItemOrbital {
           suffix:        (object/get @metric "suffix" ""),
           max:           (object/get @metric "max" 0),
           target:        (object/get @metric "target" 0),
-          trend:         (object/get @metric "trend" 0),
           trendPolarity: (object/get @metric "trendPolarity" "higher-is-better"),
-          value:         (if (= (object/get @metric "aggregation" "count") "sum")
-                       (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                       (if (= (object/get @metric "aggregation" "count") "avg")
-                           (array/avg (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                           (if (= (object/get @metric "aggregation" "count") "min")
-                               (array/min (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                               (if (= (object/get @metric "aggregation" "count") "max")
-                                   (array/max (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
-                                   (array/len (array/filter @payload.data (object/get @metric "filter" true)))))))
+          trendFormat:   (object/get @metric "trendFormat" "absolute"),
+          sparklineData: (object/get @metric "sparklineData" []),
+          clickEvent:    (object/get @metric "clickEvent" ""),
+          ;; Variance is computed as actual - baseline using `filter` + `baselineFilter`.
+          ;; For variance, `trend` carries the signed delta (StatDisplay renders it as ↑/↓ with
+          ;; success/error coloring based on trendPolarity). For other aggregations, `trend`
+          ;; falls back to the metric's authored value (defaults to 0).
+          trend: (if (= (object/get @metric "aggregation" "count") "variance")
+                     (- (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                        (array/sum (array/filter @payload.data (object/get @metric "baselineFilter" true)) (object/get @metric "field" "")))
+                     (object/get @metric "trend" 0)),
+          value: (if (= (object/get @metric "aggregation" "count") "sum")
+                     (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                     (if (= (object/get @metric "aggregation" "count") "avg")
+                         (array/avg (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                         (if (= (object/get @metric "aggregation" "count") "min")
+                             (array/min (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                             (if (= (object/get @metric "aggregation" "count") "max")
+                                 (array/max (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                                 (if (= (object/get @metric "aggregation" "count") "variance")
+                                     (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
+                                     (array/len (array/filter @payload.data (object/get @metric "filter" true))))))))
         }]))
-        (render-ui main { type: "data-list", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend", trendPolarity: "@card.trendPolarity" }] })
+        (render-ui main { type: "data-list", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
     }
     listens {
       ITEMS_LOADED { data : [object], totalCount : number }

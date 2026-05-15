@@ -1,0 +1,94 @@
+app std-embedded-dashboard "1.1.0"
+"std-embedded-dashboard — on-the-fly dashboard composer organism for embedding inside host products. Provides a 12-slot tiled layout scaffolded from std-dashboard-grid-layout. The host emits ITEMS_LOADED { data: [...] } on the bus; appended tile traits subscribe to it directly. Agents call dispatchOrbitalFactory('std-embedded-dashboard', 'DashboardOrbital', { entityName, config, extraTraits, traitOverrides }) — extraTraits append tile instances; traitOverrides.DashboardLayout.config.tileXTrait binds them to grid slots; unbound slots fall back to the org's Default* sample tiles (rendering a realistic standalone preview)."
+
+orbital DashboardOrbital {
+  uses Layout    from "std/behaviors/std-dashboard-grid-layout"
+  uses Stats     from "std/behaviors/std-stats"
+  uses Graphs    from "std/behaviors/std-graphs"
+  uses Scatter   from "std/behaviors/std-scatter"
+  uses DateRange from "std/behaviors/std-date-range"
+  uses Export    from "std/behaviors/std-export"
+
+  entity Dashboard [runtime] {
+    id : string!
+  }
+
+  trait EmptyTile -> Dashboard [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "box" })
+    }
+  }
+
+  trait DefaultKpiStats = Stats.traits.StatsItemStats -> Dashboard {
+    config: {
+      title: "Key Metrics",
+      metrics: [
+        { label: "Revenue",    value: 142000, format: "currency", icon: "trending-up",   variant: "success", trend: 8,  trendPolarity: "higher-is-better", trendFormat: "percent" },
+        { label: "MRR",        value: 11833,  format: "currency", icon: "repeat",        variant: "primary", trend: 5,  trendPolarity: "higher-is-better", trendFormat: "percent" },
+        { label: "Customers",  value: 248,    format: "number",   icon: "users",         variant: "info",    trend: 12, trendPolarity: "higher-is-better", trendFormat: "percent", sparklineData: [180, 195, 210, 220, 225, 238, 248] },
+        { label: "Churn",      value: 2,      format: "percent",  icon: "trending-down", variant: "warning", trend: 1,  trendPolarity: "lower-is-better",  trendFormat: "percent" }
+      ]
+    }
+  }
+
+  trait DefaultRevenueChart = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title: "Revenue by Quarter",
+      subtitle: "Last 4 quarters",
+      chartType: "bar",
+      height: 240,
+      showLegend: false
+    }
+  }
+
+  trait DefaultDistributionChart = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title: "Revenue Distribution",
+      subtitle: "By segment",
+      chartType: "pie",
+      height: 240,
+      showLegend: true
+    }
+  }
+
+  trait DefaultScatter = Scatter.traits.ScatterItemPlot -> Dashboard {
+    config: {
+      title: "Spend vs Revenue",
+      subtitle: "Per customer",
+      height: 240
+    }
+  }
+
+  trait DefaultDateRange = DateRange.traits.DateRangeFilter -> Dashboard {
+    config: {
+      event: "DATE_RANGE_CHANGED",
+      fromLabel: "From",
+      toLabel: "To"
+    }
+  }
+
+  trait DefaultExport = Export.traits.ExportMenu -> Dashboard {
+    config: {
+      event: "EXPORT_REQUESTED",
+      tileId: "dashboard"
+    }
+  }
+
+  trait DashboardLayout = Layout.traits.DashboardGridLayout -> Dashboard {
+    config: {
+      appName: "Dashboard",
+      navItems: [{ href: "/dashboard", label: "Dashboard", icon: "bar-chart-3" }],
+      minTileWidth: 320,
+      tile1Trait: "@trait.DefaultKpiStats",
+      tile2Trait: "@trait.DefaultRevenueChart",
+      tile3Trait: "@trait.DefaultDistributionChart",
+      tile4Trait: "@trait.DefaultScatter",
+      tile5Trait: "@trait.DefaultDateRange",
+      tile6Trait: "@trait.DefaultExport"
+    }
+  }
+
+  page "/dashboard" as DashboardPage -> DashboardLayout, DefaultKpiStats, DefaultRevenueChart, DefaultDistributionChart, DefaultScatter, DefaultDateRange, DefaultExport, EmptyTile
+}

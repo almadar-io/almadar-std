@@ -1,8 +1,9 @@
-app std-graphs "1.0.0"
-"std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField and applies the configured aggregation (count|sum|avg|min|max) per bucket, emitting {label,value} points into the chart pattern. Drop into a dashboard alongside std-stats / std-browse."
+app std-graphs "2.0.0"
+"std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField (or @config.timeField when timeAxis=true) and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
 
 orbital GraphItemOrbital {
   type ChartPoint = { label : string!, value : number }
+  type SeriesSpec = { name : string!, data : [ChartPoint], color : string, dashed : boolean }
 
   entity GraphItem [runtime] {
     id        : string!
@@ -12,38 +13,58 @@ orbital GraphItemOrbital {
   trait GraphItemGraph -> GraphItem [interaction, instance] {
     initial: idle
     config {
-      chartType     : "bar" | "line" | "pie" | "area" = "bar"
-      categoryField : string = "status"
-      valueField    : string = ""
+      chartType     : "bar" | "line" | "pie" | "area" | "donut" | "histogram" | "scatter" = "bar"
+      timeAxis      : boolean = false
+      categoryField : string  = "status"
+      timeField     : string  = "date"
+      period        : "day" | "week" | "month" | "quarter" | "year" = "month"
+      valueField    : string  = ""
       aggregation   : "count" | "sum" | "avg" | "min" | "max" = "count"
-      title         : string = "Distribution"
-      subtitle      : string = "Counts per category"
-      height        : number = 280
+      series        : [SeriesSpec] = []
+      stack         : "none" | "stack" | "normalize" = "none"
+      sortField     : "value" | "label" | "none" = "none"
+      sortDir       : "asc" | "desc" = "desc"
+      limit         : number  = 0
+      drillEvent    : string  = ""
+      title         : string  = "Distribution"
+      subtitle      : string  = "Counts per category"
+      height        : number  = 280
       showLegend    : boolean = true
       showValues    : boolean = false
     }
     state idle {
       INIT -> idle
         (set @entity.chartData [
-          { label: "Active", value: 6 },
-          { label: "Pending", value: 3 },
+          { label: "Active",   value: 6 },
+          { label: "Pending",  value: 3 },
           { label: "Inactive", value: 1 }
         ])
-        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues" })
+        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
       ITEMS_LOADED -> idle
-        (set @entity.chartData (array/map (object/entries (array/groupBy @payload.data @config.categoryField)) ["fn", "entry", {
-          label: (object/get @entry "0"),
-          value: (if (= @config.aggregation "sum")
-                     (array/sum (object/get @entry "1") @config.valueField)
-                     (if (= @config.aggregation "avg")
-                         (array/avg (object/get @entry "1") @config.valueField)
-                         (if (= @config.aggregation "min")
-                             (array/min (object/get @entry "1") @config.valueField)
-                             (if (= @config.aggregation "max")
-                                 (array/max (object/get @entry "1") @config.valueField)
-                                 (array/len (object/get @entry "1"))))))
-        }]))
-        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues" })
+        (set @entity.chartData
+          (if (= @config.chartType "histogram")
+              (array/map @payload.data ["fn", "p", { label: (object/get @p "label"), value: (object/get @p "value") }])
+              (array/map (object/entries (array/groupBy @payload.data (if @config.timeAxis @config.timeField @config.categoryField))) ["fn", "entry", {
+                label: (object/get @entry "0"),
+                value: (if (= @config.aggregation "sum")
+                           (array/sum (object/get @entry "1") @config.valueField)
+                           (if (= @config.aggregation "avg")
+                               (array/avg (object/get @entry "1") @config.valueField)
+                               (if (= @config.aggregation "min")
+                                   (array/min (object/get @entry "1") @config.valueField)
+                                   (if (= @config.aggregation "max")
+                                       (array/max (object/get @entry "1") @config.valueField)
+                                       (array/len (object/get @entry "1"))))))
+              }])))
+        (set @entity.chartData
+          (if (!= @config.sortField "none")
+              (array/sort @entity.chartData @config.sortField @config.sortDir)
+              @entity.chartData))
+        (set @entity.chartData
+          (if (> @config.limit 0)
+              (array/take @entity.chartData @config.limit)
+              @entity.chartData))
+        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
     }
     listens {
       ITEMS_LOADED { data : [object], totalCount : number }

@@ -1,0 +1,245 @@
+{
+  "name": "std-export",
+  "version": "2.0.0",
+  "description": "std-export — a row of export-format buttons (CSV / PNG / PDF / XLSX). Each format is a FormatOption row; the trait fetches the FormatOption collection on INIT so data-list iterates over a real entity collection (no nested sub-fields, no primitive arrays). EXPORT_REQUESTED carries { format, tileId } so the host or a sibling orbital can generate the actual file. This atom surfaces user intent only — it never reads or transforms underlying data.",
+  "orbitals": [
+    {
+      "name": "ExportOrbital",
+      "entity": {
+        "name": "FormatOption",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "format",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ExportMenu",
+          "category": "interaction",
+          "linkedEntity": "FormatOption",
+          "emits": [
+            {
+              "event": "FormatsLoaded",
+              "description": "Fired when format options are loaded",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[FormatOption]"
+                }
+              ]
+            },
+            {
+              "event": "FormatsLoadFailed",
+              "description": "Fired when format options fail to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "EXPORT_REQUESTED",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "format",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "tileId",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "ready"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FormatsLoaded",
+                "name": "Formats loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[FormatOption]"
+                  }
+                ]
+              },
+              {
+                "key": "FormatsLoadFailed",
+                "name": "Formats load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "EXPORT_REQUESTED",
+                "name": "Export Requested",
+                "payloadSchema": [
+                  {
+                    "name": "format",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "FormatOption",
+                    {
+                      "emit": {
+                        "failure": "FormatsLoadFailed",
+                        "success": "FormatsLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "ready",
+                "event": "FormatsLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@payload.data",
+                      "renderItem": [
+                        "fn",
+                        "fmt",
+                        {
+                          "type": "button",
+                          "label": "@fmt.label",
+                          "variant": "ghost",
+                          "size": "sm",
+                          "action": "@config.event",
+                          "actionPayload": {
+                            "format": "@fmt.format",
+                            "tileId": "@config.tileId"
+                          }
+                        }
+                      ],
+                      "fields": [],
+                      "type": "data-list"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "ready",
+                "event": "FormatsLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "ready",
+                "to": "ready",
+                "event": "EXPORT_REQUESTED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.format",
+                    "@payload.format"
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "tileId": {
+              "type": "string",
+              "default": ""
+            },
+            "event": {
+              "type": "string",
+              "default": "EXPORT_REQUESTED"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ExportMenuPage",
+          "path": "/exports/menu",
+          "traits": [
+            {
+              "ref": "ExportMenu"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

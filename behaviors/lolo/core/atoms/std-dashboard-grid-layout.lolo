@@ -1,23 +1,56 @@
-app std-dashboard-grid-layout "2.0.0"
-"std-dashboard-grid-layout — dashboard-layout chrome with three trait config slots: statsTrait, graphsTrait, feedTrait."
+app std-dashboard-grid-layout "3.0.0"
+"std-dashboard-grid-layout — dashboard-layout chrome with 12 numbered tile slots laid out in a responsive simple-grid. Slots default to an internal EmptyTile so callers only bind the tiles they actually need via traitOverrides. Slot count covers the 95th-percentile dashboard (≈3 KPIs + 6 charts + 2 tables + 1 filter row). For agent-authored dashboards, append tile traits via extraTraits[] and bind them to slots via traitOverrides.DashboardGridLayout.config.tileXTrait."
 
 orbital DashboardGridLayoutOrbital {
   entity DashboardGridLayoutState [runtime] {
     id : string!
   }
 
-  trait DashboardGridLayout [interaction, instance] {
+  trait EmptyTile -> DashboardGridLayoutState [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "box" })
+    }
+  }
+
+  trait DashboardGridLayout -> DashboardGridLayoutState [interaction, instance] {
     initial: composing
     config {
-      statsTrait  : trait
-      graphsTrait : trait
-      feedTrait   : trait
-      appName     : string   = "Dashboard"
-      navItems    : [object] = [{ href: "/dashboard", label: "Dashboard", icon: "bar-chart-3" }]
+      tile1Trait  : trait = "@trait.EmptyTile"
+      tile2Trait  : trait = "@trait.EmptyTile"
+      tile3Trait  : trait = "@trait.EmptyTile"
+      tile4Trait  : trait = "@trait.EmptyTile"
+      tile5Trait  : trait = "@trait.EmptyTile"
+      tile6Trait  : trait = "@trait.EmptyTile"
+      tile7Trait  : trait = "@trait.EmptyTile"
+      tile8Trait  : trait = "@trait.EmptyTile"
+      tile9Trait  : trait = "@trait.EmptyTile"
+      tile10Trait : trait = "@trait.EmptyTile"
+      tile11Trait : trait = "@trait.EmptyTile"
+      tile12Trait : trait = "@trait.EmptyTile"
+      minTileWidth : number   = 320
+      appName      : string   = "Dashboard"
+      navItems     : [object] = [{ href: "/dashboard", label: "Dashboard", icon: "bar-chart-3" }]
     }
     state composing {
       INIT -> composing
-        (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", children: ["@config.statsTrait", "@config.graphsTrait", { type: "typography", variant: "h4", content: "Recent Activity" }, "@config.feedTrait"] })
+        (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", children: [
+          { type: "simple-grid", minChildWidth: "@config.minTileWidth", children: [
+            "@config.tile1Trait",
+            "@config.tile2Trait",
+            "@config.tile3Trait",
+            "@config.tile4Trait",
+            "@config.tile5Trait",
+            "@config.tile6Trait",
+            "@config.tile7Trait",
+            "@config.tile8Trait",
+            "@config.tile9Trait",
+            "@config.tile10Trait",
+            "@config.tile11Trait",
+            "@config.tile12Trait"
+          ]}
+        ]})
     }
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "std-graphs",
-  "version": "1.0.0",
-  "description": "std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField and applies the configured aggregation (count|sum|avg|min|max) per bucket, emitting {label,value} points into the chart pattern. Drop into a dashboard alongside std-stats / std-browse.",
+  "version": "2.0.0",
+  "description": "std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField (or @config.timeField when timeAxis=true) and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse.",
   "orbitals": [
     {
       "name": "GraphItemOrbital",
@@ -21,13 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string"
-                },
                 "value": {
                   "name": "value",
                   "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string"
                 }
               }
             }
@@ -77,12 +77,12 @@
                     "@entity.chartData",
                     [
                       {
-                        "value": 6.0,
-                        "label": "Active"
+                        "label": "Active",
+                        "value": 6.0
                       },
                       {
-                        "value": 3.0,
-                        "label": "Pending"
+                        "label": "Pending",
+                        "value": 3.0
                       },
                       {
                         "label": "Inactive",
@@ -94,14 +94,18 @@
                     "render-ui",
                     "main",
                     {
-                      "data": "@entity.chartData",
-                      "showValues": "@config.showValues",
-                      "title": "@config.title",
-                      "showLegend": "@config.showLegend",
                       "height": "@config.height",
                       "type": "chart",
-                      "subtitle": "@config.subtitle",
-                      "chartType": "@config.chartType"
+                      "drillEvent": "@config.drillEvent",
+                      "showLegend": "@config.showLegend",
+                      "data": "@entity.chartData",
+                      "timeAxis": "@config.timeAxis",
+                      "chartType": "@config.chartType",
+                      "series": "@config.series",
+                      "title": "@config.title",
+                      "stack": "@config.stack",
+                      "showValues": "@config.showValues",
+                      "subtitle": "@config.subtitle"
                     }
                   ]
                 ]
@@ -115,44 +119,65 @@
                     "set",
                     "@entity.chartData",
                     [
-                      "array/map",
+                      "if",
                       [
-                        "object/entries",
+                        "=",
+                        "@config.chartType",
+                        "histogram"
+                      ],
+                      [
+                        "array/map",
+                        "@payload.data",
                         [
-                          "array/groupBy",
-                          "@payload.data",
-                          "@config.categoryField"
+                          "fn",
+                          "p",
+                          {
+                            "label": [
+                              "object/get",
+                              "@p",
+                              "label"
+                            ],
+                            "value": [
+                              "object/get",
+                              "@p",
+                              "value"
+                            ]
+                          }
                         ]
                       ],
                       [
-                        "fn",
-                        "entry",
-                        {
-                          "value": [
-                            "if",
+                        "array/map",
+                        [
+                          "object/entries",
+                          [
+                            "array/groupBy",
+                            "@payload.data",
                             [
-                              "=",
-                              "@config.aggregation",
-                              "sum"
+                              "if",
+                              "@config.timeAxis",
+                              "@config.timeField",
+                              "@config.categoryField"
+                            ]
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "entry",
+                          {
+                            "label": [
+                              "object/get",
+                              "@entry",
+                              "0"
                             ],
-                            [
-                              "array/sum",
-                              [
-                                "object/get",
-                                "@entry",
-                                "1"
-                              ],
-                              "@config.valueField"
-                            ],
-                            [
+                            "value": [
                               "if",
                               [
                                 "=",
                                 "@config.aggregation",
-                                "avg"
+                                "sum"
                               ],
                               [
-                                "array/avg",
+                                "array/sum",
                                 [
                                   "object/get",
                                   "@entry",
@@ -165,10 +190,10 @@
                                 [
                                   "=",
                                   "@config.aggregation",
-                                  "min"
+                                  "avg"
                                 ],
                                 [
-                                  "array/min",
+                                  "array/avg",
                                   [
                                     "object/get",
                                     "@entry",
@@ -181,10 +206,10 @@
                                   [
                                     "=",
                                     "@config.aggregation",
-                                    "max"
+                                    "min"
                                   ],
                                   [
-                                    "array/max",
+                                    "array/min",
                                     [
                                       "object/get",
                                       "@entry",
@@ -193,38 +218,91 @@
                                     "@config.valueField"
                                   ],
                                   [
-                                    "array/len",
+                                    "if",
                                     [
-                                      "object/get",
-                                      "@entry",
-                                      "1"
+                                      "=",
+                                      "@config.aggregation",
+                                      "max"
+                                    ],
+                                    [
+                                      "array/max",
+                                      [
+                                        "object/get",
+                                        "@entry",
+                                        "1"
+                                      ],
+                                      "@config.valueField"
+                                    ],
+                                    [
+                                      "array/len",
+                                      [
+                                        "object/get",
+                                        "@entry",
+                                        "1"
+                                      ]
                                     ]
                                   ]
                                 ]
                               ]
                             ]
-                          ],
-                          "label": [
-                            "object/get",
-                            "@entry",
-                            "0"
-                          ]
-                        }
+                          }
+                        ]
                       ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.chartData",
+                    [
+                      "if",
+                      [
+                        "!=",
+                        "@config.sortField",
+                        "none"
+                      ],
+                      [
+                        "array/sort",
+                        "@entity.chartData",
+                        "@config.sortField",
+                        "@config.sortDir"
+                      ],
+                      "@entity.chartData"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.chartData",
+                    [
+                      "if",
+                      [
+                        ">",
+                        "@config.limit",
+                        0.0
+                      ],
+                      [
+                        "array/take",
+                        "@entity.chartData",
+                        "@config.limit"
+                      ],
+                      "@entity.chartData"
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "subtitle": "@config.subtitle",
                       "height": "@config.height",
-                      "showValues": "@config.showValues",
-                      "title": "@config.title",
+                      "stack": "@config.stack",
+                      "chartType": "@config.chartType",
                       "type": "chart",
                       "data": "@entity.chartData",
-                      "chartType": "@config.chartType",
-                      "showLegend": "@config.showLegend"
+                      "showLegend": "@config.showLegend",
+                      "showValues": "@config.showValues",
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "drillEvent": "@config.drillEvent",
+                      "timeAxis": "@config.timeAxis",
+                      "series": "@config.series"
                     }
                   ]
                 ]
@@ -232,31 +310,25 @@
             ]
           },
           "config": {
+            "height": {
+              "type": "number",
+              "default": 280.0
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
             "valueField": {
               "type": "string",
               "default": ""
             },
-            "title": {
+            "timeField": {
               "type": "string",
-              "default": "Distribution"
-            },
-            "showValues": {
-              "type": "boolean",
-              "default": false
+              "default": "date"
             },
             "categoryField": {
               "type": "string",
               "default": "status"
-            },
-            "chartType": {
-              "type": "string",
-              "default": "bar",
-              "values": [
-                "bar",
-                "line",
-                "pie",
-                "area"
-              ]
             },
             "aggregation": {
               "type": "string",
@@ -269,17 +341,83 @@
                 "max"
               ]
             },
-            "height": {
+            "stack": {
+              "type": "string",
+              "default": "none",
+              "values": [
+                "none",
+                "stack",
+                "normalize"
+              ]
+            },
+            "showValues": {
+              "type": "boolean",
+              "default": false
+            },
+            "period": {
+              "type": "string",
+              "default": "month",
+              "values": [
+                "day",
+                "week",
+                "month",
+                "quarter",
+                "year"
+              ]
+            },
+            "limit": {
               "type": "number",
-              "default": 280.0
+              "default": 0.0
+            },
+            "title": {
+              "type": "string",
+              "default": "Distribution"
+            },
+            "sortDir": {
+              "type": "string",
+              "default": "desc",
+              "values": [
+                "asc",
+                "desc"
+              ]
             },
             "subtitle": {
               "type": "string",
               "default": "Counts per category"
             },
-            "showLegend": {
+            "drillEvent": {
+              "type": "string",
+              "default": ""
+            },
+            "sortField": {
+              "type": "string",
+              "default": "none",
+              "values": [
+                "value",
+                "label",
+                "none"
+              ]
+            },
+            "chartType": {
+              "type": "string",
+              "default": "bar",
+              "values": [
+                "bar",
+                "line",
+                "pie",
+                "area",
+                "donut",
+                "histogram",
+                "scatter"
+              ]
+            },
+            "timeAxis": {
               "type": "boolean",
-              "default": true
+              "default": false
+            },
+            "series": {
+              "type": "[SeriesSpec]",
+              "default": []
             }
           },
           "scope": "instance"

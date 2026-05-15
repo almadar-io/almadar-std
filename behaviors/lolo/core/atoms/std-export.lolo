@@ -1,0 +1,44 @@
+app std-export "2.0.0"
+"std-export — a row of export-format buttons (CSV / PNG / PDF / XLSX). Each format is a FormatOption row; the trait fetches the FormatOption collection on INIT so data-list iterates over a real entity collection (no nested sub-fields, no primitive arrays). EXPORT_REQUESTED carries { format, tileId } so the host or a sibling orbital can generate the actual file. This atom surfaces user intent only — it never reads or transforms underlying data."
+
+orbital ExportOrbital {
+  entity FormatOption [runtime] {
+    id     : string!
+    format : string!
+    label  : string!
+  }
+
+  type FormatsLoaded     = Event { data : [FormatOption] } "Fired when format options are loaded"
+  type FormatsLoadFailed = Event { error : string, code : string } "Fired when format options fail to load"
+
+  trait ExportMenu -> FormatOption [interaction, collection] {
+    initial: loading
+    config {
+      tileId : string = ""
+      event  : string = "EXPORT_REQUESTED"
+    }
+    state loading {
+      INIT -> loading
+        (fetch FormatOption { emit: { success: "FormatsLoaded", failure: "FormatsLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+      FormatsLoaded -> ready
+        (render-ui main { type: "data-list", entity: "@payload.data", fields: [], renderItem: ["fn", "fmt", { type: "button", label: "@fmt.label", variant: "ghost", size: "sm", action: "@config.event", actionPayload: { format: "@fmt.format", tileId: "@config.tileId" } }] })
+      FormatsLoadFailed -> ready
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state ready {
+      EXPORT_REQUESTED -> ready
+        (set @entity.format @payload.format)
+    }
+    emits {
+      FormatsLoaded
+      FormatsLoadFailed
+      EXPORT_REQUESTED -> external { format : string!, tileId : string }
+    }
+    listens {
+      FormatsLoadFailed { error : string, code : string }
+      EXPORT_REQUESTED { format : string!, tileId : string }
+    }
+  }
+  page "/exports/menu" as ExportMenuPage -> ExportMenu
+}

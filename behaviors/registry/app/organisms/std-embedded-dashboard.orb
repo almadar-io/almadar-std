@@ -1,0 +1,251 @@
+{
+  "name": "std-embedded-dashboard",
+  "version": "1.1.0",
+  "description": "std-embedded-dashboard — on-the-fly dashboard composer organism for embedding inside host products. Provides a 12-slot tiled layout scaffolded from std-dashboard-grid-layout. The host emits ITEMS_LOADED { data: [...] } on the bus; appended tile traits subscribe to it directly. Agents call dispatchOrbitalFactory('std-embedded-dashboard', 'DashboardOrbital', { entityName, config, extraTraits, traitOverrides }) — extraTraits append tile instances; traitOverrides.DashboardLayout.config.tileXTrait binds them to grid slots; unbound slots fall back to the org's Default* sample tiles (rendering a realistic standalone preview).",
+  "orbitals": [
+    {
+      "name": "DashboardOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-dashboard-grid-layout",
+          "as": "Layout"
+        },
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        },
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graphs"
+        },
+        {
+          "from": "std/behaviors/std-scatter",
+          "as": "Scatter"
+        },
+        {
+          "from": "std/behaviors/std-date-range",
+          "as": "DateRange"
+        },
+        {
+          "from": "std/behaviors/std-export",
+          "as": "Export"
+        }
+      ],
+      "entity": {
+        "name": "Dashboard",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EmptyTile",
+          "category": "interaction",
+          "linkedEntity": "Dashboard",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "box"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "DefaultKpiStats",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "title": "Key Metrics",
+            "metrics": [
+              {
+                "trendPolarity": "higher-is-better",
+                "format": "currency",
+                "trend": 8.0,
+                "label": "Revenue",
+                "trendFormat": "percent",
+                "value": 142000.0,
+                "icon": "trending-up",
+                "variant": "success"
+              },
+              {
+                "trend": 5.0,
+                "format": "currency",
+                "icon": "repeat",
+                "variant": "primary",
+                "value": 11833.0,
+                "label": "MRR",
+                "trendPolarity": "higher-is-better",
+                "trendFormat": "percent"
+              },
+              {
+                "value": 248.0,
+                "trendPolarity": "higher-is-better",
+                "sparklineData": [
+                  180.0,
+                  195.0,
+                  210.0,
+                  220.0,
+                  225.0,
+                  238.0,
+                  248.0
+                ],
+                "icon": "users",
+                "trend": 12.0,
+                "variant": "info",
+                "format": "number",
+                "label": "Customers",
+                "trendFormat": "percent"
+              },
+              {
+                "label": "Churn",
+                "trend": 1.0,
+                "format": "percent",
+                "trendPolarity": "lower-is-better",
+                "value": 2.0,
+                "icon": "trending-down",
+                "trendFormat": "percent",
+                "variant": "warning"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "DefaultRevenueChart",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "showLegend": false,
+            "title": "Revenue by Quarter",
+            "height": 240.0,
+            "subtitle": "Last 4 quarters",
+            "chartType": "bar"
+          }
+        },
+        {
+          "ref": "Graphs.traits.GraphItemGraph",
+          "name": "DefaultDistributionChart",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "chartType": "pie",
+            "height": 240.0,
+            "showLegend": true,
+            "title": "Revenue Distribution",
+            "subtitle": "By segment"
+          }
+        },
+        {
+          "ref": "Scatter.traits.ScatterItemPlot",
+          "name": "DefaultScatter",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "title": "Spend vs Revenue",
+            "height": 240.0,
+            "subtitle": "Per customer"
+          }
+        },
+        {
+          "ref": "DateRange.traits.DateRangeFilter",
+          "name": "DefaultDateRange",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "event": "DATE_RANGE_CHANGED",
+            "toLabel": "To",
+            "fromLabel": "From"
+          }
+        },
+        {
+          "ref": "Export.traits.ExportMenu",
+          "name": "DefaultExport",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "tileId": "dashboard",
+            "event": "EXPORT_REQUESTED"
+          }
+        },
+        {
+          "ref": "Layout.traits.DashboardGridLayout",
+          "name": "DashboardLayout",
+          "linkedEntity": "Dashboard",
+          "config": {
+            "tile1Trait": "@trait.DefaultKpiStats",
+            "tile5Trait": "@trait.DefaultDateRange",
+            "tile3Trait": "@trait.DefaultDistributionChart",
+            "tile6Trait": "@trait.DefaultExport",
+            "navItems": [
+              {
+                "label": "Dashboard",
+                "icon": "bar-chart-3",
+                "href": "/dashboard"
+              }
+            ],
+            "appName": "Dashboard",
+            "minTileWidth": 320.0,
+            "tile2Trait": "@trait.DefaultRevenueChart",
+            "tile4Trait": "@trait.DefaultScatter"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DashboardPage",
+          "path": "/dashboard",
+          "traits": [
+            {
+              "ref": "DashboardLayout"
+            },
+            {
+              "ref": "DefaultKpiStats"
+            },
+            {
+              "ref": "DefaultRevenueChart"
+            },
+            {
+              "ref": "DefaultDistributionChart"
+            },
+            {
+              "ref": "DefaultScatter"
+            },
+            {
+              "ref": "DefaultDateRange"
+            },
+            {
+              "ref": "DefaultExport"
+            },
+            {
+              "ref": "EmptyTile"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

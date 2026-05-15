@@ -1,0 +1,34 @@
+app std-date-range "1.0.0"
+"std-date-range — single primitive: date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to (matching DateRangePicker's emit shape) so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery)."
+
+orbital DateRangeOrbital {
+  entity DateRange [runtime] {
+    id   : string!
+    from : string
+    to   : string
+  }
+
+  trait DateRangeFilter -> DateRange [interaction, instance] {
+    initial: idle
+    config {
+      event     : string = "DATE_RANGE_CHANGED"
+      fromLabel : string = "From"
+      toLabel   : string = "To"
+    }
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "date-range-picker", event: "@config.event", fromLabel: "@config.fromLabel", toLabel: "@config.toLabel" })
+      DATE_RANGE_CHANGED -> idle
+        (set @entity.from @payload.from)
+        (set @entity.to   @payload.to)
+        (render-ui main { type: "date-range-picker", event: "@config.event", fromLabel: "@config.fromLabel", toLabel: "@config.toLabel", from: "@entity.from", to: "@entity.to" })
+    }
+    emits {
+      DATE_RANGE_CHANGED { from : string!, to : string! }
+    }
+    listens {
+      DATE_RANGE_CHANGED { from : string!, to : string! }
+    }
+  }
+  page "/dateranges/filter" as DateRangeFilterPage -> DateRangeFilter
+}

@@ -1,7 +1,7 @@
 {
   "name": "std-dashboard-grid-layout",
-  "version": "2.0.0",
-  "description": "std-dashboard-grid-layout — dashboard-layout chrome with three trait config slots: statsTrait, graphsTrait, feedTrait.",
+  "version": "3.0.0",
+  "description": "std-dashboard-grid-layout — dashboard-layout chrome with 12 numbered tile slots laid out in a responsive simple-grid. Slots default to an internal EmptyTile so callers only bind the tiles they actually need via traitOverrides. Slot count covers the 95th-percentile dashboard (≈3 KPIs + 6 charts + 2 tables + 1 filter row). For agent-authored dashboards, append tile traits via extraTraits[] and bind them to slots via traitOverrides.DashboardGridLayout.config.tileXTrait.",
   "orbitals": [
     {
       "name": "DashboardGridLayoutOrbital",
@@ -18,8 +18,45 @@
       },
       "traits": [
         {
+          "name": "EmptyTile",
+          "category": "interaction",
+          "linkedEntity": "DashboardGridLayoutState",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "box"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
           "name": "DashboardGridLayout",
           "category": "interaction",
+          "linkedEntity": "DashboardGridLayoutState",
           "stateMachine": {
             "states": [
               {
@@ -43,19 +80,29 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        "@config.statsTrait",
-                        "@config.graphsTrait",
-                        {
-                          "content": "Recent Activity",
-                          "variant": "h4",
-                          "type": "typography"
-                        },
-                        "@config.feedTrait"
-                      ],
                       "navItems": "@config.navItems",
+                      "type": "dashboard-layout",
                       "appName": "@config.appName",
-                      "type": "dashboard-layout"
+                      "children": [
+                        {
+                          "minChildWidth": "@config.minTileWidth",
+                          "type": "simple-grid",
+                          "children": [
+                            "@config.tile1Trait",
+                            "@config.tile2Trait",
+                            "@config.tile3Trait",
+                            "@config.tile4Trait",
+                            "@config.tile5Trait",
+                            "@config.tile6Trait",
+                            "@config.tile7Trait",
+                            "@config.tile8Trait",
+                            "@config.tile9Trait",
+                            "@config.tile10Trait",
+                            "@config.tile11Trait",
+                            "@config.tile12Trait"
+                          ]
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -63,15 +110,53 @@
             ]
           },
           "config": {
-            "graphsTrait": {
-              "type": "trait"
-            },
             "appName": {
               "type": "string",
               "default": "Dashboard"
             },
-            "feedTrait": {
-              "type": "trait"
+            "tile2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile9Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile8Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile7Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile10Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile12Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "minTileWidth": {
+              "type": "number",
+              "default": 320.0
+            },
+            "tile5Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile6Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
             },
             "navItems": {
               "type": "[object]",
@@ -83,8 +168,13 @@
                 }
               ]
             },
-            "statsTrait": {
-              "type": "trait"
+            "tile11Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile4Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
             }
           },
           "scope": "instance"

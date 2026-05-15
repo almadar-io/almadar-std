@@ -1,0 +1,58 @@
+app std-scatter "1.0.0"
+"std-scatter — embeddable scatter / bubble chart atom. ITEMS_LOADED maps @payload.data into {x,y,label,size,color} points using configured fields (no aggregation step — distinct from std-graphs). Drop into a dashboard alongside std-stats / std-graphs for two-numeric correlation views."
+
+orbital ScatterItemOrbital {
+  type ScatterPoint = {
+    x     : number!
+    y     : number!
+    label : string
+    size  : number
+    color : string
+  }
+
+  entity ScatterItem [runtime] {
+    id     : string!
+    points : [ScatterPoint] = []
+  }
+
+  trait ScatterItemPlot -> ScatterItem [interaction, instance] {
+    initial: idle
+    config {
+      xField     : string = "x"
+      yField     : string = "y"
+      labelField : string = ""
+      sizeField  : string = ""
+      colorField : string = ""
+      title      : string = "Correlation"
+      subtitle   : string = "x vs y"
+      height     : number = 280
+      drillEvent : string = ""
+    }
+    state idle {
+      INIT -> idle
+        ;; Pre-seed with a small sample so standalone previews render
+        ;; something visible. ITEMS_LOADED replaces this with real data.
+        (set @entity.points [
+          { x: 12, y: 24, label: "A", size: 8, color: "" },
+          { x: 28, y: 42, label: "B", size: 6, color: "" },
+          { x: 45, y: 18, label: "C", size: 10, color: "" },
+          { x: 60, y: 55, label: "D", size: 7, color: "" },
+          { x: 78, y: 38, label: "E", size: 9, color: "" }
+        ])
+        (render-ui main { type: "chart", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
+      ITEMS_LOADED -> idle
+        (set @entity.points (array/map @payload.data ["fn", "row", {
+          x:     (object/get @row @config.xField     0),
+          y:     (object/get @row @config.yField     0),
+          label: (object/get @row @config.labelField ""),
+          size:  (object/get @row @config.sizeField  5),
+          color: (object/get @row @config.colorField "")
+        }]))
+        (render-ui main { type: "chart", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
+    }
+    listens {
+      ITEMS_LOADED { data : [object], totalCount : number }
+    }
+  }
+  page "/scatteritems" as ScatterItemPlotPage -> ScatterItemPlot
+}
