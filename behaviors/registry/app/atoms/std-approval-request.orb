@@ -1,6 +1,6 @@
 {
   "name": "std-approval-request",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "std-approval-request — generic approval step for routing a target (timesheet, expense, PTO, etc.) through requestor + approver decisions. Lists requests in `browsing`; opens detail in `viewing_single` with Approve / Reject / Request Info / Withdraw actions.",
   "orbitals": [
     {
@@ -205,6 +205,32 @@
               ]
             },
             {
+              "event": "EDIT_COMMENT",
+              "payloadSchema": [
+                {
+                  "name": "comment",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SUBMIT_REJECTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "comment",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CANCEL_REJECTION"
+            },
+            {
               "event": "ApprovalRequestLoaded",
               "payloadSchema": [
                 {
@@ -238,6 +264,9 @@
               },
               {
                 "name": "viewing_single"
+              },
+              {
+                "name": "rejecting"
               },
               {
                 "name": "error"
@@ -334,6 +363,35 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "EDIT_COMMENT",
+                "name": "Edit Comment",
+                "payloadSchema": [
+                  {
+                    "name": "comment",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT_REJECTION",
+                "name": "Submit Rejection",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "comment",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL_REJECTION",
+                "name": "Cancel Rejection"
               }
             ],
             "transitions": [
@@ -347,8 +405,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ],
@@ -356,22 +414,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "content": "Loading approval requests…",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading approval requests…"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -385,67 +443,80 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "name": "check-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "check-circle"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "icon": "inbox",
-                              "value": "@payload.data.length",
                               "type": "stat-display",
+                              "value": "@payload.data.length",
                               "label": "Total requests"
                             },
                             {
                               "value": "14",
-                              "icon": "clock",
                               "type": "stat-display",
-                              "label": "Pending"
+                              "label": "Pending",
+                              "icon": "clock"
                             },
                             {
+                              "type": "stat-display",
+                              "value": "82%",
                               "icon": "check-circle",
-                              "type": "stat-display",
-                              "label": "Approved",
-                              "value": "82%"
+                              "label": "Approved"
                             },
                             {
-                              "label": "Avg cycle",
-                              "value": "1.4 days",
                               "type": "stat-display",
-                              "icon": "timer"
+                              "icon": "timer",
+                              "value": "1.4 days",
+                              "label": "Avg cycle"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "event": "OPEN_REQUEST",
+                              "icon": "arrow-right",
+                              "label": "Open"
+                            },
+                            {
+                              "label": "Withdraw",
+                              "variant": "danger",
+                              "event": "WITHDRAW"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "label": "Title",
+                              "variant": "caption",
                               "name": "title",
-                              "variant": "caption"
+                              "label": "Title"
                             },
                             {
                               "name": "targetType",
@@ -453,49 +524,36 @@
                               "variant": "badge"
                             },
                             {
-                              "label": "Requested By",
                               "variant": "caption",
-                              "name": "requestedBy"
+                              "name": "requestedBy",
+                              "label": "Requested By"
                             },
                             {
-                              "name": "assignedApprover",
                               "variant": "caption",
+                              "name": "assignedApprover",
                               "label": "Approver"
                             },
                             {
-                              "name": "approverDecision",
+                              "label": "Decision",
                               "variant": "badge",
-                              "label": "Decision"
+                              "name": "approverDecision"
                             },
                             {
-                              "label": "Status",
+                              "name": "status",
                               "variant": "badge",
-                              "name": "status"
+                              "label": "Status"
                             },
                             {
                               "label": "Decided",
-                              "variant": "caption",
-                              "name": "decidedAt"
+                              "name": "decidedAt",
+                              "variant": "caption"
                             }
-                          ],
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "icon": "arrow-right",
-                              "event": "OPEN_REQUEST",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "WITHDRAW",
-                              "label": "Withdraw",
-                              "variant": "danger"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -580,94 +638,91 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "variant": "ghost",
                               "type": "button",
-                              "label": "Back",
-                              "action": "CLOSE_REQUEST"
+                              "action": "CLOSE_REQUEST",
+                              "variant": "ghost",
+                              "label": "Back"
                             },
                             {
-                              "name": "check-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "check-circle"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@entity.title",
                               "type": "typography",
-                              "content": "@entity.title"
+                              "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "variant": "default",
+                              "type": "badge",
                               "label": "@entity.status"
                             },
                             {
                               "variant": "primary",
-                              "label": "@entity.approverDecision",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.approverDecision"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "direction": "vertical",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
+                                  "color": "muted",
                                   "content": "Target",
-                                  "color": "muted"
+                                  "variant": "caption"
                                 },
                                 {
                                   "content": "@entity.targetType",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 },
                                 {
+                                  "variant": "body",
                                   "content": "@entity.targetId",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "Requested by",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
                                   "content": "@entity.requestedBy"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "caption",
@@ -676,29 +731,32 @@
                                   "content": "Approver"
                                 },
                                 {
-                                  "content": "@entity.assignedApprover",
+                                  "type": "typography",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "content": "@entity.assignedApprover"
                                 }
-                              ]
-                            },
-                            {
+                              ],
                               "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
                               "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "color": "muted",
+                                  "content": "Comment",
                                   "type": "typography",
-                                  "content": "Comment"
+                                  "color": "muted",
+                                  "variant": "caption"
                                 },
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.comment"
+                                  "content": "@entity.comment",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             }
                           ]
                         },
@@ -706,70 +764,70 @@
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
+                              "label": "Requested at",
                               "icon": "calendar",
                               "type": "stat-display",
-                              "label": "Requested at",
                               "value": "@entity.requestedAt"
                             },
                             {
-                              "label": "Decided at",
-                              "icon": "calendar-check",
                               "type": "stat-display",
-                              "value": "@entity.decidedAt"
+                              "label": "Decided at",
+                              "value": "@entity.decidedAt",
+                              "icon": "calendar-check"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          "type": "simple-grid"
                         },
                         {
                           "align": "center",
-                          "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Approve",
-                              "type": "button",
-                              "action": "APPROVE",
                               "variant": "primary",
+                              "label": "Approve",
+                              "action": "APPROVE",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "REJECT",
                               "variant": "danger",
+                              "action": "REJECT",
+                              "type": "button",
                               "label": "Reject"
                             },
                             {
+                              "action": "REQUEST_INFO",
+                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "REQUEST_INFO",
-                              "label": "Request Info",
                               "type": "button",
-                              "variant": "secondary"
+                              "label": "Request Info"
                             },
                             {
-                              "action": "WITHDRAW",
-                              "type": "button",
                               "label": "Withdraw",
+                              "type": "button",
+                              "variant": "ghost",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "ghost"
+                              "action": "WITHDRAW"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
                       ],
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -789,8 +847,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -799,21 +857,21 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Withdrawing request…",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Withdrawing request…"
                         }
-                      ],
-                      "className": "py-12",
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -839,8 +897,6 @@
                     {
                       "type": "stack",
                       "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -848,11 +904,13 @@
                         {
                           "content": "Loading approval requests…",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -886,17 +944,17 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Recording approval…",
                           "variant": "caption",
+                          "content": "Recording approval…",
+                          "type": "typography",
                           "color": "muted"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "align": "center",
+                      "direction": "vertical",
                       "className": "py-12",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -905,6 +963,11 @@
                 "from": "viewing_single",
                 "to": "loading",
                 "event": "REJECT",
+                "guard": [
+                  "=",
+                  "@config.requireCommentOnReject",
+                  false
+                ],
                 "effects": [
                   [
                     "set",
@@ -916,8 +979,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -925,22 +988,111 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Recording rejection…",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Recording rejection…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "rejecting",
+                "event": "REJECT",
+                "guard": [
+                  "=",
+                  "@config.requireCommentOnReject",
+                  true
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.comment",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "x-circle"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Reject request",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Provide a reason for rejecting this request.",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "placeholder": "Reason for rejection",
+                          "action": "EDIT_COMMENT",
+                          "type": "textarea"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "icon": "send",
+                              "action": "SUBMIT_REJECTION",
+                              "variant": "danger",
+                              "label": "Submit rejection",
+                              "actionPayload": {
+                                "comment": "@entity.comment",
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "icon": "x",
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Cancel",
+                              "action": "CANCEL_REJECTION"
+                            }
+                          ],
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -969,22 +1121,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Requesting more info…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -993,6 +1145,62 @@
                 "from": "viewing_single",
                 "to": "loading",
                 "event": "WITHDRAW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Withdrawing request…"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "rejecting",
+                "to": "rejecting",
+                "event": "EDIT_COMMENT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.comment",
+                    "@payload.comment"
+                  ]
+                ]
+              },
+              {
+                "from": "rejecting",
+                "to": "loading",
+                "event": "SUBMIT_REJECTION",
                 "effects": [
                   [
                     "set",
@@ -1013,22 +1221,61 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Withdrawing request…",
                           "type": "typography",
+                          "color": "muted",
+                          "content": "Recording rejection…",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "rejecting",
+                "to": "loading",
+                "event": "CANCEL_REJECTION",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "gap": "md",
-                      "align": "center"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading approval requests…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1064,6 +1311,10 @@
             "title": {
               "type": "string",
               "default": "Approval Requests"
+            },
+            "requireCommentOnReject": {
+              "type": "boolean",
+              "default": false
             }
           },
           "scope": "collection"

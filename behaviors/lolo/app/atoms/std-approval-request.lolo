@@ -1,4 +1,4 @@
-app std-approval-request "1.0.0"
+app std-approval-request "1.1.0"
 "std-approval-request — generic approval step for routing a target (timesheet, expense, PTO, etc.) through requestor + approver decisions. Lists requests in `browsing`; opens detail in `viewing_single` with Approve / Reject / Request Info / Withdraw actions."
 
 orbital ApprovalRequestOrbital {
@@ -22,7 +22,8 @@ orbital ApprovalRequestOrbital {
 
   trait ApprovalRequestPipeline -> ApprovalRequest [interaction, collection] {
     config {
-      title : string = "Approval Requests"
+      title                  : string  = "Approval Requests"
+      requireCommentOnReject : boolean = false
     }
     initial: loading
     state loading {
@@ -61,10 +62,14 @@ orbital ApprovalRequestOrbital {
         (set @entity.id @payload.id)
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording approval…" }] })
-      REJECT -> loading
+      REJECT -> loading when (= @config.requireCommentOnReject false)
         (set @entity.id @payload.id)
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording rejection…" }] })
+      REJECT -> rejecting when (= @config.requireCommentOnReject true)
+        (set @entity.id @payload.id)
+        (set @entity.comment "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle" }, { type: "typography", content: "Reject request", variant: "h3" }] }, { type: "divider" }, { type: "typography", variant: "caption", color: "muted", content: "Provide a reason for rejecting this request." }, { type: "textarea", placeholder: "Reason for rejection", action: "EDIT_COMMENT" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Submit rejection", variant: "danger", action: "SUBMIT_REJECTION", actionPayload: { id: "@entity.id", comment: "@entity.comment" }, icon: "send" }, { type: "button", label: "Cancel", variant: "ghost", action: "CANCEL_REJECTION", icon: "x" }] }] })
       REQUEST_INFO -> loading
         (set @entity.id @payload.id)
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
@@ -73,6 +78,17 @@ orbital ApprovalRequestOrbital {
         (set @entity.id @payload.id)
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Withdrawing request…" }] })
+    }
+    state rejecting {
+      EDIT_COMMENT -> rejecting
+        (set @entity.comment @payload.comment)
+      SUBMIT_REJECTION -> loading
+        (set @entity.id @payload.id)
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording rejection…" }] })
+      CANCEL_REJECTION -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading approval requests…" }] })
     }
     state error {
       INIT -> loading
@@ -85,7 +101,10 @@ orbital ApprovalRequestOrbital {
       APPROVE        { id : string! }
       REJECT         { id : string! }
       REQUEST_INFO   { id : string! }
-      WITHDRAW       { id : string! }
+      WITHDRAW         { id : string! }
+      EDIT_COMMENT     { comment : string }
+      SUBMIT_REJECTION { id : string!, comment : string }
+      CANCEL_REJECTION { }
       ApprovalRequestLoaded      { data : [ApprovalRequest], totalCount : number }
       ApprovalRequestLoadFailed  { message : string }
     }
@@ -95,7 +114,10 @@ orbital ApprovalRequestOrbital {
       APPROVE        { id : string! }
       REJECT         { id : string! }
       REQUEST_INFO   { id : string! }
-      WITHDRAW       { id : string! }
+      WITHDRAW         { id : string! }
+      EDIT_COMMENT     { comment : string }
+      SUBMIT_REJECTION { id : string!, comment : string }
+      CANCEL_REJECTION { }
       ApprovalRequestLoaded      { data : [ApprovalRequest], totalCount : number }
       ApprovalRequestLoadFailed  { message : string }
     }
