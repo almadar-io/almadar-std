@@ -19,7 +19,21 @@
             "type": "array",
             "default": [],
             "items": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string"
+                }
+              }
             }
           }
         ]
@@ -93,37 +107,37 @@
                     "render-ui",
                     "main",
                     {
-                      "children": {
-                        "size": "sm",
-                        "action": "OPEN_EXPORT",
-                        "variant": "ghost",
-                        "icon": "download",
-                        "label": "Export",
-                        "type": "button"
-                      },
-                      "type": "popover",
-                      "position": "bottom",
                       "content": {
-                        "type": "data-list",
                         "fields": [],
+                        "type": "data-list",
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
-                            "icon": "file-down",
-                            "size": "sm",
                             "type": "button",
-                            "action": "@config.event",
-                            "variant": "ghost",
                             "label": "@fmt.label",
+                            "variant": "ghost",
+                            "size": "sm",
                             "actionPayload": {
                               "tileId": "@config.tileId",
                               "format": "@fmt.format"
-                            }
+                            },
+                            "action": "@config.event",
+                            "icon": "file-down"
                           }
                         ],
                         "entity": "@entity.options"
-                      }
+                      },
+                      "children": {
+                        "action": "OPEN_EXPORT",
+                        "icon": "download",
+                        "variant": "ghost",
+                        "type": "button",
+                        "size": "sm",
+                        "label": "Export"
+                      },
+                      "position": "bottom",
+                      "type": "popover"
                     }
                   ]
                 ]
@@ -164,7 +178,7 @@
               "default": "EXPORT_REQUESTED"
             },
             "formats": {
-              "type": "[FormatOption]",
+              "type": "[object]",
               "default": [
                 {
                   "id": "csv",
@@ -172,14 +186,14 @@
                   "label": "CSV"
                 },
                 {
-                  "id": "xlsx",
                   "label": "XLSX",
-                  "format": "xlsx"
+                  "format": "xlsx",
+                  "id": "xlsx"
                 },
                 {
+                  "label": "PDF",
                   "id": "pdf",
-                  "format": "pdf",
-                  "label": "PDF"
+                  "format": "pdf"
                 }
               ]
             }
