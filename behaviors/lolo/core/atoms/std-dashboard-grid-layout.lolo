@@ -1,5 +1,5 @@
-app std-dashboard-grid-layout "3.0.0"
-"std-dashboard-grid-layout — dashboard-layout chrome with 12 numbered tile slots laid out in a responsive simple-grid. Slots default to an internal EmptyTile so callers only bind the tiles they actually need via traitOverrides. Slot count covers the 95th-percentile dashboard (≈3 KPIs + 6 charts + 2 tables + 1 filter row). For agent-authored dashboards, append tile traits via extraTraits[] and bind them to slots via traitOverrides.DashboardGridLayout.config.tileXTrait."
+app std-dashboard-grid-layout "4.0.0"
+"std-dashboard-grid-layout — dashboard-layout chrome. Filter row at top (4 slots, horizontal toolbar), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides. Filter row is for interactive toolbar traits (filters, date-range, search, export); tile grid is for data representation (KPIs, charts, tables)."
 
 orbital DashboardGridLayoutOrbital {
   entity DashboardGridLayoutState [runtime] {
@@ -17,6 +17,10 @@ orbital DashboardGridLayoutOrbital {
   trait DashboardGridLayout -> DashboardGridLayoutState [interaction, instance] {
     initial: composing
     config {
+      filter1Trait : trait = "@trait.EmptyTile"
+      filter2Trait : trait = "@trait.EmptyTile"
+      filter3Trait : trait = "@trait.EmptyTile"
+      filter4Trait : trait = "@trait.EmptyTile"
       tile1Trait  : trait = "@trait.EmptyTile"
       tile2Trait  : trait = "@trait.EmptyTile"
       tile3Trait  : trait = "@trait.EmptyTile"
@@ -36,19 +40,28 @@ orbital DashboardGridLayoutOrbital {
     state composing {
       INIT -> composing
         (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", children: [
-          { type: "simple-grid", minChildWidth: "@config.minTileWidth", children: [
-            "@config.tile1Trait",
-            "@config.tile2Trait",
-            "@config.tile3Trait",
-            "@config.tile4Trait",
-            "@config.tile5Trait",
-            "@config.tile6Trait",
-            "@config.tile7Trait",
-            "@config.tile8Trait",
-            "@config.tile9Trait",
-            "@config.tile10Trait",
-            "@config.tile11Trait",
-            "@config.tile12Trait"
+          { type: "stack", direction: "vertical", gap: "md", children: [
+            { type: "stack", direction: "horizontal", gap: "md", wrap: true, align: "stretch", children: [
+              "@config.filter1Trait",
+              "@config.filter2Trait",
+              "@config.filter3Trait",
+              "@config.filter4Trait"
+            ]},
+            { type: "divider" },
+            { type: "simple-grid", minChildWidth: "@config.minTileWidth", children: [
+              "@config.tile1Trait",
+              "@config.tile2Trait",
+              "@config.tile3Trait",
+              "@config.tile4Trait",
+              "@config.tile5Trait",
+              "@config.tile6Trait",
+              "@config.tile7Trait",
+              "@config.tile8Trait",
+              "@config.tile9Trait",
+              "@config.tile10Trait",
+              "@config.tile11Trait",
+              "@config.tile12Trait"
+            ]}
           ]}
         ]})
     }

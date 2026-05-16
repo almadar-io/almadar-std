@@ -1,7 +1,7 @@
 {
   "name": "std-dashboard-grid-layout",
-  "version": "3.0.0",
-  "description": "std-dashboard-grid-layout — dashboard-layout chrome with 12 numbered tile slots laid out in a responsive simple-grid. Slots default to an internal EmptyTile so callers only bind the tiles they actually need via traitOverrides. Slot count covers the 95th-percentile dashboard (≈3 KPIs + 6 charts + 2 tables + 1 filter row). For agent-authored dashboards, append tile traits via extraTraits[] and bind them to slots via traitOverrides.DashboardGridLayout.config.tileXTrait.",
+  "version": "4.0.0",
+  "description": "std-dashboard-grid-layout — dashboard-layout chrome. Filter row at top (4 slots, horizontal toolbar), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides. Filter row is for interactive toolbar traits (filters, date-range, search, export); tile grid is for data representation (KPIs, charts, tables).",
   "orbitals": [
     {
       "name": "DashboardGridLayoutOrbital",
@@ -80,26 +80,49 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": "@config.navItems",
                       "type": "dashboard-layout",
                       "appName": "@config.appName",
+                      "navItems": "@config.navItems",
                       "children": [
                         {
-                          "minChildWidth": "@config.minTileWidth",
-                          "type": "simple-grid",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
-                            "@config.tile1Trait",
-                            "@config.tile2Trait",
-                            "@config.tile3Trait",
-                            "@config.tile4Trait",
-                            "@config.tile5Trait",
-                            "@config.tile6Trait",
-                            "@config.tile7Trait",
-                            "@config.tile8Trait",
-                            "@config.tile9Trait",
-                            "@config.tile10Trait",
-                            "@config.tile11Trait",
-                            "@config.tile12Trait"
+                            {
+                              "gap": "md",
+                              "children": [
+                                "@config.filter1Trait",
+                                "@config.filter2Trait",
+                                "@config.filter3Trait",
+                                "@config.filter4Trait"
+                              ],
+                              "wrap": true,
+                              "direction": "horizontal",
+                              "align": "stretch",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "children": [
+                                "@config.tile1Trait",
+                                "@config.tile2Trait",
+                                "@config.tile3Trait",
+                                "@config.tile4Trait",
+                                "@config.tile5Trait",
+                                "@config.tile6Trait",
+                                "@config.tile7Trait",
+                                "@config.tile8Trait",
+                                "@config.tile9Trait",
+                                "@config.tile10Trait",
+                                "@config.tile11Trait",
+                                "@config.tile12Trait"
+                              ],
+                              "minChildWidth": "@config.minTileWidth",
+                              "type": "simple-grid"
+                            }
                           ]
                         }
                       ]
@@ -110,11 +133,15 @@
             ]
           },
           "config": {
-            "appName": {
-              "type": "string",
-              "default": "Dashboard"
+            "minTileWidth": {
+              "type": "number",
+              "default": 320.0
             },
             "tile2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "filter3Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile"
             },
@@ -122,33 +149,21 @@
               "type": "trait",
               "default": "@trait.EmptyTile"
             },
-            "tile8Trait": {
+            "tile11Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile"
             },
-            "tile7Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile"
+            "appName": {
+              "type": "string",
+              "default": "Dashboard"
             },
             "tile1Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile"
-            },
-            "tile10Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile"
-            },
-            "tile12Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile"
             },
             "tile3Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile"
-            },
-            "minTileWidth": {
-              "type": "number",
-              "default": 320.0
             },
             "tile5Trait": {
               "type": "trait",
@@ -158,21 +173,45 @@
               "type": "trait",
               "default": "@trait.EmptyTile"
             },
+            "tile10Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "filter2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile7Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
             "navItems": {
               "type": "[object]",
               "default": [
                 {
-                  "icon": "bar-chart-3",
                   "href": "/dashboard",
+                  "icon": "bar-chart-3",
                   "label": "Dashboard"
                 }
               ]
             },
-            "tile11Trait": {
+            "tile12Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "tile8Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "filter4Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile"
             },
             "tile4Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile"
+            },
+            "filter1Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile"
             }
