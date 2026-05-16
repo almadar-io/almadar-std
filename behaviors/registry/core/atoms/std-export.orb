@@ -1,12 +1,12 @@
 {
   "name": "std-export",
-  "version": "2.0.0",
-  "description": "std-export — a row of export-format buttons (CSV / PNG / PDF / XLSX). Each format is a FormatOption row; the trait fetches the FormatOption collection on INIT so data-list iterates over a real entity collection (no nested sub-fields, no primitive arrays). EXPORT_REQUESTED carries { format, tileId } so the host or a sibling orbital can generate the actual file. This atom surfaces user intent only — it never reads or transforms underlying data.",
+  "version": "3.0.0",
+  "description": "std-export — a row of export-format buttons. Predefined CSV/XLSX/PDF defaults; caller can override via config.formats. Emits EXPORT_REQUESTED { format, tileId } on the bus; host or sibling orbital generates the file.",
   "orbitals": [
     {
       "name": "ExportOrbital",
       "entity": {
-        "name": "FormatOption",
+        "name": "ExportPanel",
         "persistence": "runtime",
         "fields": [
           {
@@ -15,14 +15,12 @@
             "required": true
           },
           {
-            "name": "format",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "label",
-            "type": "string",
-            "required": true
+            "name": "options",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
           }
         ]
       },
@@ -30,34 +28,8 @@
         {
           "name": "ExportMenu",
           "category": "interaction",
-          "linkedEntity": "FormatOption",
+          "linkedEntity": "ExportPanel",
           "emits": [
-            {
-              "event": "FormatsLoaded",
-              "description": "Fired when format options are loaded",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[FormatOption]"
-                }
-              ]
-            },
-            {
-              "event": "FormatsLoadFailed",
-              "description": "Fired when format options fail to load",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
             {
               "event": "EXPORT_REQUESTED",
               "scope": "external",
@@ -77,41 +49,14 @@
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "idle",
                 "isInitial": true
-              },
-              {
-                "name": "ready"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "FormatsLoaded",
-                "name": "Formats loaded",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[FormatOption]"
-                  }
-                ]
-              },
-              {
-                "key": "FormatsLoadFailed",
-                "name": "Formats load failed",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "key": "EXPORT_REQUESTED",
@@ -131,86 +76,50 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
+                "from": "idle",
+                "to": "idle",
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "FormatOption",
-                    {
-                      "emit": {
-                        "failure": "FormatsLoadFailed",
-                        "success": "FormatsLoaded"
-                      }
-                    }
+                    "set",
+                    "@entity.options",
+                    "@config.formats"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "ready",
-                "event": "FormatsLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "entity": "@payload.data",
+                      "fields": [],
+                      "type": "data-list",
                       "renderItem": [
                         "fn",
                         "fmt",
                         {
+                          "size": "sm",
                           "type": "button",
                           "label": "@fmt.label",
-                          "variant": "ghost",
-                          "size": "sm",
+                          "variant": "outline",
                           "action": "@config.event",
                           "actionPayload": {
-                            "format": "@fmt.format",
-                            "tileId": "@config.tileId"
+                            "tileId": "@config.tileId",
+                            "format": "@fmt.format"
                           }
                         }
                       ],
-                      "fields": [],
-                      "type": "data-list"
+                      "entity": "@entity.options"
                     }
                   ]
                 ]
               },
               {
-                "from": "loading",
-                "to": "ready",
-                "event": "FormatsLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "ready",
-                "to": "ready",
+                "from": "idle",
+                "to": "idle",
                 "event": "EXPORT_REQUESTED",
                 "effects": [
                   [
                     "set",
-                    "@entity.format",
-                    "@payload.format"
+                    "@entity.options",
+                    "@entity.options"
                   ]
                 ]
               }
@@ -224,9 +133,29 @@
             "event": {
               "type": "string",
               "default": "EXPORT_REQUESTED"
+            },
+            "formats": {
+              "type": "[FormatOption]",
+              "default": [
+                {
+                  "id": "csv",
+                  "label": "CSV",
+                  "format": "csv"
+                },
+                {
+                  "id": "xlsx",
+                  "label": "XLSX",
+                  "format": "xlsx"
+                },
+                {
+                  "id": "pdf",
+                  "label": "PDF",
+                  "format": "pdf"
+                }
+              ]
             }
           },
-          "scope": "collection"
+          "scope": "instance"
         }
       ],
       "pages": [

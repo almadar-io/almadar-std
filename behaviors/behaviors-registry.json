@@ -1,5 +1,5 @@
 {
-  "$generated": "2026-05-16T00:34:00.118Z",
+  "$generated": "2026-05-16T07:12:40.568Z",
   "$source": "tools/behavior-registry-sync",
   "totalBehaviors": 214,
   "atoms": 145,
@@ -30136,16 +30136,16 @@
       "topic": "core",
       "family": "core",
       "layer": "UI Patterns",
-      "description": "std-export — a row of export-format buttons (CSV / PNG / PDF / XLSX). Each format is a FormatOption row; the trait fetches the FormatOption collection on INIT so data-list iterates over a real entity collection (no nested sub-fields, no primitive arrays). EXPORT_REQUESTED carries { format, tileId } so the host or a sibling orbital can generate the actual file. This atom surfaces user intent only — it never reads or transforms underlying data.",
+      "description": "std-export — a row of export-format buttons. Predefined CSV/XLSX/PDF defaults; caller can override via config.formats. Emits EXPORT_REQUESTED { format, tileId } on the bus; host or sibling orbital generates the file.",
       "defaultOrbitalName": "ExportOrbital",
-      "statePattern": "loading, ready",
+      "statePattern": "idle",
       "complexity": {
-        "states": 2,
-        "events": 4,
-        "transitions": 4
+        "states": 1,
+        "events": 2,
+        "transitions": 2
       },
       "defaultEntity": {
-        "name": "FormatOption",
+        "name": "ExportPanel",
         "persistence": "runtime",
         "fields": [
           {
@@ -30154,21 +30154,16 @@
             "required": true
           },
           {
-            "name": "format",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "label",
-            "type": "string",
-            "required": true
+            "name": "options",
+            "type": "array",
+            "default": []
           }
         ]
       },
       "defaultLabels": {
-        "title": "FormatOptions",
-        "entitySingular": "FormatOption",
-        "entityPlural": "FormatOptions"
+        "title": "ExportPanels",
+        "entitySingular": "ExportPanel",
+        "entityPlural": "ExportPanels"
       },
       "defaultIcons": [],
       "composableWith": [
@@ -30245,8 +30240,6 @@
         "std-wizard-form"
       ],
       "connectableEvents": [
-        "FormatsLoaded",
-        "FormatsLoadFailed",
         "EXPORT_REQUESTED"
       ],
       "eventPayloads": {}
