@@ -15,6 +15,11 @@
 import type { OrbitalDefinition, TraitReference } from '@almadar/core/types';
 
 import {
+  stdAccountingJournalOrbital,
+  StdAccountingJournalOrbitalManifest,
+  isStdAccountingJournalOrbitalParams,
+} from './app/organisms/std-accounting.js';
+import {
   stdAgentAssistantAssistantOrbital,
   StdAgentAssistantAssistantOrbitalManifest,
   isStdAgentAssistantAssistantOrbitalParams,
@@ -227,6 +232,11 @@ import {
   isStdCrmNoteOrbitalParams,
 } from './app/organisms/std-crm.js';
 import {
+  stdCustomerSuccessCustomerAccountOrbital,
+  StdCustomerSuccessCustomerAccountOrbitalManifest,
+  isStdCustomerSuccessCustomerAccountOrbitalParams,
+} from './app/organisms/std-customer-success.js';
+import {
   stdDevopsDashboardServiceNodeOrbital,
   StdDevopsDashboardServiceNodeOrbitalManifest,
   isStdDevopsDashboardServiceNodeOrbitalParams,
@@ -241,6 +251,11 @@ import {
   isStdDevopsDashboardSystemMetricOrbitalParams,
 } from './app/organisms/std-devops-dashboard.js';
 import {
+  stdDocumentMgmtDocumentOrbital,
+  StdDocumentMgmtDocumentOrbitalManifest,
+  isStdDocumentMgmtDocumentOrbitalParams,
+} from './app/organisms/std-document-mgmt.js';
+import {
   stdEcommerceProductOrbital,
   StdEcommerceProductOrbitalManifest,
   isStdEcommerceProductOrbitalParams,
@@ -254,6 +269,11 @@ import {
   StdEcommerceOrderRecordOrbitalManifest,
   isStdEcommerceOrderRecordOrbitalParams,
 } from './app/organisms/std-ecommerce.js';
+import {
+  stdEmbeddedDashboardDashboardOrbital,
+  StdEmbeddedDashboardDashboardOrbitalManifest,
+  isStdEmbeddedDashboardDashboardOrbitalParams,
+} from './app/organisms/std-embedded-dashboard.js';
 import {
   stdEventTicketingEventOrbital,
   StdEventTicketingEventOrbitalManifest,
@@ -456,6 +476,11 @@ import {
   isStdLmsProgressOrbitalParams,
 } from './app/organisms/std-lms.js';
 import {
+  stdMarketingCampaignCampaignOrbital,
+  StdMarketingCampaignCampaignOrbitalManifest,
+  isStdMarketingCampaignCampaignOrbitalParams,
+} from './app/organisms/std-marketing-campaign.js';
+import {
   stdMarketplaceVendorOrbital,
   StdMarketplaceVendorOrbitalManifest,
   isStdMarketplaceVendorOrbitalParams,
@@ -466,6 +491,11 @@ import {
   StdMarketplaceOrderOrbitalManifest,
   isStdMarketplaceOrderOrbitalParams,
 } from './app/organisms/std-marketplace.js';
+import {
+  stdNonprofitDonationsCampaignOrbital,
+  StdNonprofitDonationsCampaignOrbitalManifest,
+  isStdNonprofitDonationsCampaignOrbitalParams,
+} from './app/organisms/std-nonprofit-donations.js';
 import {
   stdNotesNoteOrbital,
   StdNotesNoteOrbitalManifest,
@@ -664,6 +694,15 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
+  ['std-accounting::JournalOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAccountingJournalOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-accounting::JournalOrbital');
+      }
+      return stdAccountingJournalOrbital(p);
+    },
+    manifest: StdAccountingJournalOrbitalManifest,
+  }],
   ['std-agent-assistant::AssistantOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdAgentAssistantAssistantOrbitalParams(p)) {
@@ -1222,6 +1261,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdCrmNoteOrbitalManifest,
   }],
+  ['std-customer-success::CustomerAccountOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdCustomerSuccessCustomerAccountOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-customer-success::CustomerAccountOrbital');
+      }
+      return stdCustomerSuccessCustomerAccountOrbital(p);
+    },
+    manifest: StdCustomerSuccessCustomerAccountOrbitalManifest,
+  }],
   ['std-devops-dashboard::ServiceNodeOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdDevopsDashboardServiceNodeOrbitalParams(p)) {
@@ -1258,6 +1306,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdDevopsDashboardSystemMetricOrbitalManifest,
   }],
+  ['std-document-mgmt::DocumentOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdDocumentMgmtDocumentOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-document-mgmt::DocumentOrbital');
+      }
+      return stdDocumentMgmtDocumentOrbital(p);
+    },
+    manifest: StdDocumentMgmtDocumentOrbitalManifest,
+  }],
   ['std-ecommerce::ProductOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdEcommerceProductOrbitalParams(p)) {
@@ -1293,6 +1350,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdEcommerceOrderRecordOrbital(p);
     },
     manifest: StdEcommerceOrderRecordOrbitalManifest,
+  }],
+  ['std-embedded-dashboard::DashboardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdEmbeddedDashboardDashboardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-embedded-dashboard::DashboardOrbital');
+      }
+      return stdEmbeddedDashboardDashboardOrbital(p);
+    },
+    manifest: StdEmbeddedDashboardDashboardOrbitalManifest,
   }],
   ['std-event-ticketing::EventOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1807,6 +1873,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLmsProgressOrbitalManifest,
   }],
+  ['std-marketing-campaign::CampaignOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdMarketingCampaignCampaignOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-marketing-campaign::CampaignOrbital');
+      }
+      return stdMarketingCampaignCampaignOrbital(p);
+    },
+    manifest: StdMarketingCampaignCampaignOrbitalManifest,
+  }],
   ['std-marketplace::VendorOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdMarketplaceVendorOrbitalParams(p)) {
@@ -1833,6 +1908,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdMarketplaceOrderOrbital(p);
     },
     manifest: StdMarketplaceOrderOrbitalManifest,
+  }],
+  ['std-nonprofit-donations::CampaignOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdNonprofitDonationsCampaignOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-nonprofit-donations::CampaignOrbital');
+      }
+      return stdNonprofitDonationsCampaignOrbital(p);
+    },
+    manifest: StdNonprofitDonationsCampaignOrbitalManifest,
   }],
   ['std-notes::NoteOrbital', {
     factory: (p: object): OrbitalDefinition => {

@@ -35,408 +35,1231 @@ export interface StdDocumentMgmtConfig {
 }
 
 /**
- * Params for the std-document-mgmt descriptor helpers.
+ * Tunable params for the DocumentOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Document — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdDocumentMgmtParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdDocumentMgmtDocumentOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdDocumentMgmtConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'DocumentAppLayout' | 'DocumentSearch' | 'DocumentFilter' | 'DocumentStats' | 'DocumentGraphs' | 'DocumentBrowseList' | 'DocumentCreate' | 'DocumentEdit' | 'DocumentView' | 'DocumentDelete' | 'DocumentESignFlow' | 'DocumentESignCreate' | 'DocumentESignDelete' | 'DocumentESignPersistor' | 'DocumentFileStore' | 'DocumentESignRequest' | 'DocumentVersionHistory',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `DocumentMgmt.traits.DocumentAppLayout`. */
-export function stdDocumentMgmtDocumentAppLayoutTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentCatalog`. */
-export function stdDocumentMgmtDocumentCatalogTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentSearch`. */
-export function stdDocumentMgmtDocumentSearchTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentFilter`. */
-export function stdDocumentMgmtDocumentFilterTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentStats`. */
-export function stdDocumentMgmtDocumentStatsTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentGraphs`. */
-export function stdDocumentMgmtDocumentGraphsTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentBrowseList`. */
-export function stdDocumentMgmtDocumentBrowseListTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentCreate`. */
-export function stdDocumentMgmtDocumentCreateTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentEdit`. */
-export function stdDocumentMgmtDocumentEditTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentView`. */
-export function stdDocumentMgmtDocumentViewTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentDelete`. */
-export function stdDocumentMgmtDocumentDeleteTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentESignFlow`. */
-export function stdDocumentMgmtDocumentESignFlowTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentESignFlow`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentESignCreate`. */
-export function stdDocumentMgmtDocumentESignCreateTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentESignCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentESignDelete`. */
-export function stdDocumentMgmtDocumentESignDeleteTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentESignDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentESignPersistor`. */
-export function stdDocumentMgmtDocumentESignPersistorTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentESignPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentFileStore`. */
-export function stdDocumentMgmtDocumentFileStoreTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentFileStore`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentESignRequest`. */
-export function stdDocumentMgmtDocumentESignRequestTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentESignRequest`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentVersionHistory`. */
-export function stdDocumentMgmtDocumentVersionHistoryTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentVersionHistory`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `DocumentMgmt.traits.DocumentPersistor`. */
-export function stdDocumentMgmtDocumentPersistorTrait(params: StdDocumentMgmtParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.DocumentPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `DocumentMgmt.pages.DocumentsPage`. */
-export function stdDocumentMgmtDocumentsPagePage(params: StdDocumentMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.DocumentsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `DocumentMgmt.pages.DocumentsESignFlowPage`. */
-export function stdDocumentMgmtDocumentsESignFlowPagePage(params: StdDocumentMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.DocumentsESignFlowPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `DocumentMgmt.pages.DocumentsFilesPage`. */
-export function stdDocumentMgmtDocumentsFilesPagePage(params: StdDocumentMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.DocumentsFilesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `DocumentMgmt.pages.DocumentsSignaturesPage`. */
-export function stdDocumentMgmtDocumentsSignaturesPagePage(params: StdDocumentMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.DocumentsSignaturesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `DocumentMgmt.pages.DocumentsVersionsPage`. */
-export function stdDocumentMgmtDocumentsVersionsPagePage(params: StdDocumentMgmtParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.DocumentsVersionsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdDocumentMgmt(params: StdDocumentMgmtParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the DocumentOrbital orbital with consumer params. */
+export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Document';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'documents');
+  const built = makeOrbitalWithUses({
     name: 'DocumentOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-esign-flow',
+        'as': 'ESignFlow',
+      },
+      {
+        'from': 'std/behaviors/std-file-store',
+        'as': 'FileStore',
+      },
+      {
+        'from': 'std/behaviors/std-esign-request',
+        'as': 'ESignRequest',
+      },
+      {
+        'from': 'std/behaviors/std-version-history',
+        'as': 'VersionHistory',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'mimeType',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'sizeBytes',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'owner',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'archived',
+              'pending-review',
+            ],
+          },
+          {
+            'name': 'lastModified',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdDocumentMgmtDocumentAppLayoutTrait(params),
-      stdDocumentMgmtDocumentCatalogTrait(params),
-      stdDocumentMgmtDocumentSearchTrait(params),
-      stdDocumentMgmtDocumentFilterTrait(params),
-      stdDocumentMgmtDocumentStatsTrait(params),
-      stdDocumentMgmtDocumentGraphsTrait(params),
-      stdDocumentMgmtDocumentBrowseListTrait(params),
-      stdDocumentMgmtDocumentCreateTrait(params),
-      stdDocumentMgmtDocumentEditTrait(params),
-      stdDocumentMgmtDocumentViewTrait(params),
-      stdDocumentMgmtDocumentDeleteTrait(params),
-      stdDocumentMgmtDocumentESignFlowTrait(params),
-      stdDocumentMgmtDocumentESignCreateTrait(params),
-      stdDocumentMgmtDocumentESignDeleteTrait(params),
-      stdDocumentMgmtDocumentESignPersistorTrait(params),
-      stdDocumentMgmtDocumentFileStoreTrait(params),
-      stdDocumentMgmtDocumentESignRequestTrait(params),
-      stdDocumentMgmtDocumentVersionHistoryTrait(params),
-      stdDocumentMgmtDocumentPersistorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'DocumentAppLayout',
+        'config': {
+          'notificationClickEvent': 'DOCUMENT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.DocumentCatalog',
+          'navItems': [
+            {
+              'href': '/documents',
+              'icon': 'file-text',
+              'label': 'Documents',
+            },
+            {
+              'label': 'E-Sign Flow',
+              'icon': 'file-signature',
+              'href': '/esign-flow',
+            },
+            {
+              'href': '/files',
+              'icon': 'folder',
+              'label': 'Files',
+            },
+            {
+              'href': '/esign',
+              'label': 'Signatures',
+              'icon': 'pen-tool',
+            },
+            {
+              'icon': 'history',
+              'href': '/revisions/manage',
+              'label': 'Versions',
+            },
+          ],
+          'appName': 'Documents',
+          'searchEvent': 'DOCUMENT_SEARCH',
+          'notifications': [],
+        },
+        'events': {
+          'SEARCH': 'DOCUMENT_SEARCH',
+          'NOTIFY_CLICK': 'DOCUMENT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      {
+        'name': 'DocumentCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'DOCUMENT_SEARCH',
+            'triggers': 'DOCUMENT_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentAppLayout',
+            },
+          },
+          {
+            'event': 'DOCUMENT_NOTIFICATIONS_OPEN',
+            'triggers': 'DOCUMENT_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DOCUMENT_SEARCH',
+              'name': 'Document Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'DOCUMENT_NOTIFICATIONS_OPEN',
+              'name': 'Document Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'children': [
+                      {
+                        'gap': 'md',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'name': 'file-text',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Documents',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Document',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'children': [
+                          '@trait.DocumentSearch',
+                          '@trait.DocumentFilter',
+                        ],
+                        'align': 'center',
+                      },
+                      '@trait.DocumentStats',
+                      '@trait.DocumentGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.DocumentBrowseList',
+                    ],
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'DOCUMENT_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'DOCUMENT_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                      },
+                      {
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                      },
+                      {
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'label': 'Back to documents',
+                        'action': 'INIT',
+                      },
+                    ],
+                    'align': 'center',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'DocumentSearch',
+        'config': {
+          'placeholder': 'Search documents…',
+          'event': 'DOCUMENT_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'DocumentFilter',
+        'config': {
+          'event': 'DOCUMENT_FILTER',
+          'filters': [
+            {
+              'label': 'Status',
+              'filterType': 'select',
+              'field': 'status',
+              'options': [
+                'active',
+                'archived',
+                'pending-review',
+              ],
+            },
+            {
+              'field': 'mimeType',
+              'options': [
+                'pdf',
+                'doc',
+                'text',
+                'image',
+              ],
+              'label': 'Type',
+              'filterType': 'select',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'DocumentStats',
+        'config': {
+          'metrics': [
+            {
+              'format': 'number',
+              'label': 'Total',
+              'aggregation': 'count',
+              'icon': 'file-text',
+              'variant': 'primary',
+            },
+            {
+              'aggregation': 'count',
+              'variant': 'success',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+              'icon': 'check-circle',
+              'label': 'Active',
+              'format': 'number',
+            },
+            {
+              'aggregation': 'count',
+              'label': 'Pending Review',
+              'variant': 'warning',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'pending-review',
+                ],
+              ],
+              'icon': 'clock',
+              'format': 'number',
+            },
+            {
+              'aggregation': 'sum',
+              'variant': 'primary',
+              'field': 'sizeBytes',
+              'label': 'Total Size',
+              'icon': 'hard-drive',
+              'format': 'number',
+            },
+          ],
+          'title': 'Documents',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'DocumentGraphs',
+        'config': {
+          'chartType': 'bar',
+          'height': 240,
+          'aggregation': 'count',
+          'categoryField': 'status',
+          'title': 'Documents by Status',
+          'subtitle': 'Volume across status buckets',
+          'showLegend': false,
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'DocumentBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+            {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'fields': [
+            {
+              'variant': 'h3',
+              'icon': 'file-text',
+              'name': 'name',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'badge',
+              'name': 'mimeType',
+            },
+            {
+              'variant': 'body',
+              'name': 'owner',
+            },
+            {
+              'variant': 'caption',
+              'name': 'lastModified',
+              'format': 'date',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentFilter',
+            },
+          },
+          {
+            'event': 'DOCUMENT_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentPersistor',
+            },
+          },
+          {
+            'event': 'DOCUMENT_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentPersistor',
+            },
+          },
+          {
+            'event': 'DOCUMENT_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DocumentCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'mode': 'create',
+          'fields': [
+            'name',
+            'mimeType',
+            'sizeBytes',
+            'owner',
+            'status',
+          ],
+          'title': 'New Document',
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DocumentEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'name',
+            'mimeType',
+            'sizeBytes',
+            'owner',
+            'status',
+          ],
+          'title': 'Edit Document',
+          'mode': 'edit',
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'DocumentView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'eye',
+          'mode': 'edit',
+          'title': 'View Document',
+          'fields': [
+            'name',
+            'mimeType',
+            'sizeBytes',
+            'owner',
+            'status',
+            'lastModified',
+          ],
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'DocumentDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Delete Document',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'ESignFlow.traits.SignatureSessionBrowse',
+        'name': 'DocumentESignFlow',
+        'listens': [
+          {
+            'event': 'SESSION_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignPersistor',
+            },
+          },
+          {
+            'event': 'SESSION_RESENT',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignPersistor',
+            },
+          },
+          {
+            'event': 'SESSION_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'ESignFlow.traits.SignatureSessionCreate',
+        'name': 'DocumentESignCreate',
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignFlow',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'ESignFlow.traits.SignatureSessionDelete',
+        'name': 'DocumentESignDelete',
+        'listens': [
+          {
+            'event': 'REQUEST_DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignFlow',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'ESignFlow.traits.SignatureSessionPersistor',
+        'name': 'DocumentESignPersistor',
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignCreate',
+            },
+          },
+          {
+            'event': 'RESEND_REQUEST',
+            'triggers': 'DO_RESEND',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignFlow',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentESignDelete',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'FileStore.traits.StoredFileStore',
+        'name': 'DocumentFileStore',
+        'config': {
+          'title': 'Files',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'ESignRequest.traits.ESignRequestSigning',
+        'name': 'DocumentESignRequest',
+        'config': {
+          'title': 'Signature Requests',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'VersionHistory.traits.RevisionManage',
+        'name': 'DocumentVersionHistory',
+        'config': {
+          'title': 'Version History',
+        },
+      }),
+      {
+        'name': 'DocumentPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Document',
+        'emits': [
+          {
+            'event': 'DOCUMENT_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DOCUMENT_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DOCUMENT_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'DocumentDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'DOCUMENT_CREATED',
+              'name': 'Document Created',
+            },
+            {
+              'key': 'DOCUMENT_UPDATED',
+              'name': 'Document Updated',
+            },
+            {
+              'key': 'DOCUMENT_DELETED',
+              'name': 'Document Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Document',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'DOCUMENT_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Document',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'DOCUMENT_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Document',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'DOCUMENT_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
     ],
     pages: [
-      stdDocumentMgmtDocumentsPagePage(params),
-      stdDocumentMgmtDocumentsESignFlowPagePage(params),
-      stdDocumentMgmtDocumentsFilesPagePage(params),
-      stdDocumentMgmtDocumentsSignaturesPagePage(params),
-      stdDocumentMgmtDocumentsVersionsPagePage(params),
+      {
+        'name': 'DocumentsPage',
+        'path': '/documents',
+        'traits': [
+          {
+            'ref': 'DocumentAppLayout',
+          },
+          {
+            'ref': 'DocumentCatalog',
+          },
+          {
+            'ref': 'DocumentSearch',
+          },
+          {
+            'ref': 'DocumentFilter',
+          },
+          {
+            'ref': 'DocumentStats',
+          },
+          {
+            'ref': 'DocumentGraphs',
+          },
+          {
+            'ref': 'DocumentBrowseList',
+          },
+          {
+            'ref': 'DocumentCreate',
+          },
+          {
+            'ref': 'DocumentEdit',
+          },
+          {
+            'ref': 'DocumentView',
+          },
+          {
+            'ref': 'DocumentDelete',
+          },
+          {
+            'ref': 'DocumentPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'DocumentsESignFlowPage',
+        'path': '/esign-flow',
+        'traits': [
+          {
+            'ref': 'DocumentAppLayout',
+          },
+          {
+            'ref': 'DocumentESignFlow',
+          },
+          {
+            'ref': 'DocumentESignCreate',
+          },
+          {
+            'ref': 'DocumentESignDelete',
+          },
+          {
+            'ref': 'DocumentESignPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'DocumentsFilesPage',
+        'path': '/files',
+        'traits': [
+          {
+            'ref': 'DocumentAppLayout',
+          },
+          {
+            'ref': 'DocumentFileStore',
+          },
+        ],
+      } as never,
+      {
+        'name': 'DocumentsSignaturesPage',
+        'path': '/esign',
+        'traits': [
+          {
+            'ref': 'DocumentAppLayout',
+          },
+          {
+            'ref': 'DocumentESignRequest',
+          },
+        ],
+      } as never,
+      {
+        'name': 'DocumentsVersionsPage',
+        'path': '/revisions/manage',
+        'traits': [
+          {
+            'ref': 'DocumentAppLayout',
+          },
+          {
+            'ref': 'DocumentVersionHistory',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdDocumentMgmtDocumentOrbital. */
+export const StdDocumentMgmtDocumentOrbitalManifest = {
+  organism: 'std-document-mgmt',
+  orbitalName: 'DocumentOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'DocumentAppLayout',
+    'DocumentSearch',
+    'DocumentFilter',
+    'DocumentStats',
+    'DocumentGraphs',
+    'DocumentBrowseList',
+    'DocumentCreate',
+    'DocumentEdit',
+    'DocumentView',
+    'DocumentDelete',
+    'DocumentESignFlow',
+    'DocumentESignCreate',
+    'DocumentESignDelete',
+    'DocumentESignPersistor',
+    'DocumentFileStore',
+    'DocumentESignRequest',
+    'DocumentVersionHistory',
+  ] as const,
+  inlineTraitNames: [
+    'DocumentCatalog',
+    'DocumentPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdDocumentMgmtDocumentOrbitalParams keys. */
+export function isStdDocumentMgmtDocumentOrbitalParams(p: object): p is StdDocumentMgmtDocumentOrbitalParams {
+  type _OverrideRecord = NonNullable<StdDocumentMgmtDocumentOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdDocumentMgmtDocumentOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-document-mgmt — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdDocumentMgmtParams {
+  Document?: StdDocumentMgmtDocumentOrbitalParams;
+}
+
+/** Whole-organism descriptor (1 orbitals). Composes per-orbital factories. */
+export function stdDocumentMgmt(params: StdDocumentMgmtParams = {}): OrbitalDefinition[] {
+  return [
+    stdDocumentMgmtDocumentOrbital(params.Document ?? {}),
+  ];
 }

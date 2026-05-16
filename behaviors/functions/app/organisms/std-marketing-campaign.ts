@@ -35,408 +35,1662 @@ export interface StdMarketingCampaignConfig {
 }
 
 /**
- * Params for the std-marketing-campaign descriptor helpers.
+ * Tunable params for the CampaignOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: Campaign — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdMarketingCampaignParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdMarketingCampaignCampaignOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdMarketingCampaignConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'CampaignAppLayout' | 'CampaignSearch' | 'CampaignFilter' | 'CampaignStats' | 'CampaignGraphs' | 'CampaignCreate' | 'CampaignEdit' | 'CampaignView' | 'CampaignDelete' | 'CampaignBroadcastBrowse' | 'CampaignBroadcastCreate' | 'CampaignBroadcastDelete' | 'CampaignBroadcastPersistor' | 'CampaignSegment' | 'CampaignDripSequence' | 'CampaignTemplateEditor',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `MarketingCampaign.traits.CampaignAppLayout`. */
-export function stdMarketingCampaignCampaignAppLayoutTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignCatalog`. */
-export function stdMarketingCampaignCampaignCatalogTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignSearch`. */
-export function stdMarketingCampaignCampaignSearchTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignFilter`. */
-export function stdMarketingCampaignCampaignFilterTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignStats`. */
-export function stdMarketingCampaignCampaignStatsTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignGraphs`. */
-export function stdMarketingCampaignCampaignGraphsTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignBrowseList`. */
-export function stdMarketingCampaignCampaignBrowseListTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignCreate`. */
-export function stdMarketingCampaignCampaignCreateTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignEdit`. */
-export function stdMarketingCampaignCampaignEditTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignView`. */
-export function stdMarketingCampaignCampaignViewTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignDelete`. */
-export function stdMarketingCampaignCampaignDeleteTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignPersistor`. */
-export function stdMarketingCampaignCampaignPersistorTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignBroadcastBrowse`. */
-export function stdMarketingCampaignCampaignBroadcastBrowseTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignBroadcastBrowse`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignBroadcastCreate`. */
-export function stdMarketingCampaignCampaignBroadcastCreateTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignBroadcastCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignBroadcastDelete`. */
-export function stdMarketingCampaignCampaignBroadcastDeleteTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignBroadcastDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignBroadcastPersistor`. */
-export function stdMarketingCampaignCampaignBroadcastPersistorTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignBroadcastPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignSegment`. */
-export function stdMarketingCampaignCampaignSegmentTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignSegment`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignDripSequence`. */
-export function stdMarketingCampaignCampaignDripSequenceTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignDripSequence`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `MarketingCampaign.traits.CampaignTemplateEditor`. */
-export function stdMarketingCampaignCampaignTemplateEditorTrait(params: StdMarketingCampaignParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignTemplateEditor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `MarketingCampaign.pages.CampaignsPage`. */
-export function stdMarketingCampaignCampaignsPagePage(params: StdMarketingCampaignParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.CampaignsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `MarketingCampaign.pages.BroadcastsPage`. */
-export function stdMarketingCampaignBroadcastsPagePage(params: StdMarketingCampaignParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.BroadcastsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `MarketingCampaign.pages.SegmentsPage`. */
-export function stdMarketingCampaignSegmentsPagePage(params: StdMarketingCampaignParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.SegmentsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `MarketingCampaign.pages.SequencesPage`. */
-export function stdMarketingCampaignSequencesPagePage(params: StdMarketingCampaignParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.SequencesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `MarketingCampaign.pages.TemplatesPage`. */
-export function stdMarketingCampaignTemplatesPagePage(params: StdMarketingCampaignParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.TemplatesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdMarketingCampaign(params: StdMarketingCampaignParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the CampaignOrbital orbital with consumer params. */
+export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaignCampaignOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'Campaign';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'campaigns');
+  const built = makeOrbitalWithUses({
     name: 'CampaignOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-broadcast-builder',
+        'as': 'BroadcastBuilder',
+      },
+      {
+        'from': 'std/behaviors/std-segment',
+        'as': 'Segment',
+      },
+      {
+        'from': 'std/behaviors/std-drip-sequence',
+        'as': 'DripSequence',
+      },
+      {
+        'from': 'std/behaviors/std-template-editor',
+        'as': 'TemplateEditor',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'channel',
+            'type': 'string',
+            'default': 'email',
+            'values': [
+              'email',
+              'sms',
+              'push',
+              'mixed',
+            ],
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'scheduled',
+              'sending',
+              'sent',
+              'paused',
+            ],
+          },
+          {
+            'name': 'audience',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'sendCount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'openRate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'clickRate',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'scheduledAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdMarketingCampaignCampaignAppLayoutTrait(params),
-      stdMarketingCampaignCampaignCatalogTrait(params),
-      stdMarketingCampaignCampaignSearchTrait(params),
-      stdMarketingCampaignCampaignFilterTrait(params),
-      stdMarketingCampaignCampaignStatsTrait(params),
-      stdMarketingCampaignCampaignGraphsTrait(params),
-      stdMarketingCampaignCampaignBrowseListTrait(params),
-      stdMarketingCampaignCampaignCreateTrait(params),
-      stdMarketingCampaignCampaignEditTrait(params),
-      stdMarketingCampaignCampaignViewTrait(params),
-      stdMarketingCampaignCampaignDeleteTrait(params),
-      stdMarketingCampaignCampaignPersistorTrait(params),
-      stdMarketingCampaignCampaignBroadcastBrowseTrait(params),
-      stdMarketingCampaignCampaignBroadcastCreateTrait(params),
-      stdMarketingCampaignCampaignBroadcastDeleteTrait(params),
-      stdMarketingCampaignCampaignBroadcastPersistorTrait(params),
-      stdMarketingCampaignCampaignSegmentTrait(params),
-      stdMarketingCampaignCampaignDripSequenceTrait(params),
-      stdMarketingCampaignCampaignTemplateEditorTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'CampaignAppLayout',
+        'config': {
+          'notifications': [],
+          'searchEvent': 'CAMPAIGN_SEARCH',
+          'contentTrait': '@trait.CampaignCatalog',
+          'navItems': [
+            {
+              'href': '/campaigns',
+              'label': 'Campaigns',
+              'icon': 'megaphone',
+            },
+            {
+              'label': 'Broadcasts',
+              'href': '/broadcasts',
+              'icon': 'send',
+            },
+            {
+              'label': 'Segments',
+              'href': '/segments',
+              'icon': 'users',
+            },
+            {
+              'href': '/sequences',
+              'label': 'Sequences',
+              'icon': 'mail',
+            },
+            {
+              'label': 'Templates',
+              'href': '/templates',
+              'icon': 'file-text',
+            },
+          ],
+          'notificationClickEvent': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+          'appName': 'Marketing',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CAMPAIGN_SEARCH',
+        },
+      }),
+      {
+        'name': 'CampaignCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CAMPAIGN_SEARCH',
+            'triggers': 'CAMPAIGN_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignAppLayout',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+            'triggers': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CAMPAIGN_SEARCH',
+              'name': 'Campaign Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+              'name': 'Campaign Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'megaphone',
+                              },
+                              {
+                                'content': 'Campaigns',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'label': 'New Campaign',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                          },
+                        ],
+                        'justify': 'between',
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'children': [
+                          '@trait.CampaignSearch',
+                          '@trait.CampaignFilter',
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                      },
+                      '@trait.CampaignStats',
+                      '@trait.CampaignGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.CampaignBrowseList',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'CAMPAIGN_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                      },
+                      {
+                        'label': 'Back to campaigns',
+                        'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'gap': 'md',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'CampaignSearch',
+        'config': {
+          'event': 'CAMPAIGN_SEARCH',
+          'placeholder': 'Search campaigns…',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'CampaignFilter',
+        'config': {
+          'event': 'CAMPAIGN_FILTER',
+          'filters': [
+            {
+              'label': 'Channel',
+              'field': 'channel',
+              'options': [
+                'email',
+                'sms',
+                'push',
+                'mixed',
+              ],
+              'filterType': 'select',
+            },
+            {
+              'field': 'status',
+              'filterType': 'select',
+              'options': [
+                'draft',
+                'scheduled',
+                'sending',
+                'sent',
+                'paused',
+              ],
+              'label': 'Status',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'CampaignStats',
+        'config': {
+          'title': 'Campaigns',
+          'metrics': [
+            {
+              'aggregation': 'count',
+              'label': 'Total',
+              'variant': 'primary',
+              'icon': 'megaphone',
+              'format': 'number',
+            },
+            {
+              'format': 'number',
+              'label': 'Scheduled',
+              'variant': 'info',
+              'aggregation': 'count',
+              'icon': 'clock',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'scheduled',
+                ],
+              ],
+            },
+            {
+              'variant': 'success',
+              'label': 'Sent',
+              'icon': 'check-circle',
+              'format': 'number',
+              'aggregation': 'count',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'sent',
+                ],
+              ],
+            },
+            {
+              'label': 'Open Rate',
+              'icon': 'eye',
+              'aggregation': 'avg',
+              'field': 'openRate',
+              'variant': 'warning',
+              'format': 'number',
+              'suffix': '%',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'CampaignLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'CampaignGraphs',
+        'config': {
+          'chartType': 'bar',
+          'subtitle': 'Volume across channels',
+          'categoryField': 'channel',
+          'aggregation': 'count',
+          'showLegend': false,
+          'height': 240,
+          'title': 'Campaigns by Channel',
+        },
+        'listens': [
+          {
+            'event': 'CampaignLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CampaignBrowseList',
+        'category': 'interaction',
+        'linkedEntity': 'Campaign',
+        'emits': [
+          {
+            'event': 'VIEW',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.channel',
+                'type': 'string',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.audience',
+                'type': 'string',
+              },
+              {
+                'name': 'row.sendCount',
+                'type': 'number',
+              },
+              {
+                'name': 'row.openRate',
+                'type': 'number',
+              },
+              {
+                'name': 'row.clickRate',
+                'type': 'number',
+              },
+              {
+                'name': 'row.scheduledAt',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EDIT',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.channel',
+                'type': 'string',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.audience',
+                'type': 'string',
+              },
+              {
+                'name': 'row.sendCount',
+                'type': 'number',
+              },
+              {
+                'name': 'row.openRate',
+                'type': 'number',
+              },
+              {
+                'name': 'row.clickRate',
+                'type': 'number',
+              },
+              {
+                'name': 'row.scheduledAt',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DELETE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.name',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.description',
+                'type': 'string',
+              },
+              {
+                'name': 'row.channel',
+                'type': 'string',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.audience',
+                'type': 'string',
+              },
+              {
+                'name': 'row.sendCount',
+                'type': 'number',
+              },
+              {
+                'name': 'row.openRate',
+                'type': 'number',
+              },
+              {
+                'name': 'row.clickRate',
+                'type': 'number',
+              },
+              {
+                'name': 'row.scheduledAt',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CampaignLoaded',
+            'description': 'Fired when Campaign collection finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[Campaign]',
+              },
+              {
+                'name': 'totalCount',
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'CampaignLoadFailed',
+            'description': 'Fired when Campaign collection fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignFilter',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignPersistor',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignPersistor',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignPersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CampaignLoaded',
+              'name': 'Campaign loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[Campaign]',
+                },
+                {
+                  'name': 'totalCount',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'CampaignLoadFailed',
+              'name': 'Campaign load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Campaign',
+                  {
+                    'emit': {
+                      'failure': 'CampaignLoadFailed',
+                      'success': 'CampaignLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'Loading campaigns…',
+                      },
+                    ],
+                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'CampaignLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'fields': [
+                          {
+                            'label': 'Name',
+                            'name': 'name',
+                            'variant': 'h4',
+                            'icon': 'megaphone',
+                          },
+                          {
+                            'label': 'Channel',
+                            'variant': 'badge',
+                            'name': 'channel',
+                          },
+                          {
+                            'variant': 'badge',
+                            'label': 'Status',
+                            'name': 'status',
+                          },
+                          {
+                            'variant': 'caption',
+                            'label': 'Audience',
+                            'name': 'audience',
+                          },
+                          {
+                            'variant': 'body',
+                            'name': 'sendCount',
+                            'label': 'Sends',
+                          },
+                          {
+                            'label': 'Opens %',
+                            'variant': 'body',
+                            'name': 'openRate',
+                          },
+                          {
+                            'variant': 'body',
+                            'name': 'clickRate',
+                            'label': 'Clicks %',
+                          },
+                          {
+                            'label': 'Scheduled',
+                            'format': 'date',
+                            'name': 'scheduledAt',
+                            'variant': 'caption',
+                          },
+                        ],
+                        'itemActions': [
+                          {
+                            'label': 'View',
+                            'event': 'VIEW',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'label': 'Edit',
+                            'variant': 'ghost',
+                            'event': 'EDIT',
+                          },
+                          {
+                            'variant': 'danger',
+                            'label': 'Delete',
+                            'event': 'DELETE',
+                          },
+                        ],
+                        'cols': 1,
+                        'type': 'data-grid',
+                        'entity': '@payload.data',
+                        'gap': 'sm',
+                      },
+                    ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'CampaignLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'type': 'icon',
+                        'color': 'destructive',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'Failed to load campaigns',
+                        'type': 'typography',
+                      },
+                      {
+                        'type': 'typography',
+                        'variant': 'body',
+                        'color': 'muted',
+                        'content': '@payload.error',
+                      },
+                      {
+                        'variant': 'primary',
+                        'action': 'INIT',
+                        'label': 'Retry',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
+                      },
+                    ],
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Campaign',
+                  {
+                    'emit': {
+                      'failure': 'CampaignLoadFailed',
+                      'success': 'CampaignLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'VIEW',
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'EDIT',
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DELETE',
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'Campaign',
+                  {
+                    'emit': {
+                      'success': 'CampaignLoaded',
+                      'failure': 'CampaignLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CampaignCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'New Campaign',
+          'fields': [
+            'name',
+            'description',
+            'channel',
+            'audience',
+            'scheduledAt',
+          ],
+          'mode': 'create',
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CampaignEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Campaign',
+          'fields': [
+            'name',
+            'description',
+            'channel',
+            'status',
+            'audience',
+            'scheduledAt',
+          ],
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CampaignView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'name',
+            'description',
+            'channel',
+            'status',
+            'audience',
+            'sendCount',
+            'openRate',
+            'clickRate',
+            'scheduledAt',
+          ],
+          'title': 'View Campaign',
+          'mode': 'edit',
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'CampaignDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'alert-triangle',
+          'title': 'Delete Campaign',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CampaignPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'Campaign',
+        'emits': [
+          {
+            'event': 'CAMPAIGN_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CAMPAIGN_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CAMPAIGN_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CAMPAIGN_CREATED',
+              'name': 'Campaign Created',
+            },
+            {
+              'key': 'CAMPAIGN_UPDATED',
+              'name': 'Campaign Updated',
+            },
+            {
+              'key': 'CAMPAIGN_DELETED',
+              'name': 'Campaign Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'Campaign',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CAMPAIGN_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'Campaign',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CAMPAIGN_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'Campaign',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'CAMPAIGN_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'BroadcastBuilder.traits.BroadcastDraftBrowse',
+        'name': 'CampaignBroadcastBrowse',
+      }),
+      makeTraitRef({
+        'ref': 'BroadcastBuilder.traits.BroadcastDraftCreate',
+        'name': 'CampaignBroadcastCreate',
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBroadcastBrowse',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'BroadcastBuilder.traits.BroadcastDraftDelete',
+        'name': 'CampaignBroadcastDelete',
+        'listens': [
+          {
+            'event': 'REQUEST_DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBroadcastBrowse',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'BroadcastBuilder.traits.BroadcastDraftPersistor',
+        'name': 'CampaignBroadcastPersistor',
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBroadcastCreate',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBroadcastDelete',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Segment.traits.SegmentSegment',
+        'name': 'CampaignSegment',
+        'config': {
+          'title': 'Audience Segments',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'DripSequence.traits.DripSequenceSequence',
+        'name': 'CampaignDripSequence',
+        'config': {
+          'title': 'Drip Sequences',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'TemplateEditor.traits.MessageTemplateEditor',
+        'name': 'CampaignTemplateEditor',
+        'config': {
+          'title': 'Message Templates',
+        },
+      }),
     ],
     pages: [
-      stdMarketingCampaignCampaignsPagePage(params),
-      stdMarketingCampaignBroadcastsPagePage(params),
-      stdMarketingCampaignSegmentsPagePage(params),
-      stdMarketingCampaignSequencesPagePage(params),
-      stdMarketingCampaignTemplatesPagePage(params),
+      {
+        'name': 'CampaignsPage',
+        'path': '/campaigns',
+        'traits': [
+          {
+            'ref': 'CampaignAppLayout',
+          },
+          {
+            'ref': 'CampaignCatalog',
+          },
+          {
+            'ref': 'CampaignSearch',
+          },
+          {
+            'ref': 'CampaignFilter',
+          },
+          {
+            'ref': 'CampaignStats',
+          },
+          {
+            'ref': 'CampaignGraphs',
+          },
+          {
+            'ref': 'CampaignBrowseList',
+          },
+          {
+            'ref': 'CampaignCreate',
+          },
+          {
+            'ref': 'CampaignEdit',
+          },
+          {
+            'ref': 'CampaignView',
+          },
+          {
+            'ref': 'CampaignDelete',
+          },
+          {
+            'ref': 'CampaignPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'BroadcastsPage',
+        'path': '/broadcasts',
+        'traits': [
+          {
+            'ref': 'CampaignBroadcastBrowse',
+          },
+          {
+            'ref': 'CampaignBroadcastCreate',
+          },
+          {
+            'ref': 'CampaignBroadcastDelete',
+          },
+          {
+            'ref': 'CampaignBroadcastPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'SegmentsPage',
+        'path': '/segments',
+        'traits': [
+          {
+            'ref': 'CampaignSegment',
+          },
+        ],
+      } as never,
+      {
+        'name': 'SequencesPage',
+        'path': '/sequences',
+        'traits': [
+          {
+            'ref': 'CampaignDripSequence',
+          },
+        ],
+      } as never,
+      {
+        'name': 'TemplatesPage',
+        'path': '/templates',
+        'traits': [
+          {
+            'ref': 'CampaignTemplateEditor',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdMarketingCampaignCampaignOrbital. */
+export const StdMarketingCampaignCampaignOrbitalManifest = {
+  organism: 'std-marketing-campaign',
+  orbitalName: 'CampaignOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'CampaignAppLayout',
+    'CampaignSearch',
+    'CampaignFilter',
+    'CampaignStats',
+    'CampaignGraphs',
+    'CampaignCreate',
+    'CampaignEdit',
+    'CampaignView',
+    'CampaignDelete',
+    'CampaignBroadcastBrowse',
+    'CampaignBroadcastCreate',
+    'CampaignBroadcastDelete',
+    'CampaignBroadcastPersistor',
+    'CampaignSegment',
+    'CampaignDripSequence',
+    'CampaignTemplateEditor',
+  ] as const,
+  inlineTraitNames: [
+    'CampaignCatalog',
+    'CampaignBrowseList',
+    'CampaignPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdMarketingCampaignCampaignOrbitalParams keys. */
+export function isStdMarketingCampaignCampaignOrbitalParams(p: object): p is StdMarketingCampaignCampaignOrbitalParams {
+  type _OverrideRecord = NonNullable<StdMarketingCampaignCampaignOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdMarketingCampaignCampaignOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-marketing-campaign — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdMarketingCampaignParams {
+  Campaign?: StdMarketingCampaignCampaignOrbitalParams;
+}
+
+/** Whole-organism descriptor (1 orbitals). Composes per-orbital factories. */
+export function stdMarketingCampaign(params: StdMarketingCampaignParams = {}): OrbitalDefinition[] {
+  return [
+    stdMarketingCampaignCampaignOrbital(params.Campaign ?? {}),
+  ];
 }

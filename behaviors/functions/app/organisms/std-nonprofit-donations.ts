@@ -35,333 +35,1101 @@ export interface StdNonprofitDonationsConfig {
 }
 
 /**
- * Params for the std-nonprofit-donations descriptor helpers.
+ * Tunable params for the CampaignOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: FundraisingCampaign — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdNonprofitDonationsParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdNonprofitDonationsCampaignOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdNonprofitDonationsConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'CampaignAppLayout' | 'CampaignSearch' | 'CampaignFilter' | 'CampaignStats' | 'CampaignGraphs' | 'CampaignBrowseList' | 'CampaignCreate' | 'CampaignEdit' | 'CampaignView' | 'CampaignDelete' | 'CampaignDonorsPanel' | 'CampaignGoalsPanel' | 'CampaignReceiptsPanel',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `NonprofitDonations.traits.CampaignAppLayout`. */
-export function stdNonprofitDonationsCampaignAppLayoutTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignCatalog`. */
-export function stdNonprofitDonationsCampaignCatalogTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignSearch`. */
-export function stdNonprofitDonationsCampaignSearchTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignFilter`. */
-export function stdNonprofitDonationsCampaignFilterTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignStats`. */
-export function stdNonprofitDonationsCampaignStatsTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignGraphs`. */
-export function stdNonprofitDonationsCampaignGraphsTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignBrowseList`. */
-export function stdNonprofitDonationsCampaignBrowseListTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignCreate`. */
-export function stdNonprofitDonationsCampaignCreateTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignEdit`. */
-export function stdNonprofitDonationsCampaignEditTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignView`. */
-export function stdNonprofitDonationsCampaignViewTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignDelete`. */
-export function stdNonprofitDonationsCampaignDeleteTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignPersistor`. */
-export function stdNonprofitDonationsCampaignPersistorTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignDonorsPanel`. */
-export function stdNonprofitDonationsCampaignDonorsPanelTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignDonorsPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignGoalsPanel`. */
-export function stdNonprofitDonationsCampaignGoalsPanelTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignGoalsPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `NonprofitDonations.traits.CampaignReceiptsPanel`. */
-export function stdNonprofitDonationsCampaignReceiptsPanelTrait(params: StdNonprofitDonationsParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.CampaignReceiptsPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `NonprofitDonations.pages.CampaignsPage`. */
-export function stdNonprofitDonationsCampaignsPagePage(params: StdNonprofitDonationsParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.CampaignsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `NonprofitDonations.pages.DonorsPage`. */
-export function stdNonprofitDonationsDonorsPagePage(params: StdNonprofitDonationsParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.DonorsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `NonprofitDonations.pages.GoalsPage`. */
-export function stdNonprofitDonationsGoalsPagePage(params: StdNonprofitDonationsParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.GoalsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `NonprofitDonations.pages.ReceiptsPage`. */
-export function stdNonprofitDonationsReceiptsPagePage(params: StdNonprofitDonationsParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.ReceiptsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdNonprofitDonations(params: StdNonprofitDonationsParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the CampaignOrbital orbital with consumer params. */
+export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonationsCampaignOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'FundraisingCampaign';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'fundraisingcampaigns');
+  const built = makeOrbitalWithUses({
     name: 'CampaignOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-browse',
+        'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-donor',
+        'as': 'Donor',
+      },
+      {
+        'from': 'std/behaviors/std-campaign-goal',
+        'as': 'CampaignGoal',
+      },
+      {
+        'from': 'std/behaviors/std-donation-receipt',
+        'as': 'DonationReceipt',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'goalAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'raisedAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'active',
+              'completed',
+              'paused',
+              'draft',
+            ],
+          },
+          {
+            'name': 'startDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'endDate',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdNonprofitDonationsCampaignAppLayoutTrait(params),
-      stdNonprofitDonationsCampaignCatalogTrait(params),
-      stdNonprofitDonationsCampaignSearchTrait(params),
-      stdNonprofitDonationsCampaignFilterTrait(params),
-      stdNonprofitDonationsCampaignStatsTrait(params),
-      stdNonprofitDonationsCampaignGraphsTrait(params),
-      stdNonprofitDonationsCampaignBrowseListTrait(params),
-      stdNonprofitDonationsCampaignCreateTrait(params),
-      stdNonprofitDonationsCampaignEditTrait(params),
-      stdNonprofitDonationsCampaignViewTrait(params),
-      stdNonprofitDonationsCampaignDeleteTrait(params),
-      stdNonprofitDonationsCampaignPersistorTrait(params),
-      stdNonprofitDonationsCampaignDonorsPanelTrait(params),
-      stdNonprofitDonationsCampaignGoalsPanelTrait(params),
-      stdNonprofitDonationsCampaignReceiptsPanelTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'CampaignAppLayout',
+        'config': {
+          'appName': 'Donations',
+          'navItems': [
+            {
+              'label': 'Campaigns',
+              'href': '/campaigns',
+              'icon': 'target',
+            },
+            {
+              'href': '/donors',
+              'icon': 'heart-handshake',
+              'label': 'Donors',
+            },
+            {
+              'href': '/goals',
+              'label': 'Goals',
+              'icon': 'flag',
+            },
+            {
+              'icon': 'receipt',
+              'label': 'Receipts',
+              'href': '/receipts',
+            },
+          ],
+          'contentTrait': '@trait.CampaignCatalog',
+          'notifications': [],
+          'searchEvent': 'CAMPAIGN_SEARCH',
+          'notificationClickEvent': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CAMPAIGN_SEARCH',
+        },
+      }),
+      {
+        'name': 'CampaignCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'CAMPAIGN_SEARCH',
+            'triggers': 'CAMPAIGN_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignAppLayout',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+            'triggers': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'CAMPAIGN_SEARCH',
+              'name': 'Campaign Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+              'name': 'Campaign Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'justify': 'between',
+                        'gap': 'md',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'target',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Fundraising Campaigns',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                          },
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'New Campaign',
+                              },
+                            ],
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
+                        'children': [
+                          '@trait.CampaignSearch',
+                          '@trait.CampaignFilter',
+                        ],
+                      },
+                      '@trait.CampaignStats',
+                      '@trait.CampaignGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.CampaignBrowseList',
+                    ],
+                    'gap': 'lg',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'CAMPAIGN_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'INIT',
+                        'label': 'Back to campaigns',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'className': 'py-8',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'CampaignSearch',
+        'config': {
+          'placeholder': 'Search campaigns…',
+          'event': 'CAMPAIGN_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'CampaignFilter',
+        'config': {
+          'event': 'CAMPAIGN_FILTER',
+          'filters': [
+            {
+              'filterType': 'select',
+              'options': [
+                'active',
+                'completed',
+                'paused',
+                'draft',
+              ],
+              'label': 'Status',
+              'field': 'status',
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'CampaignStats',
+        'config': {
+          'title': 'Campaigns',
+          'metrics': [
+            {
+              'icon': 'target',
+              'variant': 'primary',
+              'aggregation': 'count',
+              'label': 'Total',
+              'format': 'number',
+            },
+            {
+              'aggregation': 'count',
+              'label': 'Active',
+              'icon': 'zap',
+              'variant': 'success',
+              'format': 'number',
+              'filter': [
+                'fn',
+                'row',
+                [
+                  '=',
+                  '@row.status',
+                  'active',
+                ],
+              ],
+            },
+            {
+              'aggregation': 'sum',
+              'format': 'number',
+              'variant': 'info',
+              'icon': 'flag',
+              'field': 'goalAmount',
+              'label': 'Goal',
+            },
+            {
+              'label': 'Raised',
+              'field': 'raisedAmount',
+              'aggregation': 'sum',
+              'format': 'number',
+              'variant': 'success',
+              'icon': 'trending-up',
+            },
+          ],
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'CampaignGraphs',
+        'config': {
+          'showLegend': false,
+          'aggregation': 'count',
+          'title': 'Campaigns by Status',
+          'chartType': 'bar',
+          'categoryField': 'status',
+          'height': 240,
+          'subtitle': 'Volume across campaign lifecycle',
+        },
+        'listens': [
+          {
+            'event': 'BrowseItemLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Browse.traits.BrowseItemBrowse',
+        'name': 'CampaignBrowseList',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            {
+              'icon': 'target',
+              'name': 'name',
+              'variant': 'h3',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
+              'name': 'goalAmount',
+              'variant': 'body',
+              'format': 'number',
+            },
+            {
+              'variant': 'body',
+              'name': 'raisedAmount',
+              'format': 'number',
+            },
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'startDate',
+            },
+            {
+              'variant': 'caption',
+              'name': 'endDate',
+              'format': 'date',
+            },
+          ],
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'cols': 1,
+        },
+        'listens': [
+          {
+            'event': 'SEARCH',
+            'triggers': 'REFETCH_QUERY',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignSearch',
+            },
+          },
+          {
+            'event': 'FILTER',
+            'triggers': 'REFETCH_FILTER',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignFilter',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignPersistor',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignPersistor',
+            },
+          },
+          {
+            'event': 'CAMPAIGN_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignPersistor',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CampaignCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'fields': [
+            'name',
+            'goalAmount',
+            'raisedAmount',
+            'status',
+            'startDate',
+            'endDate',
+          ],
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'New Campaign',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CampaignEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'icon': 'edit',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'goalAmount',
+            'raisedAmount',
+            'status',
+            'startDate',
+            'endDate',
+          ],
+          'title': 'Edit Campaign',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'CampaignView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'View Campaign',
+          'mode': 'edit',
+          'fields': [
+            'name',
+            'goalAmount',
+            'raisedAmount',
+            'status',
+            'startDate',
+            'endDate',
+          ],
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'CampaignDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'title': 'Delete Campaign',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'CampaignPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'FundraisingCampaign',
+        'emits': [
+          {
+            'event': 'CAMPAIGN_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CAMPAIGN_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'CAMPAIGN_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'CampaignDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CAMPAIGN_CREATED',
+              'name': 'Campaign Created',
+            },
+            {
+              'key': 'CAMPAIGN_UPDATED',
+              'name': 'Campaign Updated',
+            },
+            {
+              'key': 'CAMPAIGN_DELETED',
+              'name': 'Campaign Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'FundraisingCampaign',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CAMPAIGN_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'FundraisingCampaign',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'CAMPAIGN_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'FundraisingCampaign',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'CAMPAIGN_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Donor.traits.DonorRoster',
+        'name': 'CampaignDonorsPanel',
+        'config': {
+          'title': 'Donors',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'CampaignGoal.traits.CampaignGoalTracker',
+        'name': 'CampaignGoalsPanel',
+        'config': {
+          'title': 'Campaign Goals',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'DonationReceipt.traits.DonationReceiptIssuer',
+        'name': 'CampaignReceiptsPanel',
+        'config': {
+          'title': 'Donation Receipts',
+        },
+      }),
     ],
     pages: [
-      stdNonprofitDonationsCampaignsPagePage(params),
-      stdNonprofitDonationsDonorsPagePage(params),
-      stdNonprofitDonationsGoalsPagePage(params),
-      stdNonprofitDonationsReceiptsPagePage(params),
+      {
+        'name': 'CampaignsPage',
+        'path': '/campaigns',
+        'traits': [
+          {
+            'ref': 'CampaignAppLayout',
+          },
+          {
+            'ref': 'CampaignCatalog',
+          },
+          {
+            'ref': 'CampaignSearch',
+          },
+          {
+            'ref': 'CampaignFilter',
+          },
+          {
+            'ref': 'CampaignStats',
+          },
+          {
+            'ref': 'CampaignGraphs',
+          },
+          {
+            'ref': 'CampaignBrowseList',
+          },
+          {
+            'ref': 'CampaignCreate',
+          },
+          {
+            'ref': 'CampaignEdit',
+          },
+          {
+            'ref': 'CampaignView',
+          },
+          {
+            'ref': 'CampaignDelete',
+          },
+          {
+            'ref': 'CampaignPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'DonorsPage',
+        'path': '/donors',
+        'traits': [
+          {
+            'ref': 'CampaignAppLayout',
+          },
+          {
+            'ref': 'CampaignDonorsPanel',
+          },
+        ],
+      } as never,
+      {
+        'name': 'GoalsPage',
+        'path': '/goals',
+        'traits': [
+          {
+            'ref': 'CampaignAppLayout',
+          },
+          {
+            'ref': 'CampaignGoalsPanel',
+          },
+        ],
+      } as never,
+      {
+        'name': 'ReceiptsPage',
+        'path': '/receipts',
+        'traits': [
+          {
+            'ref': 'CampaignAppLayout',
+          },
+          {
+            'ref': 'CampaignReceiptsPanel',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdNonprofitDonationsCampaignOrbital. */
+export const StdNonprofitDonationsCampaignOrbitalManifest = {
+  organism: 'std-nonprofit-donations',
+  orbitalName: 'CampaignOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'CampaignAppLayout',
+    'CampaignSearch',
+    'CampaignFilter',
+    'CampaignStats',
+    'CampaignGraphs',
+    'CampaignBrowseList',
+    'CampaignCreate',
+    'CampaignEdit',
+    'CampaignView',
+    'CampaignDelete',
+    'CampaignDonorsPanel',
+    'CampaignGoalsPanel',
+    'CampaignReceiptsPanel',
+  ] as const,
+  inlineTraitNames: [
+    'CampaignCatalog',
+    'CampaignPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdNonprofitDonationsCampaignOrbitalParams keys. */
+export function isStdNonprofitDonationsCampaignOrbitalParams(p: object): p is StdNonprofitDonationsCampaignOrbitalParams {
+  type _OverrideRecord = NonNullable<StdNonprofitDonationsCampaignOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdNonprofitDonationsCampaignOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-nonprofit-donations — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdNonprofitDonationsParams {
+  Campaign?: StdNonprofitDonationsCampaignOrbitalParams;
+}
+
+/** Whole-organism descriptor (1 orbitals). Composes per-orbital factories. */
+export function stdNonprofitDonations(params: StdNonprofitDonationsParams = {}): OrbitalDefinition[] {
+  return [
+    stdNonprofitDonationsCampaignOrbital(params.Campaign ?? {}),
+  ];
 }

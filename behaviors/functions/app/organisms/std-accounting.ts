@@ -35,424 +35,1495 @@ export interface StdAccountingConfig {
 }
 
 /**
- * Params for the std-accounting descriptor helpers.
+ * Tunable params for the JournalOrbital orbital.
  *
- * `entityName` binds every trait/page reference's `linkedEntity`.
- * The optional override fields mirror TraitReference / PageRefObject
- * fields and are forwarded to `makeTraitRef` / `makePageRef`.
+ * Canonical entity: JournalSummary — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
  */
-export interface StdAccountingParams {
-  entityName: string;
-  /** Extra fields to add to the orbital-scoped entity clone. */
+export interface StdAccountingJournalOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
-  /** Rename the inlined trait at the call site. */
-  traitName?: string;
-  /** Per-key event rename map (atom key → caller key). */
-  events?: Record<string, string>;
-  /** Per-event effect replacement (keys are POST-rename event names). */
-  effects?: Record<string, SExpr[]>;
-  /** Replace the imported trait's `listens` array entirely. */
-  listens?: TraitEventListener[];
-  /** Set every emit's scope. */
-  emitsScope?: 'internal' | 'external';
-  /** Typed call-site config block — see the per-field interface. */
-  config?: StdAccountingConfig;
-  /** URL path override for the (first) page. */
+  /** URL path override for the orbital's first page. */
   pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'JournalAppLayout' | 'JournalSearch' | 'JournalFilter' | 'JournalStats' | 'JournalGraphs' | 'JournalCreate' | 'JournalEdit' | 'JournalView' | 'JournalDelete' | 'JournalEntriesPanel' | 'JournalTransactionBrowse' | 'JournalTransactionCreate' | 'JournalTransactionDelete' | 'JournalTransactionPersistor' | 'JournalAccountsPanel' | 'JournalApBillsPanel' | 'JournalInvoicesPanel',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
 }
 
-/** Trait descriptor: `Accounting.traits.JournalAppLayout`. */
-export function stdAccountingJournalAppLayoutTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalAppLayout`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalCatalog`. */
-export function stdAccountingJournalCatalogTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalCatalog`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalSearch`. */
-export function stdAccountingJournalSearchTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalSearch`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalFilter`. */
-export function stdAccountingJournalFilterTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalFilter`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalStats`. */
-export function stdAccountingJournalStatsTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalStats`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalGraphs`. */
-export function stdAccountingJournalGraphsTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalGraphs`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalBrowseList`. */
-export function stdAccountingJournalBrowseListTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalBrowseList`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalCreate`. */
-export function stdAccountingJournalCreateTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalEdit`. */
-export function stdAccountingJournalEditTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalEdit`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalView`. */
-export function stdAccountingJournalViewTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalView`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalDelete`. */
-export function stdAccountingJournalDeleteTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalPersistor`. */
-export function stdAccountingJournalPersistorTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalEntriesPanel`. */
-export function stdAccountingJournalEntriesPanelTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalEntriesPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalTransactionBrowse`. */
-export function stdAccountingJournalTransactionBrowseTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalTransactionBrowse`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalTransactionCreate`. */
-export function stdAccountingJournalTransactionCreateTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalTransactionCreate`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalTransactionDelete`. */
-export function stdAccountingJournalTransactionDeleteTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalTransactionDelete`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalTransactionPersistor`. */
-export function stdAccountingJournalTransactionPersistorTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalTransactionPersistor`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalAccountsPanel`. */
-export function stdAccountingJournalAccountsPanelTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalAccountsPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalApBillsPanel`. */
-export function stdAccountingJournalApBillsPanelTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalApBillsPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Trait descriptor: `Accounting.traits.JournalInvoicesPanel`. */
-export function stdAccountingJournalInvoicesPanelTrait(params: StdAccountingParams): TraitReference {
-  return makeTraitRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.traits.JournalInvoicesPanel`,
-    linkedEntity: params.entityName,
-    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
-    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
-    ...(params.effects !== undefined ? { effects: params.effects } : {}),
-    ...(params.listens !== undefined ? { listens: params.listens } : {}),
-    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
-    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
-  });
-}
-
-/** Page descriptor: `Accounting.pages.JournalSummariesPage`. */
-export function stdAccountingJournalSummariesPagePage(params: StdAccountingParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.JournalSummariesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Accounting.pages.JournalEntriesPage`. */
-export function stdAccountingJournalEntriesPagePage(params: StdAccountingParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.JournalEntriesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Accounting.pages.JournalAccountsPage`. */
-export function stdAccountingJournalAccountsPagePage(params: StdAccountingParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.JournalAccountsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Accounting.pages.JournalApBillsPage`. */
-export function stdAccountingJournalApBillsPagePage(params: StdAccountingParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.JournalApBillsPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Page descriptor: `Accounting.pages.JournalInvoicesPage`. */
-export function stdAccountingJournalInvoicesPagePage(params: StdAccountingParams): PageRefObject {
-  return makePageRef({
-    from: BEHAVIOR_PATH,
-    ref: `${ALIAS}.pages.JournalInvoicesPage`,
-    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
-    linkedEntity: params.entityName,
-  });
-}
-
-/** Whole-orbital descriptor. */
-export function stdAccounting(params: StdAccountingParams): OrbitalDefinition {
-  const entity: Entity = {
-    name: params.entityName,
-    fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
-  };
-  return makeOrbitalWithUses({
+/** Per-orbital factory: builds the JournalOrbital orbital with consumer params. */
+export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'JournalSummary';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'journalsummaries');
+  const built = makeOrbitalWithUses({
     name: 'JournalOrbital',
-    uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
-    entity,
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-modal',
+        'as': 'Modal',
+      },
+      {
+        'from': 'std/behaviors/std-confirmation',
+        'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-search',
+        'as': 'Search',
+      },
+      {
+        'from': 'std/behaviors/std-filter',
+        'as': 'Filter',
+      },
+      {
+        'from': 'std/behaviors/std-stats',
+        'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-graphs',
+        'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-ledger-entry-form',
+        'as': 'LedgerEntryForm',
+      },
+      {
+        'from': 'std/behaviors/std-ledger-entry',
+        'as': 'LedgerEntry',
+      },
+      {
+        'from': 'std/behaviors/std-chart-of-accounts',
+        'as': 'ChartOfAccounts',
+      },
+      {
+        'from': 'std/behaviors/std-ap-bill',
+        'as': 'ApBill',
+      },
+      {
+        'from': 'std/behaviors/std-invoice',
+        'as': 'Invoice',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'period',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'totalDebits',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'totalCredits',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'posted',
+              'closed',
+            ],
+          },
+          {
+            'name': 'pendingId',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
     traits: [
-      stdAccountingJournalAppLayoutTrait(params),
-      stdAccountingJournalCatalogTrait(params),
-      stdAccountingJournalSearchTrait(params),
-      stdAccountingJournalFilterTrait(params),
-      stdAccountingJournalStatsTrait(params),
-      stdAccountingJournalGraphsTrait(params),
-      stdAccountingJournalBrowseListTrait(params),
-      stdAccountingJournalCreateTrait(params),
-      stdAccountingJournalEditTrait(params),
-      stdAccountingJournalViewTrait(params),
-      stdAccountingJournalDeleteTrait(params),
-      stdAccountingJournalPersistorTrait(params),
-      stdAccountingJournalEntriesPanelTrait(params),
-      stdAccountingJournalTransactionBrowseTrait(params),
-      stdAccountingJournalTransactionCreateTrait(params),
-      stdAccountingJournalTransactionDeleteTrait(params),
-      stdAccountingJournalTransactionPersistorTrait(params),
-      stdAccountingJournalAccountsPanelTrait(params),
-      stdAccountingJournalApBillsPanelTrait(params),
-      stdAccountingJournalInvoicesPanelTrait(params),
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'JournalAppLayout',
+        'config': {
+          'searchEvent': 'JOURNAL_SEARCH',
+          'notificationClickEvent': 'JOURNAL_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'navItems': [
+            {
+              'icon': 'book-open',
+              'href': '/journal-summaries',
+              'label': 'Journal',
+            },
+            {
+              'href': '/entries',
+              'label': 'Entries',
+              'icon': 'list',
+            },
+            {
+              'label': 'Chart of Accounts',
+              'href': '/accounts',
+              'icon': 'layout-list',
+            },
+            {
+              'href': '/bills',
+              'label': 'AP Bills',
+              'icon': 'file-text',
+            },
+            {
+              'icon': 'receipt',
+              'label': 'AR Invoices',
+              'href': '/invoices',
+            },
+          ],
+          'appName': 'Accounting',
+          'contentTrait': '@trait.JournalCatalog',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'JOURNAL_NOTIFICATIONS_OPEN',
+          'SEARCH': 'JOURNAL_SEARCH',
+        },
+      }),
+      {
+        'name': 'JournalCatalog',
+        'category': 'interaction',
+        'emits': [
+          {
+            'event': 'CREATE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'source',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'JOURNAL_SEARCH',
+            'triggers': 'JOURNAL_SEARCH',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalAppLayout',
+            },
+          },
+          {
+            'event': 'JOURNAL_NOTIFICATIONS_OPEN',
+            'triggers': 'JOURNAL_NOTIFICATIONS_OPEN',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalAppLayout',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'composing',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'JOURNAL_SEARCH',
+              'name': 'Journal Search',
+              'payloadSchema': [
+                {
+                  'name': 'value',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'JOURNAL_NOTIFICATIONS_OPEN',
+              'name': 'Journal Notifications Open',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'CREATE',
+              'name': 'Create',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'direction': 'vertical',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'book-open',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Journal Summaries',
+                                'type': 'typography',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                          {
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
+                                'label': 'New Period',
+                                'action': 'CREATE',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                          },
+                        ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                      },
+                      {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'md',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          '@trait.JournalSearch',
+                          '@trait.JournalFilter',
+                        ],
+                      },
+                      '@trait.JournalStats',
+                      '@trait.JournalGraphs',
+                      {
+                        'type': 'divider',
+                      },
+                      '@trait.JournalBrowseList',
+                    ],
+                    'gap': 'lg',
+                    'type': 'stack',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'JOURNAL_SEARCH',
+            },
+            {
+              'from': 'composing',
+              'to': 'composing',
+              'event': 'JOURNAL_NOTIFICATIONS_OPEN',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'type': 'icon',
+                        'name': 'bell',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                      },
+                      {
+                        'type': 'button',
+                        'action': 'INIT',
+                        'label': 'Back to journal',
+                        'variant': 'ghost',
+                      },
+                    ],
+                    'className': 'py-8',
+                    'type': 'stack',
+                    'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'Search.traits.SearchResultSearch',
+        'name': 'JournalSearch',
+        'config': {
+          'placeholder': 'Search journal periods…',
+          'event': 'JOURNAL_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Filter.traits.FilterTargetFilter',
+        'name': 'JournalFilter',
+        'config': {
+          'event': 'JOURNAL_FILTER',
+          'filters': [
+            {
+              'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
+              'options': [
+                'draft',
+                'posted',
+                'closed',
+              ],
+            },
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Stats.traits.StatsItemStats',
+        'name': 'JournalStats',
+        'config': {
+          'metrics': [
+            {
+              'label': 'Periods',
+              'format': 'number',
+              'icon': 'book-open',
+              'aggregation': 'count',
+              'variant': 'primary',
+            },
+            {
+              'aggregation': 'sum',
+              'variant': 'success',
+              'label': 'Debits',
+              'format': 'number',
+              'field': 'totalDebits',
+              'icon': 'trending-up',
+            },
+            {
+              'format': 'number',
+              'aggregation': 'sum',
+              'label': 'Credits',
+              'icon': 'trending-down',
+              'variant': 'warning',
+              'field': 'totalCredits',
+            },
+          ],
+          'title': 'Journal Periods',
+        },
+        'listens': [
+          {
+            'event': 'JournalSummaryLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Graphs.traits.GraphItemGraph',
+        'name': 'JournalGraphs',
+        'config': {
+          'title': 'Journal Status',
+          'chartType': 'bar',
+          'height': 240,
+          'subtitle': 'Periods by status',
+          'categoryField': 'status',
+          'aggregation': 'count',
+          'showLegend': false,
+        },
+        'listens': [
+          {
+            'event': 'JournalSummaryLoaded',
+            'triggers': 'ITEMS_LOADED',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'JournalBrowseList',
+        'category': 'interaction',
+        'linkedEntity': 'JournalSummary',
+        'emits': [
+          {
+            'event': 'VIEW',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.period',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.totalDebits',
+                'type': 'number',
+              },
+              {
+                'name': 'row.totalCredits',
+                'type': 'number',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'EDIT',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.period',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.totalDebits',
+                'type': 'number',
+              },
+              {
+                'name': 'row.totalCredits',
+                'type': 'number',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'DELETE',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.id',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.period',
+                'type': 'string',
+                'required': true,
+              },
+              {
+                'name': 'row.totalDebits',
+                'type': 'number',
+              },
+              {
+                'name': 'row.totalCredits',
+                'type': 'number',
+              },
+              {
+                'name': 'row.status',
+                'type': 'string',
+              },
+              {
+                'name': 'row.pendingId',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'JournalSummaryLoaded',
+            'description': 'Fired when the journal summary collection finishes loading',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[JournalSummary]',
+              },
+              {
+                'name': 'totalCount',
+                'type': 'number',
+              },
+            ],
+          },
+          {
+            'event': 'JournalSummaryLoadFailed',
+            'description': 'Fired when the journal summary collection fails to load',
+            'scope': 'internal',
+            'payloadSchema': [
+              {
+                'name': 'error',
+                'type': 'string',
+              },
+              {
+                'name': 'code',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'JOURNAL_CREATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalPersistor',
+            },
+          },
+          {
+            'event': 'JOURNAL_UPDATED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalPersistor',
+            },
+          },
+          {
+            'event': 'JOURNAL_DELETED',
+            'triggers': 'INIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalPersistor',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'loading',
+              'isInitial': true,
+            },
+            {
+              'name': 'browsing',
+            },
+            {
+              'name': 'error',
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'JournalSummaryLoaded',
+              'name': 'JournalSummary loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[JournalSummary]',
+                },
+                {
+                  'name': 'totalCount',
+                  'type': 'number',
+                },
+              ],
+            },
+            {
+              'key': 'JournalSummaryLoadFailed',
+              'name': 'JournalSummary load failed',
+              'payloadSchema': [
+                {
+                  'name': 'error',
+                  'type': 'string',
+                },
+                {
+                  'name': 'code',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'VIEW',
+              'name': 'View',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'JournalSummary',
+                },
+              ],
+            },
+            {
+              'key': 'EDIT',
+              'name': 'Edit',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'JournalSummary',
+                },
+              ],
+            },
+            {
+              'key': 'DELETE',
+              'name': 'Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                {
+                  'name': 'row',
+                  'type': 'JournalSummary',
+                },
+              ],
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'loading',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'JournalSummary',
+                  {
+                    'emit': {
+                      'failure': 'JournalSummaryLoadFailed',
+                      'success': 'JournalSummaryLoaded',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'gap': 'md',
+                    'type': 'stack',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
+                        'content': 'Loading journal periods…',
+                      },
+                    ],
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'align': 'center',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'browsing',
+              'event': 'JournalSummaryLoaded',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'data-grid',
+                    'gap': 'sm',
+                    'entity': '@payload.data',
+                    'cols': 1,
+                    'itemActions': [
+                      {
+                        'label': 'View',
+                        'variant': 'ghost',
+                        'event': 'VIEW',
+                      },
+                      {
+                        'event': 'EDIT',
+                        'label': 'Edit',
+                        'variant': 'ghost',
+                      },
+                      {
+                        'label': 'Delete',
+                        'variant': 'danger',
+                        'event': 'DELETE',
+                      },
+                    ],
+                    'fields': [
+                      {
+                        'label': 'Period',
+                        'name': 'period',
+                        'variant': 'h4',
+                        'icon': 'calendar',
+                      },
+                      {
+                        'label': 'Status',
+                        'variant': 'badge',
+                        'name': 'status',
+                      },
+                      {
+                        'variant': 'caption',
+                        'name': 'totalDebits',
+                        'label': 'Total Debits',
+                      },
+                      {
+                        'name': 'totalCredits',
+                        'variant': 'caption',
+                        'label': 'Total Credits',
+                      },
+                    ],
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'loading',
+              'to': 'error',
+              'event': 'JournalSummaryLoadFailed',
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'variant': 'error',
+                    'type': 'alert',
+                    'message': '@payload.error',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'JournalSummary',
+                  {
+                    'emit': {
+                      'success': 'JournalSummaryLoaded',
+                      'failure': 'JournalSummaryLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'VIEW',
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'EDIT',
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+              ],
+            },
+            {
+              'from': 'browsing',
+              'to': 'browsing',
+              'event': 'DELETE',
+              'effects': [
+                [
+                  'set',
+                  '@entity.id',
+                  '@payload.id',
+                ],
+              ],
+            },
+            {
+              'from': 'error',
+              'to': 'loading',
+              'event': 'INIT',
+              'effects': [
+                [
+                  'fetch',
+                  'JournalSummary',
+                  {
+                    'emit': {
+                      'success': 'JournalSummaryLoaded',
+                      'failure': 'JournalSummaryLoadFailed',
+                    },
+                  },
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'type': 'spinner',
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'collection',
+      } as never,
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'JournalCreate',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'New Journal Period',
+          'mode': 'create',
+          'fields': [
+            'period',
+            'totalDebits',
+            'totalCredits',
+            'status',
+          ],
+          'icon': 'plus-circle',
+        },
+        'events': {
+          'OPEN': 'CREATE',
+        },
+        'listens': [
+          {
+            'event': 'CREATE',
+            'triggers': 'CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalCatalog',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'JournalEdit',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Edit Journal Period',
+          'mode': 'edit',
+          'fields': [
+            'period',
+            'totalDebits',
+            'totalCredits',
+            'status',
+          ],
+          'icon': 'edit',
+        },
+        'events': {
+          'OPEN': 'EDIT',
+        },
+        'listens': [
+          {
+            'event': 'EDIT',
+            'triggers': 'EDIT',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Modal.traits.ModalRecordModal',
+        'name': 'JournalView',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'View Journal Period',
+          'fields': [
+            'period',
+            'totalDebits',
+            'totalCredits',
+            'status',
+          ],
+          'mode': 'edit',
+          'icon': 'eye',
+        },
+        'events': {
+          'OPEN': 'VIEW',
+        },
+        'listens': [
+          {
+            'event': 'VIEW',
+            'triggers': 'VIEW',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalBrowseList',
+            },
+          },
+        ],
+      }),
+      makeTraitRef({
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
+        'name': 'JournalDelete',
+        'linkedEntity': canonicalName,
+        'config': {
+          'confirmLabel': 'Delete',
+          'title': 'Delete Journal Period',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+        },
+        'events': {
+          'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
+        },
+        'listens': [
+          {
+            'event': 'DELETE',
+            'triggers': 'DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalBrowseList',
+            },
+          },
+        ],
+      }),
+      {
+        'name': 'JournalPersistor',
+        'category': 'lifecycle',
+        'linkedEntity': 'JournalSummary',
+        'emits': [
+          {
+            'event': 'JOURNAL_CREATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'JOURNAL_UPDATED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+          {
+            'event': 'JOURNAL_DELETED',
+            'scope': 'external',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+          },
+        ],
+        'listens': [
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_CREATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalCreate',
+            },
+          },
+          {
+            'event': 'SAVE',
+            'triggers': 'DO_UPDATE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalEdit',
+            },
+          },
+          {
+            'event': 'CONFIRM_DELETE',
+            'triggers': 'DO_DELETE',
+            'source': {
+              'kind': 'trait',
+              'trait': 'JournalDelete',
+            },
+          },
+        ],
+        'stateMachine': {
+          'states': [
+            {
+              'name': 'idle',
+              'isInitial': true,
+            },
+          ],
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'key': 'DO_CREATE',
+              'name': 'Do Create',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_UPDATE',
+              'name': 'Do Update',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': 'object',
+                  'required': true,
+                },
+              ],
+            },
+            {
+              'key': 'DO_DELETE',
+              'name': 'Do Delete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+            },
+            {
+              'key': 'JOURNAL_CREATED',
+              'name': 'Journal Created',
+            },
+            {
+              'key': 'JOURNAL_UPDATED',
+              'name': 'Journal Updated',
+            },
+            {
+              'key': 'JOURNAL_DELETED',
+              'name': 'Journal Deleted',
+            },
+          ],
+          'transitions': [
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'INIT',
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_CREATE',
+              'effects': [
+                [
+                  'persist',
+                  'create',
+                  'JournalSummary',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'JOURNAL_CREATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_UPDATE',
+              'effects': [
+                [
+                  'persist',
+                  'update',
+                  'JournalSummary',
+                  '@payload.data',
+                  {
+                    'emit': {
+                      'success': 'JOURNAL_UPDATED',
+                    },
+                  },
+                ],
+              ],
+            },
+            {
+              'from': 'idle',
+              'to': 'idle',
+              'event': 'DO_DELETE',
+              'effects': [
+                [
+                  'persist',
+                  'delete',
+                  'JournalSummary',
+                  '@payload.id',
+                  {
+                    'emit': {
+                      'success': 'JOURNAL_DELETED',
+                    },
+                  },
+                ],
+              ],
+            },
+          ],
+        },
+        'scope': 'instance',
+      } as never,
+      makeTraitRef({
+        'ref': 'LedgerEntry.traits.LedgerEntryJournal',
+        'name': 'JournalEntriesPanel',
+        'config': {
+          'title': 'Ledger Entries',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'LedgerEntryForm.traits.JournalTransactionBrowse',
+        'name': 'JournalTransactionBrowse',
+      }),
+      makeTraitRef({
+        'ref': 'LedgerEntryForm.traits.JournalTransactionCreate',
+        'name': 'JournalTransactionCreate',
+      }),
+      makeTraitRef({
+        'ref': 'LedgerEntryForm.traits.JournalTransactionDelete',
+        'name': 'JournalTransactionDelete',
+      }),
+      makeTraitRef({
+        'ref': 'LedgerEntryForm.traits.JournalTransactionPersistor',
+        'name': 'JournalTransactionPersistor',
+      }),
+      makeTraitRef({
+        'ref': 'ChartOfAccounts.traits.AccountChart',
+        'name': 'JournalAccountsPanel',
+        'config': {
+          'title': 'Chart of Accounts',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'ApBill.traits.ApBillLedger',
+        'name': 'JournalApBillsPanel',
+        'config': {
+          'title': 'AP Bills',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Invoice.traits.InvoiceManage',
+        'name': 'JournalInvoicesPanel',
+        'config': {
+          'title': 'AR Invoices',
+        },
+      }),
     ],
     pages: [
-      stdAccountingJournalSummariesPagePage(params),
-      stdAccountingJournalEntriesPagePage(params),
-      stdAccountingJournalAccountsPagePage(params),
-      stdAccountingJournalApBillsPagePage(params),
-      stdAccountingJournalInvoicesPagePage(params),
+      {
+        'name': 'JournalSummariesPage',
+        'path': '/journal-summaries',
+        'traits': [
+          {
+            'ref': 'JournalAppLayout',
+          },
+          {
+            'ref': 'JournalCatalog',
+          },
+          {
+            'ref': 'JournalSearch',
+          },
+          {
+            'ref': 'JournalFilter',
+          },
+          {
+            'ref': 'JournalStats',
+          },
+          {
+            'ref': 'JournalGraphs',
+          },
+          {
+            'ref': 'JournalBrowseList',
+          },
+          {
+            'ref': 'JournalCreate',
+          },
+          {
+            'ref': 'JournalEdit',
+          },
+          {
+            'ref': 'JournalView',
+          },
+          {
+            'ref': 'JournalDelete',
+          },
+          {
+            'ref': 'JournalPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'JournalEntriesPage',
+        'path': '/entries',
+        'traits': [
+          {
+            'ref': 'JournalAppLayout',
+          },
+          {
+            'ref': 'JournalEntriesPanel',
+          },
+          {
+            'ref': 'JournalTransactionBrowse',
+          },
+          {
+            'ref': 'JournalTransactionCreate',
+          },
+          {
+            'ref': 'JournalTransactionDelete',
+          },
+          {
+            'ref': 'JournalTransactionPersistor',
+          },
+        ],
+      } as never,
+      {
+        'name': 'JournalAccountsPage',
+        'path': '/accounts',
+        'traits': [
+          {
+            'ref': 'JournalAppLayout',
+          },
+          {
+            'ref': 'JournalAccountsPanel',
+          },
+        ],
+      } as never,
+      {
+        'name': 'JournalApBillsPage',
+        'path': '/bills',
+        'traits': [
+          {
+            'ref': 'JournalAppLayout',
+          },
+          {
+            'ref': 'JournalApBillsPanel',
+          },
+        ],
+      } as never,
+      {
+        'name': 'JournalInvoicesPage',
+        'path': '/invoices',
+        'traits': [
+          {
+            'ref': 'JournalAppLayout',
+          },
+          {
+            'ref': 'JournalInvoicesPanel',
+          },
+        ],
+      } as never,
     ],
   });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference;
+      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdAccountingJournalOrbital. */
+export const StdAccountingJournalOrbitalManifest = {
+  organism: 'std-accounting',
+  orbitalName: 'JournalOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'JournalAppLayout',
+    'JournalSearch',
+    'JournalFilter',
+    'JournalStats',
+    'JournalGraphs',
+    'JournalCreate',
+    'JournalEdit',
+    'JournalView',
+    'JournalDelete',
+    'JournalEntriesPanel',
+    'JournalTransactionBrowse',
+    'JournalTransactionCreate',
+    'JournalTransactionDelete',
+    'JournalTransactionPersistor',
+    'JournalAccountsPanel',
+    'JournalApBillsPanel',
+    'JournalInvoicesPanel',
+  ] as const,
+  inlineTraitNames: [
+    'JournalCatalog',
+    'JournalBrowseList',
+    'JournalPersistor',
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdAccountingJournalOrbitalParams keys. */
+export function isStdAccountingJournalOrbitalParams(p: object): p is StdAccountingJournalOrbitalParams {
+  type _OverrideRecord = NonNullable<StdAccountingJournalOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = StdAccountingJournalOrbitalManifest.traitNames;
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Bundled params for std-accounting — one optional entry per orbital.
+ * Each entry maps to its per-orbital factory above.
+ */
+export interface StdAccountingParams {
+  Journal?: StdAccountingJournalOrbitalParams;
+}
+
+/** Whole-organism descriptor (1 orbitals). Composes per-orbital factories. */
+export function stdAccounting(params: StdAccountingParams = {}): OrbitalDefinition[] {
+  return [
+    stdAccountingJournalOrbital(params.Journal ?? {}),
+  ];
 }
