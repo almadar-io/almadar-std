@@ -50,7 +50,7 @@ export interface StdExportConfig {
   tileId?: string;
   /** Default: `"EXPORT_REQUESTED"` */
   event?: string;
-  /** Default: `[{"id":"csv","label":"CSV","format":"csv"},{"id":"xlsx","label":"XLSX","format":"xlsx"},{"id":"pdf","label":"PDF","format":"pdf"}]` */
+  /** Default: `[{"id":"csv","format":"csv","label":"CSV"},{"id":"xlsx","format":"xlsx","label":"XLSX"},{"label":"PDF","format":"pdf","id":"pdf"}]` */
   formats?: EntityRow[];
 }
 
