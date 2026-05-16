@@ -1,7 +1,7 @@
 {
   "name": "std-date-range",
-  "version": "1.0.0",
-  "description": "std-date-range — single primitive: date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to (matching DateRangePicker's emit shape) so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery).",
+  "version": "2.0.0",
+  "description": "std-date-range — compact calendar button (Looker / Tableau shape) that opens a popover containing the date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery).",
   "orbitals": [
     {
       "name": "DateRangeOrbital",
@@ -59,6 +59,10 @@
                 "name": "Initialize"
               },
               {
+                "key": "OPEN_DATE_RANGE",
+                "name": "Open Date Range"
+              },
+              {
                 "key": "DATE_RANGE_CHANGED",
                 "name": "Date Range Changed",
                 "payloadSchema": [
@@ -85,11 +89,35 @@
                     "render-ui",
                     "main",
                     {
-                      "toLabel": "@config.toLabel",
-                      "fromLabel": "@config.fromLabel",
-                      "event": "@config.event",
-                      "type": "date-range-picker"
+                      "position": "bottom",
+                      "children": {
+                        "type": "button",
+                        "size": "sm",
+                        "icon": "calendar",
+                        "action": "OPEN_DATE_RANGE",
+                        "variant": "secondary",
+                        "label": "@config.buttonLabel"
+                      },
+                      "type": "popover",
+                      "content": {
+                        "event": "@config.event",
+                        "toLabel": "@config.toLabel",
+                        "fromLabel": "@config.fromLabel",
+                        "type": "date-range-picker"
+                      }
                     }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "OPEN_DATE_RANGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.from",
+                    "@entity.from"
                   ]
                 ]
               },
@@ -112,12 +140,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "date-range-picker",
-                      "toLabel": "@config.toLabel",
-                      "to": "@entity.to",
-                      "event": "@config.event",
-                      "from": "@entity.from",
-                      "fromLabel": "@config.fromLabel"
+                      "position": "bottom",
+                      "type": "popover",
+                      "children": {
+                        "action": "OPEN_DATE_RANGE",
+                        "variant": "secondary",
+                        "icon": "calendar",
+                        "type": "button",
+                        "size": "sm",
+                        "label": "@config.buttonLabel"
+                      },
+                      "content": {
+                        "from": "@entity.from",
+                        "to": "@entity.to",
+                        "fromLabel": "@config.fromLabel",
+                        "toLabel": "@config.toLabel",
+                        "event": "@config.event",
+                        "type": "date-range-picker"
+                      }
                     }
                   ]
                 ]
@@ -125,6 +165,14 @@
             ]
           },
           "config": {
+            "fromLabel": {
+              "type": "string",
+              "default": "From"
+            },
+            "buttonLabel": {
+              "type": "string",
+              "default": "Date range"
+            },
             "event": {
               "type": "string",
               "default": "DATE_RANGE_CHANGED"
@@ -132,10 +180,6 @@
             "toLabel": {
               "type": "string",
               "default": "To"
-            },
-            "fromLabel": {
-              "type": "string",
-              "default": "From"
             }
           },
           "scope": "instance"

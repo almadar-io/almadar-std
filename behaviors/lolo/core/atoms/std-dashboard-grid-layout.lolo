@@ -1,5 +1,5 @@
-app std-dashboard-grid-layout "4.0.0"
-"std-dashboard-grid-layout — dashboard-layout chrome. Filter row at top (4 slots, horizontal toolbar), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides. Filter row is for interactive toolbar traits (filters, date-range, search, export); tile grid is for data representation (KPIs, charts, tables)."
+app std-dashboard-grid-layout "5.0.0"
+"std-dashboard-grid-layout — dashboard-layout chrome mirroring Looker Studio / Power BI: top-right toolbar slots (export / share / settings — feed `headerActions`), horizontal filter row (date range, search, dropdown filters), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides."
 
 orbital DashboardGridLayoutOrbital {
   entity DashboardGridLayoutState [runtime] {
@@ -17,6 +17,9 @@ orbital DashboardGridLayoutOrbital {
   trait DashboardGridLayout -> DashboardGridLayoutState [interaction, instance] {
     initial: composing
     config {
+      toolbar1Trait : trait = "@trait.EmptyTile"
+      toolbar2Trait : trait = "@trait.EmptyTile"
+      toolbar3Trait : trait = "@trait.EmptyTile"
       filter1Trait : trait = "@trait.EmptyTile"
       filter2Trait : trait = "@trait.EmptyTile"
       filter3Trait : trait = "@trait.EmptyTile"
@@ -39,9 +42,13 @@ orbital DashboardGridLayoutOrbital {
     }
     state composing {
       INIT -> composing
-        (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", children: [
+        (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", headerActions: { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+          "@config.toolbar1Trait",
+          "@config.toolbar2Trait",
+          "@config.toolbar3Trait"
+        ]}, children: [
           { type: "stack", direction: "vertical", gap: "md", children: [
-            { type: "stack", direction: "horizontal", gap: "md", wrap: true, align: "stretch", children: [
+            { type: "stack", direction: "horizontal", gap: "md", wrap: true, align: "center", children: [
               "@config.filter1Trait",
               "@config.filter2Trait",
               "@config.filter3Trait",

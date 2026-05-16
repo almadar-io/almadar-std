@@ -27,7 +27,9 @@ orbital ExportOrbital {
     state idle {
       INIT -> idle
         (set @entity.options @config.formats)
-        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "download" }, { type: "typography", content: "Export", variant: "h4" }] }, { type: "typography", content: "Choose a format to download this view", variant: "caption" }, { type: "data-list", entity: "@entity.options", fields: [], renderItem: ["fn", "fmt", { type: "button", label: "@fmt.label", variant: "outline", size: "sm", icon: "file-down", action: "@config.event", actionPayload: { format: "@fmt.format", tileId: "@config.tileId" } }] }] }] })
+        (render-ui main { type: "popover", position: "bottom", children: { type: "button", icon: "download", variant: "ghost", size: "sm", label: "Export", action: "OPEN_EXPORT" }, content: { type: "data-list", entity: "@entity.options", fields: [], renderItem: ["fn", "fmt", { type: "button", label: "@fmt.label", variant: "ghost", size: "sm", icon: "file-down", action: "@config.event", actionPayload: { format: "@fmt.format", tileId: "@config.tileId" } }] } })
+      OPEN_EXPORT -> idle
+        (set @entity.options @entity.options)
       EXPORT_REQUESTED -> idle
         (set @entity.options @entity.options)
     }

@@ -29,7 +29,7 @@ const ALIAS = 'Export';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdExportEventKey = 'EXPORT_REQUESTED' | 'INIT';
+export type StdExportEventKey = 'EXPORT_REQUESTED' | 'INIT' | 'OPEN_EXPORT';
 
 /**
  * Payload shape for the `EXPORT_REQUESTED` event.
@@ -50,7 +50,7 @@ export interface StdExportConfig {
   tileId?: string;
   /** Default: `"EXPORT_REQUESTED"` */
   event?: string;
-  /** Default: `[{"id":"csv","format":"csv","label":"CSV"},{"id":"xlsx","format":"xlsx","label":"XLSX"},{"label":"PDF","format":"pdf","id":"pdf"}]` */
+  /** Default: `[{"id":"csv","format":"csv","label":"CSV"},{"id":"xlsx","label":"XLSX","format":"xlsx"},{"id":"pdf","format":"pdf","label":"PDF"}]` */
   formats?: EntityRow[];
 }
 

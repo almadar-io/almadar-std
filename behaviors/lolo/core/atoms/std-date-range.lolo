@@ -1,5 +1,5 @@
-app std-date-range "1.0.0"
-"std-date-range — single primitive: date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to (matching DateRangePicker's emit shape) so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery)."
+app std-date-range "2.0.0"
+"std-date-range — compact calendar button (Looker / Tableau shape) that opens a popover containing the date-range-picker. Owns a DateRange runtime entity; DATE_RANGE_CHANGED persists @payload.from + @payload.to so cross-trait listeners can route the range into data atoms (Browse REFETCH_FILTER, Stats / Graphs requery)."
 
 orbital DateRangeOrbital {
   entity DateRange [runtime] {
@@ -11,17 +11,20 @@ orbital DateRangeOrbital {
   trait DateRangeFilter -> DateRange [interaction, instance] {
     initial: idle
     config {
-      event     : string = "DATE_RANGE_CHANGED"
-      fromLabel : string = "From"
-      toLabel   : string = "To"
+      event       : string = "DATE_RANGE_CHANGED"
+      fromLabel   : string = "From"
+      toLabel     : string = "To"
+      buttonLabel : string = "Date range"
     }
     state idle {
       INIT -> idle
-        (render-ui main { type: "date-range-picker", event: "@config.event", fromLabel: "@config.fromLabel", toLabel: "@config.toLabel" })
+        (render-ui main { type: "popover", position: "bottom", children: { type: "button", icon: "calendar", variant: "secondary", size: "sm", label: "@config.buttonLabel", action: "OPEN_DATE_RANGE" }, content: { type: "date-range-picker", event: "@config.event", fromLabel: "@config.fromLabel", toLabel: "@config.toLabel" } })
+      OPEN_DATE_RANGE -> idle
+        (set @entity.from @entity.from)
       DATE_RANGE_CHANGED -> idle
         (set @entity.from @payload.from)
         (set @entity.to   @payload.to)
-        (render-ui main { type: "date-range-picker", event: "@config.event", fromLabel: "@config.fromLabel", toLabel: "@config.toLabel", from: "@entity.from", to: "@entity.to" })
+        (render-ui main { type: "popover", position: "bottom", children: { type: "button", icon: "calendar", variant: "secondary", size: "sm", label: "@config.buttonLabel", action: "OPEN_DATE_RANGE" }, content: { type: "date-range-picker", event: "@config.event", fromLabel: "@config.fromLabel", toLabel: "@config.toLabel", from: "@entity.from", to: "@entity.to" } })
     }
     emits {
       DATE_RANGE_CHANGED { from : string!, to : string! }

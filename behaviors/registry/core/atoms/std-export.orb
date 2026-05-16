@@ -59,6 +59,10 @@
                 "name": "Initialize"
               },
               {
+                "key": "OPEN_EXPORT",
+                "name": "Open Export"
+              },
+              {
                 "key": "EXPORT_REQUESTED",
                 "name": "Export Requested",
                 "payloadSchema": [
@@ -89,60 +93,50 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "card",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "download",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Export",
-                                  "variant": "h4",
-                                  "type": "typography"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "content": "Choose a format to download this view",
-                              "type": "typography",
-                              "variant": "caption"
-                            },
-                            {
-                              "fields": [],
-                              "type": "data-list",
-                              "entity": "@entity.options",
-                              "renderItem": [
-                                "fn",
-                                "fmt",
-                                {
-                                  "action": "@config.event",
-                                  "variant": "outline",
-                                  "size": "sm",
-                                  "actionPayload": {
-                                    "format": "@fmt.format",
-                                    "tileId": "@config.tileId"
-                                  },
-                                  "label": "@fmt.label",
-                                  "type": "button",
-                                  "icon": "file-down"
-                                }
-                              ]
+                      "children": {
+                        "size": "sm",
+                        "action": "OPEN_EXPORT",
+                        "variant": "ghost",
+                        "icon": "download",
+                        "label": "Export",
+                        "type": "button"
+                      },
+                      "type": "popover",
+                      "position": "bottom",
+                      "content": {
+                        "type": "data-list",
+                        "fields": [],
+                        "renderItem": [
+                          "fn",
+                          "fmt",
+                          {
+                            "icon": "file-down",
+                            "size": "sm",
+                            "type": "button",
+                            "action": "@config.event",
+                            "variant": "ghost",
+                            "label": "@fmt.label",
+                            "actionPayload": {
+                              "tileId": "@config.tileId",
+                              "format": "@fmt.format"
                             }
-                          ]
-                        }
-                      ]
+                          }
+                        ],
+                        "entity": "@entity.options"
+                      }
                     }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "OPEN_EXPORT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.options",
+                    "@entity.options"
                   ]
                 ]
               },
@@ -179,13 +173,13 @@
                 },
                 {
                   "id": "xlsx",
-                  "format": "xlsx",
-                  "label": "XLSX"
+                  "label": "XLSX",
+                  "format": "xlsx"
                 },
                 {
-                  "label": "PDF",
+                  "id": "pdf",
                   "format": "pdf",
-                  "id": "pdf"
+                  "label": "PDF"
                 }
               ]
             }
