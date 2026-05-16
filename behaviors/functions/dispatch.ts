@@ -2400,8 +2400,13 @@ export function dispatchOrbitalFactory(
     if (!def.uses) def.uses = [];
     if (!def.traits) def.traits = [];
     for (const extra of extraTraits) {
-      const alreadyUsed = def.uses.some((u) => u.from === extra.from);
-      if (!alreadyUsed) {
+      // Dedup on alias (`as`), not registry path (`from`). Multiple
+      // aliases for the same path are valid: the factory may have
+      // already imported `from: std-stats as: Stats`, but a caller
+      // appending `from: std-stats as: KpiStats` needs the new
+      // alias registered so its `ref: KpiStats.traits.…` resolves.
+      const aliasTaken = def.uses.some((u) => u.as === extra.as);
+      if (!aliasTaken) {
         def.uses.push({ from: extra.from, as: extra.as });
       }
       const { from: _from, as: _as, ...traitFields } = extra;
