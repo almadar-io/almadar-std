@@ -1,5 +1,5 @@
-app std-matter "1.0.0"
-"std-matter — legal matter primitive: a single case (litigation, contract review, immigration filing) with client, status, lead attorney. Lists matters in `browsing`; opens matter detail in `viewing_single` with Close / Hold / Reopen actions."
+app std-matter "1.1.0"
+"std-matter — legal matter primitive: a single case (litigation, contract review, immigration filing) with client, status, lead attorney. Lists matters in `browsing`; opens matter detail in `viewing_single` with Close / Hold / Reopen actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital MatterOrbital {
   entity Matter [persistent: matters] {
@@ -20,7 +20,19 @@ orbital MatterOrbital {
 
   trait MatterDocket -> Matter [interaction, collection] {
     config {
-      title : string = "Matters"
+      title       : string   = "Matters"
+      fields      : [object] = [
+        { name: "matterNumber", label: "Matter #",  variant: "caption" },
+        { name: "title",        label: "Title",     variant: "caption" },
+        { name: "clientName",   label: "Client",    variant: "caption" },
+        { name: "practiceArea", label: "Practice",  variant: "badge"   },
+        { name: "leadAttorney", label: "Lead",      variant: "caption" },
+        { name: "status",       label: "Status",    variant: "badge"   }
+      ]
+      itemActions : [object] = [
+        { label: "Open",  event: "OPEN_MATTER",  variant: "primary", icon: "arrow-right" },
+        { label: "Close", event: "CLOSE_MATTER", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -28,7 +40,7 @@ orbital MatterOrbital {
         (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading matters…" }] })
       MatterLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "scale" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total matters", value: "@payload.data.length", icon: "scale" }, { type: "stat-display", label: "Active", value: "34", icon: "play-circle" }, { type: "stat-display", label: "On hold", value: "6", icon: "pause-circle" }, { type: "stat-display", label: "Closed this month", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "matterNumber", label: "Matter #", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "clientName", label: "Client", variant: "caption" }, { name: "practiceArea", label: "Practice", variant: "badge" }, { name: "leadAttorney", label: "Lead", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_MATTER", variant: "primary", icon: "arrow-right" }, { label: "Close", event: "CLOSE_MATTER", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "scale" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total matters", value: "@payload.data.length", icon: "scale" }, { type: "stat-display", label: "Active", value: "34", icon: "play-circle" }, { type: "stat-display", label: "On hold", value: "6", icon: "pause-circle" }, { type: "stat-display", label: "Closed this month", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       MatterLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

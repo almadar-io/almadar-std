@@ -1,7 +1,7 @@
 {
   "name": "std-membership",
-  "version": "1.0.0",
-  "description": "std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions.",
+  "version": "1.1.0",
+  "description": "std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "MembershipOrbital",
@@ -307,22 +307,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
                       "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading memberships…",
-                          "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "content": "Loading memberships…"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -336,12 +336,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal",
@@ -355,88 +352,53 @@
                               "content": "@config.title",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "label": "Total memberships",
                               "value": "@payload.data.length",
+                              "type": "stat-display",
                               "icon": "credit-card",
-                              "type": "stat-display"
+                              "label": "Total memberships"
                             },
                             {
+                              "value": "112",
                               "icon": "check-circle",
                               "type": "stat-display",
-                              "label": "Active",
-                              "value": "112"
+                              "label": "Active"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Frozen",
-                              "value": "8",
-                              "icon": "pause-circle"
+                              "icon": "pause-circle",
+                              "type": "stat-display",
+                              "value": "8"
                             },
                             {
                               "value": "$14,820",
                               "label": "MRR",
-                              "icon": "dollar-sign",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "dollar-sign"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "fields": [
-                            {
-                              "label": "Member",
-                              "name": "memberName",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Tier",
-                              "name": "tier",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "monthlyDues",
-                              "label": "Monthly Dues",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "renewalDate",
-                              "label": "Renews"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ],
+                          "fields": "@config.fields",
+                          "cols": 1.0,
+                          "itemActions": "@config.itemActions",
                           "type": "data-grid",
                           "entity": "@payload.data",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "event": "OPEN_MEMBERSHIP",
-                              "label": "Open",
-                              "variant": "primary",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Cancel",
-                              "event": "CANCEL_MEMBERSHIP"
-                            }
-                          ]
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -451,8 +413,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -516,15 +478,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Back",
                               "type": "button",
                               "variant": "ghost",
+                              "label": "Back",
                               "action": "CLOSE_MEMBERSHIP"
                             },
                             {
@@ -532,30 +498,27 @@
                               "name": "credit-card"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.memberName"
+                              "content": "@entity.memberName",
+                              "variant": "h3"
                             },
                             {
-                              "type": "badge",
+                              "label": "@entity.tier",
                               "variant": "primary",
-                              "label": "@entity.tier"
+                              "type": "badge"
                             },
                             {
                               "label": "@entity.status",
                               "variant": "default",
                               "type": "badge"
                             }
-                          ],
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "direction": "vertical",
                           "gap": "sm",
                           "children": [
@@ -564,10 +527,10 @@
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Access level",
                                   "color": "muted",
-                                  "variant": "caption"
+                                  "content": "Access level",
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
                                   "variant": "body",
@@ -578,25 +541,24 @@
                               "gap": "md"
                             },
                             {
+                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Notes",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Notes"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.notes",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
                               ]
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -604,61 +566,61 @@
                         {
                           "children": [
                             {
-                              "label": "Monthly dues",
-                              "type": "stat-display",
                               "value": "@entity.monthlyDues",
-                              "icon": "dollar-sign"
+                              "type": "stat-display",
+                              "icon": "dollar-sign",
+                              "label": "Monthly dues"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Started",
                               "value": "@entity.startDate",
-                              "type": "stat-display",
                               "icon": "calendar"
                             },
                             {
-                              "icon": "refresh-cw",
                               "type": "stat-display",
                               "value": "@entity.renewalDate",
+                              "icon": "refresh-cw",
                               "label": "Renews"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
                           "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "UPGRADE_TIER",
+                              "label": "Upgrade Tier",
                               "type": "button",
                               "variant": "primary",
+                              "action": "UPGRADE_TIER",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "label": "Upgrade Tier"
+                              }
                             },
                             {
-                              "type": "button",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "variant": "secondary",
                               "action": "FREEZE_MEMBERSHIP",
-                              "label": "Freeze"
-                            },
-                            {
-                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Cancel",
+                              "label": "Freeze",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
                               "action": "CANCEL_MEMBERSHIP",
-                              "type": "button"
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Cancel"
                             }
-                          ],
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
                       "gap": "md"
@@ -690,22 +652,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Cancelling membership…"
+                          "content": "Cancelling membership…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -729,22 +691,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading memberships…",
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Loading memberships…"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center"
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -764,8 +726,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -773,22 +735,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Upgrading tier…",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -808,8 +770,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -817,20 +779,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Freezing membership…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Freezing membership…"
                         }
                       ],
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "align": "center"
                     }
@@ -852,8 +814,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -861,22 +823,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Cancelling membership…",
-                          "type": "typography"
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Cancelling membership…"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -909,9 +871,55 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "event": "OPEN_MEMBERSHIP"
+                },
+                {
+                  "event": "CANCEL_MEMBERSHIP",
+                  "label": "Cancel",
+                  "variant": "danger"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Memberships"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "memberName",
+                  "label": "Member",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Tier",
+                  "name": "tier",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Monthly Dues",
+                  "variant": "caption",
+                  "name": "monthlyDues"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Renews",
+                  "name": "renewalDate"
+                },
+                {
+                  "variant": "badge",
+                  "label": "Status",
+                  "name": "status"
+                }
+              ]
             }
           },
           "scope": "collection"

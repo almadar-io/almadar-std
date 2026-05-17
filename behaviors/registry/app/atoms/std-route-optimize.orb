@@ -1,7 +1,7 @@
 {
   "name": "std-route-optimize",
-  "version": "1.0.0",
-  "description": "std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions.",
+  "version": "1.1.0",
+  "description": "std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "RouteOptimizeOrbital",
@@ -250,20 +250,20 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Loading routes…",
-                          "variant": "caption"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ]
                     }
@@ -280,22 +280,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "name": "map",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "map"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title"
                             }
                           ]
@@ -304,15 +303,15 @@
                           "cols": 4.0,
                           "children": [
                             {
-                              "icon": "map",
-                              "label": "Total routes",
                               "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Total routes",
+                              "icon": "map"
                             },
                             {
+                              "icon": "check-circle",
                               "value": "14",
                               "type": "stat-display",
-                              "icon": "check-circle",
                               "label": "Optimized today"
                             },
                             {
@@ -323,8 +322,8 @@
                             },
                             {
                               "value": "92 min",
-                              "icon": "clock",
                               "label": "Avg duration",
+                              "icon": "clock",
                               "type": "stat-display"
                             }
                           ],
@@ -334,47 +333,15 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "Technician",
-                              "name": "technicianId",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "totalDistanceKm",
-                              "label": "Distance (km)",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "totalDurationMinutes",
-                              "label": "Duration (min)"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "optimizedAt",
-                              "label": "Optimized"
-                            }
-                          ],
                           "gap": "sm",
+                          "entity": "@payload.data",
                           "type": "data-grid",
                           "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "label": "Open",
-                              "event": "OPEN_ROUTE",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "label": "Optimize",
-                              "event": "OPTIMIZE",
-                              "variant": "danger"
-                            }
-                          ]
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -388,9 +355,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -439,17 +406,16 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
                               "label": "Back",
                               "variant": "ghost",
-                              "type": "button"
+                              "type": "button",
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "type": "icon",
@@ -461,25 +427,28 @@
                               "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "label": "Optimized",
+                              "type": "badge",
                               "variant": "success"
                             }
                           ],
-                          "gap": "sm"
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "type": "typography",
+                                  "color": "muted",
                                   "content": "Origin lat",
                                   "variant": "caption"
                                 },
@@ -490,86 +459,84 @@
                                 }
                               ],
                               "direction": "horizontal",
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "Origin lng",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Origin lng"
                                 },
                                 {
-                                  "content": "@entity.originLng",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.originLng"
                                 }
                               ],
-                              "type": "stack",
                               "gap": "md"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "vertical"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Distance (km)",
-                              "value": "@entity.totalDistanceKm",
+                              "type": "stat-display",
                               "icon": "navigation",
-                              "type": "stat-display"
+                              "value": "@entity.totalDistanceKm",
+                              "label": "Distance (km)"
                             },
                             {
+                              "label": "Duration (min)",
                               "icon": "clock",
                               "type": "stat-display",
-                              "label": "Duration (min)",
                               "value": "@entity.totalDurationMinutes"
                             },
                             {
                               "type": "stat-display",
+                              "value": "@entity.optimizedAt",
                               "icon": "calendar",
-                              "label": "Last optimized",
-                              "value": "@entity.optimizedAt"
+                              "label": "Last optimized"
                             }
                           ],
-                          "cols": 3.0
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
                           "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "action": "OPTIMIZE",
-                              "type": "button",
                               "label": "Optimize",
+                              "type": "button",
                               "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "variant": "danger",
                               "type": "button",
                               "action": "RESET_ROUTE",
-                              "label": "Reset",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "variant": "danger",
+                              "label": "Reset"
                             }
                           ]
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -590,8 +557,8 @@
                     "Route",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ],
@@ -599,22 +566,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Optimizing route…",
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Optimizing route…"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -645,20 +612,20 @@
                     {
                       "className": "py-12",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Resetting route…",
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Resetting route…"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -682,22 +649,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading routes…",
-                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -732,15 +699,15 @@
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "Optimizing route…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
+                      "direction": "vertical",
                       "type": "stack",
+                      "align": "center",
                       "className": "py-12"
                     }
                   ]
@@ -761,8 +728,8 @@
                     "Route",
                     {
                       "emit": {
-                        "failure": "RouteLoadFailed",
-                        "success": "RouteLoaded"
+                        "success": "RouteLoaded",
+                        "failure": "RouteLoadFailed"
                       }
                     }
                   ],
@@ -770,22 +737,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "vertical",
                       "type": "stack",
-                      "className": "py-12",
                       "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Resetting route…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Resetting route…"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -800,8 +767,8 @@
                     "Route",
                     {
                       "emit": {
-                        "success": "RouteLoaded",
-                        "failure": "RouteLoadFailed"
+                        "failure": "RouteLoadFailed",
+                        "success": "RouteLoaded"
                       }
                     }
                   ],
@@ -818,9 +785,50 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "event": "OPEN_ROUTE",
+                  "variant": "primary"
+                },
+                {
+                  "event": "OPTIMIZE",
+                  "label": "Optimize",
+                  "variant": "danger"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Routes"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "technicianId",
+                  "label": "Technician",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Distance (km)",
+                  "name": "totalDistanceKm"
+                },
+                {
+                  "variant": "caption",
+                  "name": "totalDurationMinutes",
+                  "label": "Duration (min)"
+                },
+                {
+                  "name": "optimizedAt",
+                  "variant": "caption",
+                  "label": "Optimized"
+                }
+              ]
             }
           },
           "scope": "collection"

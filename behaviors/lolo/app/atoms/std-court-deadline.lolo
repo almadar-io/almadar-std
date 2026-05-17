@@ -1,5 +1,5 @@
-app std-court-deadline "1.0.0"
-"std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions."
+app std-court-deadline "1.1.0"
+"std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital CourtDeadlineOrbital {
   entity CourtDeadline [persistent: courtdeadlines] {
@@ -20,7 +20,19 @@ orbital CourtDeadlineOrbital {
 
   trait CourtDeadlineDocket -> CourtDeadline [interaction, collection] {
     config {
-      title : string = "Deadlines"
+      title       : string   = "Deadlines"
+      fields      : [object] = [
+        { name: "title",        label: "Title",        variant: "caption" },
+        { name: "deadlineType", label: "Type",         variant: "badge"   },
+        { name: "dueAt",        label: "Due",          variant: "caption" },
+        { name: "jurisdiction", label: "Jurisdiction", variant: "caption" },
+        { name: "assignedTo",   label: "Assigned",     variant: "caption" },
+        { name: "status",       label: "Status",       variant: "badge"   }
+      ]
+      itemActions : [object] = [
+        { label: "Open",     event: "OPEN_DEADLINE",  variant: "primary", icon: "arrow-right" },
+        { label: "Complete", event: "MARK_COMPLETED", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -28,7 +40,7 @@ orbital CourtDeadlineOrbital {
         (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading deadlines…" }] })
       CourtDeadlineLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar-clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total deadlines", value: "@payload.data.length", icon: "calendar-clock" }, { type: "stat-display", label: "Due this week", value: "7", icon: "alert-triangle" }, { type: "stat-display", label: "Completed", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Missed YTD", value: "2", icon: "x-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "deadlineType", label: "Type", variant: "badge" }, { name: "dueAt", label: "Due", variant: "caption" }, { name: "jurisdiction", label: "Jurisdiction", variant: "caption" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_DEADLINE", variant: "primary", icon: "arrow-right" }, { label: "Complete", event: "MARK_COMPLETED", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar-clock" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total deadlines", value: "@payload.data.length", icon: "calendar-clock" }, { type: "stat-display", label: "Due this week", value: "7", icon: "alert-triangle" }, { type: "stat-display", label: "Completed", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Missed YTD", value: "2", icon: "x-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       CourtDeadlineLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

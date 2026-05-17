@@ -1,7 +1,7 @@
 {
   "name": "std-offer-letter",
-  "version": "1.0.0",
-  "description": "std-offer-letter — formal job offer primitive. Owns an OfferLetter entity (applicant, position, salary, start date, acceptance status). Browses offers in a data-grid with Send / Revoke actions.",
+  "version": "1.1.0",
+  "description": "std-offer-letter — formal job offer primitive. Owns an OfferLetter entity (applicant, position, salary, start date, acceptance status). Browses offers in a data-grid with Send / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "OfferLetterOrbital",
@@ -262,8 +262,8 @@
                     "OfferLetter",
                     {
                       "emit": {
-                        "success": "OfferLetterLoaded",
-                        "failure": "OfferLetterLoadFailed"
+                        "failure": "OfferLetterLoadFailed",
+                        "success": "OfferLetterLoaded"
                       }
                     }
                   ],
@@ -271,22 +271,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading offer letters…"
+                          "content": "Loading offer letters…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "className": "py-12"
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -300,106 +300,68 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
-                          "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@payload.data.length",
-                              "type": "stat-display",
                               "icon": "file-text",
+                              "type": "stat-display",
+                              "value": "@payload.data.length",
                               "label": "Total offers"
                             },
                             {
-                              "icon": "send",
-                              "label": "Sent",
                               "type": "stat-display",
-                              "value": "23"
+                              "label": "Sent",
+                              "value": "23",
+                              "icon": "send"
                             },
                             {
+                              "label": "Accepted",
                               "value": "14",
                               "icon": "check-circle",
-                              "label": "Accepted",
                               "type": "stat-display"
                             },
                             {
-                              "icon": "trending-up",
                               "label": "Acceptance rate",
+                              "icon": "trending-up",
                               "type": "stat-display",
                               "value": "61%"
                             }
-                          ]
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "name": "applicantName",
-                              "label": "Applicant"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Position",
-                              "name": "position"
-                            },
-                            {
-                              "label": "Salary",
-                              "name": "salary",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "startDate",
-                              "label": "Start Date"
-                            },
-                            {
-                              "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
-                            }
-                          ],
-                          "type": "data-grid",
-                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "event": "OPEN_OFFER",
-                              "icon": "arrow-right",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Revoke",
-                              "variant": "danger",
-                              "event": "REVOKE_OFFER"
-                            }
-                          ],
-                          "cols": 1.0
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions",
+                          "entity": "@payload.data",
+                          "fields": "@config.fields"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -414,9 +376,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -478,28 +440,28 @@
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
                               "label": "Back",
+                              "type": "button",
                               "variant": "ghost",
-                              "type": "button"
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
-                              "variant": "h3",
                               "content": "@entity.applicantName",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "variant": "default",
+                              "type": "badge",
                               "label": "@entity.status"
                             }
                           ]
@@ -508,27 +470,26 @@
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Position"
+                                  "type": "typography",
+                                  "content": "Position",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.position"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
                               "type": "stack",
@@ -536,95 +497,96 @@
                               "direction": "horizontal",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "Applicant ID",
-                                  "type": "typography"
+                                  "content": "Applicant ID"
                                 },
                                 {
-                                  "content": "@entity.applicantId",
+                                  "type": "typography",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "content": "@entity.applicantId"
                                 }
                               ]
                             },
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "content": "Notes",
                                   "variant": "caption",
                                   "type": "typography",
-                                  "color": "muted",
-                                  "content": "Notes"
+                                  "color": "muted"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.notes"
+                                  "content": "@entity.notes",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
                           "type": "simple-grid",
                           "children": [
                             {
                               "type": "stat-display",
-                              "icon": "dollar-sign",
+                              "label": "Salary",
                               "value": "@entity.salary",
-                              "label": "Salary"
+                              "icon": "dollar-sign"
                             },
                             {
-                              "value": "@entity.startDate",
                               "type": "stat-display",
                               "icon": "calendar",
-                              "label": "Start date"
+                              "label": "Start date",
+                              "value": "@entity.startDate"
                             },
                             {
-                              "label": "Expires",
                               "type": "stat-display",
-                              "icon": "calendar-x",
-                              "value": "@entity.expiresAt"
+                              "value": "@entity.expiresAt",
+                              "label": "Expires",
+                              "icon": "calendar-x"
                             }
-                          ]
+                          ],
+                          "cols": 3.0
                         },
                         {
-                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "action": "SEND_OFFER",
                               "label": "Send Offer",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
                               "type": "button",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Revoke",
-                              "type": "button",
-                              "variant": "danger",
-                              "action": "REVOKE_OFFER",
+                              "action": "SEND_OFFER",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
+                            },
+                            {
+                              "action": "REVOKE_OFFER",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "danger",
+                              "label": "Revoke",
+                              "type": "button"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -644,8 +606,8 @@
                     "OfferLetter",
                     {
                       "emit": {
-                        "success": "OfferLetterLoaded",
-                        "failure": "OfferLetterLoadFailed"
+                        "failure": "OfferLetterLoadFailed",
+                        "success": "OfferLetterLoaded"
                       }
                     }
                   ],
@@ -653,22 +615,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Revoking offer…",
                           "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Revoking offer…"
                         }
                       ],
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -693,21 +655,21 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Loading offer letters…",
-                          "type": "typography",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -736,22 +698,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Sending offer…"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center",
+                      "className": "py-12",
                       "type": "stack",
-                      "className": "py-12"
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -780,6 +742,7 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
                       "children": [
@@ -787,13 +750,12 @@
                           "type": "spinner"
                         },
                         {
-                          "content": "Revoking offer…",
                           "color": "muted",
                           "variant": "caption",
+                          "content": "Revoking offer…",
                           "type": "typography"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md"
                     }
@@ -819,8 +781,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -831,6 +793,52 @@
             "title": {
               "type": "string",
               "default": "Offer Letters"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "applicantName",
+                  "variant": "caption",
+                  "label": "Applicant"
+                },
+                {
+                  "name": "position",
+                  "label": "Position",
+                  "variant": "caption"
+                },
+                {
+                  "name": "salary",
+                  "variant": "caption",
+                  "label": "Salary"
+                },
+                {
+                  "label": "Start Date",
+                  "variant": "caption",
+                  "name": "startDate"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "event": "OPEN_OFFER"
+                },
+                {
+                  "event": "REVOKE_OFFER",
+                  "label": "Revoke",
+                  "variant": "danger"
+                }
+              ]
             }
           },
           "scope": "collection"

@@ -1,5 +1,5 @@
-app std-ledger-entry "1.0.0"
-"std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions."
+app std-ledger-entry "1.1.0"
+"std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital LedgerEntryOrbital {
   entity LedgerEntry [persistent: ledgerentries] {
@@ -20,7 +20,19 @@ orbital LedgerEntryOrbital {
 
   trait LedgerEntryJournal -> LedgerEntry [interaction, collection] {
     config {
-      title : string = "Journal Entries"
+      title       : string   = "Journal Entries"
+      fields      : [object] = [
+        { name: "entryDate",    label: "Date",        variant: "caption" },
+        { name: "accountName",  label: "Account",     variant: "caption" },
+        { name: "description",  label: "Description", variant: "caption" },
+        { name: "debit",        label: "Debit",       variant: "caption" },
+        { name: "credit",       label: "Credit",      variant: "caption" },
+        { name: "isReconciled", label: "Reconciled",  variant: "badge"   }
+      ]
+      itemActions : [object] = [
+        { label: "Open",    event: "OPEN_ENTRY",    variant: "primary", icon: "arrow-right" },
+        { label: "Reverse", event: "REVERSE_ENTRY", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -28,7 +40,7 @@ orbital LedgerEntryOrbital {
         (fetch LedgerEntry { emit: { success: "LedgerEntryLoaded", failure: "LedgerEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading journal entries…" }] })
       LedgerEntryLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Entries", value: "@payload.data.length", icon: "book-open" }, { type: "stat-display", label: "Net balance", value: "$12,480", icon: "dollar-sign" }, { type: "stat-display", label: "Reconciled", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Pending", value: "23", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "entryDate", label: "Date", variant: "caption" }, { name: "accountName", label: "Account", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "debit", label: "Debit", variant: "caption" }, { name: "credit", label: "Credit", variant: "caption" }, { name: "isReconciled", label: "Reconciled", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ENTRY", variant: "primary", icon: "arrow-right" }, { label: "Reverse", event: "REVERSE_ENTRY", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "book-open" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Entries", value: "@payload.data.length", icon: "book-open" }, { type: "stat-display", label: "Net balance", value: "$12,480", icon: "dollar-sign" }, { type: "stat-display", label: "Reconciled", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Pending", value: "23", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       LedgerEntryLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

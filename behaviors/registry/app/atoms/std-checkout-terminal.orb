@@ -1,7 +1,7 @@
 {
   "name": "std-checkout-terminal",
-  "version": "1.0.0",
-  "description": "std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list.",
+  "version": "1.1.0",
+  "description": "std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "CheckoutSessionOrbital",
@@ -294,8 +294,8 @@
                     "CheckoutSession",
                     {
                       "emit": {
-                        "success": "CheckoutSessionLoaded",
-                        "failure": "CheckoutSessionLoadFailed"
+                        "failure": "CheckoutSessionLoadFailed",
+                        "success": "CheckoutSessionLoaded"
                       }
                     }
                   ],
@@ -303,6 +303,7 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "children": [
                         {
                           "size": "md",
@@ -310,16 +311,15 @@
                         },
                         {
                           "variant": "caption",
-                          "content": "Loading terminals…",
                           "color": "muted",
+                          "content": "Loading terminals…",
                           "type": "typography"
                         }
                       ],
-                      "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
+                      "gap": "md",
                       "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -334,13 +334,11 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
@@ -348,9 +346,9 @@
                               "name": "credit-card"
                             },
                             {
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
                           ]
                         },
@@ -358,51 +356,16 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_TERMINAL",
-                              "variant": "primary",
-                              "label": "Open"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Void",
-                              "event": "VOID_SESSION"
-                            }
-                          ],
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions",
                           "type": "data-grid",
-                          "fields": [
-                            {
-                              "label": "Terminal",
-                              "name": "terminalId",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Cashier",
-                              "name": "cashierName"
-                            },
-                            {
-                              "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "Total",
-                              "variant": "caption",
-                              "name": "total"
-                            },
-                            {
-                              "label": "Opened",
-                              "variant": "caption",
-                              "name": "openedAt"
-                            }
-                          ],
-                          "cols": 1.0
+                          "fields": "@config.fields"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -416,9 +379,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -477,18 +440,17 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
-                              "type": "button",
                               "variant": "ghost",
+                              "type": "button",
+                              "label": "Back",
                               "action": "CLOSE_TERMINAL"
                             },
                             {
@@ -497,100 +459,103 @@
                               "content": "Session detail"
                             },
                             {
+                              "label": "@entity.status",
                               "variant": "default",
-                              "type": "badge",
-                              "label": "@entity.status"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Terminal",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.terminalId"
-                                }
-                              ]
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Cashier",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.cashierName",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Opened"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.openedAt"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Payment method"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.paymentMethod",
-                                  "type": "typography"
-                                }
-                              ]
+                              "type": "badge"
                             }
                           ],
-                          "direction": "vertical"
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "resource-bar",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Terminal",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.terminalId",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Cashier",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.cashierName",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Opened",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.openedAt",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Payment method",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.paymentMethod",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
                           "size": "md",
+                          "type": "resource-bar",
                           "resources": [
                             {
                               "icon": "wallet",
@@ -598,8 +563,8 @@
                               "label": "Subtotal"
                             },
                             {
-                              "value": "@entity.tax",
                               "icon": "percent",
+                              "value": "@entity.tax",
                               "label": "Tax"
                             },
                             {
@@ -611,33 +576,31 @@
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Tender Payment",
+                              "action": "TENDER_PAYMENT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "TENDER_PAYMENT",
-                              "variant": "primary"
+                              "label": "Tender Payment",
+                              "variant": "primary",
+                              "type": "button"
                             },
                             {
+                              "variant": "danger",
+                              "label": "Void Session",
+                              "type": "button",
                               "action": "VOID_SESSION",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "variant": "danger",
-                              "label": "Void Session"
+                              }
                             }
                           ],
                           "gap": "sm",
-                          "align": "center"
+                          "align": "center",
+                          "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -666,23 +629,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
-                          "size": "md",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "md"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
+                          "color": "muted",
                           "content": "Voiding session…",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
-                      "className": "py-12"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -697,8 +660,8 @@
                     "CheckoutSession",
                     {
                       "emit": {
-                        "success": "CheckoutSessionLoaded",
-                        "failure": "CheckoutSessionLoadFailed"
+                        "failure": "CheckoutSessionLoadFailed",
+                        "success": "CheckoutSessionLoaded"
                       }
                     }
                   ],
@@ -706,11 +669,10 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
-                          "size": "md",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "md"
                         },
                         {
                           "type": "typography",
@@ -719,10 +681,11 @@
                           "content": "Loading terminals…"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical"
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -731,51 +694,6 @@
                 "from": "viewing_single",
                 "to": "loading",
                 "event": "TENDER_PAYMENT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "CheckoutSession",
-                    {
-                      "emit": {
-                        "success": "CheckoutSessionLoaded",
-                        "failure": "CheckoutSessionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner",
-                          "size": "md"
-                        },
-                        {
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Tendering payment…"
-                        }
-                      ],
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "VOID_SESSION",
                 "effects": [
                   [
                     "set",
@@ -796,23 +714,68 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner",
                           "size": "md"
                         },
                         {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Tendering payment…",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "VOID_SESSION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CheckoutSession",
+                    {
+                      "emit": {
+                        "success": "CheckoutSessionLoaded",
+                        "failure": "CheckoutSessionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "md",
+                          "type": "spinner"
+                        },
+                        {
                           "content": "Voiding session…",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -845,6 +808,51 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Terminal",
+                  "variant": "caption",
+                  "name": "terminalId"
+                },
+                {
+                  "variant": "caption",
+                  "name": "cashierName",
+                  "label": "Cashier"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Total",
+                  "variant": "caption",
+                  "name": "total"
+                },
+                {
+                  "variant": "caption",
+                  "name": "openedAt",
+                  "label": "Opened"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_TERMINAL",
+                  "variant": "primary"
+                },
+                {
+                  "event": "VOID_SESSION",
+                  "label": "Void",
+                  "variant": "danger"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Terminals"

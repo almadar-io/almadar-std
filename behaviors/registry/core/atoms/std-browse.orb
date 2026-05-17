@@ -1,7 +1,7 @@
 {
   "name": "std-browse",
-  "version": "2.0.0",
-  "description": "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid.",
+  "version": "2.1.0",
+  "description": "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present).",
   "orbitals": [
     {
       "name": "BrowseItemOrbital",
@@ -283,11 +283,11 @@
                     "BrowseItem",
                     {
                       "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      },
-                      "limit": "@config.pageSize"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
                     }
                   ],
                   [
@@ -311,14 +311,14 @@
                     {
                       "children": [
                         {
-                          "imageField": "@config.imageField",
-                          "itemActions": "@config.itemActions",
                           "gap": "@config.gap",
-                          "type": "data-grid",
-                          "pageSize": "@config.displayPageSize",
+                          "imageField": "@config.imageField",
                           "fields": "@config.fields",
+                          "type": "data-grid",
+                          "cols": "@config.cols",
                           "entity": "@payload.data",
-                          "cols": "@config.cols"
+                          "itemActions": "@config.itemActions",
+                          "pageSize": "@config.displayPageSize"
                         }
                       ],
                       "type": "stack",
@@ -355,8 +355,8 @@
                     {
                       "limit": "@config.pageSize",
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       },
                       "offset": 0.0
                     }
@@ -380,12 +380,6 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      },
-                      "limit": "@config.pageSize",
-                      "offset": 0.0,
                       "filter": [
                         "or",
                         [
@@ -402,7 +396,13 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ]
+                      ],
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ]
                 ]
@@ -417,11 +417,11 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       },
-                      "limit": "@config.pageSize",
                       "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -452,6 +452,7 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "limit": "@config.pageSize",
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
@@ -464,8 +465,7 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ],
-                      "limit": "@config.pageSize"
+                      ]
                     }
                   ]
                 ]
@@ -479,19 +479,19 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "pageSize": "@config.displayPageSize",
-                          "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
-                          "type": "data-grid",
-                          "fields": "@config.fields",
                           "imageField": "@config.imageField",
+                          "fields": "@config.fields",
+                          "type": "data-grid",
                           "cols": "@config.cols",
-                          "gap": "@config.gap"
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions",
+                          "gap": "@config.gap",
+                          "pageSize": "@config.displayPageSize"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -518,8 +518,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -527,9 +527,13 @@
             ]
           },
           "config": {
-            "displayPageSize": {
+            "imageField": {
+              "type": "string",
+              "default": ""
+            },
+            "cols": {
               "type": "number",
-              "default": 10.0
+              "default": 1.0
             },
             "itemActions": {
               "type": "[object]",
@@ -539,21 +543,17 @@
               "type": "string",
               "default": "md"
             },
-            "imageField": {
-              "type": "string",
-              "default": ""
-            },
-            "cols": {
+            "pageSize": {
               "type": "number",
-              "default": 1.0
+              "default": 10.0
             },
             "fields": {
               "type": "[object]",
               "default": [
                 {
-                  "label": "Name",
                   "name": "name",
-                  "variant": "h4"
+                  "variant": "h4",
+                  "label": "Name"
                 },
                 {
                   "label": "Description",
@@ -561,13 +561,13 @@
                   "name": "description"
                 },
                 {
-                  "label": "Status",
+                  "name": "status",
                   "variant": "badge",
-                  "name": "status"
+                  "label": "Status"
                 }
               ]
             },
-            "pageSize": {
+            "displayPageSize": {
               "type": "number",
               "default": 10.0
             }

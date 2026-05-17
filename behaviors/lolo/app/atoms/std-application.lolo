@@ -1,5 +1,5 @@
-app std-application "1.0.0"
-"std-application — job-style application bundle: form + attachments + status flow (draft/submitted/under-review/accepted/rejected)."
+app std-application "1.1.0"
+"std-application — job-style application bundle: form + attachments + status flow (draft/submitted/under-review/accepted/rejected). Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital ApplicationOrbital {
   entity Application [persistent: applications] {
@@ -25,13 +25,29 @@ orbital ApplicationOrbital {
   type ApplicationRejected   = Event { id : string }                        "Fired after an application transitions to rejected"
 
   trait ApplicationManage -> Application [interaction, collection] {
+    config {
+      title       : string   = "Applications"
+      fields      : [object] = [
+        { name: "applicantName",  label: "Applicant", variant: "caption", icon: "user" },
+        { name: "applicantEmail", label: "Email",     variant: "caption" },
+        { name: "targetType",     label: "Target",    variant: "caption" },
+        { name: "status",         label: "Status",    variant: "badge"   },
+        { name: "submittedAt",    label: "Submitted", variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Edit",   event: "EDIT",   variant: "ghost"   },
+        { label: "Submit", event: "SUBMIT", variant: "primary" },
+        { label: "Accept", event: "ACCEPT", variant: "primary" },
+        { label: "Reject", event: "REJECT", variant: "danger"  }
+      ]
+    }
     initial: loading
     state loading {
       INIT -> loading
         (fetch Application { emit: { success: "ApplicationLoaded", failure: "ApplicationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading applications…" }] })
       ApplicationLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Applications", variant: "h3" }] }, { type: "button", label: "New Application", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total applications", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Submitted", value: "21", icon: "send" }, { type: "stat-display", label: "Under review", value: "8", icon: "search" }, { type: "stat-display", label: "Accepted", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", itemActions: [{ label: "Edit", event: "EDIT", variant: "ghost" }, { label: "Submit", event: "SUBMIT", variant: "primary" }, { label: "Accept", event: "ACCEPT", variant: "primary" }, { label: "Reject", event: "REJECT", variant: "danger" }], fields: [{ name: "applicantName", label: "Applicant", variant: "caption", icon: "user" }, { name: "applicantEmail", label: "Email", variant: "caption" }, { name: "targetType", label: "Target", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "submittedAt", label: "Submitted", variant: "caption" }], cols: 1, gap: "sm" }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "Applications", variant: "h3" }] }, { type: "button", label: "New Application", action: "CREATE", variant: "primary", icon: "plus" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total applications", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Submitted", value: "21", icon: "send" }, { type: "stat-display", label: "Under review", value: "8", icon: "search" }, { type: "stat-display", label: "Accepted", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", itemActions: "@config.itemActions", fields: "@config.fields", cols: 1, gap: "sm" }] })
       ApplicationLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

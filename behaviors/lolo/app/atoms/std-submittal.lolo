@@ -1,5 +1,5 @@
-app std-submittal "1.0.0"
-"std-submittal — construction submittal primitive tracking material/equipment samples reviewed and approved before installation. Lists submittals in `browsing`; opens detail in `viewing_single` with Approve / Reject / Revise / Delete actions."
+app std-submittal "1.1.0"
+"std-submittal — construction submittal primitive tracking material/equipment samples reviewed and approved before installation. Lists submittals in `browsing`; opens detail in `viewing_single` with Approve / Reject / Revise / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital SubmittalOrbital {
   entity Submittal [persistent: submittals] {
@@ -23,6 +23,8 @@ orbital SubmittalOrbital {
   trait SubmittalReview -> Submittal [interaction, collection] {
     config {
       title : string = "Submittals"
+      fields      : [object] = [{ name: "submittalNumber", label: "Number", variant: "caption" }, { name: "specSection", label: "Spec Section", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "contractor", label: "Contractor", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "revisionNumber", label: "Rev", variant: "caption" }]
+      itemActions : [object] = [{ label: "Open", event: "OPEN_SUBMITTAL", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }]
     }
     initial: loading
     state loading {
@@ -30,7 +32,7 @@ orbital SubmittalOrbital {
         (fetch Submittal { emit: { success: "SubmittalLoaded", failure: "SubmittalLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading submittals…" }] })
       SubmittalLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total submittals", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "In review", value: "18", icon: "search" }, { type: "stat-display", label: "Approved", value: "62", icon: "check-circle" }, { type: "stat-display", label: "Revise & resubmit", value: "7", icon: "rotate-cw" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "submittalNumber", label: "Number", variant: "caption" }, { name: "specSection", label: "Spec Section", variant: "caption" }, { name: "title", label: "Title", variant: "caption" }, { name: "contractor", label: "Contractor", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "revisionNumber", label: "Rev", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_SUBMITTAL", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total submittals", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "In review", value: "18", icon: "search" }, { type: "stat-display", label: "Approved", value: "62", icon: "check-circle" }, { type: "stat-display", label: "Revise & resubmit", value: "7", icon: "rotate-cw" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       SubmittalLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

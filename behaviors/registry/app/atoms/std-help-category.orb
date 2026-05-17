@@ -1,7 +1,7 @@
 {
   "name": "std-help-category",
-  "version": "1.0.0",
-  "description": "std-help-category — Help center category directory grouping articles into sections like Getting Started, Billing, API Reference.",
+  "version": "1.1.0",
+  "description": "std-help-category — Help center category directory grouping articles into sections like Getting Started, Billing, API Reference. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "HelpCategoryOrbital",
@@ -270,8 +270,8 @@
                     "HelpCategory",
                     {
                       "emit": {
-                        "success": "HelpCategoryLoaded",
-                        "failure": "HelpCategoryLoadFailed"
+                        "failure": "HelpCategoryLoadFailed",
+                        "success": "HelpCategoryLoaded"
                       }
                     }
                   ],
@@ -279,22 +279,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Loading help categories…"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -308,11 +308,11 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "sm",
                           "align": "center",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -324,96 +324,53 @@
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Total categories",
+                              "value": "@payload.data.length",
                               "icon": "folder",
-                              "value": "@payload.data.length"
+                              "label": "Total categories",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
+                              "label": "Published",
                               "icon": "check-circle",
-                              "value": "18",
-                              "label": "Published"
+                              "type": "stat-display",
+                              "value": "18"
                             },
                             {
-                              "type": "stat-display",
                               "value": "246",
                               "icon": "book-open",
-                              "label": "Articles"
+                              "label": "Articles",
+                              "type": "stat-display"
                             },
                             {
                               "value": "13",
-                              "label": "Avg per category",
                               "icon": "bar-chart",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Avg per category"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "name": "name",
-                              "variant": "caption",
-                              "label": "Name"
-                            },
-                            {
-                              "label": "Slug",
-                              "variant": "caption",
-                              "name": "slug"
-                            },
-                            {
-                              "name": "articleCount",
-                              "label": "Articles",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Order",
-                              "name": "sortOrder"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            },
-                            {
-                              "label": "Updated",
-                              "name": "updatedAt",
-                              "variant": "caption"
-                            }
-                          ],
                           "cols": 1.0,
-                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "gap": "sm",
+                          "itemActions": "@config.itemActions",
                           "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_CATEGORY",
-                              "variant": "primary",
-                              "label": "Open",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "label": "Archive",
-                              "event": "ARCHIVE",
-                              "variant": "danger"
-                            }
-                          ]
+                          "entity": "@payload.data"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -488,19 +445,15 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
                               "label": "Back",
                               "type": "button",
-                              "action": "CLOSE_VIEW"
+                              "variant": "ghost"
                             },
                             {
                               "type": "icon",
@@ -512,132 +465,136 @@
                               "variant": "h3"
                             },
                             {
+                              "variant": "default",
                               "label": "@entity.status",
-                              "type": "badge",
-                              "variant": "default"
+                              "type": "badge"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
+                          "align": "center",
                           "gap": "sm",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Slug",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.slug"
-                                }
-                              ]
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "Description"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.description"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Icon",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.icon",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md"
-                            }
-                          ],
-                          "direction": "vertical",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Slug",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.slug",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Description"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.description"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Icon"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.icon",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "value": "@entity.articleCount",
                               "icon": "book-open",
                               "type": "stat-display",
-                              "label": "Articles",
-                              "value": "@entity.articleCount"
+                              "label": "Articles"
                             },
                             {
-                              "icon": "list-ordered",
                               "label": "Sort order",
-                              "type": "stat-display",
-                              "value": "@entity.sortOrder"
+                              "value": "@entity.sortOrder",
+                              "icon": "list-ordered",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Updated",
                               "type": "stat-display",
+                              "value": "@entity.updatedAt",
                               "icon": "calendar",
-                              "value": "@entity.updatedAt"
+                              "label": "Updated"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
+                              "variant": "primary",
                               "label": "Publish",
                               "action": "PUBLISH"
                             },
                             {
-                              "action": "ARCHIVE",
                               "type": "button",
-                              "label": "Archive",
-                              "variant": "danger",
+                              "action": "ARCHIVE",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "variant": "danger",
+                              "label": "Archive"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -666,8 +623,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
@@ -675,12 +630,14 @@
                         },
                         {
                           "type": "typography",
-                          "content": "Archiving category…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Archiving category…"
                         }
                       ],
                       "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "direction": "vertical"
                     }
                   ]
@@ -705,22 +662,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "className": "py-12",
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Loading help categories…",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading help categories…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -751,19 +708,19 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Publishing category…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
                       "gap": "md"
                     }
                   ]
@@ -793,20 +750,20 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Archiving category…",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
                       "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "gap": "md",
                       "type": "stack"
                     }
@@ -841,9 +798,60 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "name",
+                  "label": "Name"
+                },
+                {
+                  "name": "slug",
+                  "label": "Slug",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "name": "articleCount",
+                  "label": "Articles"
+                },
+                {
+                  "name": "sortOrder",
+                  "label": "Order",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "name": "updatedAt",
+                  "variant": "caption",
+                  "label": "Updated"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Help Categories"
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "event": "OPEN_CATEGORY",
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "variant": "danger",
+                  "event": "ARCHIVE",
+                  "label": "Archive"
+                }
+              ]
             }
           },
           "scope": "collection"

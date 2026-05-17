@@ -1,7 +1,7 @@
 {
   "name": "std-ledger-entry",
-  "version": "1.0.0",
-  "description": "std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions.",
+  "version": "1.1.0",
+  "description": "std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "LedgerEntryOrbital",
@@ -282,21 +282,21 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "content": "Loading journal entries…",
                           "variant": "caption",
+                          "content": "Loading journal entries…",
                           "type": "typography"
                         }
                       ],
-                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
-                      "className": "py-12"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -310,109 +310,66 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "book-open",
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
-                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
-                              "type": "stat-display",
                               "icon": "book-open",
-                              "label": "Entries"
+                              "type": "stat-display",
+                              "label": "Entries",
+                              "value": "@payload.data.length"
                             },
                             {
                               "icon": "dollar-sign",
-                              "type": "stat-display",
                               "value": "$12,480",
+                              "type": "stat-display",
                               "label": "Net balance"
                             },
                             {
+                              "value": "84%",
                               "icon": "check-circle",
-                              "type": "stat-display",
                               "label": "Reconciled",
-                              "value": "84%"
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Pending",
+                              "icon": "clock",
                               "value": "23",
-                              "icon": "clock"
+                              "type": "stat-display"
                             }
                           ],
+                          "cols": 4.0,
                           "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "type": "data-grid",
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_ENTRY",
-                              "label": "Open",
-                              "variant": "primary",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Reverse",
-                              "event": "REVERSE_ENTRY"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "label": "Date",
-                              "name": "entryDate",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "accountName",
-                              "label": "Account",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Description",
-                              "name": "description"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "debit",
-                              "label": "Debit"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Credit",
-                              "name": "credit"
-                            },
-                            {
-                              "name": "isReconciled",
-                              "label": "Reconciled",
-                              "variant": "badge"
-                            }
-                          ]
+                          "itemActions": "@config.itemActions"
                         }
                       ],
                       "direction": "vertical"
@@ -429,9 +386,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -490,17 +447,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "variant": "ghost",
                               "label": "Back",
                               "type": "button",
-                              "action": "CLOSE_VIEW",
-                              "variant": "ghost"
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "type": "icon",
@@ -508,53 +463,50 @@
                             },
                             {
                               "content": "@entity.accountName",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
                               "variant": "default",
-                              "type": "badge",
-                              "label": "@entity.referenceType"
+                              "label": "@entity.referenceType",
+                              "type": "badge"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "sm",
-                          "direction": "vertical",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "content": "Account ID",
+                                  "color": "muted",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "@entity.accountId",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
-                              "gap": "md",
                               "children": [
                                 {
                                   "variant": "caption",
                                   "color": "muted",
-                                  "type": "typography",
-                                  "content": "Description"
+                                  "content": "Description",
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
@@ -562,20 +514,21 @@
                                   "content": "@entity.description"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "content": "Reference",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Reference"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.referenceId",
+                                  "variant": "body",
                                   "type": "typography"
                                 }
                               ],
@@ -583,63 +536,67 @@
                               "direction": "horizontal",
                               "gap": "md"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 3.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "icon": "calendar",
-                              "label": "Date",
                               "value": "@entity.entryDate",
+                              "label": "Date",
                               "type": "stat-display"
                             },
                             {
+                              "label": "Debit",
                               "type": "stat-display",
-                              "value": "@entity.debit",
                               "icon": "arrow-down",
-                              "label": "Debit"
+                              "value": "@entity.debit"
                             },
                             {
-                              "value": "@entity.credit",
+                              "icon": "arrow-up",
                               "type": "stat-display",
-                              "label": "Credit",
-                              "icon": "arrow-up"
+                              "value": "@entity.credit",
+                              "label": "Credit"
                             }
                           ]
                         },
                         {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
-                              "variant": "primary",
+                              "action": "RECONCILE_ENTRY",
+                              "label": "Reconcile",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Reconcile",
-                              "action": "RECONCILE_ENTRY"
+                              "type": "button",
+                              "variant": "primary"
                             },
                             {
-                              "action": "REVERSE_ENTRY",
-                              "variant": "danger",
-                              "label": "Reverse",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button"
+                              "action": "REVERSE_ENTRY",
+                              "variant": "danger",
+                              "label": "Reverse"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -659,8 +616,8 @@
                     "LedgerEntry",
                     {
                       "emit": {
-                        "failure": "LedgerEntryLoadFailed",
-                        "success": "LedgerEntryLoaded"
+                        "success": "LedgerEntryLoaded",
+                        "failure": "LedgerEntryLoadFailed"
                       }
                     }
                   ],
@@ -668,22 +625,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Reversing entry…",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
                           "variant": "caption"
                         }
-                      ],
-                      "direction": "vertical",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -698,8 +655,8 @@
                     "LedgerEntry",
                     {
                       "emit": {
-                        "success": "LedgerEntryLoaded",
-                        "failure": "LedgerEntryLoadFailed"
+                        "failure": "LedgerEntryLoadFailed",
+                        "success": "LedgerEntryLoaded"
                       }
                     }
                   ],
@@ -707,10 +664,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -718,11 +674,12 @@
                         {
                           "variant": "caption",
                           "content": "Loading journal…",
-                          "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -751,22 +708,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Reconciling entry…"
                         }
                       ],
-                      "align": "center"
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -795,8 +752,8 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
                       "children": [
@@ -804,13 +761,13 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
                           "content": "Reversing entry…",
-                          "variant": "caption"
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -825,8 +782,8 @@
                     "LedgerEntry",
                     {
                       "emit": {
-                        "failure": "LedgerEntryLoadFailed",
-                        "success": "LedgerEntryLoaded"
+                        "success": "LedgerEntryLoaded",
+                        "failure": "LedgerEntryLoadFailed"
                       }
                     }
                   ],
@@ -834,8 +791,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -843,6 +800,57 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_ENTRY",
+                  "variant": "primary",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "REVERSE_ENTRY",
+                  "variant": "danger",
+                  "label": "Reverse"
+                }
+              ]
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Date",
+                  "name": "entryDate"
+                },
+                {
+                  "label": "Account",
+                  "name": "accountName",
+                  "variant": "caption"
+                },
+                {
+                  "name": "description",
+                  "label": "Description",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "name": "debit",
+                  "label": "Debit"
+                },
+                {
+                  "variant": "caption",
+                  "name": "credit",
+                  "label": "Credit"
+                },
+                {
+                  "name": "isReconciled",
+                  "label": "Reconciled",
+                  "variant": "badge"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Journal Entries"

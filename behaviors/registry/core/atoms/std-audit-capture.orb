@@ -1,0 +1,218 @@
+{
+  "name": "std-audit-capture",
+  "version": "1.0.0",
+  "description": "std-audit-capture — event-interceptor audit log. Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, and timestamp. Composable via `extraTraits` to interpose audit logging behind any mutating trait without touching its state machine.",
+  "orbitals": [
+    {
+      "name": "AuditCaptureOrbital",
+      "entity": {
+        "name": "AuditEntry",
+        "collection": "audit_entries",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "actor",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "entityType",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "entityId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "recordedAt",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AuditCaptureListener",
+          "category": "lifecycle",
+          "linkedEntity": "AuditEntry",
+          "emits": [
+            {
+              "event": "AuditRecorded",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "actor",
+                  "type": "string"
+                },
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "entityType",
+                  "type": "string"
+                },
+                {
+                  "name": "entityId",
+                  "type": "string"
+                },
+                {
+                  "name": "recordedAt",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "EntityMutated",
+                "name": "Entity mutated",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "AuditRecorded",
+                "name": "Audit recorded",
+                "payloadSchema": [
+                  {
+                    "name": "actor",
+                    "type": "string"
+                  },
+                  {
+                    "name": "action",
+                    "type": "string"
+                  },
+                  {
+                    "name": "entityType",
+                    "type": "string"
+                  },
+                  {
+                    "name": "entityId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "recordedAt",
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "EntityMutated",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.actor",
+                    "@user.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.action",
+                    "EntityMutated"
+                  ],
+                  [
+                    "set",
+                    "@entity.entityType",
+                    "@config.captureEntity"
+                  ],
+                  [
+                    "set",
+                    "@entity.entityId",
+                    [
+                      "object/get",
+                      "@payload.data",
+                      "id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.recordedAt",
+                    0.0
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "AuditEntry",
+                    {
+                      "recordedAt": 0.0,
+                      "entityId": "@payload.data.id",
+                      "action": "EntityMutated",
+                      "actor": "@user.id",
+                      "entityType": "@config.captureEntity"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "AuditRecorded",
+                    {
+                      "recordedAt": 0.0,
+                      "entityType": "@config.captureEntity",
+                      "actor": "@user.id",
+                      "action": "EntityMutated",
+                      "entityId": "@payload.data.id"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "captureEntity": {
+              "type": "string",
+              "default": ""
+            },
+            "captureEventTypes": {
+              "type": "[string]",
+              "default": [
+                "Saved",
+                "Deleted"
+              ]
+            },
+            "excludeFields": {
+              "type": "[string]",
+              "default": []
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AuditCapturePage",
+          "path": "/audit-capture",
+          "traits": [
+            {
+              "ref": "AuditCaptureListener"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

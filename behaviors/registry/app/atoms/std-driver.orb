@@ -1,7 +1,7 @@
 {
   "name": "std-driver",
-  "version": "1.0.0",
-  "description": "std-driver — fleet driver primitive tracking license info, hire date, status, assigned vehicle. Lists drivers in `browsing`; opens detail in `viewing_single` with Suspend / Reinstate / Terminate / Assign Vehicle actions.",
+  "version": "1.1.0",
+  "description": "std-driver — fleet driver primitive tracking license info, hire date, status, assigned vehicle. Lists drivers in `browsing`; opens detail in `viewing_single` with Suspend / Reinstate / Terminate / Assign Vehicle actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "DriverOrbital",
@@ -347,22 +347,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading drivers…"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -376,111 +376,68 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "user"
+                              "name": "user",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "children": [
                             {
+                              "type": "stat-display",
                               "icon": "users",
                               "value": "@payload.data.length",
-                              "type": "stat-display",
                               "label": "Total drivers"
                             },
                             {
-                              "type": "stat-display",
-                              "icon": "check-circle",
                               "label": "Active",
-                              "value": "24"
-                            },
-                            {
-                              "label": "On leave",
+                              "value": "24",
                               "type": "stat-display",
-                              "icon": "pause-circle",
-                              "value": "3"
+                              "icon": "check-circle"
                             },
                             {
+                              "type": "stat-display",
+                              "value": "3",
+                              "label": "On leave",
+                              "icon": "pause-circle"
+                            },
+                            {
+                              "label": "License expiring 30d",
                               "type": "stat-display",
                               "value": "4",
-                              "label": "License expiring 30d",
                               "icon": "alert-triangle"
                             }
                           ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "label": "Open",
-                              "event": "OPEN_DRIVER",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "event": "SUSPEND",
-                              "label": "Suspend",
-                              "variant": "danger"
-                            }
-                          ],
+                          "itemActions": "@config.itemActions",
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "cols": 1.0,
                           "gap": "sm",
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "name": "name",
-                              "label": "Name"
-                            },
-                            {
-                              "label": "License",
-                              "variant": "caption",
-                              "name": "licenseNumber"
-                            },
-                            {
-                              "label": "Class",
-                              "variant": "badge",
-                              "name": "licenseClass"
-                            },
-                            {
-                              "name": "licenseExpiresAt",
-                              "label": "Expires",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            },
-                            {
-                              "name": "assignedVehicleId",
-                              "variant": "caption",
-                              "label": "Vehicle"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
                       ],
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -495,9 +452,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -561,197 +518,324 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
+                              "label": "Back",
                               "action": "CLOSE_VIEW",
-                              "variant": "ghost",
-                              "label": "Back"
+                              "variant": "ghost"
                             },
                             {
                               "name": "user",
                               "type": "icon"
                             },
                             {
-                              "content": "@entity.name",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@entity.name"
                             },
                             {
-                              "label": "@entity.licenseClass",
                               "type": "badge",
+                              "label": "@entity.licenseClass",
                               "variant": "primary"
                             },
                             {
-                              "variant": "default",
+                              "label": "@entity.status",
                               "type": "badge",
-                              "label": "@entity.status"
+                              "variant": "default"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "License #"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.licenseNumber"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
                               "type": "stack",
                               "children": [
                                 {
-                                  "content": "License #",
+                                  "content": "Phone",
                                   "variant": "caption",
-                                  "type": "typography",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.licenseNumber",
+                                  "type": "typography",
+                                  "content": "@entity.phone",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Email"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.email",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Vehicle"
+                                },
+                                {
+                                  "content": "@entity.assignedVehicleId",
                                   "type": "typography",
                                   "variant": "body"
                                 }
                               ],
                               "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Phone"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.phone"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Email"
-                                },
-                                {
-                                  "content": "@entity.email",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Vehicle"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.assignedVehicleId"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 2.0,
                           "children": [
                             {
-                              "value": "@entity.hiredAt",
-                              "icon": "calendar",
                               "type": "stat-display",
+                              "icon": "calendar",
+                              "value": "@entity.hiredAt",
                               "label": "Hired"
                             },
                             {
-                              "value": "@entity.licenseExpiresAt",
-                              "icon": "calendar-x",
+                              "label": "License expires",
                               "type": "stat-display",
-                              "label": "License expires"
+                              "value": "@entity.licenseExpiresAt",
+                              "icon": "calendar-x"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "action": "ASSIGN_VEHICLE",
+                              "type": "button",
+                              "variant": "primary",
                               "label": "Assign Vehicle",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "variant": "primary",
-                              "type": "button"
+                              }
                             },
                             {
-                              "type": "button",
-                              "label": "Suspend",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "type": "button",
+                              "label": "Suspend",
                               "action": "SUSPEND",
                               "variant": "danger"
                             },
                             {
+                              "type": "button",
+                              "label": "Reinstate",
+                              "action": "REINSTATE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "variant": "secondary",
-                              "label": "Reinstate",
-                              "action": "REINSTATE"
+                              "variant": "secondary"
                             },
                             {
+                              "variant": "danger",
                               "type": "button",
+                              "action": "TERMINATE",
+                              "label": "Terminate",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "variant": "danger",
-                              "action": "TERMINATE",
-                              "label": "Terminate"
+                              }
                             }
                           ],
-                          "align": "center"
+                          "gap": "sm"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
+                "to": "loading",
+                "event": "SUSPEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "failure": "DriverLoadFailed",
+                        "success": "DriverLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Suspending driver…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "success": "DriverLoaded",
+                        "failure": "DriverLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading drivers…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ASSIGN_VEHICLE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Driver",
+                    {
+                      "emit": {
+                        "success": "DriverLoaded",
+                        "failure": "DriverLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Assigning vehicle…",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
                 "to": "loading",
                 "event": "SUSPEND",
                 "effects": [
@@ -774,10 +858,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -789,132 +870,8 @@
                           "type": "typography"
                         }
                       ],
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "CLOSE_VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "Driver",
-                    {
-                      "emit": {
-                        "failure": "DriverLoadFailed",
-                        "success": "DriverLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Loading drivers…",
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "ASSIGN_VEHICLE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "Driver",
-                    {
-                      "emit": {
-                        "failure": "DriverLoadFailed",
-                        "success": "DriverLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "type": "stack",
                       "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "content": "Assigning vehicle…",
-                          "type": "typography",
-                          "color": "muted"
-                        }
-                      ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "SUSPEND",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "Driver",
-                    {
-                      "emit": {
-                        "failure": "DriverLoadFailed",
-                        "success": "DriverLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Suspending driver…"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
                       "gap": "md",
                       "className": "py-12"
                     }
@@ -945,22 +902,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Reinstating driver…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -980,8 +937,8 @@
                     "Driver",
                     {
                       "emit": {
-                        "failure": "DriverLoadFailed",
-                        "success": "DriverLoaded"
+                        "success": "DriverLoaded",
+                        "failure": "DriverLoadFailed"
                       }
                     }
                   ],
@@ -998,10 +955,10 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Terminating driver…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Terminating driver…",
+                          "variant": "caption"
                         }
                       ],
                       "direction": "vertical"
@@ -1019,8 +976,8 @@
                     "Driver",
                     {
                       "emit": {
-                        "success": "DriverLoaded",
-                        "failure": "DriverLoadFailed"
+                        "failure": "DriverLoadFailed",
+                        "success": "DriverLoaded"
                       }
                     }
                   ],
@@ -1028,8 +985,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1037,6 +994,57 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "variant": "primary",
+                  "event": "OPEN_DRIVER",
+                  "label": "Open"
+                },
+                {
+                  "variant": "danger",
+                  "event": "SUSPEND",
+                  "label": "Suspend"
+                }
+              ]
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "name",
+                  "label": "Name",
+                  "variant": "caption"
+                },
+                {
+                  "label": "License",
+                  "name": "licenseNumber",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Class",
+                  "variant": "badge",
+                  "name": "licenseClass"
+                },
+                {
+                  "name": "licenseExpiresAt",
+                  "label": "Expires",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Vehicle",
+                  "variant": "caption",
+                  "name": "assignedVehicleId"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Drivers"

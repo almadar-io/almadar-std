@@ -1,7 +1,7 @@
 {
   "name": "std-menu",
-  "version": "1.0.0",
-  "description": "std-menu — restaurant POS menu items grouped by category with availability windows. Owns a MenuItem entity (price, category, available, prep time, modifier groups) and a single manage trait that loads items, browses them in a data-grid with Create / Update / Toggle-Available / Delete actions, and persists each verdict back to the row.",
+  "version": "1.1.0",
+  "description": "std-menu — restaurant POS menu items grouped by category with availability windows. Owns a MenuItem entity (price, category, available, prep time, modifier groups) and a single manage trait that loads items, browses them in a data-grid with Create / Update / Toggle-Available / Delete actions, and persists each verdict back to the row. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "MenuOrbital",
@@ -798,8 +798,8 @@
                     "MenuItem",
                     {
                       "emit": {
-                        "failure": "MenuItemLoadFailed",
-                        "success": "MenuItemLoaded"
+                        "success": "MenuItemLoaded",
+                        "failure": "MenuItemLoadFailed"
                       }
                     }
                   ],
@@ -808,18 +808,18 @@
                     "main",
                     {
                       "gap": "md",
-                      "align": "center",
                       "type": "stack",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Loading menu…",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading menu…"
                         }
                       ],
                       "direction": "vertical"
@@ -838,111 +838,67 @@
                     {
                       "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "name": "utensils",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "utensils"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Menu items",
                               "type": "stat-display",
-                              "icon": "utensils",
-                              "value": "@payload.data.length"
+                              "label": "Menu items",
+                              "value": "@payload.data.length",
+                              "icon": "utensils"
                             },
                             {
-                              "value": "62",
-                              "icon": "check-circle",
                               "label": "Available",
+                              "icon": "check-circle",
+                              "value": "62",
                               "type": "stat-display"
                             },
                             {
-                              "icon": "list",
-                              "type": "stat-display",
+                              "label": "Categories",
                               "value": "8",
-                              "label": "Categories"
+                              "type": "stat-display",
+                              "icon": "list"
                             },
                             {
+                              "label": "Avg price",
                               "value": "$14.50",
                               "type": "stat-display",
-                              "label": "Avg price",
                               "icon": "dollar-sign"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "icon": "arrow-right",
-                              "label": "Open",
-                              "event": "OPEN_ITEM"
-                            },
-                            {
-                              "event": "DELETE",
-                              "variant": "danger",
-                              "label": "Delete",
-                              "icon": "trash"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "label": "Item",
-                              "name": "name"
-                            },
-                            {
-                              "label": "Category",
-                              "name": "category",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "price",
-                              "label": "Price",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Currency",
-                              "variant": "badge",
-                              "name": "currency"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "prepTimeMinutes",
-                              "label": "Prep (min)"
-                            },
-                            {
-                              "label": "Available",
-                              "name": "available",
-                              "variant": "badge"
-                            }
-                          ],
-                          "gap": "sm",
-                          "type": "data-grid",
                           "cols": 1.0,
-                          "entity": "@payload.data"
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -957,8 +913,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -1042,51 +998,51 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
-                              "action": "CLOSE_VIEW",
+                              "variant": "ghost",
                               "label": "Back",
-                              "variant": "ghost"
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "type": "icon",
                               "name": "utensils"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.name"
+                              "content": "@entity.name",
+                              "variant": "h3"
                             },
                             {
                               "type": "badge",
                               "label": "@entity.category",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "color": "muted",
                                   "content": "Description",
-                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
@@ -1094,7 +1050,9 @@
                                   "variant": "body",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
                               "gap": "md",
@@ -1103,38 +1061,36 @@
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "type": "typography",
+                                  "content": "Available from",
                                   "color": "muted",
-                                  "content": "Available from"
+                                  "type": "typography"
                                 },
                                 {
+                                  "content": "@entity.availableFrom",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.availableFrom"
+                                  "variant": "body"
                                 }
                               ]
                             },
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Available until"
+                                  "color": "muted",
+                                  "content": "Available until",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@entity.availableUntil",
                                   "type": "typography",
-                                  "content": "@entity.availableUntil"
+                                  "variant": "body"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "type": "stack"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1142,43 +1098,41 @@
                         {
                           "children": [
                             {
-                              "type": "stat-display",
-                              "icon": "dollar-sign",
                               "value": "@entity.price",
-                              "label": "Price"
+                              "label": "Price",
+                              "icon": "dollar-sign",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Currency",
                               "type": "stat-display",
                               "value": "@entity.currency",
+                              "label": "Currency",
                               "icon": "circle-dollar-sign"
                             },
                             {
-                              "value": "@entity.prepTimeMinutes",
                               "icon": "clock",
                               "type": "stat-display",
+                              "value": "@entity.prepTimeMinutes",
                               "label": "Prep (min)"
                             },
                             {
-                              "label": "Order",
+                              "type": "stat-display",
                               "icon": "list-ordered",
                               "value": "@entity.order",
-                              "type": "stat-display"
+                              "label": "Order"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "label": "Toggle Available",
-                              "action": "TOGGLE_AVAILABLE",
                               "type": "button",
+                              "action": "TOGGLE_AVAILABLE",
                               "actionPayload": {
                                 "itemId": "@entity.id",
                                 "row": "@entity"
@@ -1187,19 +1141,21 @@
                             },
                             {
                               "label": "Delete",
-                              "type": "button",
+                              "action": "DELETE",
                               "variant": "danger",
                               "actionPayload": {
                                 "itemId": "@entity.id",
                                 "row": "@entity"
                               },
-                              "action": "DELETE"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1286,8 +1242,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "MenuItemDeleted",
-                        "failure": "MenuItemWriteFailed"
+                        "failure": "MenuItemWriteFailed",
+                        "success": "MenuItemDeleted"
                       }
                     }
                   ],
@@ -1295,19 +1251,19 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "md",
                       "direction": "vertical",
                       "className": "py-12",
                       "type": "stack",
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "content": "Deleting menu item…",
+                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ]
@@ -1342,8 +1298,8 @@
                     "MenuItem",
                     {
                       "emit": {
-                        "failure": "MenuItemLoadFailed",
-                        "success": "MenuItemLoaded"
+                        "success": "MenuItemLoaded",
+                        "failure": "MenuItemLoadFailed"
                       }
                     }
                   ]
@@ -1375,9 +1331,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -1392,8 +1348,8 @@
                     "MenuItem",
                     {
                       "emit": {
-                        "failure": "MenuItemLoadFailed",
-                        "success": "MenuItemLoaded"
+                        "success": "MenuItemLoaded",
+                        "failure": "MenuItemLoadFailed"
                       }
                     }
                   ],
@@ -1401,22 +1357,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Loading menu…",
                           "color": "muted",
+                          "content": "Loading menu…",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1433,8 +1389,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "MenuItemWriteFailed",
-                        "success": "MenuItemCreated"
+                        "success": "MenuItemCreated",
+                        "failure": "MenuItemWriteFailed"
                       }
                     }
                   ],
@@ -1443,21 +1399,21 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "content": "Creating menu item…",
-                          "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1553,22 +1509,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Updating menu item…",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1667,9 +1623,9 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
                       "align": "center",
                       "children": [
@@ -1677,10 +1633,10 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
+                          "content": "Toggling availability…",
                           "variant": "caption",
-                          "content": "Toggling availability…"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ]
                     }
@@ -1769,8 +1725,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "MenuItemDeleted",
-                        "failure": "MenuItemWriteFailed"
+                        "failure": "MenuItemWriteFailed",
+                        "success": "MenuItemDeleted"
                       }
                     }
                   ],
@@ -1778,6 +1734,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -1785,15 +1746,10 @@
                         {
                           "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Deleting menu item…"
+                          "content": "Deleting menu item…",
+                          "color": "muted"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -1817,8 +1773,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1826,6 +1782,58 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Item",
+                  "name": "name",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Category",
+                  "name": "category",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Price",
+                  "variant": "caption",
+                  "name": "price"
+                },
+                {
+                  "variant": "badge",
+                  "name": "currency",
+                  "label": "Currency"
+                },
+                {
+                  "name": "prepTimeMinutes",
+                  "label": "Prep (min)",
+                  "variant": "caption"
+                },
+                {
+                  "name": "available",
+                  "label": "Available",
+                  "variant": "badge"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "event": "OPEN_ITEM",
+                  "label": "Open",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "DELETE",
+                  "icon": "trash",
+                  "variant": "danger",
+                  "label": "Delete"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Menu"

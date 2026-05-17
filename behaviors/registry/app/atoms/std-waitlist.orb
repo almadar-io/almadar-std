@@ -1,7 +1,7 @@
 {
   "name": "std-waitlist",
-  "version": "1.0.0",
-  "description": "std-waitlist — sorted queue with auto-promote-on-cancel. Lists waitlist entries in `browsing`; opens detail in `viewing_single` with Promote / Cancel actions.",
+  "version": "1.1.0",
+  "description": "std-waitlist — sorted queue with auto-promote-on-cancel. Lists waitlist entries in `browsing`; opens detail in `viewing_single` with Promote / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "WaitlistOrbital",
@@ -351,8 +351,8 @@
                     "WaitlistEntry",
                     {
                       "emit": {
-                        "failure": "WaitlistEntryLoadFailed",
-                        "success": "WaitlistEntryLoaded"
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
                       }
                     }
                   ],
@@ -360,22 +360,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "className": "py-12",
+                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading waitlist…"
+                          "content": "Loading waitlist…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -390,11 +390,12 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
@@ -402,93 +403,53 @@
                               "name": "users"
                             },
                             {
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Total entries",
                               "value": "@payload.data.length",
-                              "icon": "users"
+                              "icon": "users",
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
                               "value": "126",
-                              "icon": "hourglass",
-                              "label": "Waiting"
+                              "label": "Waiting",
+                              "icon": "hourglass"
                             },
                             {
+                              "value": "24",
                               "label": "Promoted 7d",
-                              "icon": "arrow-up",
                               "type": "stat-display",
-                              "value": "24"
+                              "icon": "arrow-up"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Avg wait time",
                               "icon": "clock",
-                              "value": "3d"
+                              "label": "Avg wait time",
+                              "value": "3d",
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "event": "OPEN_ENTRY",
-                              "variant": "primary",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "icon": "x",
-                              "event": "CANCEL",
-                              "label": "Cancel",
-                              "variant": "danger"
-                            }
-                          ],
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
                           "cols": 1.0,
                           "type": "data-grid",
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "#",
-                              "name": "position",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "User",
-                              "variant": "caption",
-                              "name": "userId"
-                            },
-                            {
-                              "label": "Type",
-                              "variant": "badge",
-                              "name": "targetType"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            },
-                            {
-                              "name": "joinedAt",
-                              "label": "Joined",
-                              "variant": "caption"
-                            }
-                          ]
+                          "gap": "sm"
                         }
                       ]
                     }
@@ -504,8 +465,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -565,18 +526,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
                               "action": "CLOSE_VIEW",
                               "label": "Back",
+                              "type": "button",
                               "variant": "ghost"
                             },
                             {
@@ -584,27 +544,27 @@
                               "name": "users"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "@entity.userId"
                             },
                             {
                               "label": "@entity.status",
-                              "type": "badge",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "badge"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "stack",
+                              "gap": "md",
                               "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "caption",
@@ -613,33 +573,32 @@
                                   "type": "typography"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.targetId",
-                                  "type": "typography"
+                                  "content": "@entity.targetId"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             },
                             {
                               "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Target type",
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "content": "Target type",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@entity.targetType",
                                   "variant": "body",
-                                  "content": "@entity.targetType"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
                           ],
-                          "gap": "sm",
+                          "direction": "vertical",
                           "type": "stack"
                         },
                         {
@@ -648,62 +607,64 @@
                         {
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@entity.position",
                               "label": "Position",
+                              "value": "@entity.position",
+                              "type": "stat-display",
                               "icon": "hash"
                             },
                             {
                               "value": "@entity.joinedAt",
                               "type": "stat-display",
-                              "label": "Joined",
-                              "icon": "calendar"
+                              "icon": "calendar",
+                              "label": "Joined"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Promoted",
                               "icon": "arrow-up",
+                              "type": "stat-display",
                               "value": "@entity.promotedAt"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Notified",
                               "icon": "bell",
-                              "value": "@entity.notifiedAt"
+                              "value": "@entity.notifiedAt",
+                              "type": "stat-display"
                             }
                           ],
                           "cols": 4.0,
                           "type": "simple-grid"
                         },
                         {
-                          "align": "center",
+                          "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "label": "Promote",
+                              "variant": "primary",
                               "action": "PROMOTE",
                               "actionPayload": {
-                                "row": "@entity",
-                                "entryId": "@entity.id"
+                                "entryId": "@entity.id",
+                                "row": "@entity"
                               },
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Promote"
+                              "type": "button"
                             },
                             {
-                              "label": "Cancel",
+                              "variant": "danger",
                               "type": "button",
                               "actionPayload": {
                                 "entryId": "@entity.id",
                                 "row": "@entity"
                               },
                               "action": "CANCEL",
-                              "variant": "danger"
+                              "label": "Cancel"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -724,8 +685,8 @@
                     "WaitlistEntry",
                     {
                       "emit": {
-                        "success": "WaitlistEntryLoaded",
-                        "failure": "WaitlistEntryLoadFailed"
+                        "failure": "WaitlistEntryLoadFailed",
+                        "success": "WaitlistEntryLoaded"
                       }
                     }
                   ],
@@ -733,9 +694,10 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "align": "center",
-                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -747,8 +709,7 @@
                           "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -772,7 +733,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
                       "direction": "vertical",
                       "className": "py-12",
                       "children": [
@@ -780,14 +742,13 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Loading waitlist…",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading waitlist…"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -818,20 +779,20 @@
                     {
                       "gap": "md",
                       "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Promoting entry…",
                           "variant": "caption",
+                          "content": "Promoting entry…",
                           "type": "typography",
                           "color": "muted"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -851,8 +812,8 @@
                     "WaitlistEntry",
                     {
                       "emit": {
-                        "success": "WaitlistEntryLoaded",
-                        "failure": "WaitlistEntryLoadFailed"
+                        "failure": "WaitlistEntryLoadFailed",
+                        "success": "WaitlistEntryLoaded"
                       }
                     }
                   ],
@@ -860,20 +821,20 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "content": "Cancelling entry…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12"
                     }
@@ -911,6 +872,53 @@
             "title": {
               "type": "string",
               "default": "Waitlist"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "badge",
+                  "label": "#",
+                  "name": "position"
+                },
+                {
+                  "label": "User",
+                  "variant": "caption",
+                  "name": "userId"
+                },
+                {
+                  "name": "targetType",
+                  "label": "Type",
+                  "variant": "badge"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "name": "joinedAt",
+                  "label": "Joined",
+                  "variant": "caption"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_ENTRY",
+                  "variant": "primary",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "CANCEL",
+                  "icon": "x",
+                  "label": "Cancel",
+                  "variant": "danger"
+                }
+              ]
             }
           },
           "scope": "collection"

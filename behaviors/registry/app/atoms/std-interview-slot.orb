@@ -1,7 +1,7 @@
 {
   "name": "std-interview-slot",
-  "version": "1.0.0",
-  "description": "std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status.",
+  "version": "1.1.0",
+  "description": "std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "InterviewSlotOrbital",
@@ -267,8 +267,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "failure": "InterviewSlotLoadFailed",
-                        "success": "InterviewSlotLoaded"
+                        "success": "InterviewSlotLoaded",
+                        "failure": "InterviewSlotLoadFailed"
                       }
                     }
                   ],
@@ -277,20 +277,20 @@
                     "main",
                     {
                       "align": "center",
-                      "type": "stack",
                       "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading interviews…",
                           "variant": "caption",
+                          "content": "Loading interviews…",
                           "color": "muted",
                           "type": "typography"
                         }
                       ],
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -305,107 +305,69 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "calendar"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "label": "Scheduled",
                               "icon": "calendar",
+                              "value": "@payload.data.length",
                               "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
                               "value": "9",
-                              "icon": "clock",
-                              "label": "Today"
+                              "label": "Today",
+                              "icon": "clock"
                             },
                             {
                               "type": "stat-display",
-                              "value": "37",
                               "label": "Completed this week",
+                              "value": "37",
                               "icon": "check-circle"
                             },
                             {
+                              "value": "6%",
                               "label": "No-show rate",
-                              "icon": "alert-triangle",
                               "type": "stat-display",
-                              "value": "6%"
+                              "icon": "alert-triangle"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "cols": 1.0,
                           "type": "data-grid",
                           "entity": "@payload.data",
-                          "cols": 1.0,
-                          "fields": [
-                            {
-                              "name": "applicantName",
-                              "label": "Applicant",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "interviewerName",
-                              "label": "Interviewer"
-                            },
-                            {
-                              "label": "Scheduled",
-                              "name": "scheduledAt",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Format",
-                              "variant": "badge",
-                              "name": "format"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            }
-                          ],
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_INTERVIEW",
-                              "icon": "arrow-right",
-                              "variant": "primary",
-                              "label": "Open"
-                            },
-                            {
-                              "label": "Cancel",
-                              "event": "CANCEL_INTERVIEW",
-                              "variant": "danger"
-                            }
-                          ]
+                          "fields": "@config.fields"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -420,8 +382,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -480,53 +442,56 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "children": [
                             {
                               "variant": "ghost",
-                              "label": "Back",
                               "type": "button",
+                              "label": "Back",
                               "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "calendar"
+                              "name": "calendar",
+                              "type": "icon"
                             },
                             {
-                              "content": "@entity.applicantName",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@entity.applicantName"
                             },
                             {
-                              "label": "@entity.format",
                               "variant": "primary",
+                              "label": "@entity.format",
                               "type": "badge"
                             },
                             {
-                              "type": "badge",
                               "label": "@entity.status",
-                              "variant": "default"
+                              "variant": "default",
+                              "type": "badge"
                             }
                           ],
+                          "type": "stack",
                           "align": "center",
                           "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
+                              "gap": "md",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "content": "Interviewer"
                                 },
                                 {
@@ -535,100 +500,97 @@
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md"
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
+                                  "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "Applicant ID",
-                                  "color": "muted"
+                                  "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.applicantId",
                                   "type": "typography",
+                                  "content": "@entity.applicantId",
                                   "variant": "body"
                                 }
                               ]
                             },
                             {
-                              "children": [
-                                {
-                                  "content": "Notes",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
-                                }
-                              ],
                               "type": "stack",
                               "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Notes",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.notes"
+                                }
+                              ],
                               "gap": "md"
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 2.0,
                           "children": [
                             {
-                              "label": "Scheduled",
-                              "icon": "calendar",
                               "value": "@entity.scheduledAt",
-                              "type": "stat-display"
+                              "label": "Scheduled",
+                              "type": "stat-display",
+                              "icon": "calendar"
                             },
                             {
-                              "label": "Duration (min)",
                               "icon": "clock",
-                              "value": "@entity.durationMinutes",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Duration (min)",
+                              "value": "@entity.durationMinutes"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "action": "COMPLETE_INTERVIEW",
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Complete",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              }
-                            },
-                            {
-                              "label": "Cancel",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "CANCEL_INTERVIEW",
+                              "label": "Complete",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Cancel",
                               "variant": "danger",
-                              "type": "button"
+                              "action": "CANCEL_INTERVIEW",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -657,22 +619,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
-                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Cancelling interview…",
                           "color": "muted",
-                          "variant": "caption",
-                          "type": "typography"
+                          "content": "Cancelling interview…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -696,22 +658,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading interviews…",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Loading interviews…"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -731,8 +693,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "failure": "InterviewSlotLoadFailed",
-                        "success": "InterviewSlotLoaded"
+                        "success": "InterviewSlotLoaded",
+                        "failure": "InterviewSlotLoadFailed"
                       }
                     }
                   ],
@@ -740,22 +702,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Completing interview…",
-                          "type": "typography",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -784,22 +746,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Cancelling interview…",
                           "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Cancelling interview…"
                         }
                       ],
+                      "gap": "md",
+                      "align": "center",
                       "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -823,8 +785,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -835,6 +797,52 @@
             "title": {
               "type": "string",
               "default": "Interviews"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "applicantName",
+                  "label": "Applicant",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Interviewer",
+                  "name": "interviewerName"
+                },
+                {
+                  "label": "Scheduled",
+                  "variant": "caption",
+                  "name": "scheduledAt"
+                },
+                {
+                  "name": "format",
+                  "variant": "badge",
+                  "label": "Format"
+                },
+                {
+                  "label": "Status",
+                  "name": "status",
+                  "variant": "badge"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "event": "OPEN_INTERVIEW",
+                  "variant": "primary",
+                  "label": "Open",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "CANCEL_INTERVIEW",
+                  "variant": "danger",
+                  "label": "Cancel"
+                }
+              ]
             }
           },
           "scope": "collection"

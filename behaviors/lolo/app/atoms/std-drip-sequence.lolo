@@ -1,5 +1,5 @@
-app std-drip-sequence "1.0.0"
-"std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions."
+app std-drip-sequence "1.1.0"
+"std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital DripSequenceOrbital {
   entity DripSequence [persistent: dripsequences] {
@@ -18,7 +18,19 @@ orbital DripSequenceOrbital {
 
   trait DripSequenceSequence -> DripSequence [interaction, collection] {
     config {
-      title : string = "Drip Sequences"
+      title       : string   = "Drip Sequences"
+      fields      : [object] = [
+        { name: "name",           label: "Name",        variant: "caption" },
+        { name: "description",    label: "Description", variant: "caption" },
+        { name: "triggerEvent",   label: "Trigger",     variant: "caption" },
+        { name: "status",         label: "Status",      variant: "badge"   },
+        { name: "totalEnrolled",  label: "Enrolled",    variant: "caption" },
+        { name: "totalCompleted", label: "Completed",   variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",  event: "OPEN_SEQUENCE", variant: "primary", icon: "arrow-right" },
+        { label: "Pause", event: "PAUSE",         variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -26,7 +38,7 @@ orbital DripSequenceOrbital {
         (fetch DripSequence { emit: { success: "DripSequenceLoaded", failure: "DripSequenceLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading drip sequences…" }] })
       DripSequenceLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total sequences", value: "@payload.data.length", icon: "mail" }, { type: "stat-display", label: "Active", value: "14", icon: "play-circle" }, { type: "stat-display", label: "Enrolled", value: "8,420", icon: "users" }, { type: "stat-display", label: "Completion rate", value: "67%", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "triggerEvent", label: "Trigger", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "totalEnrolled", label: "Enrolled", variant: "caption" }, { name: "totalCompleted", label: "Completed", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_SEQUENCE", variant: "primary", icon: "arrow-right" }, { label: "Pause", event: "PAUSE", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "mail" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total sequences", value: "@payload.data.length", icon: "mail" }, { type: "stat-display", label: "Active", value: "14", icon: "play-circle" }, { type: "stat-display", label: "Enrolled", value: "8,420", icon: "users" }, { type: "stat-display", label: "Completion rate", value: "67%", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       DripSequenceLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

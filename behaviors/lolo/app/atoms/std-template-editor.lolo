@@ -1,5 +1,5 @@
-app std-template-editor "1.0.0"
-"std-template-editor — message template authoring primitive. Lists templates in `browsing`; opens detail in `viewing_single` with Edit / Save / Delete actions."
+app std-template-editor "1.1.0"
+"std-template-editor — message template authoring primitive. Lists templates in `browsing`; opens detail in `viewing_single` with Edit / Save / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital MessageTemplateOrbital {
   entity MessageTemplate [persistent: messagetemplates] {
@@ -18,6 +18,8 @@ orbital MessageTemplateOrbital {
   trait MessageTemplateEditor -> MessageTemplate [interaction, collection] {
     config {
       title : string = "Templates"
+      fields      : [object] = [{ name: "name", label: "Name", variant: "caption" }, { name: "channel", label: "Channel", variant: "badge" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "lastEditedAt", label: "Updated", variant: "caption" }]
+      itemActions : [object] = [{ label: "Open", event: "OPEN_TEMPLATE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_TEMPLATE", variant: "danger" }]
     }
     initial: loading
     state loading {
@@ -25,7 +27,7 @@ orbital MessageTemplateOrbital {
         (fetch MessageTemplate { emit: { success: "MessageTemplateLoaded", failure: "MessageTemplateLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading templates…" }] })
       MessageTemplateLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total templates", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Email", value: "32", icon: "mail" }, { type: "stat-display", label: "SMS", value: "14", icon: "message-square" }, { type: "stat-display", label: "Edited 7d", value: "9", icon: "edit" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "name", label: "Name", variant: "caption" }, { name: "channel", label: "Channel", variant: "badge" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "lastEditedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TEMPLATE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_TEMPLATE", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total templates", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Email", value: "32", icon: "mail" }, { type: "stat-display", label: "SMS", value: "14", icon: "message-square" }, { type: "stat-display", label: "Edited 7d", value: "9", icon: "edit" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       MessageTemplateLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

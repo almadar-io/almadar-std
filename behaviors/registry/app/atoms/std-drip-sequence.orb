@@ -1,7 +1,7 @@
 {
   "name": "std-drip-sequence",
-  "version": "1.0.0",
-  "description": "std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions.",
+  "version": "1.1.0",
+  "description": "std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "DripSequenceOrbital",
@@ -261,21 +261,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Loading drip sequences…"
+                          "content": "Loading drip sequences…",
+                          "color": "muted"
                         }
                       ],
                       "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
                       "align": "center"
                     }
                   ]
@@ -290,14 +290,14 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -311,91 +311,48 @@
                           ]
                         },
                         {
+                          "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "label": "Total sequences",
-                              "value": "@payload.data.length",
+                              "type": "stat-display",
                               "icon": "mail",
-                              "type": "stat-display"
+                              "value": "@payload.data.length"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Active",
                               "icon": "play-circle",
-                              "type": "stat-display",
                               "value": "14"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "users",
                               "value": "8,420",
-                              "label": "Enrolled"
+                              "label": "Enrolled",
+                              "icon": "users"
                             },
                             {
-                              "icon": "check-circle",
-                              "type": "stat-display",
                               "label": "Completion rate",
-                              "value": "67%"
+                              "value": "67%",
+                              "icon": "check-circle",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "label": "Open",
-                              "event": "OPEN_SEQUENCE",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "variant": "danger",
-                              "event": "PAUSE",
-                              "label": "Pause"
-                            }
-                          ],
+                          "fields": "@config.fields",
                           "gap": "sm",
-                          "fields": [
-                            {
-                              "label": "Name",
-                              "variant": "caption",
-                              "name": "name"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Description",
-                              "name": "description"
-                            },
-                            {
-                              "name": "triggerEvent",
-                              "label": "Trigger",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "variant": "badge",
-                              "label": "Status"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Enrolled",
-                              "name": "totalEnrolled"
-                            },
-                            {
-                              "name": "totalCompleted",
-                              "label": "Completed",
-                              "variant": "caption"
-                            }
-                          ],
-                          "type": "data-grid"
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "itemActions": "@config.itemActions"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -409,9 +366,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -465,23 +422,23 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
                               "variant": "ghost",
+                              "action": "CLOSE_VIEW",
                               "label": "Back",
-                              "type": "button",
-                              "action": "CLOSE_VIEW"
+                              "type": "button"
                             },
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
                               "content": "@entity.name",
@@ -489,28 +446,30 @@
                               "type": "typography"
                             },
                             {
-                              "type": "badge",
+                              "label": "@entity.status",
                               "variant": "primary",
-                              "label": "@entity.status"
+                              "type": "badge"
                             }
                           ],
+                          "gap": "sm",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "sm",
                           "children": [
                             {
-                              "gap": "md",
+                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "variant": "caption",
+                                  "color": "muted",
                                   "content": "Description",
                                   "type": "typography"
                                 },
@@ -519,25 +478,24 @@
                                   "type": "typography",
                                   "content": "@entity.description"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "children": [
                                 {
                                   "color": "muted",
                                   "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Trigger"
+                                  "content": "Trigger",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.triggerEvent"
+                                  "content": "@entity.triggerEvent",
+                                  "variant": "body"
                                 }
                               ],
-                              "gap": "md",
                               "type": "stack",
+                              "gap": "md",
                               "direction": "horizontal"
                             }
                           ]
@@ -547,36 +505,36 @@
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 2.0,
                           "children": [
                             {
+                              "value": "@entity.totalEnrolled",
                               "type": "stat-display",
                               "icon": "users",
-                              "value": "@entity.totalEnrolled",
                               "label": "Enrolled"
                             },
                             {
-                              "icon": "check-circle",
-                              "value": "@entity.totalCompleted",
+                              "label": "Completed",
                               "type": "stat-display",
-                              "label": "Completed"
+                              "icon": "check-circle",
+                              "value": "@entity.totalCompleted"
                             }
-                          ],
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "action": "ACTIVATE",
+                              "type": "button",
+                              "label": "Activate",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "Activate"
+                              "action": "ACTIVATE",
+                              "variant": "primary"
                             },
                             {
                               "type": "button",
@@ -584,13 +542,12 @@
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Pause",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Pause"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -610,8 +567,8 @@
                     "DripSequence",
                     {
                       "emit": {
-                        "failure": "DripSequenceLoadFailed",
-                        "success": "DripSequenceLoaded"
+                        "success": "DripSequenceLoaded",
+                        "failure": "DripSequenceLoadFailed"
                       }
                     }
                   ],
@@ -619,22 +576,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Pausing sequence…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "type": "typography"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -649,8 +606,8 @@
                     "DripSequence",
                     {
                       "emit": {
-                        "success": "DripSequenceLoaded",
-                        "failure": "DripSequenceLoadFailed"
+                        "failure": "DripSequenceLoadFailed",
+                        "success": "DripSequenceLoaded"
                       }
                     }
                   ],
@@ -658,9 +615,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -671,9 +630,7 @@
                           "color": "muted",
                           "variant": "caption"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -702,22 +659,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "type": "stack",
                       "gap": "md",
-                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Activating sequence…",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -746,22 +703,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Pausing sequence…",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Pausing sequence…",
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical"
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -794,6 +751,57 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "event": "OPEN_SEQUENCE",
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "variant": "danger",
+                  "label": "Pause",
+                  "event": "PAUSE"
+                }
+              ]
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "name",
+                  "label": "Name"
+                },
+                {
+                  "label": "Description",
+                  "variant": "caption",
+                  "name": "description"
+                },
+                {
+                  "label": "Trigger",
+                  "variant": "caption",
+                  "name": "triggerEvent"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Enrolled",
+                  "name": "totalEnrolled",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Completed",
+                  "name": "totalCompleted",
+                  "variant": "caption"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Drip Sequences"

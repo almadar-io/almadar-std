@@ -1,5 +1,5 @@
-app std-response-collector "1.0.0"
-"std-response-collector — survey per-respondent answer accumulator. Lists responses in `browsing`; opens detail in `viewing_single` with Resubmit / Delete actions."
+app std-response-collector "1.1.0"
+"std-response-collector — survey per-respondent answer accumulator. Lists responses in `browsing`; opens detail in `viewing_single` with Resubmit / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital ResponseCollectorOrbital {
   entity Response [persistent: responses] {
@@ -16,7 +16,18 @@ orbital ResponseCollectorOrbital {
 
   trait ResponseCollect -> Response [interaction, collection] {
     config {
-      title : string = "Responses"
+      title       : string   = "Responses"
+      fields      : [object] = [
+        { name: "questionId",   label: "Question",   variant: "caption" },
+        { name: "respondentId", label: "Respondent", variant: "caption" },
+        { name: "surveyId",     label: "Survey",     variant: "caption" },
+        { name: "answerJson",   label: "Answer",     variant: "caption" },
+        { name: "submittedAt",  label: "Submitted",  variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",   event: "OPEN_RESPONSE",   variant: "primary", icon: "arrow-right" },
+        { label: "Delete", event: "DELETE_RESPONSE", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -24,7 +35,7 @@ orbital ResponseCollectorOrbital {
         (fetch Response { emit: { success: "ResponseLoaded", failure: "ResponseLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading responses…" }] })
       ResponseLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total responses", value: "@payload.data.length", icon: "clipboard-list" }, { type: "stat-display", label: "Completion", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Respondents", value: "312", icon: "users" }, { type: "stat-display", label: "Surveys", value: "6", icon: "file-text" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "questionId", label: "Question", variant: "caption" }, { name: "respondentId", label: "Respondent", variant: "caption" }, { name: "surveyId", label: "Survey", variant: "caption" }, { name: "answerJson", label: "Answer", variant: "caption" }, { name: "submittedAt", label: "Submitted", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RESPONSE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_RESPONSE", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total responses", value: "@payload.data.length", icon: "clipboard-list" }, { type: "stat-display", label: "Completion", value: "84%", icon: "check-circle" }, { type: "stat-display", label: "Respondents", value: "312", icon: "users" }, { type: "stat-display", label: "Surveys", value: "6", icon: "file-text" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       ResponseLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

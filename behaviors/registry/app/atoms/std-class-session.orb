@@ -1,7 +1,7 @@
 {
   "name": "std-class-session",
-  "version": "1.0.0",
-  "description": "std-class-session — scheduled fitness/yoga/dance class session. Lists sessions in `browsing`; opens session detail in `viewing_single` with Start / Cancel actions.",
+  "version": "1.1.0",
+  "description": "std-class-session — scheduled fitness/yoga/dance class session. Lists sessions in `browsing`; opens session detail in `viewing_single` with Start / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "ClassSessionOrbital",
@@ -271,8 +271,8 @@
                     "ClassSession",
                     {
                       "emit": {
-                        "success": "ClassSessionLoaded",
-                        "failure": "ClassSessionLoadFailed"
+                        "failure": "ClassSessionLoadFailed",
+                        "success": "ClassSessionLoaded"
                       }
                     }
                   ],
@@ -280,22 +280,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
                           "type": "typography",
+                          "color": "muted",
                           "content": "Loading class sessions…"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -309,26 +309,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "calendar",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "calendar"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "simple-grid",
@@ -336,27 +333,27 @@
                           "children": [
                             {
                               "icon": "calendar",
-                              "label": "Sessions",
                               "type": "stat-display",
+                              "label": "Sessions",
                               "value": "@payload.data.length"
                             },
                             {
-                              "icon": "clock",
+                              "type": "stat-display",
                               "label": "Today",
                               "value": "12",
-                              "type": "stat-display"
+                              "icon": "clock"
                             },
                             {
                               "value": "78%",
-                              "type": "stat-display",
                               "label": "Capacity used",
-                              "icon": "users"
+                              "icon": "users",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "2",
                               "icon": "x-circle",
-                              "label": "Cancelled"
+                              "value": "2",
+                              "label": "Cancelled",
+                              "type": "stat-display"
                             }
                           ]
                         },
@@ -364,57 +361,17 @@
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "name": "className",
-                              "label": "Class",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Instructor",
-                              "name": "instructorName",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "startTime",
-                              "label": "Start",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Capacity",
-                              "name": "capacity"
-                            },
-                            {
-                              "label": "Booked",
-                              "variant": "badge",
-                              "name": "bookedCount"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            }
-                          ],
-                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "type": "data-grid",
+                          "cols": 1.0,
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "icon": "arrow-right",
-                              "event": "OPEN_SESSION",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "CANCEL_CLASS",
-                              "variant": "danger",
-                              "label": "Cancel"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          "itemActions": "@config.itemActions"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -494,111 +451,112 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
-                              "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "variant": "ghost",
-                              "label": "Back"
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "name": "calendar",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "calendar"
                             },
                             {
-                              "content": "@entity.className",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "@entity.className"
                             },
                             {
-                              "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default",
-                              "label": "@entity.status"
+                              "type": "badge"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Instructor",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.instructorName"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Location",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.location"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Notes",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.notes",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ],
-                          "align": "center",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "content": "Instructor",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.instructorName",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Location"
-                                },
-                                {
-                                  "content": "@entity.location",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ]
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "content": "Notes",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "children": [
-                            {
-                              "label": "Start",
+                              "icon": "clock",
                               "type": "stat-display",
-                              "value": "@entity.startTime",
-                              "icon": "clock"
+                              "label": "Start",
+                              "value": "@entity.startTime"
                             },
                             {
                               "value": "@entity.durationMinutes",
@@ -609,17 +567,18 @@
                             {
                               "icon": "users",
                               "type": "stat-display",
-                              "value": "@entity.bookedCount",
-                              "label": "Booked"
+                              "label": "Booked",
+                              "value": "@entity.bookedCount"
                             },
                             {
                               "icon": "user-plus",
+                              "type": "stat-display",
                               "value": "@entity.capacity",
-                              "label": "Capacity",
-                              "type": "stat-display"
+                              "label": "Capacity"
                             }
                           ],
-                          "cols": 4.0
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "stack",
@@ -627,29 +586,27 @@
                           "align": "center",
                           "children": [
                             {
+                              "variant": "primary",
                               "action": "START_CLASS",
+                              "type": "button",
+                              "label": "Start Class",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "variant": "primary",
-                              "label": "Start Class"
+                              }
                             },
                             {
+                              "action": "CANCEL_CLASS",
+                              "label": "Cancel",
                               "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "label": "Cancel",
-                              "action": "CANCEL_CLASS"
+                              "type": "button"
                             }
                           ],
                           "gap": "sm"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -678,22 +635,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Cancelling class…",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -708,8 +665,8 @@
                     "ClassSession",
                     {
                       "emit": {
-                        "failure": "ClassSessionLoadFailed",
-                        "success": "ClassSessionLoaded"
+                        "success": "ClassSessionLoaded",
+                        "failure": "ClassSessionLoadFailed"
                       }
                     }
                   ],
@@ -717,22 +674,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "gap": "md",
                       "align": "center",
-                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading class sessions…",
+                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "color": "muted"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -752,8 +709,8 @@
                     "ClassSession",
                     {
                       "emit": {
-                        "failure": "ClassSessionLoadFailed",
-                        "success": "ClassSessionLoaded"
+                        "success": "ClassSessionLoaded",
+                        "failure": "ClassSessionLoadFailed"
                       }
                     }
                   ],
@@ -761,21 +718,21 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Starting class…",
-                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Starting class…"
                         }
                       ],
-                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "type": "stack"
                     }
                   ]
@@ -796,8 +753,8 @@
                     "ClassSession",
                     {
                       "emit": {
-                        "success": "ClassSessionLoaded",
-                        "failure": "ClassSessionLoadFailed"
+                        "failure": "ClassSessionLoadFailed",
+                        "success": "ClassSessionLoaded"
                       }
                     }
                   ],
@@ -805,22 +762,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "content": "Cancelling class…",
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted"
                         }
                       ],
+                      "className": "py-12",
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -835,8 +792,8 @@
                     "ClassSession",
                     {
                       "emit": {
-                        "success": "ClassSessionLoaded",
-                        "failure": "ClassSessionLoadFailed"
+                        "failure": "ClassSessionLoadFailed",
+                        "success": "ClassSessionLoaded"
                       }
                     }
                   ],
@@ -844,8 +801,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -856,6 +813,57 @@
             "title": {
               "type": "string",
               "default": "Class Sessions"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Class",
+                  "name": "className"
+                },
+                {
+                  "label": "Instructor",
+                  "variant": "caption",
+                  "name": "instructorName"
+                },
+                {
+                  "label": "Start",
+                  "name": "startTime",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "badge",
+                  "name": "capacity",
+                  "label": "Capacity"
+                },
+                {
+                  "variant": "badge",
+                  "name": "bookedCount",
+                  "label": "Booked"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "variant": "primary",
+                  "event": "OPEN_SESSION",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "CANCEL_CLASS",
+                  "variant": "danger",
+                  "label": "Cancel"
+                }
+              ]
             }
           },
           "scope": "collection"

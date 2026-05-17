@@ -1,5 +1,5 @@
-app std-route-optimize "1.0.0"
-"std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions."
+app std-route-optimize "1.1.0"
+"std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital RouteOptimizeOrbital {
   entity Route [persistent: routes] {
@@ -18,7 +18,17 @@ orbital RouteOptimizeOrbital {
 
   trait RouteOptimize -> Route [interaction, collection] {
     config {
-      title : string = "Routes"
+      title       : string   = "Routes"
+      fields      : [object] = [
+        { name: "technicianId",         label: "Technician",     variant: "caption" },
+        { name: "totalDistanceKm",      label: "Distance (km)",  variant: "caption" },
+        { name: "totalDurationMinutes", label: "Duration (min)", variant: "caption" },
+        { name: "optimizedAt",          label: "Optimized",      variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",     event: "OPEN_ROUTE", variant: "primary", icon: "arrow-right" },
+        { label: "Optimize", event: "OPTIMIZE",   variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -26,7 +36,7 @@ orbital RouteOptimizeOrbital {
         (fetch Route { emit: { success: "RouteLoaded", failure: "RouteLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading routes…" }] })
       RouteLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total routes", value: "@payload.data.length", icon: "map" }, { type: "stat-display", label: "Optimized today", value: "14", icon: "check-circle" }, { type: "stat-display", label: "Total distance", value: "1,284 km", icon: "navigation" }, { type: "stat-display", label: "Avg duration", value: "92 min", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "technicianId", label: "Technician", variant: "caption" }, { name: "totalDistanceKm", label: "Distance (km)", variant: "caption" }, { name: "totalDurationMinutes", label: "Duration (min)", variant: "caption" }, { name: "optimizedAt", label: "Optimized", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_ROUTE", variant: "primary", icon: "arrow-right" }, { label: "Optimize", event: "OPTIMIZE", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total routes", value: "@payload.data.length", icon: "map" }, { type: "stat-display", label: "Optimized today", value: "14", icon: "check-circle" }, { type: "stat-display", label: "Total distance", value: "1,284 km", icon: "navigation" }, { type: "stat-display", label: "Avg duration", value: "92 min", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       RouteLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

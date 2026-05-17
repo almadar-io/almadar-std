@@ -1,7 +1,7 @@
 {
   "name": "std-modifier-group",
-  "version": "1.0.0",
-  "description": "std-modifier-group — restaurant menu item customization groups with required/optional/multi-select constraints. Owns a ModifierGroupRecord entity (constraint type, min/max selections, serialized options) and a single manage trait that loads groups, browses them in a data-grid with Create / Update / Delete actions, and persists each verdict back to the row.",
+  "version": "1.1.0",
+  "description": "std-modifier-group — restaurant menu item customization groups with required/optional/multi-select constraints. Owns a ModifierGroupRecord entity (constraint type, min/max selections, serialized options) and a single manage trait that loads groups, browses them in a data-grid with Create / Update / Delete actions, and persists each verdict back to the row. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "ModifierGroupOrbital",
@@ -510,6 +510,8 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "center",
                       "type": "stack",
                       "children": [
                         {
@@ -517,15 +519,13 @@
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Loading modifier groups…",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -539,15 +539,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -558,9 +552,15 @@
                               "variant": "h3",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "type": "stat-display",
@@ -569,8 +569,8 @@
                               "label": "Total groups"
                             },
                             {
-                              "value": "12",
                               "type": "stat-display",
+                              "value": "12",
                               "icon": "asterisk",
                               "label": "Required"
                             },
@@ -581,66 +581,27 @@
                               "icon": "check-square"
                             },
                             {
-                              "icon": "list",
-                              "type": "stat-display",
                               "label": "Avg options",
+                              "type": "stat-display",
+                              "icon": "list",
                               "value": "5"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "icon": "arrow-right",
-                              "label": "Open",
-                              "variant": "primary",
-                              "event": "OPEN_GROUP"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "label": "Group",
-                              "name": "name"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "constraintType",
-                              "label": "Constraint"
-                            },
-                            {
-                              "name": "required",
-                              "label": "Required",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "Min",
-                              "variant": "caption",
-                              "name": "minSelect"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "maxSelect",
-                              "label": "Max"
-                            }
-                          ],
+                          "fields": "@config.fields",
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions",
                           "cols": 1.0,
                           "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -654,9 +615,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -705,28 +666,26 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
+                              "variant": "ghost",
                               "label": "Back",
-                              "type": "button",
                               "action": "CLOSE_VIEW",
-                              "variant": "ghost"
+                              "type": "button"
                             },
                             {
                               "name": "list-checks",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "@entity.name"
                             },
                             {
@@ -734,35 +693,36 @@
                               "type": "badge",
                               "label": "@entity.constraintType"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "color": "muted",
                                   "type": "typography",
-                                  "content": "Options JSON"
+                                  "variant": "caption",
+                                  "content": "Options JSON",
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.optionsJson",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.optionsJson"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -772,39 +732,40 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
+                              "icon": "minus",
                               "value": "@entity.minSelect",
                               "label": "Min select",
-                              "icon": "minus"
+                              "type": "stat-display"
                             },
                             {
                               "label": "Max select",
-                              "value": "@entity.maxSelect",
                               "type": "stat-display",
-                              "icon": "plus"
+                              "icon": "plus",
+                              "value": "@entity.maxSelect"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "actionPayload": {
-                                "row": "@entity",
-                                "groupId": "@entity.id"
-                              },
-                              "label": "Delete",
-                              "type": "button",
+                              "variant": "danger",
                               "action": "DELETE",
-                              "variant": "danger"
+                              "type": "button",
+                              "actionPayload": {
+                                "groupId": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "label": "Delete"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -865,22 +826,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
                       "gap": "md",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "variant": "caption",
                           "type": "typography",
-                          "content": "Deleting modifier group…",
-                          "color": "muted"
+                          "content": "Deleting modifier group…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -895,8 +856,8 @@
                     "ModifierGroupRecord",
                     {
                       "emit": {
-                        "failure": "ModifierGroupLoadFailed",
-                        "success": "ModifierGroupLoaded"
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
                       }
                     }
                   ]
@@ -912,8 +873,8 @@
                     "ModifierGroupRecord",
                     {
                       "emit": {
-                        "failure": "ModifierGroupLoadFailed",
-                        "success": "ModifierGroupLoaded"
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
                       }
                     }
                   ]
@@ -929,8 +890,8 @@
                     "ModifierGroupRecord",
                     {
                       "emit": {
-                        "failure": "ModifierGroupLoadFailed",
-                        "success": "ModifierGroupLoaded"
+                        "success": "ModifierGroupLoaded",
+                        "failure": "ModifierGroupLoadFailed"
                       }
                     }
                   ]
@@ -945,8 +906,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error"
                     }
                   ]
@@ -971,22 +932,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading modifier groups…",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading modifier groups…"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1012,22 +973,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
                       "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Creating modifier group…",
                           "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
+                          "content": "Creating modifier group…",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1088,22 +1049,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "className": "py-12",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
+                          "type": "typography",
                           "content": "Updating modifier group…",
-                          "type": "typography"
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1155,8 +1116,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ModifierGroupDeleted",
-                        "failure": "ModifierGroupWriteFailed"
+                        "failure": "ModifierGroupWriteFailed",
+                        "success": "ModifierGroupDeleted"
                       }
                     }
                   ],
@@ -1164,6 +1125,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "direction": "vertical",
                       "children": [
                         {
@@ -1171,15 +1135,12 @@
                         },
                         {
                           "content": "Deleting modifier group…",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1194,8 +1155,8 @@
                     "ModifierGroupRecord",
                     {
                       "emit": {
-                        "success": "ModifierGroupLoaded",
-                        "failure": "ModifierGroupLoadFailed"
+                        "failure": "ModifierGroupLoadFailed",
+                        "success": "ModifierGroupLoaded"
                       }
                     }
                   ],
@@ -1212,6 +1173,53 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "name",
+                  "label": "Group"
+                },
+                {
+                  "variant": "badge",
+                  "name": "constraintType",
+                  "label": "Constraint"
+                },
+                {
+                  "variant": "badge",
+                  "name": "required",
+                  "label": "Required"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Min",
+                  "name": "minSelect"
+                },
+                {
+                  "name": "maxSelect",
+                  "label": "Max",
+                  "variant": "caption"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_GROUP",
+                  "variant": "primary",
+                  "icon": "arrow-right"
+                },
+                {
+                  "icon": "trash",
+                  "event": "DELETE",
+                  "variant": "danger",
+                  "label": "Delete"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Modifier Groups"

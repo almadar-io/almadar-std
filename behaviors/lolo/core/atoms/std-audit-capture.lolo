@@ -1,0 +1,54 @@
+app std-audit-capture "1.0.0"
+"std-audit-capture — event-interceptor audit log. Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, and timestamp. Composable via `extraTraits` to interpose audit logging behind any mutating trait without touching its state machine."
+
+orbital AuditCaptureOrbital {
+  entity AuditEntry [persistent: audit_entries] {
+    id         : string!
+    actor      : string  = ""
+    action     : string  = ""
+    entityType : string  = ""
+    entityId   : string  = ""
+    recordedAt : number  = 0
+  }
+
+  type EntityMutated  = Event { data : object }                                                                                    "Rename via traitOverrides.events to the upstream mutation event (e.g. ContactSaved, ContactDeleted)."
+  type AuditRecorded  = Event { actor : string, action : string, entityType : string, entityId : string, recordedAt : number }     "Re-emitted after the audit row persists; rename to wire downstream listeners (e.g. AuditDashboardAppended)."
+
+  trait AuditCaptureListener -> AuditEntry [lifecycle, instance] {
+    config {
+      captureEntity     : string   = ""
+      captureEventTypes : [string] = ["Saved", "Deleted"]
+      excludeFields     : [string] = []
+    }
+    initial: idle
+    state idle {
+      EntityMutated -> idle
+        (set @entity.actor "@user.id")
+        (set @entity.action "EntityMutated")
+        (set @entity.entityType @config.captureEntity)
+        (set @entity.entityId (object/get @payload.data "id"))
+        (set @entity.recordedAt 0)
+        (persist create AuditEntry {
+          actor:      "@user.id",
+          action:     "EntityMutated",
+          entityType: "@config.captureEntity",
+          entityId:   "@payload.data.id",
+          recordedAt: 0
+        })
+        (emit AuditRecorded {
+          actor:      "@user.id",
+          action:     "EntityMutated",
+          entityType: "@config.captureEntity",
+          entityId:   "@payload.data.id",
+          recordedAt: 0
+        })
+    }
+    emits {
+      AuditRecorded -> external { actor : string, action : string, entityType : string, entityId : string, recordedAt : number }
+    }
+    listens {
+      EntityMutated { data : object }
+    }
+  }
+  page "/audit-capture" as AuditCapturePage -> AuditCaptureListener
+}

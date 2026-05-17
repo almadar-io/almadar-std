@@ -1,0 +1,42 @@
+app std-row-access-control "1.0.0"
+"std-row-access-control — row-level access control gate. Listens for `RowsLoaded` (rename via traitOverrides.events to the consumer's load event), filters `@payload.data` by `@user.id` (when `ownerField` is set) and/or `@user.role` (when `visibleRoles` is non-empty), re-emits `RowsFiltered` for downstream consumers (rename to wire into the UI atom's listen). Composable via `extraTraits` to interpose between a data fetch and a list/grid UI."
+
+orbital RowAccessControlOrbital {
+  entity RowAccessGateView [runtime] {
+    id           : string!
+    filteredData : [object]  = []
+    inputCount   : number    = 0
+    outputCount  : number    = 0
+    accessDenied : boolean   = false
+  }
+
+  type RowsLoaded   = Event { data : [object] }                          "Rename via traitOverrides.events to the upstream fetch-success event (e.g. ContactLoaded)."
+  type RowsFiltered = Event { data : [object], filteredCount : number }  "Re-emitted with the access-gated row set; rename to wire the downstream consumer (e.g. ContactGated)."
+
+  trait RowAccessGate -> RowAccessGateView [lifecycle, instance] {
+    config {
+      ownerField   : string   = ""
+      visibleRoles : [string] = []
+    }
+    initial: idle
+    state idle {
+      RowsLoaded -> idle
+        (set @entity.inputCount (array/len @payload.data))
+        (set @entity.accessDenied (and (not (= (array/len @config.visibleRoles) 0)) (not (array/includes @config.visibleRoles @user.role))))
+        (set @entity.filteredData (if @entity.accessDenied
+          []
+          (if (not (= @config.ownerField ""))
+            (array/filter @payload.data ["fn", "row", (= (object/get @row @config.ownerField) @user.id)])
+            @payload.data)))
+        (set @entity.outputCount (array/len @entity.filteredData))
+        (emit RowsFiltered { data: "@entity.filteredData", filteredCount: "@entity.outputCount" })
+    }
+    emits {
+      RowsFiltered -> external { data : [object], filteredCount : number }
+    }
+    listens {
+      RowsLoaded { data : [object] }
+    }
+  }
+  page "/row-access-control" as RowAccessControlPage -> RowAccessGate
+}

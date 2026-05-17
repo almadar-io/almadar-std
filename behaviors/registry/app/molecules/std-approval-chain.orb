@@ -1,7 +1,7 @@
 {
   "name": "std-approval-chain",
-  "version": "2.0.0",
-  "description": "std-approval-chain — domain-specific N-step approval workflow. Composes std-step-flow with persisted ApprovalRequest entity carrying domain fields (requestType, amount, requester). Lights up std-legal-case, std-ap-bill, std-change-order, std-application (hr-portal) — each rebinds std-step-flow + sets its own `config.steps` array.",
+  "version": "2.0.1",
+  "description": "std-approval-chain — single-item N-step sequential approval workflow (manager → finance → executive on ONE request). Composes std-step-flow; agents tune the chain via `config.steps`. Pick this when the user wants a single document/request walked through ordered approvers. For an approver inbox triaging MANY requests (list + detail), use std-approval-request instead. Lights up std-legal-case, std-ap-bill, std-change-order, std-application (hr-portal).",
   "orbitals": [
     {
       "name": "ApprovalChainOrbital",
@@ -68,22 +68,22 @@
           "config": {
             "steps": [
               {
-                "description": "Direct manager reviews the request and verifies budget impact",
                 "key": "manager",
                 "label": "Manager Review",
+                "description": "Direct manager reviews the request and verifies budget impact",
                 "icon": "user-check"
               },
               {
-                "label": "Finance Approval",
-                "key": "finance",
+                "description": "Finance team checks compliance with company policy",
                 "icon": "calculator",
-                "description": "Finance team checks compliance with company policy"
+                "label": "Finance Approval",
+                "key": "finance"
               },
               {
-                "label": "Executive Sign-off",
-                "description": "Final executive approval before commitment",
                 "key": "executive",
-                "icon": "shield-check"
+                "label": "Executive Sign-off",
+                "icon": "shield-check",
+                "description": "Final executive approval before commitment"
               }
             ],
             "title": "Approval Request"

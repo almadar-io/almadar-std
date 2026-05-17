@@ -1,5 +1,5 @@
-app std-approval-request "1.1.0"
-"std-approval-request — generic approval step for routing a target (timesheet, expense, PTO, etc.) through requestor + approver decisions. Lists requests in `browsing`; opens detail in `viewing_single` with Approve / Reject / Request Info / Withdraw actions."
+app std-approval-request "1.3.0"
+"std-approval-request — approver inbox / triage queue. Browses many pending approval requests in a list (data-grid), opens one at a time for detail with Approve / Reject / Request Info / Withdraw. Pick this when the user is an approver working through a queue. For single-item N-step sequential approval (manager → finance → exec on ONE item), use std-approval-chain instead. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital ApprovalRequestOrbital {
   entity ApprovalRequest [persistent: approvalrequests] {
@@ -22,8 +22,21 @@ orbital ApprovalRequestOrbital {
 
   trait ApprovalRequestPipeline -> ApprovalRequest [interaction, collection] {
     config {
-      title                  : string  = "Approval Requests"
-      requireCommentOnReject : boolean = false
+      title                  : string   = "Approval Requests"
+      requireCommentOnReject : boolean  = false
+      fields                 : [object] = [
+        { name: "title",            label: "Title",        variant: "caption" },
+        { name: "targetType",       label: "Target",       variant: "badge"   },
+        { name: "requestedBy",      label: "Requested By", variant: "caption" },
+        { name: "assignedApprover", label: "Approver",     variant: "caption" },
+        { name: "approverDecision", label: "Decision",     variant: "badge"   },
+        { name: "status",           label: "Status",       variant: "badge"   },
+        { name: "decidedAt",        label: "Decided",      variant: "caption" }
+      ]
+      itemActions            : [object] = [
+        { label: "Open",     event: "OPEN_REQUEST", variant: "primary", icon: "arrow-right" },
+        { label: "Withdraw", event: "WITHDRAW",     variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -31,7 +44,7 @@ orbital ApprovalRequestOrbital {
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading approval requests…" }] })
       ApprovalRequestLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total requests", value: "@payload.data.length", icon: "inbox" }, { type: "stat-display", label: "Pending", value: "14", icon: "clock" }, { type: "stat-display", label: "Approved", value: "82%", icon: "check-circle" }, { type: "stat-display", label: "Avg cycle", value: "1.4 days", icon: "timer" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "targetType", label: "Target", variant: "badge" }, { name: "requestedBy", label: "Requested By", variant: "caption" }, { name: "assignedApprover", label: "Approver", variant: "caption" }, { name: "approverDecision", label: "Decision", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "decidedAt", label: "Decided", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_REQUEST", variant: "primary", icon: "arrow-right" }, { label: "Withdraw", event: "WITHDRAW", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total requests", value: "@payload.data.length", icon: "inbox" }, { type: "stat-display", label: "Pending", value: "14", icon: "clock" }, { type: "stat-display", label: "Approved", value: "82%", icon: "check-circle" }, { type: "stat-display", label: "Avg cycle", value: "1.4 days", icon: "timer" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       ApprovalRequestLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.message" })
     }

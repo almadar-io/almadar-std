@@ -1,7 +1,7 @@
 {
   "name": "std-trial",
-  "version": "1.0.0",
-  "description": "std-trial — subscription trial countdown with auto-convert at expiry. Lists trials in `browsing`; opens detail in `viewing_single` with Convert / Expire / Cancel actions.",
+  "version": "1.1.0",
+  "description": "std-trial — subscription trial countdown with auto-convert at expiry. Lists trials in `browsing`; opens detail in `viewing_single` with Convert / Expire / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "TrialOrbital",
@@ -436,11 +436,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -465,50 +465,50 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "clock",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "@config.title",
                               "variant": "h3",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
+                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center"
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "children": [
                             {
-                              "icon": "clock",
                               "type": "stat-display",
                               "value": "@payload.data.length",
+                              "icon": "clock",
                               "label": "Active trials"
                             },
                             {
                               "type": "stat-display",
-                              "value": "42%",
                               "label": "Conversion rate",
+                              "value": "42%",
                               "icon": "trending-up"
                             },
                             {
-                              "icon": "alert-triangle",
-                              "label": "Expiring 7d",
+                              "value": "18",
                               "type": "stat-display",
-                              "value": "18"
+                              "icon": "alert-triangle",
+                              "label": "Expiring 7d"
                             },
                             {
-                              "label": "Converted this mo",
-                              "type": "stat-display",
                               "value": "31",
-                              "icon": "check-circle"
+                              "label": "Converted this mo",
+                              "icon": "check-circle",
+                              "type": "stat-display"
                             }
                           ],
                           "cols": 4.0,
@@ -518,64 +518,15 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "fields": "@config.fields",
                           "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "name": "customerId",
-                              "variant": "caption",
-                              "label": "Customer"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "planId",
-                              "label": "Plan"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Started",
-                              "name": "startedAt"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "expiresAt",
-                              "label": "Expires"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "convertedAt",
-                              "label": "Converted"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Notified",
-                              "name": "notifiedAt"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "event": "OPEN_TRIAL",
-                              "icon": "arrow-right",
-                              "variant": "primary",
-                              "label": "Open"
-                            },
-                            {
-                              "variant": "danger",
-                              "icon": "x",
-                              "label": "Cancel",
-                              "event": "CANCEL"
-                            }
-                          ],
                           "cols": 1.0,
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions",
                           "gap": "sm"
                         }
                       ],
-                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -590,9 +541,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -656,42 +607,43 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
+                              "label": "Back",
                               "action": "CLOSE_VIEW",
-                              "type": "button",
-                              "label": "Back"
+                              "variant": "ghost",
+                              "type": "button"
                             },
                             {
                               "name": "clock",
                               "type": "icon"
                             },
                             {
-                              "content": "@entity.customerId",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "@entity.customerId"
                             },
                             {
-                              "type": "badge",
                               "label": "@entity.status",
+                              "type": "badge",
                               "variant": "primary"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "direction": "vertical",
                           "gap": "sm",
                           "children": [
                             {
-                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "color": "muted",
@@ -705,101 +657,100 @@
                                   "content": "@entity.planId"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "type": "typography",
+                                  "variant": "caption",
                                   "content": "Subscription",
-                                  "variant": "caption"
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.subscriptionId",
-                                  "type": "typography"
+                                  "content": "@entity.subscriptionId"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
+                              ]
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "icon": "calendar",
                               "label": "Started",
-                              "value": "@entity.startedAt"
+                              "type": "stat-display",
+                              "value": "@entity.startedAt",
+                              "icon": "calendar"
                             },
                             {
-                              "icon": "calendar-clock",
-                              "value": "@entity.expiresAt",
                               "label": "Expires",
-                              "type": "stat-display"
+                              "value": "@entity.expiresAt",
+                              "type": "stat-display",
+                              "icon": "calendar-clock"
                             },
                             {
-                              "type": "stat-display",
+                              "value": "@entity.convertedAt",
                               "label": "Converted",
-                              "icon": "check-circle",
-                              "value": "@entity.convertedAt"
+                              "type": "stat-display",
+                              "icon": "check-circle"
                             },
                             {
-                              "label": "Notified",
                               "type": "stat-display",
+                              "icon": "bell",
                               "value": "@entity.notifiedAt",
-                              "icon": "bell"
+                              "label": "Notified"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "align": "center",
-                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "primary",
+                              "type": "button",
+                              "label": "Convert",
                               "action": "CONVERT",
                               "actionPayload": {
                                 "trialId": "@entity.id",
                                 "convertedAt": "@entity.expiresAt",
                                 "row": "@entity"
-                              },
-                              "type": "button",
-                              "label": "Convert"
+                              }
                             },
                             {
+                              "variant": "secondary",
                               "action": "EXPIRE",
                               "actionPayload": {
                                 "trialId": "@entity.id",
                                 "row": "@entity"
                               },
-                              "variant": "secondary",
-                              "type": "button",
-                              "label": "Expire"
+                              "label": "Expire",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
-                              "label": "Cancel",
-                              "actionPayload": {
-                                "trialId": "@entity.id",
-                                "row": "@entity"
-                              },
                               "action": "CANCEL",
-                              "variant": "danger"
+                              "type": "button",
+                              "variant": "danger",
+                              "actionPayload": {
+                                "row": "@entity",
+                                "trialId": "@entity.id"
+                              },
+                              "label": "Cancel"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         }
                       ]
                     }
@@ -830,22 +781,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Cancelling trial…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Cancelling trial…"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -869,22 +820,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Loading trials…",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "content": "Loading trials…"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -904,8 +855,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "failure": "TrialLoadFailed",
-                        "success": "TrialLoaded"
+                        "success": "TrialLoaded",
+                        "failure": "TrialLoadFailed"
                       }
                     }
                   ],
@@ -913,22 +864,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
-                          "content": "Converting trial…",
-                          "variant": "caption"
+                          "content": "Converting trial…"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -957,21 +908,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Expiring trial…",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
+                          "content": "Expiring trial…",
                           "variant": "caption"
                         }
                       ],
+                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
+                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -1006,15 +957,15 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Cancelling trial…",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Cancelling trial…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
                       "gap": "md",
                       "align": "center"
                     }
@@ -1031,8 +982,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "failure": "TrialLoadFailed",
-                        "success": "TrialLoaded"
+                        "success": "TrialLoaded",
+                        "failure": "TrialLoadFailed"
                       }
                     }
                   ],
@@ -1049,9 +1000,66 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "customerId",
+                  "label": "Customer",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Plan",
+                  "variant": "caption",
+                  "name": "planId"
+                },
+                {
+                  "label": "Status",
+                  "variant": "badge",
+                  "name": "status"
+                },
+                {
+                  "name": "startedAt",
+                  "variant": "caption",
+                  "label": "Started"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Expires",
+                  "name": "expiresAt"
+                },
+                {
+                  "label": "Converted",
+                  "name": "convertedAt",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Notified",
+                  "name": "notifiedAt",
+                  "variant": "caption"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Trials"
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "event": "OPEN_TRIAL",
+                  "variant": "primary"
+                },
+                {
+                  "icon": "x",
+                  "variant": "danger",
+                  "label": "Cancel",
+                  "event": "CANCEL"
+                }
+              ]
             }
           },
           "scope": "collection"

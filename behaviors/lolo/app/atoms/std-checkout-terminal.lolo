@@ -1,5 +1,5 @@
-app std-checkout-terminal "1.0.0"
-"std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list."
+app std-checkout-terminal "1.1.0"
+"std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital CheckoutSessionOrbital {
   entity CheckoutSession [persistent: checkoutsessions] {
@@ -22,7 +22,18 @@ orbital CheckoutSessionOrbital {
 
   trait CheckoutSessionTerminal -> CheckoutSession [interaction, collection] {
     config {
-      title : string = "Terminals"
+      title       : string   = "Terminals"
+      fields      : [object] = [
+        { name: "terminalId",  label: "Terminal", variant: "caption" },
+        { name: "cashierName", label: "Cashier",  variant: "caption" },
+        { name: "status",      label: "Status",   variant: "badge"   },
+        { name: "total",       label: "Total",    variant: "caption" },
+        { name: "openedAt",    label: "Opened",   variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open", event: "OPEN_TERMINAL", variant: "primary" },
+        { label: "Void", event: "VOID_SESSION",  variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -30,7 +41,7 @@ orbital CheckoutSessionOrbital {
         (fetch CheckoutSession { emit: { success: "CheckoutSessionLoaded", failure: "CheckoutSessionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "md" }, { type: "typography", variant: "caption", color: "muted", content: "Loading terminals…" }] })
       CheckoutSessionLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "terminalId", label: "Terminal", variant: "caption" }, { name: "cashierName", label: "Cashier", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "total", label: "Total", variant: "caption" }, { name: "openedAt", label: "Opened", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_TERMINAL", variant: "primary" }, { label: "Void", event: "VOID_SESSION", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       CheckoutSessionLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

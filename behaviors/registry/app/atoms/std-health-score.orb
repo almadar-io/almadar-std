@@ -1,7 +1,7 @@
 {
   "name": "std-health-score",
-  "version": "1.0.0",
-  "description": "std-health-score — customer success health score primitive surfacing churn risk via composite usage/support/engagement signals. Lists health scores in `browsing`; opens detail in `viewing_single` with Recalculate / Assign CSM actions.",
+  "version": "1.1.0",
+  "description": "std-health-score — customer success health score primitive surfacing churn risk via composite usage/support/engagement signals. Lists health scores in `browsing`; opens detail in `viewing_single` with Recalculate / Assign CSM actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "HealthScoreOrbital",
@@ -292,8 +292,8 @@
                     "HealthScore",
                     {
                       "emit": {
-                        "success": "HealthScoreLoaded",
-                        "failure": "HealthScoreLoadFailed"
+                        "failure": "HealthScoreLoadFailed",
+                        "success": "HealthScoreLoaded"
                       }
                     }
                   ],
@@ -301,22 +301,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Loading health scores…",
+                          "variant": "caption",
                           "color": "muted",
                           "type": "typography"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -334,110 +334,62 @@
                       "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "activity",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             }
                           ],
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
-                          "cols": 4.0,
                           "children": [
                             {
+                              "type": "stat-display",
                               "icon": "users",
                               "label": "Total customers",
-                              "value": "@payload.data.length",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "label": "Green tier",
+                              "icon": "smile",
+                              "value": "62%",
                               "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "62%",
-                              "icon": "smile",
-                              "label": "Green tier"
-                            },
-                            {
                               "value": "8",
-                              "type": "stat-display",
                               "label": "At risk (red)",
+                              "type": "stat-display",
                               "icon": "alert-triangle"
                             },
                             {
-                              "label": "30d trend",
-                              "value": "+4.2%",
+                              "icon": "trending-up",
                               "type": "stat-display",
-                              "icon": "trending-up"
+                              "value": "+4.2%",
+                              "label": "30d trend"
                             }
                           ],
+                          "cols": 4.0,
                           "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "variant": "primary",
-                              "icon": "arrow-right",
-                              "event": "OPEN_SCORE"
-                            },
-                            {
-                              "variant": "secondary",
-                              "event": "RECALCULATE",
-                              "label": "Recalculate"
-                            }
-                          ],
-                          "fields": [
-                            {
-                              "label": "Customer",
-                              "variant": "caption",
-                              "name": "customerName"
-                            },
-                            {
-                              "label": "Score",
-                              "variant": "badge",
-                              "name": "score"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "tier",
-                              "label": "Tier"
-                            },
-                            {
-                              "name": "usageScore",
-                              "label": "Usage",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Support",
-                              "variant": "caption",
-                              "name": "supportScore"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Trend",
-                              "name": "trend"
-                            },
-                            {
-                              "name": "assignedCsm",
-                              "label": "CSM",
-                              "variant": "caption"
-                            }
-                          ],
                           "cols": 1.0,
-                          "type": "data-grid"
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "gap": "sm"
                         }
                       ],
                       "gap": "md"
@@ -454,9 +406,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.message",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.message"
                     }
                   ]
                 ]
@@ -525,31 +477,29 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "action": "CLOSE_VIEW",
                               "type": "button",
-                              "label": "Back"
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "name": "activity",
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "@entity.customerName",
-                              "type": "typography"
+                              "content": "@entity.customerName"
                             },
                             {
                               "variant": "primary",
-                              "label": "@entity.tier",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.tier"
                             },
                             {
                               "label": "@entity.trend",
@@ -557,25 +507,23 @@
                               "type": "badge"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Customer ID",
                                   "color": "muted",
                                   "variant": "caption",
+                                  "content": "Customer ID",
                                   "type": "typography"
                                 },
                                 {
@@ -583,91 +531,95 @@
                                   "content": "@entity.customerId",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "type": "stack",
                               "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Assigned CSM"
+                                  "color": "muted",
+                                  "content": "Assigned CSM",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.assignedCsm"
+                                  "content": "@entity.assignedCsm",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Composite",
-                              "value": "@entity.score",
                               "type": "stat-display",
-                              "icon": "activity"
+                              "icon": "activity",
+                              "value": "@entity.score",
+                              "label": "Composite"
                             },
                             {
                               "label": "Usage",
-                              "value": "@entity.usageScore",
+                              "icon": "bar-chart",
                               "type": "stat-display",
-                              "icon": "bar-chart"
+                              "value": "@entity.usageScore"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Support",
                               "value": "@entity.supportScore",
+                              "label": "Support",
                               "icon": "life-buoy"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Engagement",
                               "value": "@entity.engagementScore",
+                              "type": "stat-display",
                               "icon": "users"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "type": "stack",
                           "children": [
                             {
                               "type": "button",
-                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "label": "Recalculate",
+                              "variant": "primary",
                               "action": "RECALCULATE"
                             },
                             {
-                              "variant": "secondary",
                               "label": "Assign CSM",
+                              "type": "button",
+                              "variant": "secondary",
+                              "action": "ASSIGN_CSM",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "action": "ASSIGN_CSM"
+                              }
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -687,8 +639,8 @@
                     "HealthScore",
                     {
                       "emit": {
-                        "success": "HealthScoreLoaded",
-                        "failure": "HealthScoreLoadFailed"
+                        "failure": "HealthScoreLoadFailed",
+                        "success": "HealthScoreLoaded"
                       }
                     }
                   ],
@@ -701,17 +653,17 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Recalculating health score…",
-                          "variant": "caption"
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -735,9 +687,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
@@ -750,7 +699,10 @@
                           "content": "Loading health scores…"
                         }
                       ],
-                      "className": "py-12"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -779,22 +731,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
                           "content": "Recalculating health score…"
                         }
                       ],
                       "gap": "md",
-                      "align": "center"
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -814,8 +766,8 @@
                     "HealthScore",
                     {
                       "emit": {
-                        "failure": "HealthScoreLoadFailed",
-                        "success": "HealthScoreLoaded"
+                        "success": "HealthScoreLoaded",
+                        "failure": "HealthScoreLoadFailed"
                       }
                     }
                   ],
@@ -823,22 +775,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Assigning CSM…",
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Assigning CSM…",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -853,8 +805,8 @@
                     "HealthScore",
                     {
                       "emit": {
-                        "success": "HealthScoreLoaded",
-                        "failure": "HealthScoreLoadFailed"
+                        "failure": "HealthScoreLoadFailed",
+                        "success": "HealthScoreLoaded"
                       }
                     }
                   ],
@@ -874,6 +826,62 @@
             "title": {
               "type": "string",
               "default": "Customer Health Scores"
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "event": "OPEN_SCORE",
+                  "icon": "arrow-right",
+                  "label": "Open"
+                },
+                {
+                  "event": "RECALCULATE",
+                  "variant": "secondary",
+                  "label": "Recalculate"
+                }
+              ]
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "customerName",
+                  "label": "Customer",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Score",
+                  "variant": "badge",
+                  "name": "score"
+                },
+                {
+                  "name": "tier",
+                  "label": "Tier",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Usage",
+                  "name": "usageScore",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Support",
+                  "name": "supportScore",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Trend",
+                  "variant": "badge",
+                  "name": "trend"
+                },
+                {
+                  "variant": "caption",
+                  "name": "assignedCsm",
+                  "label": "CSM"
+                }
+              ]
             }
           },
           "scope": "collection"

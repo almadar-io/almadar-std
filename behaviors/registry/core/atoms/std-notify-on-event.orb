@@ -1,0 +1,234 @@
+{
+  "name": "std-notify-on-event",
+  "version": "1.0.0",
+  "description": "std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`. Composable via `extraTraits` to wire reactive notifications behind any emitting trait.",
+  "orbitals": [
+    {
+      "name": "NotifyOnEventOrbital",
+      "entity": {
+        "name": "NotificationRecord",
+        "collection": "notifications",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "recipient",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "channel",
+            "type": "string",
+            "default": "in-app"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "default": "info"
+          },
+          {
+            "name": "dispatched",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "recordedAt",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "NotifyOnEventListener",
+          "category": "lifecycle",
+          "linkedEntity": "NotificationRecord",
+          "emits": [
+            {
+              "event": "NotificationDispatched",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "recipient",
+                  "type": "string"
+                },
+                {
+                  "name": "channel",
+                  "type": "string"
+                },
+                {
+                  "name": "message",
+                  "type": "string"
+                },
+                {
+                  "name": "severity",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "EventOccurred",
+                "name": "Event occurred",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "NotificationDispatched",
+                "name": "Notification dispatched",
+                "payloadSchema": [
+                  {
+                    "name": "recipient",
+                    "type": "string"
+                  },
+                  {
+                    "name": "channel",
+                    "type": "string"
+                  },
+                  {
+                    "name": "message",
+                    "type": "string"
+                  },
+                  {
+                    "name": "severity",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "EventOccurred",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.recipient",
+                    "@user.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.channel",
+                    "@config.notifyChannel"
+                  ],
+                  [
+                    "set",
+                    "@entity.message",
+                    "@config.template"
+                  ],
+                  [
+                    "set",
+                    "@entity.severity",
+                    "@config.severity"
+                  ],
+                  [
+                    "set",
+                    "@entity.dispatched",
+                    [
+                      "=",
+                      "@config.notifyChannel",
+                      "in-app"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.recordedAt",
+                    0.0
+                  ],
+                  [
+                    "if",
+                    [
+                      "=",
+                      "@config.notifyChannel",
+                      "in-app"
+                    ],
+                    [
+                      "notify",
+                      "@config.severity",
+                      "@config.template"
+                    ],
+                    [
+                      "persist",
+                      "create",
+                      "NotificationRecord",
+                      {
+                        "message": "@config.template",
+                        "channel": "@config.notifyChannel",
+                        "recipient": "@user.id",
+                        "severity": "@config.severity",
+                        "dispatched": false,
+                        "recordedAt": 0.0
+                      }
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "NotificationDispatched",
+                    {
+                      "message": "@config.template",
+                      "recipient": "@user.id",
+                      "channel": "@config.notifyChannel",
+                      "severity": "@config.severity"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "listensFor": {
+              "type": "[string]",
+              "default": []
+            },
+            "template": {
+              "type": "string",
+              "default": ""
+            },
+            "notifyChannel": {
+              "type": "string",
+              "default": "in-app"
+            },
+            "severity": {
+              "type": "string",
+              "default": "info"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "NotifyOnEventPage",
+          "path": "/notify-on-event",
+          "traits": [
+            {
+              "ref": "NotifyOnEventListener"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

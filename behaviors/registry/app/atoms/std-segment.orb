@@ -1,7 +1,7 @@
 {
   "name": "std-segment",
-  "version": "1.0.0",
-  "description": "std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action.",
+  "version": "1.1.0",
+  "description": "std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "SegmentOrbital",
@@ -207,8 +207,8 @@
                     "Segment",
                     {
                       "emit": {
-                        "failure": "SegmentLoadFailed",
-                        "success": "SegmentLoaded"
+                        "success": "SegmentLoaded",
+                        "failure": "SegmentLoadFailed"
                       }
                     }
                   ],
@@ -216,11 +216,9 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -228,10 +226,12 @@
                         {
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading segments…"
+                          "content": "Loading segments…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -245,100 +245,67 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "users"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "content": "@config.title"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
-                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": "@payload.data.length",
                               "label": "Total segments",
-                              "icon": "users"
+                              "icon": "users",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "12,480",
-                              "type": "stat-display",
                               "icon": "user-check",
+                              "type": "stat-display",
+                              "value": "12,480",
                               "label": "Active members"
                             },
                             {
+                              "value": "1,560",
                               "icon": "bar-chart",
                               "type": "stat-display",
-                              "label": "Avg size",
-                              "value": "1,560"
+                              "label": "Avg size"
                             },
                             {
-                              "label": "Updated 24h",
+                              "icon": "refresh-cw",
                               "type": "stat-display",
                               "value": "8",
-                              "icon": "refresh-cw"
+                              "label": "Updated 24h"
                             }
                           ],
-                          "cols": 4.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 1.0,
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "event": "OPEN_SEGMENT",
-                              "variant": "primary",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "event": "RECALCULATE",
-                              "variant": "danger",
-                              "label": "Recalculate"
-                            }
-                          ],
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
                           "type": "data-grid",
-                          "fields": [
-                            {
-                              "name": "name",
-                              "variant": "caption",
-                              "label": "Name"
-                            },
-                            {
-                              "label": "Description",
-                              "name": "description",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "memberCount",
-                              "variant": "badge",
-                              "label": "Members"
-                            },
-                            {
-                              "name": "lastUpdated",
-                              "label": "Updated",
-                              "variant": "caption"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "gap": "sm"
+                          "entity": "@payload.data"
                         }
                       ]
                     }
@@ -355,8 +322,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -401,12 +368,11 @@
                     "main",
                     {
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "label": "Back",
@@ -420,25 +386,26 @@
                             },
                             {
                               "content": "@entity.name",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "variant": "primary",
                               "label": "@entity.memberCount",
+                              "variant": "primary",
                               "type": "badge"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "typography",
@@ -448,75 +415,75 @@
                                 },
                                 {
                                   "content": "@entity.description",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
                               ],
+                              "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "content": "Criteria",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "content": "Criteria",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.criteria",
-                                  "type": "typography"
+                                  "content": "@entity.criteria"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "icon": "users",
                               "label": "Members",
                               "value": "@entity.memberCount",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "users"
                             },
                             {
                               "label": "Last updated",
-                              "icon": "calendar",
                               "type": "stat-display",
-                              "value": "@entity.lastUpdated"
+                              "value": "@entity.lastUpdated",
+                              "icon": "calendar"
                             }
-                          ],
-                          "cols": 2.0
+                          ]
                         },
                         {
+                          "align": "center",
                           "children": [
                             {
                               "type": "button",
+                              "variant": "primary",
+                              "action": "RECALCULATE",
+                              "label": "Recalculate",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "label": "Recalculate",
-                              "action": "RECALCULATE",
-                              "variant": "primary"
+                              }
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -536,8 +503,8 @@
                     "Segment",
                     {
                       "emit": {
-                        "success": "SegmentLoaded",
-                        "failure": "SegmentLoadFailed"
+                        "failure": "SegmentLoadFailed",
+                        "success": "SegmentLoaded"
                       }
                     }
                   ],
@@ -545,21 +512,21 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Recalculating segment…"
+                          "content": "Recalculating segment…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -585,20 +552,20 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "content": "Loading segments…",
                           "type": "typography",
-                          "content": "Loading segments…"
+                          "color": "muted"
                         }
                       ],
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12"
                     }
                   ]
@@ -619,8 +586,8 @@
                     "Segment",
                     {
                       "emit": {
-                        "success": "SegmentLoaded",
-                        "failure": "SegmentLoadFailed"
+                        "failure": "SegmentLoadFailed",
+                        "success": "SegmentLoaded"
                       }
                     }
                   ],
@@ -628,8 +595,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "align": "center",
                       "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
@@ -637,12 +605,11 @@
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Recalculating segment…"
                         }
                       ],
-                      "align": "center",
                       "type": "stack"
                     }
                   ]
@@ -676,6 +643,47 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Description",
+                  "name": "description"
+                },
+                {
+                  "label": "Members",
+                  "variant": "badge",
+                  "name": "memberCount"
+                },
+                {
+                  "label": "Updated",
+                  "variant": "caption",
+                  "name": "lastUpdated"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary",
+                  "event": "OPEN_SEGMENT"
+                },
+                {
+                  "label": "Recalculate",
+                  "event": "RECALCULATE",
+                  "variant": "danger"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Segments"

@@ -1,5 +1,5 @@
-app std-checkin "1.0.0"
-"std-checkin — arrival check-in atom listing recorded check-ins (qr or geo). Lists check-ins in `browsing`; opens detail in `viewing_single` with Verify / Revoke actions."
+app std-checkin "1.1.0"
+"std-checkin — arrival check-in atom listing recorded check-ins (qr or geo). Lists check-ins in `browsing`; opens detail in `viewing_single` with Verify / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital CheckinOrbital {
   entity Checkin [persistent: checkins] {
@@ -20,8 +20,19 @@ orbital CheckinOrbital {
 
   trait CheckinScan -> Checkin [interaction, collection] {
     config {
-      mode  : string = "geo"
-      title : string = "Check-ins"
+      mode        : string   = "geo"
+      title       : string   = "Check-ins"
+      fields      : [object] = [
+        { name: "targetType",  label: "Type",   variant: "badge"   },
+        { name: "targetId",    label: "Target", variant: "caption" },
+        { name: "userId",      label: "User",   variant: "caption" },
+        { name: "mode",        label: "Mode",   variant: "badge"   },
+        { name: "checkedInAt", label: "When",   variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",   event: "OPEN_CHECKIN",   variant: "primary", icon: "arrow-right" },
+        { label: "Revoke", event: "REVOKE_CHECKIN", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -29,7 +40,7 @@ orbital CheckinOrbital {
         (fetch Checkin { emit: { success: "CheckinLoaded", failure: "CheckinLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading check-ins…" }] })
       CheckinLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total check-ins", value: "@payload.data.length", icon: "map-pin" }, { type: "stat-display", label: "Verified", value: "92%", icon: "check-circle" }, { type: "stat-display", label: "Today", value: "47", icon: "calendar" }, { type: "stat-display", label: "Sites covered", value: "18", icon: "globe" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "targetType", label: "Type", variant: "badge" }, { name: "targetId", label: "Target", variant: "caption" }, { name: "userId", label: "User", variant: "caption" }, { name: "mode", label: "Mode", variant: "badge" }, { name: "checkedInAt", label: "When", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CHECKIN", variant: "primary", icon: "arrow-right" }, { label: "Revoke", event: "REVOKE_CHECKIN", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total check-ins", value: "@payload.data.length", icon: "map-pin" }, { type: "stat-display", label: "Verified", value: "92%", icon: "check-circle" }, { type: "stat-display", label: "Today", value: "47", icon: "calendar" }, { type: "stat-display", label: "Sites covered", value: "18", icon: "globe" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       CheckinLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

@@ -1,7 +1,7 @@
 {
   "name": "std-recurring-charge",
-  "version": "1.0.0",
-  "description": "std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions.",
+  "version": "1.1.0",
+  "description": "std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "SubscriptionOrbital",
@@ -305,8 +305,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "success": "SubscriptionLoaded",
-                        "failure": "SubscriptionLoadFailed"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ],
@@ -314,22 +314,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "content": "Loading subscriptions…",
+                          "variant": "caption",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -343,116 +343,68 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "repeat",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "repeat"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "content": "@config.title"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
                               "value": "@payload.data.length",
-                              "label": "Total subscriptions",
                               "icon": "repeat",
+                              "label": "Total subscriptions",
                               "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "value": "248",
                               "label": "Active",
-                              "icon": "check-circle"
+                              "icon": "check-circle",
+                              "value": "248"
                             },
                             {
+                              "type": "stat-display",
                               "value": "$18,400",
                               "icon": "dollar-sign",
-                              "label": "MRR",
-                              "type": "stat-display"
+                              "label": "MRR"
                             },
                             {
-                              "value": "7",
                               "label": "Past due",
+                              "icon": "alert-triangle",
                               "type": "stat-display",
-                              "icon": "alert-triangle"
+                              "value": "7"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "gap": "sm",
-                          "cols": 1.0,
                           "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "name": "customerId",
-                              "label": "Customer",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Plan",
-                              "name": "planId",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            },
-                            {
-                              "name": "amount",
-                              "variant": "caption",
-                              "label": "Amount"
-                            },
-                            {
-                              "name": "interval",
-                              "label": "Interval",
-                              "variant": "badge"
-                            },
-                            {
-                              "label": "Next Bill",
-                              "variant": "caption",
-                              "name": "nextBillingAt"
-                            },
-                            {
-                              "name": "attemptCount",
-                              "label": "Retries",
-                              "variant": "caption"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "event": "OPEN_SUBSCRIPTION",
-                              "variant": "primary",
-                              "label": "Open",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "event": "CANCEL",
-                              "label": "Cancel",
-                              "variant": "danger"
-                            }
-                          ]
+                          "gap": "sm",
+                          "fields": "@config.fields",
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -467,9 +419,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -553,22 +505,26 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
                               "label": "Back",
                               "type": "button",
-                              "action": "CLOSE_VIEW"
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
                             },
                             {
                               "name": "repeat",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.customerId"
                             },
                             {
@@ -577,125 +533,121 @@
                               "type": "badge"
                             },
                             {
+                              "label": "@entity.interval",
                               "variant": "primary",
-                              "type": "badge",
-                              "label": "@entity.interval"
+                              "type": "badge"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "color": "muted",
                                   "content": "Plan",
+                                  "variant": "caption",
                                   "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.planId",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             },
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
                               "type": "stack",
                               "children": [
                                 {
-                                  "content": "Currency",
                                   "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Currency",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.currency",
                                   "variant": "body",
+                                  "content": "@entity.currency",
                                   "type": "typography"
                                 }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              ]
                             }
                           ],
-                          "type": "stack",
+                          "gap": "sm",
                           "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "icon": "dollar-sign",
                               "label": "Amount",
-                              "value": "@entity.amount"
+                              "value": "@entity.amount",
+                              "type": "stat-display",
+                              "icon": "dollar-sign"
                             },
                             {
-                              "label": "Retries",
                               "type": "stat-display",
                               "value": "@entity.attemptCount",
+                              "label": "Retries",
                               "icon": "rotate-cw"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Next bill",
                               "icon": "calendar",
-                              "value": "@entity.nextBillingAt"
+                              "type": "stat-display",
+                              "value": "@entity.nextBillingAt",
+                              "label": "Next bill"
                             },
                             {
-                              "label": "Last charge",
-                              "value": "@entity.lastChargeAt",
+                              "icon": "credit-card",
                               "type": "stat-display",
-                              "icon": "credit-card"
+                              "label": "Last charge",
+                              "value": "@entity.lastChargeAt"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
                               "action": "CHARGE",
+                              "variant": "primary",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Charge",
-                              "type": "button",
-                              "variant": "primary"
+                              "label": "Charge"
                             },
                             {
-                              "type": "button",
                               "variant": "danger",
+                              "label": "Cancel",
                               "action": "CANCEL",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Cancel"
+                              "type": "button"
                             }
                           ]
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -724,22 +676,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Charging subscription…",
                           "color": "muted",
+                          "variant": "caption",
                           "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -759,8 +711,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "failure": "SubscriptionLoadFailed",
-                        "success": "SubscriptionLoaded"
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
                       }
                     }
                   ],
@@ -768,22 +720,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "align": "center",
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "Cancelling subscription…",
                           "variant": "caption",
-                          "content": "Cancelling subscription…"
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -798,8 +750,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "failure": "SubscriptionLoadFailed",
-                        "success": "SubscriptionLoaded"
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
                       }
                     }
                   ],
@@ -812,16 +764,16 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "content": "Loading subscriptions…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center"
                     }
                   ]
@@ -842,8 +794,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "success": "SubscriptionLoaded",
-                        "failure": "SubscriptionLoadFailed"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ],
@@ -851,21 +803,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Charging subscription…",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "type": "stack"
                     }
                   ]
@@ -896,21 +848,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
                       "align": "center",
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Cancelling subscription…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Cancelling subscription…"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -925,8 +877,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "failure": "SubscriptionLoadFailed",
-                        "success": "SubscriptionLoaded"
+                        "success": "SubscriptionLoaded",
+                        "failure": "SubscriptionLoadFailed"
                       }
                     }
                   ],
@@ -934,8 +886,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -950,6 +902,62 @@
             "maxRetries": {
               "type": "number",
               "default": 4.0
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Customer",
+                  "variant": "caption",
+                  "name": "customerId"
+                },
+                {
+                  "name": "planId",
+                  "variant": "caption",
+                  "label": "Plan"
+                },
+                {
+                  "variant": "badge",
+                  "label": "Status",
+                  "name": "status"
+                },
+                {
+                  "name": "amount",
+                  "label": "Amount",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Interval",
+                  "name": "interval",
+                  "variant": "badge"
+                },
+                {
+                  "name": "nextBillingAt",
+                  "label": "Next Bill",
+                  "variant": "caption"
+                },
+                {
+                  "name": "attemptCount",
+                  "label": "Retries",
+                  "variant": "caption"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "event": "OPEN_SUBSCRIPTION",
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "variant": "danger",
+                  "label": "Cancel",
+                  "event": "CANCEL"
+                }
+              ]
             }
           },
           "scope": "collection"

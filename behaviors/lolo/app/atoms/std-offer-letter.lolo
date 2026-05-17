@@ -1,5 +1,5 @@
-app std-offer-letter "1.0.0"
-"std-offer-letter — formal job offer primitive. Owns an OfferLetter entity (applicant, position, salary, start date, acceptance status). Browses offers in a data-grid with Send / Revoke actions."
+app std-offer-letter "1.1.0"
+"std-offer-letter — formal job offer primitive. Owns an OfferLetter entity (applicant, position, salary, start date, acceptance status). Browses offers in a data-grid with Send / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital OfferLetterOrbital {
   entity OfferLetter [persistent: offerletters] {
@@ -19,7 +19,18 @@ orbital OfferLetterOrbital {
 
   trait OfferLetterFlow -> OfferLetter [interaction, collection] {
     config {
-      title : string = "Offer Letters"
+      title       : string   = "Offer Letters"
+      fields      : [object] = [
+        { name: "applicantName", label: "Applicant",  variant: "caption" },
+        { name: "position",      label: "Position",   variant: "caption" },
+        { name: "salary",        label: "Salary",     variant: "caption" },
+        { name: "startDate",     label: "Start Date", variant: "caption" },
+        { name: "status",        label: "Status",     variant: "badge"   }
+      ]
+      itemActions : [object] = [
+        { label: "Open",   event: "OPEN_OFFER",   variant: "primary", icon: "arrow-right" },
+        { label: "Revoke", event: "REVOKE_OFFER", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -27,7 +38,7 @@ orbital OfferLetterOrbital {
         (fetch OfferLetter { emit: { success: "OfferLetterLoaded", failure: "OfferLetterLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading offer letters…" }] })
       OfferLetterLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total offers", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Sent", value: "23", icon: "send" }, { type: "stat-display", label: "Accepted", value: "14", icon: "check-circle" }, { type: "stat-display", label: "Acceptance rate", value: "61%", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "applicantName", label: "Applicant", variant: "caption" }, { name: "position", label: "Position", variant: "caption" }, { name: "salary", label: "Salary", variant: "caption" }, { name: "startDate", label: "Start Date", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_OFFER", variant: "primary", icon: "arrow-right" }, { label: "Revoke", event: "REVOKE_OFFER", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total offers", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Sent", value: "23", icon: "send" }, { type: "stat-display", label: "Accepted", value: "14", icon: "check-circle" }, { type: "stat-display", label: "Acceptance rate", value: "61%", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       OfferLetterLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

@@ -1,7 +1,7 @@
 {
   "name": "std-rfi",
-  "version": "1.0.0",
-  "description": "std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions.",
+  "version": "1.1.0",
+  "description": "std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "RfiOrbital",
@@ -318,8 +318,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "failure": "RfiLoadFailed",
-                        "success": "RfiLoaded"
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
                       }
                     }
                   ],
@@ -327,21 +327,21 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading RFIs…"
+                          "content": "Loading RFIs…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
                       "className": "py-12"
                     }
                   ]
@@ -356,38 +356,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "help-circle"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
+                          "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "type": "stat-display",
-                              "icon": "help-circle",
+                              "label": "Total RFIs",
                               "value": "@payload.data.length",
-                              "label": "Total RFIs"
+                              "icon": "help-circle"
                             },
                             {
-                              "value": "18",
+                              "icon": "mail",
                               "type": "stat-display",
                               "label": "Open",
-                              "icon": "mail"
+                              "value": "18"
                             },
                             {
                               "icon": "alert-triangle",
@@ -396,72 +397,28 @@
                               "type": "stat-display"
                             },
                             {
-                              "label": "Avg response",
                               "icon": "clock",
                               "value": "3.2d",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Avg response"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "icon": "arrow-right",
-                              "event": "OPEN_RFI",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "CLOSE",
-                              "variant": "danger",
-                              "label": "Close"
-                            }
-                          ],
                           "gap": "sm",
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "name": "rfiNumber",
-                              "variant": "caption",
-                              "label": "RFI #"
-                            },
-                            {
-                              "label": "Subject",
-                              "name": "subject",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "raisedBy",
-                              "label": "Raised By",
-                              "variant": "caption"
-                            },
-                            {
-                              "label": "Assigned",
-                              "variant": "caption",
-                              "name": "assignedTo"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Due",
-                              "name": "dueAt"
-                            }
-                          ],
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "type": "data-grid",
                           "cols": 1.0,
-                          "type": "data-grid"
+                          "entity": "@payload.data"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -475,8 +432,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error"
                     }
                   ]
@@ -551,162 +508,162 @@
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "variant": "ghost",
                               "action": "CLOSE_VIEW",
-                              "label": "Back"
+                              "label": "Back",
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
                               "name": "help-circle",
                               "type": "icon"
                             },
                             {
-                              "content": "@entity.subject",
                               "variant": "h3",
+                              "content": "@entity.subject",
                               "type": "typography"
                             },
                             {
-                              "variant": "default",
                               "label": "@entity.status",
+                              "variant": "default",
                               "type": "badge"
                             }
                           ],
-                          "type": "stack",
+                          "align": "center",
                           "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "RFI #",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography"
+                                  "content": "RFI #",
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.rfiNumber",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.rfiNumber"
                                 }
                               ]
                             },
                             {
-                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "content": "Question",
+                                  "variant": "caption",
                                   "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption"
+                                  "color": "muted"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.question"
+                                  "content": "@entity.question",
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
+                                  "variant": "caption",
                                   "type": "typography",
                                   "content": "Response",
-                                  "color": "muted",
-                                  "variant": "caption"
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.response",
                                   "variant": "body",
+                                  "content": "@entity.response",
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "type": "stack"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
+                              "label": "Raised by",
                               "type": "stat-display",
-                              "value": "@entity.raisedBy",
                               "icon": "user",
-                              "label": "Raised by"
+                              "value": "@entity.raisedBy"
                             },
                             {
-                              "label": "Assigned",
                               "type": "stat-display",
+                              "value": "@entity.assignedTo",
                               "icon": "user-check",
-                              "value": "@entity.assignedTo"
+                              "label": "Assigned"
                             },
                             {
-                              "icon": "calendar",
                               "type": "stat-display",
-                              "label": "Due",
-                              "value": "@entity.dueAt"
+                              "value": "@entity.dueAt",
+                              "icon": "calendar",
+                              "label": "Due"
                             },
                             {
+                              "label": "Answered",
                               "type": "stat-display",
                               "value": "@entity.answeredAt",
-                              "label": "Answered",
                               "icon": "check-circle"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
-                          "align": "center",
                           "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
+                              "label": "Submit",
                               "variant": "primary",
                               "action": "SUBMIT",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "label": "Submit"
+                              }
                             },
                             {
                               "type": "button",
-                              "action": "ANSWER",
                               "label": "Answer",
+                              "action": "ANSWER",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "variant": "secondary"
                             },
                             {
-                              "variant": "danger",
+                              "type": "button",
+                              "label": "Close",
+                              "action": "CLOSE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Close",
-                              "action": "CLOSE",
-                              "type": "button"
+                              "variant": "danger"
                             }
                           ]
                         }
@@ -730,8 +687,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -739,6 +696,7 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "type": "stack",
                       "children": [
                         {
@@ -747,14 +705,13 @@
                         {
                           "type": "typography",
                           "color": "muted",
-                          "content": "Submitting RFI…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Submitting RFI…"
                         }
                       ],
                       "align": "center",
-                      "direction": "vertical",
                       "gap": "md",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -783,17 +740,17 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
                           "content": "Answering RFI…"
                         }
                       ],
@@ -818,8 +775,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "failure": "RfiLoadFailed",
-                        "success": "RfiLoaded"
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
                       }
                     }
                   ],
@@ -827,22 +784,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "variant": "caption",
+                          "type": "typography",
                           "content": "Closing RFI…",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
                       "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
-                      "gap": "md"
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -857,8 +814,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -867,21 +824,21 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading RFIs…"
+                          "content": "Loading RFIs…",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -910,22 +867,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "content": "Submitting RFI…",
-                          "type": "typography"
+                          "variant": "caption",
+                          "content": "Submitting RFI…"
                         }
                       ],
-                      "className": "py-12"
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -945,8 +902,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -954,22 +911,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "content": "Answering RFI…",
-                          "type": "typography"
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack",
-                      "className": "py-12",
-                      "align": "center"
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -989,8 +946,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -1004,15 +961,15 @@
                         },
                         {
                           "type": "typography",
-                          "content": "Closing RFI…",
                           "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Closing RFI…"
                         }
                       ],
                       "type": "stack",
-                      "className": "py-12",
                       "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "direction": "vertical"
                     }
                   ]
@@ -1046,6 +1003,57 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "event": "OPEN_RFI"
+                },
+                {
+                  "variant": "danger",
+                  "event": "CLOSE",
+                  "label": "Close"
+                }
+              ]
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "RFI #",
+                  "name": "rfiNumber"
+                },
+                {
+                  "name": "subject",
+                  "label": "Subject",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "variant": "badge",
+                  "label": "Status"
+                },
+                {
+                  "name": "raisedBy",
+                  "variant": "caption",
+                  "label": "Raised By"
+                },
+                {
+                  "label": "Assigned",
+                  "variant": "caption",
+                  "name": "assignedTo"
+                },
+                {
+                  "name": "dueAt",
+                  "variant": "caption",
+                  "label": "Due"
+                }
+              ]
+            },
             "title": {
               "type": "string",
               "default": "RFIs"

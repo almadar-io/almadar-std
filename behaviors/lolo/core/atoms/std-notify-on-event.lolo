@@ -1,0 +1,59 @@
+app std-notify-on-event "1.0.0"
+"std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`. Composable via `extraTraits` to wire reactive notifications behind any emitting trait."
+
+orbital NotifyOnEventOrbital {
+  entity NotificationRecord [persistent: notifications] {
+    id         : string!
+    recipient  : string  = ""
+    channel    : string  = "in-app"
+    message    : string  = ""
+    severity   : string  = "info"
+    dispatched : boolean = false
+    recordedAt : number  = 0
+  }
+
+  type EventOccurred         = Event { data : object }                                                                  "Rename via traitOverrides.events to the upstream event (e.g. ContactSaved). The atom listens on this sentinel and dispatches a notification."
+  type NotificationDispatched = Event { recipient : string, channel : string, message : string, severity : string }     "Re-emitted after dispatch; rename to wire downstream observers (e.g. NotificationLogAppended)."
+
+  trait NotifyOnEventListener -> NotificationRecord [lifecycle, instance] {
+    config {
+      listensFor    : [string] = []
+      notifyChannel : string   = "in-app"
+      template      : string   = ""
+      severity      : string   = "info"
+    }
+    initial: idle
+    state idle {
+      EventOccurred -> idle
+        (set @entity.recipient "@user.id")
+        (set @entity.channel @config.notifyChannel)
+        (set @entity.message @config.template)
+        (set @entity.severity @config.severity)
+        (set @entity.dispatched (= @config.notifyChannel "in-app"))
+        (set @entity.recordedAt 0)
+        (if (= @config.notifyChannel "in-app")
+          (notify @config.severity @config.template)
+          (persist create NotificationRecord {
+            recipient:  "@user.id",
+            channel:    "@config.notifyChannel",
+            message:    "@config.template",
+            severity:   "@config.severity",
+            dispatched: false,
+            recordedAt: 0
+          }))
+        (emit NotificationDispatched {
+          recipient: "@user.id",
+          channel:   "@config.notifyChannel",
+          message:   "@config.template",
+          severity:  "@config.severity"
+        })
+    }
+    emits {
+      NotificationDispatched -> external { recipient : string, channel : string, message : string, severity : string }
+    }
+    listens {
+      EventOccurred { data : object }
+    }
+  }
+  page "/notify-on-event" as NotifyOnEventPage -> NotifyOnEventListener
+}

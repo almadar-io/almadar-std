@@ -1,0 +1,361 @@
+{
+  "name": "std-cross-reference",
+  "version": "1.0.0",
+  "description": "std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity to your consumer junction. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers.",
+  "orbitals": [
+    {
+      "name": "CrossReferenceOrbital",
+      "entity": {
+        "name": "CrossRefLink",
+        "collection": "cross_ref_links",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "leftId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "rightId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "filteredLinks",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CrossReferenceGate",
+          "category": "lifecycle",
+          "linkedEntity": "CrossRefLink",
+          "emits": [
+            {
+              "event": "LinkCreated",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "LinkRemoved",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "leftId",
+                  "type": "string"
+                },
+                {
+                  "name": "rightId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LinksLoaded",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "leftId",
+                  "type": "string"
+                },
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "LinksFetched",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "LinkOpFailed",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "LinkRequested",
+                "name": "Link requested",
+                "payloadSchema": [
+                  {
+                    "name": "leftId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "rightId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "UnlinkRequested",
+                "name": "Unlink requested",
+                "payloadSchema": [
+                  {
+                    "name": "leftId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "rightId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "FETCH_LINKS_FOR",
+                "name": "Fetch Links For",
+                "payloadSchema": [
+                  {
+                    "name": "leftId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LinksFetched",
+                "name": "Links fetched",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "LinkCreated",
+                "name": "Link created",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "LinkRemoved",
+                "name": "Link removed",
+                "payloadSchema": [
+                  {
+                    "name": "leftId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "rightId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LinksLoaded",
+                "name": "Links loaded",
+                "payloadSchema": [
+                  {
+                    "name": "leftId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "LinkOpFailed",
+                "name": "Link op failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "LinkRequested",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "CrossRefLink",
+                    {
+                      "rightId": "@payload.rightId",
+                      "leftId": "@payload.leftId"
+                    },
+                    {
+                      "emit": {
+                        "failure": "LinkOpFailed",
+                        "success": "LinkCreated"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "UnlinkRequested",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "CrossRefLink",
+                    "@payload",
+                    {
+                      "emit": {
+                        "failure": "LinkOpFailed",
+                        "success": "LinkRemoved"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "FETCH_LINKS_FOR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.leftId",
+                    "@payload.leftId"
+                  ],
+                  [
+                    "fetch",
+                    "CrossRefLink",
+                    {
+                      "emit": {
+                        "success": "LinksFetched",
+                        "failure": "LinkOpFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "LinksFetched",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.filteredLinks",
+                    [
+                      "array/filter",
+                      "@payload.data",
+                      [
+                        "fn",
+                        "row",
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@row",
+                            "leftId"
+                          ],
+                          "@entity.leftId"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "LinksLoaded",
+                    {
+                      "data": "@entity.filteredLinks",
+                      "leftId": "@entity.leftId"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "rightIdField": {
+              "type": "string",
+              "default": ""
+            },
+            "junctionEntity": {
+              "type": "string",
+              "default": ""
+            },
+            "leftEntity": {
+              "type": "string",
+              "default": ""
+            },
+            "rightEntity": {
+              "type": "string",
+              "default": ""
+            },
+            "leftIdField": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CrossReferencePage",
+          "path": "/cross-reference",
+          "traits": [
+            {
+              "ref": "CrossReferenceGate"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

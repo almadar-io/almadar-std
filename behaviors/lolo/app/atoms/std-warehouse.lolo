@@ -1,5 +1,5 @@
-app std-warehouse "1.0.0"
-"std-warehouse — physical or logical storage location. Lists warehouses in `browsing`; opens a warehouse detail view (name, code, address, type, active flag, total SKU count) in `viewing_single`."
+app std-warehouse "1.1.0"
+"std-warehouse — physical or logical storage location. Lists warehouses in `browsing`; opens a warehouse detail view (name, code, address, type, active flag, total SKU count) in `viewing_single`. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital WarehouseOrbital {
   entity Warehouse [persistent: warehouses] {
@@ -18,6 +18,8 @@ orbital WarehouseOrbital {
   trait WarehouseDirectory -> Warehouse [interaction, collection] {
     config {
       title : string = "Locations"
+      fields      : [object] = [{ name: "code", label: "Code", variant: "caption" }, { name: "name", label: "Name", variant: "caption" }, { name: "type", label: "Type", variant: "badge" }, { name: "totalSkus", label: "SKUs", variant: "caption" }, { name: "isActive", label: "Active", variant: "badge" }]
+      itemActions : [object] = [{ label: "Open", event: "OPEN_WAREHOUSE", variant: "primary", icon: "arrow-right" }]
     }
     initial: loading
     state loading {
@@ -25,7 +27,7 @@ orbital WarehouseOrbital {
         (fetch Warehouse { emit: { success: "WarehouseLoaded", failure: "WarehouseLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "md" }, { type: "typography", variant: "caption", color: "muted", content: "Loading locations…" }] })
       WarehouseLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "warehouse" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total locations", value: "@payload.data.length", icon: "warehouse" }, { type: "stat-display", label: "Active", value: "12", icon: "check-circle" }, { type: "stat-display", label: "Total SKUs", value: "48,392", icon: "package" }, { type: "stat-display", label: "Avg utilization", value: "73%", icon: "bar-chart" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "code", label: "Code", variant: "caption" }, { name: "name", label: "Name", variant: "caption" }, { name: "type", label: "Type", variant: "badge" }, { name: "totalSkus", label: "SKUs", variant: "caption" }, { name: "isActive", label: "Active", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_WAREHOUSE", variant: "primary", icon: "arrow-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "warehouse" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total locations", value: "@payload.data.length", icon: "warehouse" }, { type: "stat-display", label: "Active", value: "12", icon: "check-circle" }, { type: "stat-display", label: "Total SKUs", value: "48,392", icon: "package" }, { type: "stat-display", label: "Avg utilization", value: "73%", icon: "bar-chart" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       WarehouseLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

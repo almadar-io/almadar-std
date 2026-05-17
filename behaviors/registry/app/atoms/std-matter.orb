@@ -1,7 +1,7 @@
 {
   "name": "std-matter",
-  "version": "1.0.0",
-  "description": "std-matter — legal matter primitive: a single case (litigation, contract review, immigration filing) with client, status, lead attorney. Lists matters in `browsing`; opens matter detail in `viewing_single` with Close / Hold / Reopen actions.",
+  "version": "1.1.0",
+  "description": "std-matter — legal matter primitive: a single case (litigation, contract review, immigration filing) with client, status, lead attorney. Lists matters in `browsing`; opens matter detail in `viewing_single` with Close / Hold / Reopen actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "MatterOrbital",
@@ -312,22 +312,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading matters…",
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted"
                         }
                       ],
+                      "className": "py-12",
+                      "align": "center",
                       "direction": "vertical",
-                      "align": "center"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -341,111 +341,68 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "scale"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
+                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "label": "Total matters",
                               "type": "stat-display",
+                              "value": "@payload.data.length",
                               "icon": "scale"
                             },
                             {
-                              "label": "Active",
+                              "type": "stat-display",
                               "value": "34",
-                              "type": "stat-display",
-                              "icon": "play-circle"
+                              "icon": "play-circle",
+                              "label": "Active"
                             },
                             {
-                              "value": "6",
                               "icon": "pause-circle",
-                              "type": "stat-display",
-                              "label": "On hold"
+                              "label": "On hold",
+                              "value": "6",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
+                              "value": "12",
                               "label": "Closed this month",
-                              "icon": "check-circle",
-                              "value": "12"
+                              "type": "stat-display",
+                              "icon": "check-circle"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "icon": "arrow-right",
-                              "variant": "primary",
-                              "label": "Open",
-                              "event": "OPEN_MATTER"
-                            },
-                            {
-                              "label": "Close",
-                              "event": "CLOSE_MATTER",
-                              "variant": "danger"
-                            }
-                          ],
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
                           "type": "data-grid",
+                          "gap": "sm",
                           "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "variant": "caption",
-                              "name": "matterNumber",
-                              "label": "Matter #"
-                            },
-                            {
-                              "variant": "caption",
-                              "label": "Title",
-                              "name": "title"
-                            },
-                            {
-                              "label": "Client",
-                              "name": "clientName",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "practiceArea",
-                              "label": "Practice"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "leadAttorney",
-                              "label": "Lead"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            }
-                          ]
+                          "cols": 1.0
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -460,9 +417,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -526,15 +483,15 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "type": "button",
                               "variant": "ghost",
-                              "label": "Back"
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "type": "icon",
@@ -542,105 +499,104 @@
                             },
                             {
                               "content": "@entity.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
+                              "type": "badge",
                               "label": "@entity.practiceArea",
-                              "variant": "primary",
-                              "type": "badge"
+                              "variant": "primary"
                             },
                             {
                               "label": "@entity.status",
-                              "variant": "default",
-                              "type": "badge"
+                              "type": "badge",
+                              "variant": "default"
                             }
                           ],
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
                               "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "content": "Matter #",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.matterNumber"
-                                }
-                              ]
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Client",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.clientName"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Lead attorney",
                                   "type": "typography",
                                   "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.leadAttorney",
                                   "type": "typography",
+                                  "content": "@entity.matterNumber",
                                   "variant": "body"
                                 }
                               ],
                               "type": "stack",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Client",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.clientName",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "content": "Notes",
-                                  "color": "muted",
-                                  "variant": "caption"
+                                  "content": "Lead attorney",
+                                  "variant": "caption",
+                                  "color": "muted"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.notes"
+                                  "content": "@entity.leadAttorney",
+                                  "variant": "body"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
                               "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Notes"
+                                },
+                                {
+                                  "content": "@entity.notes",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack"
                             }
                           ],
                           "direction": "vertical",
-                          "gap": "sm",
                           "type": "stack"
                         },
                         {
@@ -652,56 +608,57 @@
                           "children": [
                             {
                               "value": "@entity.openedAt",
-                              "icon": "calendar",
                               "type": "stat-display",
-                              "label": "Opened"
+                              "label": "Opened",
+                              "icon": "calendar"
                             },
                             {
-                              "icon": "calendar-check",
                               "type": "stat-display",
-                              "value": "@entity.closedAt",
-                              "label": "Closed"
+                              "icon": "calendar-check",
+                              "label": "Closed",
+                              "value": "@entity.closedAt"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "CLOSE_MATTER",
-                              "label": "Close Matter",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "label": "Close Matter",
                               "type": "button",
+                              "action": "CLOSE_MATTER",
                               "variant": "danger"
                             },
                             {
-                              "type": "button",
-                              "label": "Hold",
                               "variant": "secondary",
                               "action": "HOLD_MATTER",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "type": "button",
+                              "label": "Hold"
                             },
                             {
                               "label": "Reopen",
+                              "type": "button",
+                              "action": "REOPEN_MATTER",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "variant": "primary",
-                              "action": "REOPEN_MATTER"
+                              "variant": "primary"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -730,21 +687,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Closing matter…",
                           "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Closing matter…"
+                          "variant": "caption"
                         }
                       ],
                       "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -760,8 +717,8 @@
                     "Matter",
                     {
                       "emit": {
-                        "success": "MatterLoaded",
-                        "failure": "MatterLoadFailed"
+                        "failure": "MatterLoadFailed",
+                        "success": "MatterLoaded"
                       }
                     }
                   ],
@@ -770,21 +727,21 @@
                     "main",
                     {
                       "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Loading matters…",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -824,10 +781,10 @@
                           "color": "muted"
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "align": "center"
                     }
                   ]
@@ -857,22 +814,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Putting matter on hold…",
                           "variant": "caption",
+                          "content": "Putting matter on hold…",
                           "color": "muted",
                           "type": "typography"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -901,22 +858,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Reopening matter…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Reopening matter…",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "align": "center"
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -940,8 +897,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -952,6 +909,57 @@
             "title": {
               "type": "string",
               "default": "Matters"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Matter #",
+                  "name": "matterNumber",
+                  "variant": "caption"
+                },
+                {
+                  "name": "title",
+                  "label": "Title",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "name": "clientName",
+                  "label": "Client"
+                },
+                {
+                  "name": "practiceArea",
+                  "label": "Practice",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Lead",
+                  "name": "leadAttorney",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "event": "OPEN_MATTER",
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open"
+                },
+                {
+                  "event": "CLOSE_MATTER",
+                  "label": "Close",
+                  "variant": "danger"
+                }
+              ]
             }
           },
           "scope": "collection"

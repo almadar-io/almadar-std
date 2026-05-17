@@ -1,5 +1,5 @@
-app std-rfi "1.0.0"
-"std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions."
+app std-rfi "1.1.0"
+"std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital RfiOrbital {
   entity Rfi [persistent: rfis] {
@@ -22,7 +22,19 @@ orbital RfiOrbital {
 
   trait RfiPipeline -> Rfi [interaction, collection] {
     config {
-      title : string = "RFIs"
+      title       : string   = "RFIs"
+      fields      : [object] = [
+        { name: "rfiNumber",  label: "RFI #",     variant: "caption" },
+        { name: "subject",    label: "Subject",   variant: "caption" },
+        { name: "status",     label: "Status",    variant: "badge"   },
+        { name: "raisedBy",   label: "Raised By", variant: "caption" },
+        { name: "assignedTo", label: "Assigned",  variant: "caption" },
+        { name: "dueAt",      label: "Due",       variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",  event: "OPEN_RFI", variant: "primary", icon: "arrow-right" },
+        { label: "Close", event: "CLOSE",    variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -30,7 +42,7 @@ orbital RfiOrbital {
         (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading RFIs…" }] })
       RfiLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total RFIs", value: "@payload.data.length", icon: "help-circle" }, { type: "stat-display", label: "Open", value: "18", icon: "mail" }, { type: "stat-display", label: "Overdue", value: "5", icon: "alert-triangle" }, { type: "stat-display", label: "Avg response", value: "3.2d", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "rfiNumber", label: "RFI #", variant: "caption" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "raisedBy", label: "Raised By", variant: "caption" }, { name: "assignedTo", label: "Assigned", variant: "caption" }, { name: "dueAt", label: "Due", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RFI", variant: "primary", icon: "arrow-right" }, { label: "Close", event: "CLOSE", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total RFIs", value: "@payload.data.length", icon: "help-circle" }, { type: "stat-display", label: "Open", value: "18", icon: "mail" }, { type: "stat-display", label: "Overdue", value: "5", icon: "alert-triangle" }, { type: "stat-display", label: "Avg response", value: "3.2d", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       RfiLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

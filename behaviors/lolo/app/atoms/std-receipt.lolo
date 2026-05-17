@@ -1,5 +1,5 @@
-app std-receipt "1.0.0"
-"std-receipt — receipt primitive. Lists receipts in `browsing`; opens detail in `viewing_single` with Email / Reprint actions."
+app std-receipt "1.1.0"
+"std-receipt — receipt primitive. Lists receipts in `browsing`; opens detail in `viewing_single` with Email / Reprint actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital ReceiptOrbital {
   entity Receipt [persistent: receipts] {
@@ -22,7 +22,18 @@ orbital ReceiptOrbital {
 
   trait ReceiptIssuer -> Receipt [interaction, collection] {
     config {
-      title : string = "Receipts"
+      title       : string   = "Receipts"
+      fields      : [object] = [
+        { name: "receiptNumber",   label: "Receipt #", variant: "caption" },
+        { name: "recipientName",   label: "Recipient", variant: "caption" },
+        { name: "transactionType", label: "Type",      variant: "badge"   },
+        { name: "total",           label: "Total",     variant: "caption" },
+        { name: "issuedAt",        label: "Issued",    variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",    event: "OPEN_RECEIPT",    variant: "primary", icon: "arrow-right" },
+        { label: "Reprint", event: "REPRINT_RECEIPT", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -30,7 +41,7 @@ orbital ReceiptOrbital {
         (fetch Receipt { emit: { success: "ReceiptLoaded", failure: "ReceiptLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading receipts…" }] })
       ReceiptLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total receipts", value: "@payload.data.length", icon: "receipt" }, { type: "stat-display", label: "Issued today", value: "23", icon: "calendar" }, { type: "stat-display", label: "Revenue", value: "$12,840", icon: "dollar-sign" }, { type: "stat-display", label: "Emailed", value: "92%", icon: "mail" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "receiptNumber", label: "Receipt #", variant: "caption" }, { name: "recipientName", label: "Recipient", variant: "caption" }, { name: "transactionType", label: "Type", variant: "badge" }, { name: "total", label: "Total", variant: "caption" }, { name: "issuedAt", label: "Issued", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_RECEIPT", variant: "primary", icon: "arrow-right" }, { label: "Reprint", event: "REPRINT_RECEIPT", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "receipt" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total receipts", value: "@payload.data.length", icon: "receipt" }, { type: "stat-display", label: "Issued today", value: "23", icon: "calendar" }, { type: "stat-display", label: "Revenue", value: "$12,840", icon: "dollar-sign" }, { type: "stat-display", label: "Emailed", value: "92%", icon: "mail" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       ReceiptLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

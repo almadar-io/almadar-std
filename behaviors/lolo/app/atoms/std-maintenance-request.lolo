@@ -1,5 +1,5 @@
-app std-maintenance-request "1.0.0"
-"std-maintenance-request — tenant-submitted request lifecycle (open → scheduled → in_progress → completed). Request-flow primitive (distinct from work-order's dispatch-flow)."
+app std-maintenance-request "1.1.0"
+"std-maintenance-request — tenant-submitted request lifecycle (open → scheduled → in_progress → completed). Request-flow primitive (distinct from work-order's dispatch-flow). Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital MaintenanceRequestOrbital {
   entity MaintenanceRequest [persistent: maintenancerequests] {
@@ -24,7 +24,19 @@ orbital MaintenanceRequestOrbital {
 
   trait MaintenanceRequestQueue -> MaintenanceRequest [interaction, collection] {
     config {
-      title : string = "Maintenance Requests"
+      title       : string   = "Maintenance Requests"
+      fields      : [object] = [
+        { name: "unitId",        label: "Unit",        variant: "caption" },
+        { name: "requesterName", label: "Requester",   variant: "caption" },
+        { name: "description",   label: "Description", variant: "caption" },
+        { name: "priority",      label: "Priority",    variant: "badge"   },
+        { name: "status",        label: "Status",      variant: "badge"   },
+        { name: "requestedAt",   label: "Requested",   variant: "caption" }
+      ]
+      itemActions : [object] = [
+        { label: "Open",   event: "OPEN_REQUEST",   variant: "primary", icon: "arrow-right" },
+        { label: "Cancel", event: "CANCEL_REQUEST", variant: "danger",  icon: "x" }
+      ]
     }
     initial: loading
     state loading {
@@ -32,7 +44,7 @@ orbital MaintenanceRequestOrbital {
         (fetch MaintenanceRequest { emit: { success: "MaintenanceRequestLoaded", failure: "MaintenanceRequestLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading maintenance requests…" }] })
       MaintenanceRequestLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open requests", value: "@payload.data.length", icon: "wrench" }, { type: "stat-display", label: "Urgent", value: "5", icon: "alert-triangle" }, { type: "stat-display", label: "Scheduled", value: "18", icon: "calendar" }, { type: "stat-display", label: "Avg resolve (hr)", value: "32", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "unitId", label: "Unit", variant: "caption" }, { name: "requesterName", label: "Requester", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "priority", label: "Priority", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "requestedAt", label: "Requested", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_REQUEST", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL_REQUEST", variant: "danger", icon: "x" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open requests", value: "@payload.data.length", icon: "wrench" }, { type: "stat-display", label: "Urgent", value: "5", icon: "alert-triangle" }, { type: "stat-display", label: "Scheduled", value: "18", icon: "calendar" }, { type: "stat-display", label: "Avg resolve (hr)", value: "32", icon: "clock" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       MaintenanceRequestLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

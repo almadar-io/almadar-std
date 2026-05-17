@@ -1,5 +1,5 @@
-app std-membership "1.0.0"
-"std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions."
+app std-membership "1.1.0"
+"std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital MembershipOrbital {
   entity Membership [persistent: memberships] {
@@ -20,7 +20,18 @@ orbital MembershipOrbital {
 
   trait MembershipDirectory -> Membership [interaction, collection] {
     config {
-      title : string = "Memberships"
+      title       : string   = "Memberships"
+      fields      : [object] = [
+        { name: "memberName",  label: "Member",       variant: "caption" },
+        { name: "tier",        label: "Tier",         variant: "badge"   },
+        { name: "monthlyDues", label: "Monthly Dues", variant: "caption" },
+        { name: "renewalDate", label: "Renews",       variant: "caption" },
+        { name: "status",      label: "Status",       variant: "badge"   }
+      ]
+      itemActions : [object] = [
+        { label: "Open",   event: "OPEN_MEMBERSHIP",   variant: "primary", icon: "arrow-right" },
+        { label: "Cancel", event: "CANCEL_MEMBERSHIP", variant: "danger" }
+      ]
     }
     initial: loading
     state loading {
@@ -28,7 +39,7 @@ orbital MembershipOrbital {
         (fetch Membership { emit: { success: "MembershipLoaded", failure: "MembershipLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading memberships…" }] })
       MembershipLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total memberships", value: "@payload.data.length", icon: "credit-card" }, { type: "stat-display", label: "Active", value: "112", icon: "check-circle" }, { type: "stat-display", label: "Frozen", value: "8", icon: "pause-circle" }, { type: "stat-display", label: "MRR", value: "$14,820", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "memberName", label: "Member", variant: "caption" }, { name: "tier", label: "Tier", variant: "badge" }, { name: "monthlyDues", label: "Monthly Dues", variant: "caption" }, { name: "renewalDate", label: "Renews", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_MEMBERSHIP", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL_MEMBERSHIP", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total memberships", value: "@payload.data.length", icon: "credit-card" }, { type: "stat-display", label: "Active", value: "112", icon: "check-circle" }, { type: "stat-display", label: "Frozen", value: "8", icon: "pause-circle" }, { type: "stat-display", label: "MRR", value: "$14,820", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       MembershipLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

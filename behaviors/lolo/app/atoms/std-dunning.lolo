@@ -1,5 +1,5 @@
-app std-dunning "1.0.0"
-"std-dunning — failed-payment escalation ladder for subscriptions. Lists open dunning cases in `browsing`; opens detail in `viewing_single` with Escalate / Resolve / Suspend actions."
+app std-dunning "1.1.0"
+"std-dunning — failed-payment escalation ladder for subscriptions. Lists open dunning cases in `browsing`; opens detail in `viewing_single` with Escalate / Resolve / Suspend actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
 orbital DunningCaseOrbital {
   entity DunningCase [persistent: dunningcases] {
@@ -22,7 +22,19 @@ orbital DunningCaseOrbital {
 
   trait DunningEscalate -> DunningCase [interaction, collection] {
     config {
-      title : string = "Dunning Cases"
+      title       : string   = "Dunning Cases"
+      fields      : [object] = [
+        { name: "subscriptionId", label: "Subscription", variant: "caption" },
+        { name: "customerId",     label: "Customer",     variant: "caption" },
+        { name: "severity",       label: "Severity",     variant: "badge"   },
+        { name: "attemptNumber",  label: "Attempt",      variant: "caption" },
+        { name: "amountDue",      label: "Amount Due",   variant: "caption" },
+        { name: "status",         label: "Status",       variant: "badge"   }
+      ]
+      itemActions : [object] = [
+        { label: "Open",    event: "OPEN_CASE", variant: "primary", icon: "arrow-right" },
+        { label: "Suspend", event: "SUSPEND",   variant: "danger",  icon: "ban" }
+      ]
     }
     initial: loading
     state loading {
@@ -30,7 +42,7 @@ orbital DunningCaseOrbital {
         (fetch DunningCase { emit: { success: "DunningCaseLoaded", failure: "DunningCaseLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading dunning cases…" }] })
       DunningCaseLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open cases", value: "@payload.data.length", icon: "alert-triangle" }, { type: "stat-display", label: "Recovered", value: "18", icon: "check-circle" }, { type: "stat-display", label: "Suspended", value: "3", icon: "ban" }, { type: "stat-display", label: "Recovery rate", value: "62%", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "subscriptionId", label: "Subscription", variant: "caption" }, { name: "customerId", label: "Customer", variant: "caption" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "attemptNumber", label: "Attempt", variant: "caption" }, { name: "amountDue", label: "Amount Due", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN_CASE", variant: "primary", icon: "arrow-right" }, { label: "Suspend", event: "SUSPEND", variant: "danger", icon: "ban" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Open cases", value: "@payload.data.length", icon: "alert-triangle" }, { type: "stat-display", label: "Recovered", value: "18", icon: "check-circle" }, { type: "stat-display", label: "Suspended", value: "3", icon: "ban" }, { type: "stat-display", label: "Recovery rate", value: "62%", icon: "trending-up" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
       DunningCaseLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

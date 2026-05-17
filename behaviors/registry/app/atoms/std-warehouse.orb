@@ -1,7 +1,7 @@
 {
   "name": "std-warehouse",
-  "version": "1.0.0",
-  "description": "std-warehouse — physical or logical storage location. Lists warehouses in `browsing`; opens a warehouse detail view (name, code, address, type, active flag, total SKU count) in `viewing_single`.",
+  "version": "1.1.0",
+  "description": "std-warehouse — physical or logical storage location. Lists warehouses in `browsing`; opens a warehouse detail view (name, code, address, type, active flag, total SKU count) in `viewing_single`. Agents tune the list shape via `config.fields` + `config.itemActions`.",
   "orbitals": [
     {
       "name": "WarehouseOrbital",
@@ -209,7 +209,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner",
@@ -217,15 +217,15 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "content": "Loading locations…",
+                          "variant": "caption",
                           "color": "muted"
                         }
                       ],
                       "className": "py-12",
-                      "type": "stack",
                       "gap": "md",
-                      "align": "center"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -240,50 +240,49 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "warehouse",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "warehouse"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "children": [
                             {
-                              "label": "Total locations",
+                              "value": "@payload.data.length",
                               "type": "stat-display",
                               "icon": "warehouse",
-                              "value": "@payload.data.length"
+                              "label": "Total locations"
                             },
                             {
                               "value": "12",
-                              "type": "stat-display",
+                              "label": "Active",
                               "icon": "check-circle",
-                              "label": "Active"
+                              "type": "stat-display"
                             },
                             {
+                              "icon": "package",
+                              "type": "stat-display",
                               "label": "Total SKUs",
-                              "value": "48,392",
-                              "type": "stat-display",
-                              "icon": "package"
+                              "value": "48,392"
                             },
                             {
                               "type": "stat-display",
-                              "value": "73%",
+                              "label": "Avg utilization",
                               "icon": "bar-chart",
-                              "label": "Avg utilization"
+                              "value": "73%"
                             }
                           ],
                           "type": "simple-grid",
@@ -293,47 +292,15 @@
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "label": "Code",
-                              "variant": "caption",
-                              "name": "code"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "name",
-                              "label": "Name"
-                            },
-                            {
-                              "label": "Type",
-                              "variant": "badge",
-                              "name": "type"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "totalSkus",
-                              "label": "SKUs"
-                            },
-                            {
-                              "name": "isActive",
-                              "variant": "badge",
-                              "label": "Active"
-                            }
-                          ],
-                          "type": "data-grid",
+                          "fields": "@config.fields",
+                          "cols": 1.0,
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_WAREHOUSE",
-                              "variant": "primary",
-                              "label": "Open",
-                              "icon": "arrow-right"
-                            }
-                          ],
                           "entity": "@payload.data",
-                          "cols": 1.0
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -349,8 +316,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -399,19 +366,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Back",
                               "variant": "ghost",
-                              "action": "CLOSE_WAREHOUSE"
+                              "type": "button",
+                              "action": "CLOSE_WAREHOUSE",
+                              "label": "Back"
                             },
                             {
                               "type": "icon",
@@ -423,82 +388,84 @@
                               "type": "typography"
                             },
                             {
-                              "label": "@entity.type",
+                              "type": "badge",
                               "variant": "default",
-                              "type": "badge"
+                              "label": "@entity.type"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
-                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
                               "gap": "md",
                               "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "type": "typography",
                                   "content": "Code",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.code",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.code"
                                 }
                               ]
                             },
                             {
+                              "direction": "horizontal",
                               "gap": "md",
                               "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "content": "Address",
-                                  "variant": "caption"
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.address",
                                   "variant": "body",
+                                  "content": "@entity.address",
                                   "type": "typography"
                                 }
                               ]
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 2.0,
                           "children": [
                             {
                               "type": "stat-display",
-                              "label": "Total SKUs",
                               "value": "@entity.totalSkus",
-                              "icon": "package"
+                              "icon": "package",
+                              "label": "Total SKUs"
                             },
                             {
+                              "label": "Type",
                               "value": "@entity.type",
                               "type": "stat-display",
-                              "icon": "tag",
-                              "label": "Type"
+                              "icon": "tag"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -522,23 +489,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner",
                           "size": "md"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
                           "content": "Loading locations…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -553,8 +520,8 @@
                     "Warehouse",
                     {
                       "emit": {
-                        "failure": "WarehouseLoadFailed",
-                        "success": "WarehouseLoaded"
+                        "success": "WarehouseLoaded",
+                        "failure": "WarehouseLoadFailed"
                       }
                     }
                   ],
@@ -562,8 +529,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -574,6 +541,47 @@
             "title": {
               "type": "string",
               "default": "Locations"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Code",
+                  "name": "code"
+                },
+                {
+                  "label": "Name",
+                  "variant": "caption",
+                  "name": "name"
+                },
+                {
+                  "variant": "badge",
+                  "name": "type",
+                  "label": "Type"
+                },
+                {
+                  "label": "SKUs",
+                  "variant": "caption",
+                  "name": "totalSkus"
+                },
+                {
+                  "variant": "badge",
+                  "label": "Active",
+                  "name": "isActive"
+                }
+              ]
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "event": "OPEN_WAREHOUSE",
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open"
+                }
+              ]
             }
           },
           "scope": "collection"
