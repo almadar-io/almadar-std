@@ -12,6 +12,7 @@ import { describe, it, expect } from 'vitest';
 import type { OrbitalSchema } from '@almadar/core';
 import {
   applyParamsToOrb,
+  applyParamsToWholeOrb,
   extractManifest,
 } from '../factory-runtime/index.js';
 
@@ -89,6 +90,31 @@ describe('factory-runtime', () => {
             t.name === firstTraitName,
         );
         expect(overridden).toBeDefined();
+      }
+    });
+  });
+
+  describe('applyParamsToWholeOrb', () => {
+    it('applies the same params bag to every orbital with a matching manifest', async () => {
+      // std-embedded-dashboard is multi-orbital — broadest exercise for the
+      // whole-orb path that the LLM-loop seam (`call_behavior`) takes.
+      const orb = await loadOrb('app', 'organisms', 'std-embedded-dashboard');
+      const manifests = extractManifest(orb);
+      const built = applyParamsToWholeOrb(orb, manifests, {
+        entityName: 'Metric',
+      });
+      expect(built.name).toBe(orb.name);
+      expect(built.orbitals.length).toBe(orb.orbitals.length);
+      // Every orbital that had a manifest should have its entity renamed
+      // to 'Metric'. Orbitals without a manifest pass through unchanged.
+      const manifestNames = new Set(manifests.map((m) => m.orbitalName));
+      for (const orbital of built.orbitals) {
+        if (!manifestNames.has(orbital.name)) continue;
+        const entity = orbital.entity;
+        if (typeof entity === 'string' || 'extends' in entity) {
+          throw new Error('expected resolved Entity on rebuilt orbital');
+        }
+        expect(entity.name).toBe('Metric');
       }
     });
   });

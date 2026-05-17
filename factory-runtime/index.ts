@@ -20,6 +20,7 @@ export {
   applyParamsToOrb,
   validateOrbitalFactoryParams,
 } from './apply-params-to-orb.js';
+export { applyParamsToWholeOrb } from './apply-params-to-whole-orb.js';
 export type {
   OrbitalFactoryParams,
   OrbitalTraitOverride,
