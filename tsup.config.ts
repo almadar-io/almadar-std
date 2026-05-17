@@ -11,6 +11,7 @@ export default defineConfig({
     'behaviors/exports-reader.ts',
     'behaviors/query.ts',
     'behaviors/functions/index.ts',
+    'factory-runtime/index.ts',
   ],
   format: ['esm'],
   dts: true,
