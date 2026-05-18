@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-finance-tracker';
 const ALIAS = 'FinanceTracker';
@@ -209,7 +210,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
           'NOTIFY_CLICK': 'TRANSACTION_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TransactionCatalog',
         'category': 'interaction',
         'emits': [
@@ -406,7 +407,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Transaction', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'TransactionSearch',
@@ -738,10 +739,10 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TransactionPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Transaction',
         'emits': [
           {
             'event': 'TRANSACTION_CREATED',
@@ -920,7 +921,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Transaction', canonicalName) as never,
     ],
     pages: [
       {
@@ -1171,10 +1172,10 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
           'SEARCH': 'FINANCE_SUMMARY_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FinanceSummaryDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FinanceSummary',
         'emits': [
           {
             'event': 'FinanceSummaryLoaded',
@@ -1396,7 +1397,7 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'FinanceSummary', canonicalName) as never,
     ],
     pages: [
       {
@@ -1628,10 +1629,10 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
           'SEARCH': 'FINANCE_REPORT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FinanceReportBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FinanceReport',
         'emits': [
           {
             'event': 'CREATE',
@@ -2115,7 +2116,7 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'FinanceReport', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'FinanceReportView',
@@ -2175,10 +2176,10 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FinanceReportPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FinanceReport',
         'emits': [
           {
             'event': 'REPORT_CREATED',
@@ -2256,7 +2257,7 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'FinanceReport', canonicalName) as never,
     ],
     pages: [
       {

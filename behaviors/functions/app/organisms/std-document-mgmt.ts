@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-document-mgmt';
 const ALIAS = 'DocumentMgmt';
@@ -237,7 +238,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
           'NOTIFY_CLICK': 'DOCUMENT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DocumentCatalog',
         'category': 'interaction',
         'emits': [
@@ -434,7 +435,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Document', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'DocumentSearch',
@@ -879,10 +880,10 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
           'title': 'Version History',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DocumentPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Document',
         'emits': [
           {
             'event': 'DOCUMENT_CREATED',
@@ -1061,7 +1062,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Document', canonicalName) as never,
     ],
     pages: [
       {

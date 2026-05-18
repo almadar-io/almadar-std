@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-accounting';
 const ALIAS = 'Accounting';
@@ -227,7 +228,7 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           'SEARCH': 'JOURNAL_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'JournalCatalog',
         'category': 'interaction',
         'emits': [
@@ -424,7 +425,7 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'JournalSummary', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'JournalSearch',
@@ -517,10 +518,10 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'JournalBrowseList',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'JournalSummary',
         'emits': [
           {
             'event': 'VIEW',
@@ -982,7 +983,7 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'JournalSummary', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'JournalCreate',
@@ -1095,10 +1096,10 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'JournalPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'JournalSummary',
         'emits': [
           {
             'event': 'JOURNAL_CREATED',
@@ -1277,7 +1278,7 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'JournalSummary', canonicalName) as never,
       makeTraitRef({
         'ref': 'LedgerEntry.traits.LedgerEntryJournal',
         'name': 'JournalEntriesPanel',

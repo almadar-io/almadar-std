@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-devops-dashboard';
 const ALIAS = 'DevopsDashboard';
@@ -225,7 +226,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           'NOTIFY_CLICK': 'SERVICE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ServiceNodeCatalog',
         'category': 'interaction',
         'emits': [
@@ -452,7 +453,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ServiceNode', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ServiceNodeSearch',
@@ -794,10 +795,10 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ServiceNodePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ServiceNode',
         'emits': [
           {
             'event': 'SERVICE_CREATED',
@@ -976,11 +977,11 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'ServiceNode', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ServiceNodeCircuitBreaker',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ServiceNode',
         'emits': [
           {
             'event': 'ServiceNodeLoaded',
@@ -1721,7 +1722,7 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'ServiceNode', canonicalName) as never,
     ],
     pages: [
       {
@@ -2009,7 +2010,7 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
           'SEARCH': 'ALERT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AlertCatalog',
         'category': 'interaction',
         'emits': [
@@ -2107,7 +2108,7 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'AlertMetric', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'AlertBrowseList',
@@ -2292,10 +2293,10 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AlertPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AlertMetric',
         'emits': [
           {
             'event': 'ALERT_CREATED',
@@ -2474,11 +2475,11 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'AlertMetric', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AlertEmail',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AlertMetric',
         'listens': [
           {
             'event': 'ALERT_CREATED',
@@ -2560,7 +2561,7 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'AlertMetric', canonicalName) as never,
     ],
     pages: [
       {
@@ -2816,7 +2817,7 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
           'NOTIFY_CLICK': 'LOG_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'LogCatalog',
         'category': 'interaction',
         'stateMachine': {
@@ -2884,7 +2885,7 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'LogEntry', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'LogBrowseList',
@@ -3178,7 +3179,7 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
           ],
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SystemMetricDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -3243,7 +3244,7 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'SystemMetric', canonicalName) as never,
     ],
     pages: [
       {

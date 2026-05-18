@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-property-mgmt';
 const ALIAS = 'PropertyMgmt';
@@ -233,7 +234,7 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
           'NOTIFY_CLICK': 'PROPERTY_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PropertyCatalog',
         'category': 'interaction',
         'emits': [
@@ -430,7 +431,7 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Property', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PropertySearch',
@@ -757,10 +758,10 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PropertyPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Property',
         'emits': [
           {
             'event': 'PROPERTY_CREATED',
@@ -939,7 +940,7 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Property', canonicalName) as never,
     ],
     pages: [
       {
@@ -1237,7 +1238,7 @@ export function stdPropertyMgmtLeasePanelOrbital(params: StdPropertyMgmtLeasePan
           'NOTIFY_CLICK': 'LEASE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'LeasePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1297,7 +1298,7 @@ export function stdPropertyMgmtLeasePanelOrbital(params: StdPropertyMgmtLeasePan
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Lease', canonicalName) as never,
       makeTraitRef({
         'ref': 'Lease.traits.LeaseManager',
         'name': 'LeaseView',
@@ -1560,7 +1561,7 @@ export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantP
           'NOTIFY_CLICK': 'TENANT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TenantPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1620,7 +1621,7 @@ export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Tenant', canonicalName) as never,
       makeTraitRef({
         'ref': 'Tenant.traits.TenantDirectory',
         'name': 'TenantView',
@@ -1884,7 +1885,7 @@ export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRen
           'SEARCH': 'RENT_CHARGE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RentChargePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1944,7 +1945,7 @@ export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRen
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'RentCharge', canonicalName) as never,
       makeTraitRef({
         'ref': 'RentCharge.traits.RentChargeLedger',
         'name': 'RentChargeView',
@@ -2230,7 +2231,7 @@ export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropert
           'NOTIFY_CLICK': 'MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MaintenanceRequestPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -2290,7 +2291,7 @@ export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropert
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MaintenanceRequest', canonicalName) as never,
       makeTraitRef({
         'ref': 'MaintenanceRequest.traits.MaintenanceRequestQueue',
         'name': 'MaintenanceRequestView',

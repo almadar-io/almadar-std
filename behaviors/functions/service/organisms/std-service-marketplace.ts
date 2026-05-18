@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-service-marketplace';
 const ALIAS = 'ServiceMarketplace';
@@ -351,10 +352,10 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ProductBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'CHECKOUT',
@@ -1333,11 +1334,11 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'PRODUCT_CREATED',
@@ -1637,11 +1638,11 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductEdit',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'PRODUCT_UPDATED',
@@ -1962,11 +1963,11 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'EDIT',
@@ -2331,11 +2332,11 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductDelete',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'PRODUCT_DELETED',
@@ -2703,7 +2704,7 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Product', canonicalName) as never,
     ],
     pages: [
       {
@@ -2892,10 +2893,10 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'AuthSessionOauth',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AuthSession',
         'emits': [
           {
             'event': 'AuthSessionLoadFailed',
@@ -3984,7 +3985,7 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'AuthSession', canonicalName) as never,
     ],
     pages: [
       {
@@ -4173,10 +4174,10 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'OrderPaymentPayment',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderPayment',
         'emits': [
           {
             'event': 'SEND_RECEIPT',
@@ -5101,11 +5102,11 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'OrderPayment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderPaymentReceipt',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderPayment',
         'emits': [
           {
             'event': 'ProductEmailCompleted',
@@ -5557,7 +5558,7 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'OrderPayment', canonicalName) as never,
     ],
     pages: [
       {
@@ -5736,10 +5737,10 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'OrderBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Order',
         'emits': [
           {
             'event': 'CREATE',
@@ -6190,11 +6191,11 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Order', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Order',
         'emits': [
           {
             'event': 'ORDER_CREATED',
@@ -6485,11 +6486,11 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Order', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderEdit',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Order',
         'emits': [
           {
             'event': 'ORDER_UPDATED',
@@ -6800,11 +6801,11 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Order', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Order',
         'emits': [
           {
             'event': 'EDIT',
@@ -7139,11 +7140,11 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Order', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderDelete',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Order',
         'emits': [
           {
             'event': 'ORDER_DELETED',
@@ -7503,7 +7504,7 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Order', canonicalName) as never,
     ],
     pages: [
       {

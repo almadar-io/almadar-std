@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-helpdesk';
 const ALIAS = 'Helpdesk';
@@ -218,7 +219,7 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
           'NOTIFY_CLICK': 'TICKET_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TicketCatalog',
         'category': 'interaction',
         'emits': [
@@ -415,7 +416,7 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Ticket', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'TicketSearch',
@@ -745,10 +746,10 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TicketPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Ticket',
         'emits': [
           {
             'event': 'TICKET_CREATED',
@@ -927,7 +928,7 @@ export function stdHelpdeskTicketOrbital(params: StdHelpdeskTicketOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Ticket', canonicalName) as never,
     ],
     pages: [
       {
@@ -1204,10 +1205,10 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
           'SEARCH': 'TICKET_REPLY_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TicketReplyBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TicketReply',
         'emits': [
           {
             'event': 'CREATE',
@@ -1464,8 +1465,8 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'TicketReply', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'TicketReplyComposerForm',
         'category': 'interaction',
         'emits': [
@@ -1564,7 +1565,7 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TicketReply', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'TicketReplyCreate',
@@ -1624,10 +1625,10 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TicketReplyPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TicketReply',
         'emits': [
           {
             'event': 'REPLY_CREATED',
@@ -1705,7 +1706,7 @@ export function stdHelpdeskTicketReplyOrbital(params: StdHelpdeskTicketReplyOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TicketReply', canonicalName) as never,
     ],
     pages: [
       {
@@ -1985,7 +1986,7 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
           ],
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SupportMetricsDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -2050,7 +2051,7 @@ export function stdHelpdeskSupportMetricsOrbital(params: StdHelpdeskSupportMetri
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'SupportMetric', canonicalName) as never,
     ],
     pages: [
       {

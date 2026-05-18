@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-builder';
 const ALIAS = 'AgentBuilder';
@@ -292,10 +293,10 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'BuildPlanner',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildPlan',
         'emits': [
           {
             'event': 'PLAN_READY',
@@ -1499,11 +1500,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildPlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerTaskInput',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildPlan',
         'emits': [
           {
             'event': 'BuildPlanLoaded',
@@ -1695,11 +1696,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildPlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerClassifierFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildPlan',
         'emits': [
           {
             'event': 'SAVE',
@@ -2238,11 +2239,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildPlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildPlan',
         'emits': [
           {
             'event': 'SAVE',
@@ -2769,11 +2770,11 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildPlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerMemoryLifecycle',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildPlan',
         'emits': [
           {
             'event': 'BuildPlanLoaded',
@@ -3080,7 +3081,7 @@ export function stdAgentBuilderBuildPlanOrbital(params: StdAgentBuilderBuildPlan
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'BuildPlan', canonicalName) as never,
     ],
     pages: [
       {
@@ -3361,10 +3362,10 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'SchemaBuilder',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildLoop',
         'emits': [
           {
             'event': 'TOOL_LOOP_DONE',
@@ -4750,11 +4751,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildLoop', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopStepProgress',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildLoop',
         'emits': [
           {
             'event': 'RESET',
@@ -5909,11 +5910,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildLoop', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildLoop',
         'emits': [
           {
             'event': 'SAVE',
@@ -6439,11 +6440,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildLoop', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopToolCallFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildLoop',
         'emits': [
           {
             'event': 'SAVE',
@@ -6945,11 +6946,11 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildLoop', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopContextMonitor',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildLoop',
         'emits': [
           {
             'event': 'RESET',
@@ -8923,7 +8924,7 @@ export function stdAgentBuilderBuildLoopOrbital(params: StdAgentBuilderBuildLoop
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'BuildLoop', canonicalName) as never,
     ],
     pages: [
       {
@@ -9155,10 +9156,10 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'FixLoop',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildFix',
         'emits': [
           {
             'event': 'FIX_SUCCEEDED',
@@ -10543,11 +10544,11 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildFix', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'FixLoopStepProgress',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildFix',
         'emits': [
           {
             'event': 'RESET',
@@ -11694,11 +11695,11 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildFix', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'FixLoopErrorsBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildFix',
         'emits': [
           {
             'event': 'BuildFixLoaded',
@@ -11948,11 +11949,11 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildFix', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'FixLoopValidateCall',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildFix',
         'emits': [
           {
             'event': 'SAVE',
@@ -12457,11 +12458,11 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildFix', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'FixLoopFixCall',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildFix',
         'emits': [
           {
             'event': 'SAVE',
@@ -12966,11 +12967,11 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildFix', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'FixLoopCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildFix',
         'emits': [
           {
             'event': 'SAVE',
@@ -13496,7 +13497,7 @@ export function stdAgentBuilderBuildFixOrbital(params: StdAgentBuilderBuildFixOr
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'BuildFix', canonicalName) as never,
     ],
     pages: [
       {
@@ -13671,10 +13672,10 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'BuildSessionManager',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildSession',
         'emits': [
           {
             'event': 'FORK',
@@ -13994,11 +13995,11 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildSession', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'BuildSessionLabel',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildSession',
         'emits': [
           {
             'event': 'LABELED',
@@ -14308,11 +14309,11 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'BuildSession', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'BuildSessionAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildSession',
         'emits': [
           {
             'event': 'ENDED',
@@ -14772,7 +14773,7 @@ export function stdAgentBuilderBuildSessionOrbital(params: StdAgentBuilderBuildS
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'BuildSession', canonicalName) as never,
     ],
     pages: [
       {

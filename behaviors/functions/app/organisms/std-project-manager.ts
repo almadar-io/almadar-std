@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-project-manager';
 const ALIAS = 'ProjectManager';
@@ -236,7 +237,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
           'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TaskCatalog',
         'category': 'interaction',
         'emits': [
@@ -434,7 +435,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Task', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'TaskSearch',
@@ -824,10 +825,10 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TaskPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Task',
         'emits': [
           {
             'event': 'TASK_CREATED',
@@ -1006,7 +1007,7 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Task', canonicalName) as never,
     ],
     pages: [
       {
@@ -1296,7 +1297,7 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
           'SEARCH': 'SPRINT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SprintCatalog',
         'category': 'interaction',
         'emits': [
@@ -1395,7 +1396,7 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Sprint', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'SprintBrowseList',
@@ -1599,10 +1600,10 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SprintPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Sprint',
         'emits': [
           {
             'event': 'SPRINT_CREATED',
@@ -1781,7 +1782,7 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Sprint', canonicalName) as never,
     ],
     pages: [
       {
@@ -2021,10 +2022,10 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
           'SEARCH': 'BURNDOWN_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BurndownDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Burndown',
         'emits': [
           {
             'event': 'BurndownLoaded',
@@ -2312,7 +2313,7 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Burndown', canonicalName) as never,
     ],
     pages: [
       {

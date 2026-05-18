@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-ats-recruiting';
 const ALIAS = 'AtsRecruiting';
@@ -216,7 +217,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
           'NOTIFY_CLICK': 'JOB_OPENING_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'JobOpeningCatalog',
         'category': 'interaction',
         'emits': [
@@ -413,7 +414,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'JobOpening', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'JobOpeningSearch',
@@ -757,10 +758,10 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'JobOpeningPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'JobOpening',
         'emits': [
           {
             'event': 'JOB_OPENING_CREATED',
@@ -939,7 +940,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'JobOpening', canonicalName) as never,
     ],
     pages: [
       {

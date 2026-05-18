@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-legal-case';
 const ALIAS = 'LegalCase';
@@ -254,7 +255,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
           'NOTIFY_CLICK': 'MATTER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MatterCatalog',
         'category': 'interaction',
         'emits': [
@@ -451,7 +452,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Matter', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MatterSearch',
@@ -813,10 +814,10 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MatterPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Matter',
         'emits': [
           {
             'event': 'MATTER_CREATED',
@@ -995,7 +996,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Matter', canonicalName) as never,
     ],
     pages: [
       {
@@ -1293,7 +1294,7 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
           'NOTIFY_CLICK': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BillableHourPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1353,7 +1354,7 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'BillableHour', canonicalName) as never,
       makeTraitRef({
         'ref': 'BillableHour.traits.BillableHourTimesheet',
         'name': 'BillableHourTimesheetView',
@@ -1625,7 +1626,7 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
           'SEARCH': 'COURT_DEADLINE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CourtDeadlinePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1685,7 +1686,7 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'CourtDeadline', canonicalName) as never,
       makeTraitRef({
         'ref': 'CourtDeadline.traits.CourtDeadlineDocket',
         'name': 'CourtDeadlineDocketView',
@@ -1959,7 +1960,7 @@ export function stdLegalCaseMatterPanelOrbital(params: StdLegalCaseMatterPanelOr
           'SEARCH': 'MATTER_CASE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MatterCasePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -2019,7 +2020,7 @@ export function stdLegalCaseMatterPanelOrbital(params: StdLegalCaseMatterPanelOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MatterCase', canonicalName) as never,
       makeTraitRef({
         'ref': 'Matter.traits.MatterDocket',
         'name': 'MatterCaseDocketView',

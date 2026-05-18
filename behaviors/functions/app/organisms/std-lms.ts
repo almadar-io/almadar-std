@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-lms';
 const ALIAS = 'Lms';
@@ -233,7 +234,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           'NOTIFY_CLICK': 'COURSE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CourseCatalog',
         'category': 'interaction',
         'emits': [
@@ -567,7 +568,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Course', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'CourseSearch',
@@ -828,10 +829,10 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CoursePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Course',
         'emits': [
           {
             'event': 'COURSE_CREATED',
@@ -1010,8 +1011,8 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Course', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'CourseThumbnailForm',
         'category': 'interaction',
         'emits': [
@@ -1098,7 +1099,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Course', canonicalName) as never,
       makeTraitRef({
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'CourseThumbnailUpload',
@@ -1134,7 +1135,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           'uiTrait': '@trait.CourseLessonPlayer',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CourseLessonPlayer',
         'category': 'interaction',
         'emits': [
@@ -1356,7 +1357,7 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Course', canonicalName) as never,
     ],
     pages: [
       {
@@ -1633,10 +1634,10 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
           'NOTIFY_CLICK': 'ENROLLMENT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EnrollmentWizard',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Enrollment',
         'emits': [
           {
             'event': 'ENROLLED',
@@ -2625,7 +2626,7 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Enrollment', canonicalName) as never,
     ],
     pages: [
       {
@@ -2864,7 +2865,7 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
           'NOTIFY_CLICK': 'PROGRESS_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProgressDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -2929,11 +2930,11 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Progress', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProgressStats',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Progress',
         'emits': [
           {
             'event': 'ProgressLoaded',
@@ -3117,11 +3118,11 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Progress', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProgressGraphs',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Progress',
         'emits': [
           {
             'event': 'ProgressLoaded',
@@ -3241,7 +3242,7 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Progress', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ProgressBrowseList',
@@ -3293,7 +3294,7 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProgressItemSink',
         'category': 'lifecycle',
         'listens': [
@@ -3404,7 +3405,7 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Progress', canonicalName) as never,
     ],
     pages: [
       {

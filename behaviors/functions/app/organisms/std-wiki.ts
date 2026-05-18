@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-wiki';
 const ALIAS = 'Wiki';
@@ -257,7 +258,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
           'NOTIFY_CLICK': 'WIKI_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WikiWorkspace',
         'category': 'interaction',
         'emits': [
@@ -477,7 +478,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WikiPage', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'WikiSearch',
@@ -774,10 +775,10 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
           'title': 'Tags',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WikiPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'WikiPage',
         'emits': [
           {
             'event': 'WIKI_CREATED',
@@ -956,7 +957,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WikiPage', canonicalName) as never,
     ],
     pages: [
       {
@@ -1274,7 +1275,7 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
           'NOTIFY_CLICK': 'REVISION_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RevisionWorkspace',
         'category': 'interaction',
         'emits': [
@@ -1377,7 +1378,7 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WikiRevision', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'RevisionBrowseList',
@@ -1462,10 +1463,10 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RevisionPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'WikiRevision',
         'emits': [
           {
             'event': 'REVISION_CREATED',
@@ -1543,7 +1544,7 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WikiRevision', canonicalName) as never,
     ],
     pages: [
       {

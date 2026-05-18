@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-booking-system';
 const ALIAS = 'BookingSystem';
@@ -206,7 +207,7 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProviderCatalog',
         'category': 'interaction',
         'emits': [
@@ -403,7 +404,7 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Provider', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ProviderSearch',
@@ -609,10 +610,10 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProviderCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Provider',
         'emits': [
           {
             'event': 'PROVIDER_CREATED',
@@ -914,11 +915,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Provider', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProviderEdit',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Provider',
         'emits': [
           {
             'event': 'PROVIDER_UPDATED',
@@ -1241,11 +1242,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Provider', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProviderView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Provider',
         'emits': [
           {
             'event': 'EDIT',
@@ -1654,11 +1655,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Provider', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProviderDelete',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Provider',
         'emits': [
           {
             'event': 'PROVIDER_DELETED',
@@ -2026,7 +2027,7 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Provider', canonicalName) as never,
     ],
     pages: [
       {
@@ -2322,7 +2323,7 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BookingPaymentForm',
         'category': 'interaction',
         'emits': [
@@ -2410,11 +2411,11 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Booking', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'BookingWizard',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Booking',
         'emits': [
           {
             'event': 'BOOKING_CONFIRMED',
@@ -3679,7 +3680,7 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Booking', canonicalName) as never,
     ],
     pages: [
       {
@@ -3934,7 +3935,7 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           'SEARCH': 'APPOINTMENT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AppointmentDashboard',
         'category': 'interaction',
         'emits': [
@@ -4036,7 +4037,7 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Appointment', canonicalName) as never,
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'AppointmentCalendar',
@@ -4175,10 +4176,10 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AppointmentCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Appointment',
         'emits': [
           {
             'event': 'APPOINTMENT_CREATED',
@@ -4472,11 +4473,11 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Appointment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AppointmentEdit',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Appointment',
         'emits': [
           {
             'event': 'APPOINTMENT_UPDATED',
@@ -4790,11 +4791,11 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Appointment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AppointmentView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Appointment',
         'emits': [
           {
             'event': 'EDIT',
@@ -5178,11 +5179,11 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Appointment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AppointmentDelete',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Appointment',
         'emits': [
           {
             'event': 'APPOINTMENT_DELETED',
@@ -5542,7 +5543,7 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Appointment', canonicalName) as never,
     ],
     pages: [
       {
@@ -5783,10 +5784,10 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
           'SEARCH': 'SCHEDULE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ScheduleDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Schedule',
         'emits': [
           {
             'event': 'ScheduleLoaded',
@@ -6259,7 +6260,7 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Schedule', canonicalName) as never,
     ],
     pages: [
       {

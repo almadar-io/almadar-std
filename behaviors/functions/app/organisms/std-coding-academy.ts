@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-coding-academy';
 const ALIAS = 'CodingAcademy';
@@ -159,10 +160,10 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'SeqChallengeSequencerGame',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'SeqChallenge',
         'emits': [
           {
             'event': 'SeqChallengeLoaded',
@@ -480,7 +481,7 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'SeqChallenge', canonicalName) as never,
       makeTraitRef({
         'ref': 'YouTube.traits.ServiceYoutubeYoutube',
         'name': 'SeqLessonVideo',
@@ -491,7 +492,7 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
           'autoplay': false,
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SeqLessonPlayer',
         'category': 'interaction',
         'stateMachine': {
@@ -556,7 +557,7 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
           },
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'SeqChallenge', canonicalName) as never,
       makeTraitRef({
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'SeqProgressStorage',
@@ -580,7 +581,7 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SeqProgressForm',
         'category': 'interaction',
         'emits': [
@@ -650,7 +651,7 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'SeqChallenge', canonicalName) as never,
     ],
     pages: [
       {
@@ -840,10 +841,10 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'BuildChallengeBuilderGame',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'BuildChallenge',
         'emits': [
           {
             'event': 'BuildChallengeLoaded',
@@ -1152,7 +1153,7 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'BuildChallenge', canonicalName) as never,
     ],
     pages: [
       {
@@ -1326,10 +1327,10 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'EventChallengeEventHandlerGame',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'EventChallenge',
         'emits': [
           {
             'event': 'EventChallengeLoaded',
@@ -1638,7 +1639,7 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'EventChallenge', canonicalName) as never,
     ],
     pages: [
       {
@@ -1892,7 +1893,7 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           'NOTIFY_CLICK': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'StudentProgressCatalog',
         'category': 'interaction',
         'listens': [
@@ -2049,7 +2050,7 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'StudentProgress', canonicalName) as never,
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'StudentProgressStats',
@@ -2288,10 +2289,10 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'StudentProgressPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'StudentProgress',
         'emits': [
           {
             'event': 'PROGRESS_UPDATED',
@@ -2419,7 +2420,7 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'StudentProgress', canonicalName) as never,
     ],
     pages: [
       {

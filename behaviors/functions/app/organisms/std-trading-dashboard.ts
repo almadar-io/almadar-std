@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-trading-dashboard';
 const ALIAS = 'TradingDashboard';
@@ -201,7 +202,7 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
           'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PortfolioCatalog',
         'category': 'interaction',
         'emits': [
@@ -398,7 +399,7 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Portfolio', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PortfolioSearch',
@@ -717,10 +718,10 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PortfolioPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Portfolio',
         'emits': [
           {
             'event': 'PORTFOLIO_CREATED',
@@ -899,7 +900,7 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Portfolio', canonicalName) as never,
     ],
     pages: [
       {
@@ -1184,7 +1185,7 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
           'NOTIFY_CLICK': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TradeOrderCatalog',
         'category': 'interaction',
         'emits': [
@@ -1282,7 +1283,7 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TradeOrder', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TradeOrderBrowseList',
@@ -1475,10 +1476,10 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TradeOrderPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TradeOrder',
         'emits': [
           {
             'event': 'TRADE_ORDER_CREATED',
@@ -1657,7 +1658,7 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TradeOrder', canonicalName) as never,
     ],
     pages: [
       {
@@ -1901,7 +1902,7 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
           'SEARCH': 'MARKET_FEED_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MarketFeedDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -1941,7 +1942,7 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MarketFeed', canonicalName) as never,
       makeTraitRef({
         'ref': 'Selection.traits.SelectableItemSelection',
         'name': 'MarketSelection',
@@ -1950,10 +1951,10 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
           'multi': true,
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MarketFeedAsync',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MarketFeed',
         'emits': [
           {
             'event': 'MarketFeedLoaded',
@@ -2526,7 +2527,7 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'MarketFeed', canonicalName) as never,
     ],
     pages: [
       {

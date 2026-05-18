@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-customer-success';
 const ALIAS = 'CustomerSuccess';
@@ -241,7 +242,7 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
           'NOTIFY_CLICK': 'CS_ACCOUNT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CsAccountCatalog',
         'category': 'interaction',
         'emits': [
@@ -438,7 +439,7 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'CsAccount', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'CsAccountSearch',
@@ -784,10 +785,10 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CsAccountPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CsAccount',
         'emits': [
           {
             'event': 'CS_ACCOUNT_CREATED',
@@ -966,7 +967,7 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'CsAccount', canonicalName) as never,
       makeTraitRef({
         'ref': 'HealthScore.traits.HealthScoreDashboard',
         'name': 'CsAccountHealthScores',

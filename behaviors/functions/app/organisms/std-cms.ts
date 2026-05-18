@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-cms';
 const ALIAS = 'Cms';
@@ -227,7 +228,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           'SEARCH': 'ARTICLE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ArticleCatalog',
         'category': 'interaction',
         'emits': [
@@ -420,7 +421,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Article', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ArticleBrowseList',
@@ -707,7 +708,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ArticleHeroImageUpload',
         'category': 'interaction',
         'emits': [
@@ -850,11 +851,11 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Article', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ArticlePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Article',
         'emits': [
           {
             'event': 'ARTICLE_CREATED',
@@ -1049,7 +1050,7 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Article', canonicalName) as never,
     ],
     pages: [
       {
@@ -1327,7 +1328,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
           'NOTIFY_CLICK': 'MEDIA_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MediaCatalog',
         'category': 'interaction',
         'emits': [
@@ -1455,7 +1456,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MediaAsset', canonicalName) as never,
       makeTraitRef({
         'ref': 'Gallery.traits.GalleryItemGallery',
         'name': 'MediaAssetGallery',
@@ -1485,7 +1486,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MediaUpload',
         'category': 'interaction',
         'emits': [
@@ -1760,7 +1761,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MediaAsset', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'MediaAssetCreate',
@@ -1809,10 +1810,10 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
           'OPEN': 'VIEW',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MediaPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MediaAsset',
         'emits': [
           {
             'event': 'MEDIA_CREATED',
@@ -1913,7 +1914,7 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MediaAsset', canonicalName) as never,
     ],
     pages: [
       {
@@ -2171,7 +2172,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
           'SEARCH': 'CATEGORY_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CategoryCatalog',
         'category': 'interaction',
         'emits': [
@@ -2298,7 +2299,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Category', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'CategoryBrowseList',
@@ -2488,10 +2489,10 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CategoryPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Category',
         'emits': [
           {
             'event': 'CATEGORY_CREATED',
@@ -2670,7 +2671,7 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Category', canonicalName) as never,
     ],
     pages: [
       {
@@ -2935,7 +2936,7 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
           'SEARCH': 'CMS_HUB_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CmsHubDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -3029,7 +3030,7 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'HubArticle', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'HubBrowseList',

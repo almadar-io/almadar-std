@@ -15,13 +15,20 @@
  */
 
 import type {
+  Effect,
   Entity,
   EntityField,
+  Expression,
   OrbitalDefinition,
   OrbitalEntity,
   OrbitalSchema,
   PageRefObject,
+  SExpr,
+  Trait,
+  TraitEventContract,
+  TraitEventListener,
   TraitReference,
+  TraitTick,
 } from '@almadar/core';
 import type {
   MakePageRefOpts,
@@ -190,9 +197,17 @@ function buildEntity(
 type TraitOrInline = OrbitalSchema['orbitals'][number]['traits'][number];
 type PageOrRef = NonNullable<OrbitalSchema['orbitals'][number]['pages']>[number];
 
-function isTraitReferenceObject(t: TraitOrInline): t is TraitReference {
+/**
+ * The ref-shape branch of `TraitRef` (`@almadar/core`) is an anonymous
+ * object literal, not the exported `TraitReference` interface. Extract
+ * the actual union member so the negation of `isTraitReferenceObject`
+ * actually narrows away the ref branch and leaves the inline `Trait` shape.
+ */
+type TraitRefObject = Extract<TraitOrInline, { ref: string }>;
+
+function isTraitReferenceObject(t: TraitOrInline): t is TraitRefObject {
   // Narrow guard. `t` comes from `orbital.traits` which is a union of
-  // `TraitReference | (inline trait shape)`. The codegen emits the same
+  // `string | TraitRefObject | Trait`. The codegen emits the same
   // structural test before rewriting `linkedEntity`.
   if (t === null || typeof t !== 'object') return false;
   if (!('ref' in t)) return false;
@@ -222,6 +237,259 @@ function rewriteInlineLinkedEntity<T extends { linkedEntity?: string }>(
   return { ...shape, linkedEntity: newName };
 }
 
+// ============================================================================
+// AGENT-005 — Inline-trait entity-name rebinding (Phase 1c body fix)
+//
+// Phase 1 rebound the trait's top-level `linkedEntity`. AGENT-005's
+// deeper half is the SExpression / payload / event-listener literals
+// embedded inside the trait — `(fetch X)`, `(persist op X …)`, `(ref X)`,
+// `(spawn X …)`, `@X.path` binding roots, render-ui pattern props that
+// address the entity store, and payload-schema type strings like `"X"`
+// or `"[X]"`. The orbital-rust inline phase rewrites all of these for
+// REF-imported traits (when the call-site supplies a `linkedEntity`
+// override) but has no record of the canonical name for INLINE-authored
+// traits, so the rewrite never fires there. The factory layer is the
+// only place that knows BOTH names (`oCanonicalEntityName` baked at
+// codegen, `params.entityName` at runtime), so the substitution lives
+// here, mirroring `crates/orbital-compiler/src/phases/inline.rs:578`
+// (`rewrite_identifiers`) on the canonical `@almadar/core` types.
+// ============================================================================
+
+/**
+ * Entity-bound positional operators per the canonical operator registry
+ * at `packages/almadar-std/modules/core.ts`. For each operator we record:
+ *  - the operator string at SExpression index 0
+ *  - an optional `actionGuard` for the discriminated form (only `persist`
+ *    today: `["persist", "create"|"update"|"delete", entity, …]`)
+ *  - the SExpression index that holds the entity-name literal
+ *
+ * Adding a new entity-bound operator means adding one row here. No code
+ * paths elsewhere have to change.
+ */
+const ENTITY_POSITIONAL_OPS: ReadonlyArray<{
+  readonly op: string;
+  readonly actionGuard?: ReadonlySet<string>;
+  readonly entityIndex: number;
+}> = [
+  { op: 'fetch', entityIndex: 1 },
+  { op: 'ref', entityIndex: 1 },
+  { op: 'spawn', entityIndex: 1 },
+  { op: 'persist', actionGuard: new Set(['create', 'update', 'delete']), entityIndex: 2 },
+];
+
+/**
+ * Object keys whose string value carries an entity name. Matches the
+ * `ENTITY_VALUED_PROPS` set used by the orbital-rust inline phase
+ * (`crates/orbital-compiler/src/phases/inline.rs:695`) so render-ui
+ * patterns + trait-ref objects rebind consistently across both layers.
+ */
+const ENTITY_VALUED_PROPS: ReadonlySet<string> = new Set([
+  'entity',
+  'source',
+  'entityType',
+  'linkedEntity',
+]);
+
+/**
+ * Strict-recursive map shape for SExpr object literals. The canonical
+ * `SExprAtom` object branch (`@almadar/core/types/expression.ts`) uses
+ * `Record<string, unknown>` to allow open value types at the schema
+ * boundary; within the rewriter we work with a stricter view where every
+ * value is itself an `SExpr`. The narrowing assertion at the object-branch
+ * entry point is the single boundary between the two views.
+ */
+interface SExprMap { readonly [k: string]: SExpr }
+
+/**
+ * Rewrite entity-name references inside a canonical `SExpr`. Covers every
+ * shape the orbital runtime treats as an entity reference:
+ *
+ *   - `(<op> ENTITY …)`              — positional, per `ENTITY_POSITIONAL_OPS`
+ *   - `"@ENTITY"` / `"@ENTITY.path"` — binding root rewrite (covers `set`,
+ *                                      `get`, and any operator that takes
+ *                                      a `@Entity`-rooted binding string)
+ *   - `{ "<entityProp>": ENTITY }`   — object props per `ENTITY_VALUED_PROPS`
+ *     inside an `SExprAtom` object literal (render-ui pattern config,
+ *     payload data, etc.)
+ *
+ * Operates on the canonical `SExpr` from `@almadar/core` so callers can
+ * pass typed `Effect` / `Expression` values directly.
+ */
+function rewriteEntityInSExpr(value: SExpr, oldName: string, newName: string): SExpr {
+  if (value === null) return null;
+  if (typeof value === 'boolean' || typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const prefix = `@${oldName}`;
+    if (value === prefix || value.startsWith(`${prefix}.`)) {
+      return `@${newName}${value.slice(prefix.length)}`;
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    const first = value[0];
+    if (typeof first === 'string') {
+      for (const entry of ENTITY_POSITIONAL_OPS) {
+        if (first !== entry.op) continue;
+        if (entry.actionGuard !== undefined) {
+          const action = value[1];
+          if (typeof action !== 'string' || !entry.actionGuard.has(action)) continue;
+        }
+        const at = entry.entityIndex;
+        const slot = value[at];
+        if (typeof slot !== 'string' || slot !== oldName) continue;
+        const rewritten: SExpr[] = [];
+        for (let i = 0; i < value.length; i++) {
+          rewritten.push(i === at ? newName : rewriteEntityInSExpr(value[i], oldName, newName));
+        }
+        return rewritten;
+      }
+    }
+    return value.map((v) => rewriteEntityInSExpr(v, oldName, newName));
+  }
+  // Object-literal branch of `SExprAtom` (render-ui pattern props,
+  // payload data, etc.). Narrow the canonical `Record<string, unknown>`
+  // to the stricter `SExprMap` view for the recursive walk.
+  return rewriteEntityInSExprMap(value as SExprMap, oldName, newName);
+}
+
+function rewriteEntityInSExprMap(obj: SExprMap, oldName: string, newName: string): SExprMap {
+  const next: { [k: string]: SExpr } = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (ENTITY_VALUED_PROPS.has(k) && typeof v === 'string' && v === oldName) {
+      next[k] = newName;
+    } else {
+      next[k] = rewriteEntityInSExpr(v, oldName, newName);
+    }
+  }
+  return next;
+}
+
+/**
+ * Rewrite the entity-name literal inside an `EventPayloadField.type`
+ * (and `entityType`) string. Payload types can read `"Product"`,
+ * `"[Product]"`, or a primitive (`"string"` / `"number"` / …). Only the
+ * entity-name shapes get rewritten; primitives pass through.
+ */
+function rewritePayloadFieldType(typeStr: string, oldName: string, newName: string): string {
+  if (typeStr === oldName) return newName;
+  if (typeStr === `[${oldName}]`) return `[${newName}]`;
+  return typeStr;
+}
+
+function rewriteEventContract(
+  contract: TraitEventContract,
+  oldName: string,
+  newName: string,
+): TraitEventContract {
+  if (!contract.payloadSchema || contract.payloadSchema.length === 0) return contract;
+  return {
+    ...contract,
+    payloadSchema: contract.payloadSchema.map((f) => {
+      const next = { ...f, type: rewritePayloadFieldType(f.type, oldName, newName) };
+      if (typeof f.entityType === 'string' && f.entityType === oldName) {
+        next.entityType = newName;
+      }
+      return next;
+    }),
+  };
+}
+
+function rewriteListener(
+  listener: TraitEventListener,
+  oldName: string,
+  newName: string,
+): TraitEventListener {
+  // payloadMapping values are strings (`@OldEntity.path` binding roots).
+  if (!listener.payloadMapping) return listener;
+  const prefix = `@${oldName}`;
+  const nextMapping: Record<string, string> = {};
+  for (const [k, v] of Object.entries(listener.payloadMapping)) {
+    nextMapping[k] =
+      v === prefix || v.startsWith(`${prefix}.`)
+        ? `@${newName}${v.slice(prefix.length)}`
+        : v;
+  }
+  return { ...listener, payloadMapping: nextMapping };
+}
+
+function rewriteTick(tick: TraitTick, oldName: string, newName: string): TraitTick {
+  const next: TraitTick = { ...tick };
+  if (next.guard !== undefined && next.guard !== null) {
+    next.guard = rewriteEntityInSExpr(next.guard as SExpr, oldName, newName) as Expression;
+  }
+  next.effects = next.effects.map(
+    (e) => rewriteEntityInSExpr(e as SExpr, oldName, newName) as Effect,
+  );
+  return next;
+}
+
+/**
+ * Rewrite every entity-name reference inside an inline `Trait` so a
+ * factory-driven `params.entityName` rename actually lands on the
+ * SExpression literals embedded in transitions / effects / ticks /
+ * payload type strings. The trait's top-level `linkedEntity` is rewritten
+ * separately by `rewriteInlineLinkedEntity`; this function walks every
+ * field that can carry a body-level reference. Returns the same canonical
+ * `Trait` shape — no widening, no `unknown`.
+ */
+/**
+ * Rebind an inline `Trait` to a renamed entity. Combines top-level
+ * `linkedEntity` rewrite + body-level entity-ref rewriting (SExpr literals
+ * in transitions / effects / ticks / payloads / listens).
+ *
+ * Exported for use by codegen-emitted std factories
+ * (`packages/almadar-std/behaviors/functions/*.ts`) so the codegen and the
+ * runtime overlay share ONE rewriter. Plan rule 6: codegen + runtime overlay
+ * MUST stay symmetric — making both call this single helper enforces that.
+ */
+export function rebindInlineTraitEntity(trait: Trait, oldName: string, newName: string): Trait {
+  if (oldName === newName) return trait;
+  return rewriteEntityInInlineTrait(rewriteInlineLinkedEntity(trait, oldName, newName), oldName, newName);
+}
+
+export function rewriteEntityInInlineTrait(trait: Trait, oldName: string, newName: string): Trait {
+  if (oldName === newName) return trait;
+  const next: Trait = { ...trait };
+
+  if (next.stateMachine) {
+    next.stateMachine = {
+      ...next.stateMachine,
+      transitions: next.stateMachine.transitions.map((t) => {
+        const updated = { ...t };
+        if (updated.guard !== undefined && updated.guard !== null) {
+          updated.guard = rewriteEntityInSExpr(updated.guard as SExpr, oldName, newName) as Expression;
+        }
+        if (updated.effects) {
+          updated.effects = updated.effects.map(
+            (e) => rewriteEntityInSExpr(e as SExpr, oldName, newName) as Effect,
+          );
+        }
+        return updated;
+      }),
+    };
+  }
+
+  if (next.initialEffects) {
+    next.initialEffects = next.initialEffects.map(
+      (e) => rewriteEntityInSExpr(e as SExpr, oldName, newName) as Effect,
+    );
+  }
+
+  if (next.ticks) {
+    next.ticks = next.ticks.map((t) => rewriteTick(t, oldName, newName));
+  }
+
+  if (next.emits) {
+    next.emits = next.emits.map((c) => rewriteEventContract(c, oldName, newName));
+  }
+
+  if (next.listens) {
+    next.listens = next.listens.map((l) => rewriteListener(l, oldName, newName));
+  }
+
+  return next;
+}
+
 type TraitInput = OrbitalSchema['orbitals'][number]['traits'][number];
 type PageInput = NonNullable<OrbitalSchema['orbitals'][number]['pages']>[number];
 
@@ -233,7 +501,14 @@ function rebuildTraits(
   return traits.map((t): TraitInput => {
     if (!isTraitReferenceObject(t)) {
       if (typeof t === 'string') return t;
-      return rewriteInlineLinkedEntity(t, ctx.canonicalEntityName, effectiveEntityName);
+      // Inline-authored trait. Phase 1 rebound the trait's top-level
+      // `linkedEntity`; AGENT-005 (Rust inline-phase gap) is the deeper
+      // body rewrite — `(fetch X)` / `(persist op X …)` / `(ref X)` /
+      // `(spawn X …)` / `@X.path` / `linkedEntity: X` literals embedded
+      // in the trait's transitions/effects/payloads/render-ui pattern
+      // props. We do both here so the compiler sees a fully-rebound
+      // trait.
+      return rebindInlineTraitEntity(t, ctx.canonicalEntityName, effectiveEntityName);
     }
     const rewrittenLinkedEntity =
       t.linkedEntity === ctx.canonicalEntityName ? effectiveEntityName : t.linkedEntity;

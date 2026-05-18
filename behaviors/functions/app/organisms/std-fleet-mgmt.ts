@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-fleet-mgmt';
 const ALIAS = 'FleetMgmt';
@@ -234,7 +235,7 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
           'SEARCH': 'FLEET_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FleetCatalog',
         'category': 'interaction',
         'emits': [
@@ -431,7 +432,7 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Fleet', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'FleetSearch',
@@ -749,10 +750,10 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FleetPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Fleet',
         'emits': [
           {
             'event': 'FLEET_CREATED',
@@ -931,7 +932,7 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Fleet', canonicalName) as never,
     ],
     pages: [
       {
@@ -1247,7 +1248,7 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
           'NOTIFY_CLICK': 'VEHICLE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'VehiclePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1307,7 +1308,7 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Vehicle', canonicalName) as never,
       makeTraitRef({
         'ref': 'Vehicle.traits.VehicleFleet',
         'name': 'VehicleView',
@@ -1584,7 +1585,7 @@ export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOr
           'SEARCH': 'DRIVER_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DriverPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1644,7 +1645,7 @@ export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Driver', canonicalName) as never,
       makeTraitRef({
         'ref': 'Driver.traits.DriverRoster',
         'name': 'DriverView',
@@ -1921,7 +1922,7 @@ export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTele
           'SEARCH': 'TELEMATICS_EVENT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TelematicsEventPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1981,7 +1982,7 @@ export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTele
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TelematicsEvent', canonicalName) as never,
       makeTraitRef({
         'ref': 'TelematicsEvent.traits.TelematicsEventStream',
         'name': 'TelematicsEventView',

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-cicd-pipeline';
 const ALIAS = 'CicdPipeline';
@@ -217,7 +218,7 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
           'SEARCH': 'BUILD_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BuildCatalog',
         'category': 'interaction',
         'emits': [
@@ -414,7 +415,7 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Build', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'BuildSearch',
@@ -748,10 +749,10 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BuildPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Build',
         'emits': [
           {
             'event': 'BUILD_CREATED',
@@ -930,7 +931,7 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Build', canonicalName) as never,
     ],
     pages: [
       {
@@ -1212,7 +1213,7 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
           'SEARCH': 'STAGE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'StageCatalog',
         'category': 'interaction',
         'emits': [
@@ -1394,7 +1395,7 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Stage', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'StageBrowseList',
@@ -1586,10 +1587,10 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'StagePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Stage',
         'emits': [
           {
             'event': 'STAGE_CREATED',
@@ -1768,7 +1769,7 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Stage', canonicalName) as never,
     ],
     pages: [
       {
@@ -2050,7 +2051,7 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
           'gap': 'sm',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DeploymentDisplay',
         'category': 'interaction',
         'listens': [
@@ -2202,8 +2203,8 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Deployment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'DeploymentCommitsPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -2246,7 +2247,7 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Deployment', canonicalName) as never,
       makeTraitRef({
         'ref': 'GitHub.traits.ServiceGithubGithub',
         'name': 'DeploymentGitHub',
@@ -2259,10 +2260,10 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
           'op': 'listCommits',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DeploymentAsync',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Deployment',
         'emits': [
           {
             'event': 'DeploymentLoaded',
@@ -2739,7 +2740,7 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Deployment', canonicalName) as never,
     ],
     pages: [
       {

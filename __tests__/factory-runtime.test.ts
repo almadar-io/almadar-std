@@ -15,6 +15,7 @@ import {
   applyParamsToWholeOrb,
   extractManifest,
 } from '../factory-runtime/index.js';
+import type { OrbitalTraitOverride } from '../factory-runtime/index.js';
 
 const REGISTRY_ROOT = join(__dirname, '..', 'behaviors', 'registry');
 
@@ -63,7 +64,7 @@ describe('factory-runtime', () => {
       const manifest = manifests.find((m) => m.orbitalName === orbital.name);
       if (!manifest) throw new Error('expected manifest for first orbital');
 
-      const overrides: Record<string, { config?: Record<string, unknown> }> = {};
+      const overrides: Record<string, OrbitalTraitOverride> = {};
       if (manifest.traitNames.length > 0) {
         const firstTrait = manifest.traitNames[0];
         overrides[firstTrait] = { config: { listLabel: 'Custom Label' } };

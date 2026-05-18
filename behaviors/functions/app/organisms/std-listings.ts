@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-listings';
 const ALIAS = 'Listings';
@@ -249,7 +250,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
           'SEARCH': 'LISTING_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ListingCatalog',
         'category': 'interaction',
         'emits': [
@@ -467,7 +468,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Listing', canonicalName) as never,
       makeTraitRef({
         'ref': 'GeoSearch.traits.GeoSearchResultSearch',
         'name': 'ListingGeoSearch',
@@ -806,10 +807,10 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
           'flat': true,
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ListingPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Listing',
         'emits': [
           {
             'event': 'LISTING_CREATED',
@@ -988,7 +989,7 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Listing', canonicalName) as never,
     ],
     pages: [
       {
@@ -1246,10 +1247,10 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'InquiryBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Inquiry',
         'emits': [
           {
             'event': 'CREATE',
@@ -1622,7 +1623,7 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Inquiry', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'InquiryCreate',
@@ -1653,10 +1654,10 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'InquiryPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Inquiry',
         'emits': [
           {
             'event': 'INQUIRY_CREATED',
@@ -1734,7 +1735,7 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Inquiry', canonicalName) as never,
     ],
     pages: [
       {

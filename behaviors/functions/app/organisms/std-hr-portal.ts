@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-hr-portal';
 const ALIAS = 'HrPortal';
@@ -229,7 +230,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
           'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EmployeeCatalog',
         'category': 'interaction',
         'emits': [
@@ -425,7 +426,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Employee', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'EmployeeSearch',
@@ -778,10 +779,10 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EmployeePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Employee',
         'emits': [
           {
             'event': 'EMPLOYEE_CREATED',
@@ -964,7 +965,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Employee', canonicalName) as never,
       makeTraitRef({
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'EmployeeAvatarUpload',
@@ -980,7 +981,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
           'maxSize': 5242880,
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EmployeeAvatarUploadForm',
         'category': 'interaction',
         'emits': [
@@ -1063,7 +1064,7 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Employee', canonicalName) as never,
     ],
     pages: [
       {
@@ -1353,10 +1354,10 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
           'SEARCH': 'ONBOARDING_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'OnboardingWizard',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Onboarding',
         'emits': [
           {
             'event': 'ONBOARDED',
@@ -2410,7 +2411,7 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Onboarding', canonicalName) as never,
     ],
     pages: [
       {
@@ -2680,7 +2681,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
           'NOTIFY_CLICK': 'TIME_OFF_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TimeOffCatalog',
         'category': 'interaction',
         'emits': [
@@ -2782,7 +2783,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TimeOff', canonicalName) as never,
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'TimeOffCalendar',
@@ -3026,10 +3027,10 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TimeOffPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TimeOff',
         'emits': [
           {
             'event': 'TIME_OFF_CREATED',
@@ -3299,7 +3300,7 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TimeOff', canonicalName) as never,
     ],
     pages: [
       {
@@ -3555,10 +3556,10 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
           'relationField': 'managerId',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'OrgChartDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrgNode',
         'emits': [
           {
             'event': 'OrgChartLoaded',
@@ -3902,7 +3903,7 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'OrgNode', canonicalName) as never,
     ],
     pages: [
       {

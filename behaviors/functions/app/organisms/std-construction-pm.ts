@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-construction-pm';
 const ALIAS = 'ConstructionPm';
@@ -239,7 +240,7 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
           'SEARCH': 'PROJECT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProjectCatalog',
         'category': 'interaction',
         'emits': [
@@ -436,7 +437,7 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ConstructionProject', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ProjectSearch',
@@ -769,10 +770,10 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProjectPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ConstructionProject',
         'emits': [
           {
             'event': 'PROJECT_CREATED',
@@ -951,7 +952,7 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ConstructionProject', canonicalName) as never,
     ],
     pages: [
       {
@@ -1254,7 +1255,7 @@ export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPan
           'NOTIFY_CLICK': 'RFI_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RfiPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1314,7 +1315,7 @@ export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPan
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Rfi', canonicalName) as never,
       makeTraitRef({
         'ref': 'Rfi.traits.RfiPipeline',
         'name': 'RfiPipelineView',
@@ -1590,7 +1591,7 @@ export function stdConstructionPmSubmittalPanelOrbital(params: StdConstructionPm
           'NOTIFY_CLICK': 'SUBMITTAL_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SubmittalPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1650,7 +1651,7 @@ export function stdConstructionPmSubmittalPanelOrbital(params: StdConstructionPm
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Submittal', canonicalName) as never,
       makeTraitRef({
         'ref': 'Submittal.traits.SubmittalReview',
         'name': 'SubmittalReviewView',
@@ -1925,7 +1926,7 @@ export function stdConstructionPmChangeOrderPanelOrbital(params: StdConstruction
           'NOTIFY_CLICK': 'CHANGE_ORDER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ChangeOrderPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1985,7 +1986,7 @@ export function stdConstructionPmChangeOrderPanelOrbital(params: StdConstruction
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ChangeOrder', canonicalName) as never,
       makeTraitRef({
         'ref': 'ChangeOrder.traits.ChangeOrderLedger',
         'name': 'ChangeOrderLedgerView',

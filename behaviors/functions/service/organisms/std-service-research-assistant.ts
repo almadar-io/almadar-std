@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-service-research-assistant';
 const ALIAS = 'ServiceResearchAssistant';
@@ -205,10 +206,10 @@ export function stdServiceResearchAssistantResearchOrbital(params: StdServiceRes
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ResearchPipeline',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Research',
         'emits': [
           {
             'event': 'ResearchYoutubeCompleted',
@@ -1563,7 +1564,7 @@ export function stdServiceResearchAssistantResearchOrbital(params: StdServiceRes
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Research', canonicalName) as never,
     ],
     pages: [
       {
@@ -1737,10 +1738,10 @@ export function stdServiceResearchAssistantCacheEntryOrbital(params: StdServiceR
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'CacheEntryRedis',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CacheEntry',
         'emits': [
           {
             'event': 'CacheEntryLoadFailed',
@@ -2576,7 +2577,7 @@ export function stdServiceResearchAssistantCacheEntryOrbital(params: StdServiceR
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'CacheEntry', canonicalName) as never,
     ],
     pages: [
       {
@@ -2754,10 +2755,10 @@ export function stdServiceResearchAssistantReportOrbital(params: StdServiceResea
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ReportStorage',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Report',
         'emits': [
           {
             'event': 'ReportLoadFailed',
@@ -3706,7 +3707,7 @@ export function stdServiceResearchAssistantReportOrbital(params: StdServiceResea
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Report', canonicalName) as never,
     ],
     pages: [
       {
@@ -3884,10 +3885,10 @@ export function stdServiceResearchAssistantKnowledgeQueryOrbital(params: StdServ
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'KnowledgeQueryCustomBearer',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'KnowledgeQuery',
         'emits': [
           {
             'event': 'KnowledgeQueryLoadFailed',
@@ -4636,7 +4637,7 @@ export function stdServiceResearchAssistantKnowledgeQueryOrbital(params: StdServ
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'KnowledgeQuery', canonicalName) as never,
     ],
     pages: [
       {

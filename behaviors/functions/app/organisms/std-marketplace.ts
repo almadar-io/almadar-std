@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-marketplace';
 const ALIAS = 'Marketplace';
@@ -200,7 +201,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
           'SEARCH': 'VENDOR_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'VendorCatalog',
         'category': 'interaction',
         'emits': [
@@ -386,7 +387,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Vendor', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'VendorBrowseList',
@@ -586,10 +587,10 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'VendorPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Vendor',
         'emits': [
           {
             'event': 'VENDOR_CREATED',
@@ -768,7 +769,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Vendor', canonicalName) as never,
     ],
     pages: [
       {
@@ -1105,7 +1106,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
           'SEARCH': 'LISTING_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ListingCatalog',
         'category': 'interaction',
         'emits': [
@@ -1318,7 +1319,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Listing', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ListingSearch',
@@ -1685,10 +1686,10 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ListingPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Listing',
         'emits': [
           {
             'event': 'LISTING_CREATED',
@@ -1867,7 +1868,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Listing', canonicalName) as never,
     ],
     pages: [
       {
@@ -2174,7 +2175,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
           'NOTIFY_CLICK': 'ORDER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'OrderCatalog',
         'category': 'interaction',
         'emits': [
@@ -2360,7 +2361,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Order', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'OrderBrowseList',
@@ -2567,10 +2568,10 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'OrderPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Order',
         'emits': [
           {
             'event': 'ORDER_CREATED',
@@ -2749,7 +2750,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Order', canonicalName) as never,
     ],
     pages: [
       {

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-inventory';
 const ALIAS = 'Inventory';
@@ -232,7 +233,7 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
           'NOTIFY_CLICK': 'INVENTORY_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'InventoryCatalog',
         'category': 'interaction',
         'emits': [
@@ -429,7 +430,7 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'InventoryItem', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'InventorySearch',
@@ -744,10 +745,10 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'InventoryPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'InventoryItem',
         'emits': [
           {
             'event': 'INVENTORY_CREATED',
@@ -926,7 +927,7 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'InventoryItem', canonicalName) as never,
     ],
     pages: [
       {
@@ -1208,7 +1209,7 @@ export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLeve
           'SEARCH': 'STOCK_LEVEL_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'StockLevelPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1268,7 +1269,7 @@ export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLeve
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'StockLevel', canonicalName) as never,
       makeTraitRef({
         'ref': 'StockLevel.traits.StockLevelLedger',
         'name': 'StockLevelView',
@@ -1521,7 +1522,7 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
           'NOTIFY_CLICK': 'WAREHOUSE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WarehousePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1581,7 +1582,7 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Warehouse', canonicalName) as never,
       makeTraitRef({
         'ref': 'Warehouse.traits.WarehouseDirectory',
         'name': 'WarehouseView',
@@ -1834,7 +1835,7 @@ export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderR
           'SEARCH': 'REORDER_RULE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ReorderRulePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1894,7 +1895,7 @@ export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderR
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ReorderRule', canonicalName) as never,
       makeTraitRef({
         'ref': 'ReorderRule.traits.ReorderRuleManager',
         'name': 'ReorderRuleView',
@@ -2175,7 +2176,7 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
           'SEARCH': 'STOCK_ADJUSTMENT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'StockAdjustmentPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -2235,7 +2236,7 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'StockAdjustment', canonicalName) as never,
       makeTraitRef({
         'ref': 'StockAdjustment.traits.StockAdjustmentBrowse',
         'name': 'StockAdjustmentBrowse',

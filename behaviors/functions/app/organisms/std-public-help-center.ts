@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-public-help-center';
 const ALIAS = 'PublicHelpCenter';
@@ -229,7 +230,7 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
           'NOTIFY_CLICK': 'HELP_CENTER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'HelpCenterCatalog',
         'category': 'interaction',
         'emits': [
@@ -426,7 +427,7 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'HelpCenter', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'HelpCenterSearch',
@@ -756,10 +757,10 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'HelpCenterPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'HelpCenter',
         'emits': [
           {
             'event': 'HELP_CENTER_CREATED',
@@ -938,7 +939,7 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'HelpCenter', canonicalName) as never,
     ],
     pages: [
       {
@@ -1251,7 +1252,7 @@ export function stdPublicHelpCenterHelpArticlePanelOrbital(params: StdPublicHelp
           'SEARCH': 'HELP_ARTICLE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'HelpArticlePanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1311,7 +1312,7 @@ export function stdPublicHelpCenterHelpArticlePanelOrbital(params: StdPublicHelp
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'HelpArticle', canonicalName) as never,
       makeTraitRef({
         'ref': 'HelpArticle.traits.HelpArticleManage',
         'name': 'HelpArticleView',
@@ -1569,7 +1570,7 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
           'NOTIFY_CLICK': 'HELP_CATEGORY_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'HelpCategoryPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1629,7 +1630,7 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'HelpCategory', canonicalName) as never,
       makeTraitRef({
         'ref': 'HelpCategory.traits.HelpCategoryDirectory',
         'name': 'HelpCategoryView',

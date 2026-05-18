@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-reviewer';
 const ALIAS = 'AgentReviewer';
@@ -223,10 +224,10 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ReviewGenerator',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Review',
         'emits': [
           {
             'event': 'ReviewLoaded',
@@ -982,7 +983,7 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Review', canonicalName) as never,
     ],
     pages: [
       {
@@ -1205,10 +1206,10 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ReviewRagRag',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewRag',
         'listens': [
           {
             'event': 'GENERATE',
@@ -2005,11 +2006,11 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ReviewRag', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'RagTabs',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewRag',
         'emits': [
           {
             'event': 'SELECT_TAB',
@@ -2315,11 +2316,11 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ReviewRag', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'RagMemoryLifecycle',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewRag',
         'emits': [
           {
             'event': 'ReviewRagLoaded',
@@ -2578,11 +2579,11 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ReviewRag', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'RagSearchLifecycle',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewRag',
         'emits': [
           {
             'event': 'ReviewRagLoaded',
@@ -2841,11 +2842,11 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ReviewRag', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'RagCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewRag',
         'emits': [
           {
             'event': 'SAVE',
@@ -3374,7 +3375,7 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'ReviewRag', canonicalName) as never,
     ],
     pages: [
       {
@@ -3552,10 +3553,10 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'InputClassifier',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Analysis',
         'emits': [
           {
             'event': 'CLASSIFIED',
@@ -4110,11 +4111,11 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Analysis', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AnalysisNotification',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Analysis',
         'emits': [
           {
             'event': 'AnalysisLoaded',
@@ -4434,11 +4435,11 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Analysis', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AnalysisAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Analysis',
         'emits': [
           {
             'event': 'SHOW',
@@ -4689,7 +4690,7 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Analysis', canonicalName) as never,
     ],
     pages: [
       {
@@ -4873,10 +4874,10 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ReviewCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewCompletion',
         'emits': [
           {
             'event': 'GENERATED',
@@ -5397,11 +5398,11 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ReviewCompletion', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ReviewCompletionNotification',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewCompletion',
         'emits': [
           {
             'event': 'ReviewCompletionLoaded',
@@ -5721,11 +5722,11 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ReviewCompletion', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ReviewCompletionAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ReviewCompletion',
         'emits': [
           {
             'event': 'SHOW',
@@ -6049,7 +6050,7 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'ReviewCompletion', canonicalName) as never,
     ],
     pages: [
       {

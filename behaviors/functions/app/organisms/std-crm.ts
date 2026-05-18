@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-crm';
 const ALIAS = 'Crm';
@@ -221,7 +222,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
           'SEARCH': 'CONTACT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ContactCatalog',
         'category': 'interaction',
         'emits': [
@@ -434,7 +435,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Contact', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ContactSearch',
@@ -767,10 +768,10 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ContactPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Contact',
         'emits': [
           {
             'event': 'CONTACT_CREATED',
@@ -949,8 +950,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Contact', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ContactEmailSend',
         'category': 'interaction',
         'emits': [
@@ -1082,7 +1083,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Contact', canonicalName) as never,
     ],
     pages: [
       {
@@ -1376,7 +1377,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
           'NOTIFY_CLICK': 'DEAL_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DealCatalog',
         'category': 'interaction',
         'emits': [
@@ -1474,7 +1475,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Deal', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'DealBrowseList',
@@ -1670,10 +1671,10 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DealPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Deal',
         'emits': [
           {
             'event': 'DEAL_CREATED',
@@ -1852,7 +1853,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Deal', canonicalName) as never,
     ],
     pages: [
       {
@@ -2098,10 +2099,10 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
           'NOTIFY_CLICK': 'PIPELINE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PipelineDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Pipeline',
         'emits': [
           {
             'event': 'PipelineLoaded',
@@ -2312,7 +2313,7 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Pipeline', canonicalName) as never,
     ],
     pages: [
       {
@@ -2568,7 +2569,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
           'SEARCH': 'NOTE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'NoteCatalog',
         'category': 'interaction',
         'emits': [
@@ -2675,7 +2676,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Note', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'NoteBrowseList',
@@ -2881,10 +2882,10 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'NotePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Note',
         'emits': [
           {
             'event': 'NOTE_CREATED',
@@ -3063,7 +3064,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Note', canonicalName) as never,
     ],
     pages: [
       {

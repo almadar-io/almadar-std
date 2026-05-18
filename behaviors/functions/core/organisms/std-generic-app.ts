@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-generic-app';
 const ALIAS = 'GenericApp';
@@ -223,7 +224,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ContactCatalog',
         'category': 'interaction',
         'emits': [
@@ -405,7 +406,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Contact', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ContactSearch',
@@ -638,10 +639,10 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ContactPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Contact',
         'emits': [
           {
             'event': 'CONTACT_CREATED',
@@ -820,7 +821,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Contact', canonicalName) as never,
     ],
     pages: [
       {
@@ -1125,7 +1126,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
           'SEARCH': 'ITEM_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ItemCatalog',
         'category': 'interaction',
         'emits': [
@@ -1304,7 +1305,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Item', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ItemSearch',
@@ -1542,10 +1543,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ItemPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Item',
         'emits': [
           {
             'event': 'ITEM_CREATED',
@@ -1724,7 +1725,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Item', canonicalName) as never,
     ],
     pages: [
       {
@@ -2016,7 +2017,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
           'NOTIFY_CLICK': 'ACTIVITY_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ActivityCatalog',
         'category': 'interaction',
         'listens': [
@@ -2153,7 +2154,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Activity', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ActivityBrowseList',
@@ -2317,10 +2318,10 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ActivityPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Activity',
         'emits': [
           {
             'event': 'ACTIVITY_CREATED',
@@ -2462,7 +2463,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Activity', canonicalName) as never,
     ],
     pages: [
       {
@@ -2761,7 +2762,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
           'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TaskCatalog',
         'category': 'interaction',
         'emits': [
@@ -2934,7 +2935,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Task', canonicalName) as never,
       makeTraitRef({
         'ref': 'Selection.traits.SelectableItemSelection',
         'name': 'TaskSelection',
@@ -3155,10 +3156,10 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TaskPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Task',
         'emits': [
           {
             'event': 'TASK_CREATED',
@@ -3337,7 +3338,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Task', canonicalName) as never,
     ],
     pages: [
       {
@@ -3634,7 +3635,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
           'NOTIFY_CLICK': 'CAL_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CalendarCatalog',
         'category': 'interaction',
         'emits': [
@@ -3807,7 +3808,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ScheduledEvent', canonicalName) as never,
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'CalendarView',
@@ -3991,7 +3992,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CalendarPersistor',
         'category': 'lifecycle',
         'linkedEntity': 'CalendarEvent',
@@ -4173,7 +4174,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ScheduledEvent', canonicalName) as never,
     ],
     pages: [
       {
@@ -4465,7 +4466,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
           'NOTIFY_CLICK': 'WIDGET_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WidgetCatalog',
         'category': 'interaction',
         'listens': [
@@ -4607,7 +4608,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Widget', canonicalName) as never,
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'WidgetStats',
@@ -4828,10 +4829,10 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WidgetPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Widget',
         'emits': [
           {
             'event': 'WIDGET_CREATED',
@@ -4973,7 +4974,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Widget', canonicalName) as never,
     ],
     pages: [
       {
@@ -5265,7 +5266,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
           'SEARCH': 'FEED_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FeedCatalog',
         'category': 'interaction',
         'emits': [
@@ -5435,7 +5436,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'FeedPost', canonicalName) as never,
       makeTraitRef({
         'ref': 'Pagination.traits.PagedItemPagination',
         'name': 'FeedPagination',
@@ -5614,10 +5615,10 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FeedPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FeedPost',
         'emits': [
           {
             'event': 'FEED_CREATED',
@@ -5796,7 +5797,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'FeedPost', canonicalName) as never,
     ],
     pages: [
       {
@@ -6084,7 +6085,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
           'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'NoteCatalog',
         'category': 'interaction',
         'emits': [
@@ -6257,7 +6258,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Note', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'NoteSearch',
@@ -6461,10 +6462,10 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'NotePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Note',
         'emits': [
           {
             'event': 'NOTE_CREATED',
@@ -6643,7 +6644,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Note', canonicalName) as never,
     ],
     pages: [
       {
