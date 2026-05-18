@@ -116,6 +116,10 @@ export {
   getBehaviorsByOperations,
   searchBehaviors,
   getBehaviorSummary,
+  // Embeddings (publish-time bake)
+  type BehaviorEmbeddingsManifest,
+  getBehaviorEmbeddings,
+  getBehaviorEmbedding,
 } from './behaviors/index.js';
 
 // All behavior functions

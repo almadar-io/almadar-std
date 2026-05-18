@@ -10,6 +10,7 @@ export default defineConfig({
     'behaviors/types.ts',
     'behaviors/exports-reader.ts',
     'behaviors/query.ts',
+    'behaviors/embeddings.ts',
     'behaviors/functions/index.ts',
     'factory-runtime/index.ts',
   ],
@@ -29,5 +30,14 @@ export default defineConfig({
     // Copy behaviors-registry.json so query.ts can find it at runtime.
     cpSync('behaviors/behaviors-registry.json', 'dist/behaviors/behaviors-registry.json');
     cpSync('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
+    // Copy behaviors-embeddings.json (when the bake step ran). When the
+    // file is absent, consumers fall back to the full catalog walk —
+    // `getBehaviorEmbeddings()` returns null gracefully.
+    try {
+      cpSync('behaviors/behaviors-embeddings.json', 'dist/behaviors/behaviors-embeddings.json');
+      cpSync('behaviors/behaviors-embeddings.json', 'dist/behaviors-embeddings.json');
+    } catch {
+      // Bake step skipped (no OPENAI_API_KEY) — that's OK, consumers fall back.
+    }
   },
 });

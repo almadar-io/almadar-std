@@ -62,5 +62,12 @@ export {
   getBehaviorSummary,
 } from './query.js';
 
+// Behavior embeddings (publish-time bake — see scripts/build-embeddings.ts)
+export {
+  type BehaviorEmbeddingsManifest,
+  getBehaviorEmbeddings,
+  getBehaviorEmbedding,
+} from './embeddings.js';
+
 // All behavior functions (atoms, molecules, organisms)
 export * from './functions/index.js';
