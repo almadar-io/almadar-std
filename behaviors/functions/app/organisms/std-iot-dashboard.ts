@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-iot-dashboard';
 const ALIAS = 'IotDashboard';
@@ -186,7 +187,7 @@ export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSenso
           'NOTIFY_CLICK': 'SENSOR_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SensorCatalog',
         'category': 'interaction',
         'stateMachine': {
@@ -266,7 +267,7 @@ export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSenso
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'SensorReading', canonicalName) as never,
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'SensorStats',
@@ -641,7 +642,7 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
           'SEARCH': 'DEVICE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DeviceCatalog',
         'category': 'interaction',
         'emits': [
@@ -836,7 +837,7 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Device', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'DeviceSearch',
@@ -1076,10 +1077,10 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DevicePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Device',
         'emits': [
           {
             'event': 'DEVICE_CREATED',
@@ -1258,7 +1259,7 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Device', canonicalName) as never,
     ],
     pages: [
       {
@@ -1545,7 +1546,7 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           'SEARCH': 'ALERT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AlertCatalog',
         'category': 'interaction',
         'emits': [
@@ -1647,7 +1648,7 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'DeviceAlert', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'AlertBrowseList',
@@ -1836,10 +1837,10 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AlertPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DeviceAlert',
         'emits': [
           {
             'event': 'ALERT_CREATED',
@@ -2018,8 +2019,8 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'DeviceAlert', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AlertEmailNotice',
         'category': 'interaction',
         'stateMachine': {
@@ -2055,7 +2056,7 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'DeviceAlert', canonicalName) as never,
       makeTraitRef({
         'ref': 'Email.traits.ServiceEmailEmail',
         'name': 'AlertEmail',
@@ -2077,10 +2078,10 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DeviceAlertCircuitBreaker',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DeviceAlert',
         'emits': [
           {
             'event': 'DeviceAlertLoaded',
@@ -2821,7 +2822,7 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'DeviceAlert', canonicalName) as never,
     ],
     pages: [
       {

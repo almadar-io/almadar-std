@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-forum';
 const ALIAS = 'Forum';
@@ -234,7 +235,7 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
           'NOTIFY_CLICK': 'QUESTION_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'QuestionCatalog',
         'category': 'interaction',
         'emits': [
@@ -434,7 +435,7 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Question', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'QuestionSearch',
@@ -772,10 +773,10 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'QuestionPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Question',
         'emits': [
           {
             'event': 'QUESTION_CREATED',
@@ -954,7 +955,7 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Question', canonicalName) as never,
     ],
     pages: [
       {
@@ -1251,7 +1252,7 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
           'SEARCH': 'MODERATION_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ModerationDisplay',
         'category': 'interaction',
         'listens': [
@@ -1413,7 +1414,7 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ModerationDecision', canonicalName) as never,
       makeTraitRef({
         'ref': 'ModQueue.traits.ModQueueItemReview',
         'name': 'ModerationQueue',
@@ -1524,10 +1525,10 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ModerationPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ModerationDecision',
         'emits': [
           {
             'event': 'DECISION_RECORDED',
@@ -1655,7 +1656,7 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ModerationDecision', canonicalName) as never,
     ],
     pages: [
       {

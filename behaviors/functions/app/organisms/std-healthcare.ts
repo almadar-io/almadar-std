@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-healthcare';
 const ALIAS = 'Healthcare';
@@ -227,7 +228,7 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           'SEARCH': 'PATIENT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PatientCatalog',
         'category': 'interaction',
         'emits': [
@@ -423,7 +424,7 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Patient', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PatientSearch',
@@ -771,10 +772,10 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PatientPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Patient',
         'emits': [
           {
             'event': 'PATIENT_CREATED',
@@ -957,8 +958,8 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Patient', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PatientDocumentUpload',
         'category': 'interaction',
         'emits': [
@@ -1150,7 +1151,7 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Patient', canonicalName) as never,
     ],
     pages: [
       {
@@ -1480,7 +1481,7 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
           'SEARCH': 'APPOINTMENT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AppointmentCatalog',
         'category': 'interaction',
         'emits': [
@@ -1582,7 +1583,7 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Appointment', canonicalName) as never,
       makeTraitRef({
         'ref': 'Calendar.traits.CalendarEventCalendar',
         'name': 'AppointmentCalendar',
@@ -1821,10 +1822,10 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AppointmentPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Appointment',
         'emits': [
           {
             'event': 'APPOINTMENT_CREATED',
@@ -2094,8 +2095,8 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Appointment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AppointmentReminderSms',
         'category': 'interaction',
         'emits': [
@@ -2281,7 +2282,7 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Appointment', canonicalName) as never,
     ],
     pages: [
       {
@@ -2564,10 +2565,10 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
           'SEARCH': 'INTAKE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'IntakeFormWizard',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'IntakeForm',
         'emits': [
           {
             'event': 'INTAKE_SUBMITTED',
@@ -3613,7 +3614,7 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'IntakeForm', canonicalName) as never,
     ],
     pages: [
       {
@@ -3877,7 +3878,7 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           'NOTIFY_CLICK': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PrescriptionCatalog',
         'category': 'interaction',
         'emits': [
@@ -3975,7 +3976,7 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Prescription', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'PrescriptionBrowseList',
@@ -4130,10 +4131,10 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PrescriptionView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Prescription',
         'emits': [
           {
             'event': 'CLOSE',
@@ -4519,7 +4520,7 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Prescription', canonicalName) as never,
       makeTraitRef({
         'ref': 'Confirmation.traits.ConfirmActionConfirmation',
         'name': 'PrescriptionDelete',
@@ -4545,10 +4546,10 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PrescriptionPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Prescription',
         'emits': [
           {
             'event': 'PRESCRIPTION_CREATED',
@@ -4731,7 +4732,7 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Prescription', canonicalName) as never,
     ],
     pages: [
       {
@@ -4957,10 +4958,10 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
           'SEARCH': 'DASHBOARD_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DashboardDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DashboardSummary',
         'stateMachine': {
           'states': [
             {
@@ -5055,7 +5056,7 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'DashboardSummary', canonicalName) as never,
     ],
     pages: [
       {

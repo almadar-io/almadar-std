@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-api-gateway';
 const ALIAS = 'ApiGateway';
@@ -216,7 +217,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
           'SEARCH': 'ROUTE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RouteCatalog',
         'category': 'interaction',
         'emits': [
@@ -413,7 +414,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Route', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'RouteSearch',
@@ -740,10 +741,10 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RoutePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Route',
         'emits': [
           {
             'event': 'ROUTE_CREATED',
@@ -922,7 +923,7 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Route', canonicalName) as never,
     ],
     pages: [
       {
@@ -1209,7 +1210,7 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
           'SEARCH': 'BACKEND_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BackendCatalog',
         'category': 'interaction',
         'emits': [
@@ -1402,7 +1403,7 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Backend', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'BackendBrowseList',
@@ -1600,10 +1601,10 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BackendPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Backend',
         'emits': [
           {
             'event': 'BACKEND_CREATED',
@@ -1782,7 +1783,7 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Backend', canonicalName) as never,
     ],
     pages: [
       {
@@ -2081,7 +2082,7 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
           'displayPageSize': 10,
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'AnalyticsDisplay',
         'category': 'interaction',
         'listens': [
@@ -2230,7 +2231,7 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'AnalyticsRecord', canonicalName) as never,
     ],
     pages: [
       {

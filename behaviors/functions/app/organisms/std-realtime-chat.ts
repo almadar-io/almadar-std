@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-realtime-chat';
 const ALIAS = 'RealtimeChat';
@@ -195,7 +196,7 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           'NOTIFY_CLICK': 'CHAT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ChatRoom',
         'category': 'interaction',
         'emits': [
@@ -382,7 +383,7 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ChatMessage', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ChatSearch',
@@ -431,10 +432,10 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ChatMessageBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ChatMessage',
         'emits': [
           {
             'event': 'COMPOSE',
@@ -743,7 +744,7 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'ChatMessage', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'ChatMessageCompose',
@@ -802,10 +803,10 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ChatMessagePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ChatMessage',
         'emits': [
           {
             'event': 'MESSAGE_SAVED',
@@ -883,8 +884,8 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'ChatMessage', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ChatMessageAttachment',
         'category': 'interaction',
         'emits': [
@@ -1087,8 +1088,8 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'ChatMessage', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ChatSmsNotify',
         'category': 'interaction',
         'emits': [
@@ -1279,7 +1280,7 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ChatMessage', canonicalName) as never,
     ],
     pages: [
       {
@@ -1542,7 +1543,7 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
           'NOTIFY_CLICK': 'CHANNEL_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ChannelCatalog',
         'category': 'interaction',
         'emits': [
@@ -1652,7 +1653,7 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Channel', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ChannelBrowseList',
@@ -1840,10 +1841,10 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ChannelPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Channel',
         'emits': [
           {
             'event': 'CHANNEL_CREATED',
@@ -2022,7 +2023,7 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Channel', canonicalName) as never,
     ],
     pages: [
       {
@@ -2261,10 +2262,10 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
           'NOTIFY_CLICK': 'ONLINE_USER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'OnlineUserDisplay',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OnlineUser',
         'emits': [
           {
             'event': 'OnlineUserLoaded',
@@ -2582,7 +2583,7 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'OnlineUser', canonicalName) as never,
     ],
     pages: [
       {

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-marketing-campaign';
 const ALIAS = 'MarketingCampaign';
@@ -256,7 +257,7 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           'SEARCH': 'CAMPAIGN_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CampaignCatalog',
         'category': 'interaction',
         'emits': [
@@ -453,7 +454,7 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Campaign', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'CampaignSearch',
@@ -584,10 +585,10 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CampaignBrowseList',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Campaign',
         'emits': [
           {
             'event': 'VIEW',
@@ -1126,7 +1127,7 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Campaign', canonicalName) as never,
       makeTraitRef({
         'ref': 'Modal.traits.ModalRecordModal',
         'name': 'CampaignCreate',
@@ -1247,10 +1248,10 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CampaignPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Campaign',
         'emits': [
           {
             'event': 'CAMPAIGN_CREATED',
@@ -1429,7 +1430,7 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Campaign', canonicalName) as never,
       makeTraitRef({
         'ref': 'BroadcastBuilder.traits.BroadcastDraftBrowse',
         'name': 'CampaignBroadcastBrowse',

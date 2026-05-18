@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-ecommerce';
 const ALIAS = 'Ecommerce';
@@ -197,7 +198,7 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           'SEARCH': 'PRODUCT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProductCatalog',
         'category': 'interaction',
         'emits': [
@@ -379,7 +380,7 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Product', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'ProductBrowseList',
@@ -459,10 +460,10 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ProductCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'PRODUCT_CREATED',
@@ -763,11 +764,11 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductEdit',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'PRODUCT_UPDATED',
@@ -1089,11 +1090,11 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'EDIT',
@@ -1480,11 +1481,11 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Product', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProductDelete',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Product',
         'emits': [
           {
             'event': 'PRODUCT_DELETED',
@@ -1852,7 +1853,7 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Product', canonicalName) as never,
     ],
     pages: [
       {
@@ -2052,10 +2053,10 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'CartItemCartBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CartItem',
         'emits': [
           {
             'event': 'CHECKOUT_STARTED',
@@ -2679,11 +2680,11 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'CartItem', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'CartItemAddItem',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CartItem',
         'emits': [
           {
             'event': 'CartItemLoadFailed',
@@ -2963,11 +2964,11 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'CartItem', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'CartItemRemoveConfirm',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'CartItem',
         'emits': [
           {
             'event': 'CartItemDeleteFailed',
@@ -3316,7 +3317,7 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'CartItem', canonicalName) as never,
     ],
     pages: [
       {
@@ -3520,7 +3521,7 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CheckoutPaymentForm',
         'category': 'interaction',
         'emits': [
@@ -3608,11 +3609,11 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Checkout', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'CheckoutWizard',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Checkout',
         'emits': [
           {
             'event': 'ORDER_PLACED',
@@ -4526,7 +4527,7 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Checkout', canonicalName) as never,
     ],
     pages: [
       {
@@ -4719,10 +4720,10 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'OrderRecordBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderRecord',
         'emits': [
           {
             'event': 'CREATE',
@@ -5209,11 +5210,11 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'OrderRecord', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderRecordCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderRecord',
         'emits': [
           {
             'event': 'ORDER_RECORD_CREATED',
@@ -5506,11 +5507,11 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'OrderRecord', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderRecordEdit',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderRecord',
         'emits': [
           {
             'event': 'ORDER_RECORD_UPDATED',
@@ -5823,11 +5824,11 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'OrderRecord', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderRecordView',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderRecord',
         'emits': [
           {
             'event': 'EDIT',
@@ -6206,11 +6207,11 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'OrderRecord', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'OrderRecordDelete',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderRecord',
         'emits': [
           {
             'event': 'ORDER_RECORD_DELETED',
@@ -6570,7 +6571,7 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'OrderRecord', canonicalName) as never,
     ],
     pages: [
       {

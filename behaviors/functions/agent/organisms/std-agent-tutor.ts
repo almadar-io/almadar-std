@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-tutor';
 const ALIAS = 'AgentTutor';
@@ -231,10 +232,10 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'TeachingSession',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TutorSession',
         'emits': [
           {
             'event': 'ASSESSMENT_DONE',
@@ -1220,7 +1221,7 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'TutorSession', canonicalName) as never,
     ],
     pages: [
       {
@@ -1397,10 +1398,10 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'QuizEngine',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'QuizQuestion',
         'emits': [
           {
             'event': 'QUIZ_GRADED',
@@ -2151,7 +2152,7 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'QuizQuestion', canonicalName) as never,
     ],
     pages: [
       {
@@ -2339,10 +2340,10 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'TutorConversation',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TutorChat',
         'emits': [
           {
             'event': 'SEND_MESSAGE',
@@ -2883,11 +2884,11 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'TutorChat', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'TutorChatAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TutorChat',
         'emits': [
           {
             'event': 'TOKEN_UPDATE',
@@ -3171,7 +3172,7 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'TutorChat', canonicalName) as never,
     ],
     pages: [
       {
@@ -3352,10 +3353,10 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ConceptBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Concept',
         'emits': [
           {
             'event': 'MEMORIZE',
@@ -3862,11 +3863,11 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Concept', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ConceptCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Concept',
         'emits': [
           {
             'event': 'MEMORIZED',
@@ -4146,11 +4147,11 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Concept', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ConceptAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Concept',
         'emits': [
           {
             'event': 'FORGOT',
@@ -4623,7 +4624,7 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Concept', canonicalName) as never,
     ],
     pages: [
       {
@@ -4804,10 +4805,10 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'LevelClassifier',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'StudentAssessment',
         'emits': [
           {
             'event': 'CLASSIFIED',
@@ -5335,11 +5336,11 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'StudentAssessment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'StudentAssessmentNotification',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'StudentAssessment',
         'emits': [
           {
             'event': 'StudentAssessmentLoaded',
@@ -5659,11 +5660,11 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'StudentAssessment', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'StudentAssessmentAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'StudentAssessment',
         'emits': [
           {
             'event': 'SHOW',
@@ -5909,7 +5910,7 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'StudentAssessment', canonicalName) as never,
     ],
     pages: [
       {

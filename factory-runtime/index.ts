@@ -18,6 +18,7 @@
 export { extractManifest } from './extract-manifest.js';
 export {
   applyParamsToOrb,
+  rebindInlineTraitEntity,
   validateOrbitalFactoryParams,
 } from './apply-params-to-orb.js';
 export { applyParamsToWholeOrb } from './apply-params-to-whole-orb.js';

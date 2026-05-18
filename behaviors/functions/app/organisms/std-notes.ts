@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-notes';
 const ALIAS = 'Notes';
@@ -236,7 +237,7 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
           'SEARCH': 'NOTE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'NoteCatalog',
         'category': 'interaction',
         'emits': [
@@ -433,7 +434,7 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Note', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'NoteSearch',
@@ -754,10 +755,10 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'NotePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Note',
         'emits': [
           {
             'event': 'NOTE_CREATED',
@@ -936,7 +937,7 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Note', canonicalName) as never,
     ],
     pages: [
       {
@@ -1337,7 +1338,7 @@ export function stdNotesRichEditorPanelOrbital(params: StdNotesRichEditorPanelOr
           'SEARCH': 'RICH_EDITOR_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'RichEditorPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1397,7 +1398,7 @@ export function stdNotesRichEditorPanelOrbital(params: StdNotesRichEditorPanelOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Document', canonicalName) as never,
       makeTraitRef({
         'ref': 'RichEditor.traits.DocumentEdit',
         'name': 'RichEditorDocumentEdit',

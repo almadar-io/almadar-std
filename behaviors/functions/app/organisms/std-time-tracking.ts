@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-time-tracking';
 const ALIAS = 'TimeTracking';
@@ -242,7 +243,7 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
           'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EmployeeCatalog',
         'category': 'interaction',
         'emits': [
@@ -439,7 +440,7 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Employee', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'EmployeeSearch',
@@ -780,10 +781,10 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EmployeePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Employee',
         'emits': [
           {
             'event': 'EMPLOYEE_CREATED',
@@ -962,7 +963,7 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Employee', canonicalName) as never,
     ],
     pages: [
       {
@@ -1276,7 +1277,7 @@ export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTime
           'SEARCH': 'TIMESHEET_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TimesheetPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1336,7 +1337,7 @@ export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTime
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Timesheet', canonicalName) as never,
       makeTraitRef({
         'ref': 'Timesheet.traits.TimesheetLedger',
         'name': 'TimesheetLedgerView',
@@ -1615,7 +1616,7 @@ export function stdTimeTrackingTimeEntryPanelOrbital(params: StdTimeTrackingTime
           'NOTIFY_CLICK': 'TIME_ENTRY_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TimeEntryPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -1675,7 +1676,7 @@ export function stdTimeTrackingTimeEntryPanelOrbital(params: StdTimeTrackingTime
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TimeEntry', canonicalName) as never,
       makeTraitRef({
         'ref': 'TimeEntry.traits.TimeEntryLog',
         'name': 'TimeEntryLogView',
@@ -1949,7 +1950,7 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
           'SEARCH': 'BILLABLE_HOUR_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'BillableHourPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -2009,7 +2010,7 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'BillableHour', canonicalName) as never,
       makeTraitRef({
         'ref': 'BillableHour.traits.BillableHourTimesheet',
         'name': 'BillableHourTimesheetView',
@@ -2303,7 +2304,7 @@ export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTracki
           'NOTIFY_CLICK': 'APPROVAL_REQUEST_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ApprovalRequestPanel',
         'category': 'interaction',
         'stateMachine': {
@@ -2363,7 +2364,7 @@ export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTracki
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ApprovalRequest', canonicalName) as never,
       makeTraitRef({
         'ref': 'ApprovalRequest.traits.ApprovalRequestPipeline',
         'name': 'ApprovalRequestPipelineView',

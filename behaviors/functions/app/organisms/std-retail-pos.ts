@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-retail-pos';
 const ALIAS = 'RetailPos';
@@ -223,7 +224,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
           'SEARCH': 'SALE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SaleCatalog',
         'category': 'interaction',
         'emits': [
@@ -420,7 +421,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Sale', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'SaleSearch',
@@ -750,10 +751,10 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SalePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Sale',
         'emits': [
           {
             'event': 'SALE_CREATED',
@@ -932,7 +933,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Sale', canonicalName) as never,
     ],
     pages: [
       {

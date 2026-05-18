@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-nonprofit-donations';
 const ALIAS = 'NonprofitDonations';
@@ -229,7 +230,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
           'SEARCH': 'CAMPAIGN_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CampaignCatalog',
         'category': 'interaction',
         'emits': [
@@ -426,7 +427,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'FundraisingCampaign', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'CampaignSearch',
@@ -753,10 +754,10 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CampaignPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'FundraisingCampaign',
         'emits': [
           {
             'event': 'CAMPAIGN_CREATED',
@@ -935,7 +936,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'FundraisingCampaign', canonicalName) as never,
       makeTraitRef({
         'ref': 'Donor.traits.DonorRoster',
         'name': 'CampaignDonorsPanel',

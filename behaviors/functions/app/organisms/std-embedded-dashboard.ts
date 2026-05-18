@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-embedded-dashboard';
 const ALIAS = 'EmbeddedDashboard';
@@ -125,10 +126,10 @@ export function stdEmbeddedDashboardDashboardOrbital(params: StdEmbeddedDashboar
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'EmptyTile',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Dashboard',
         'stateMachine': {
           'states': [
             {
@@ -160,7 +161,7 @@ export function stdEmbeddedDashboardDashboardOrbital(params: StdEmbeddedDashboar
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Dashboard', canonicalName) as never,
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'DefaultKpiStats',

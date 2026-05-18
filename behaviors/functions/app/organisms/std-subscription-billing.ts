@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-subscription-billing';
 const ALIAS = 'SubscriptionBilling';
@@ -227,7 +228,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
           'NOTIFY_CLICK': 'PLAN_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PlanCatalog',
         'category': 'interaction',
         'emits': [
@@ -442,7 +443,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Plan', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PlanSearch',
@@ -790,10 +791,10 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
           'title': 'Trials',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PlanPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Plan',
         'emits': [
           {
             'event': 'PLAN_CREATED',
@@ -972,7 +973,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Plan', canonicalName) as never,
     ],
     pages: [
       {
@@ -1250,7 +1251,7 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
           'SEARCH': 'INVOICE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'InvoiceCatalog',
         'category': 'interaction',
         'emits': [
@@ -1441,7 +1442,7 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'InvoiceNote', canonicalName) as never,
       makeTraitRef({
         'ref': 'Inv.traits.InvoiceManage',
         'name': 'InvoiceManageBlock',
@@ -1531,10 +1532,10 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'InvoiceNotePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'InvoiceNote',
         'emits': [
           {
             'event': 'NOTE_CREATED',
@@ -1662,7 +1663,7 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'InvoiceNote', canonicalName) as never,
     ],
     pages: [
       {
@@ -1908,7 +1909,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
           'SEARCH': 'DUNNING_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DunningCatalog',
         'category': 'interaction',
         'emits': [
@@ -2099,7 +2100,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'DunningNote', canonicalName) as never,
       makeTraitRef({
         'ref': 'Dunning.traits.DunningEscalate',
         'name': 'DunningEscalateBlock',
@@ -2188,10 +2189,10 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'DunningNotePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'DunningNote',
         'emits': [
           {
             'event': 'NOTE_CREATED',
@@ -2319,7 +2320,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'DunningNote', canonicalName) as never,
     ],
     pages: [
       {

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-assistant';
 const ALIAS = 'AgentAssistant';
@@ -267,10 +268,10 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'AssistantConversation',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Assistant',
         'emits': [
           {
             'event': 'SEND_MESSAGE',
@@ -943,11 +944,11 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Assistant', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AssistantAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Assistant',
         'emits': [
           {
             'event': 'TOKEN_UPDATE',
@@ -1232,7 +1233,7 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Assistant', canonicalName) as never,
     ],
     pages: [
       {
@@ -1414,10 +1415,10 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'MemoryBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Memory',
         'emits': [
           {
             'event': 'MEMORIZE',
@@ -1925,11 +1926,11 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Memory', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'MemoryCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Memory',
         'emits': [
           {
             'event': 'MEMORIZED',
@@ -2209,11 +2210,11 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'Memory', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'MemoryAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Memory',
         'emits': [
           {
             'event': 'FORGOT',
@@ -2686,7 +2687,7 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'Memory', canonicalName) as never,
     ],
     pages: [
       {
@@ -2880,10 +2881,10 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'AssistantContextMonitor',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AssistantContext',
         'emits': [
           {
             'event': 'COMPACT',
@@ -4839,11 +4840,11 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'AssistantContext', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AssistantContextNotification',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AssistantContext',
         'emits': [
           {
             'event': 'AssistantContextLoaded',
@@ -5163,11 +5164,11 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'AssistantContext', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'AssistantContextAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AssistantContext',
         'emits': [
           {
             'event': 'SHOW',
@@ -5658,7 +5659,7 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'AssistantContext', canonicalName) as never,
     ],
     pages: [
       {
@@ -5833,10 +5834,10 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ProviderManager',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ProviderConfig',
         'emits': [
           {
             'event': 'SWITCHED',
@@ -6398,11 +6399,11 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ProviderConfig', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProviderConfigNotification',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ProviderConfig',
         'emits': [
           {
             'event': 'ProviderConfigLoaded',
@@ -6722,11 +6723,11 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ProviderConfig', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ProviderConfigAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ProviderConfig',
         'emits': [
           {
             'event': 'SHOW',
@@ -7012,7 +7013,7 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'ProviderConfig', canonicalName) as never,
     ],
     pages: [
       {
@@ -7208,10 +7209,10 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'AssistantTabs',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'AssistantNav',
         'emits': [
           {
             'event': 'SELECT_TAB',
@@ -7517,7 +7518,7 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'AssistantNav', canonicalName) as never,
     ],
     pages: [
       {
@@ -7679,10 +7680,10 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'MemoryDrawer',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MemorySidebar',
         'emits': [
           {
             'event': 'MemorySidebarLoaded',
@@ -8000,7 +8001,7 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'MemorySidebar', canonicalName) as never,
     ],
     pages: [
       {

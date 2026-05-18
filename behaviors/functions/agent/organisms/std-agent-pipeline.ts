@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-pipeline';
 const ALIAS = 'AgentPipeline';
@@ -300,10 +301,10 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'PipelinePlanner',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelinePlan',
         'emits': [
           {
             'event': 'PLAN_READY',
@@ -1525,11 +1526,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelinePlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerTaskInput',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelinePlan',
         'emits': [
           {
             'event': 'PipelinePlanLoaded',
@@ -1721,11 +1722,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelinePlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerClassifierFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelinePlan',
         'emits': [
           {
             'event': 'SAVE',
@@ -2264,11 +2265,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelinePlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelinePlan',
         'emits': [
           {
             'event': 'SAVE',
@@ -2795,11 +2796,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelinePlan', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PlannerMemoryLifecycle',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelinePlan',
         'emits': [
           {
             'event': 'PipelinePlanLoaded',
@@ -3103,7 +3104,7 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'PipelinePlan', canonicalName) as never,
     ],
     pages: [
       {
@@ -3384,10 +3385,10 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'PipelineExecutor',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineExec',
         'emits': [
           {
             'event': 'STEP_COMPLETE',
@@ -4797,11 +4798,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelineExec', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopStepProgress',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineExec',
         'emits': [
           {
             'event': 'RESET',
@@ -5956,11 +5957,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelineExec', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopCompletionFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineExec',
         'emits': [
           {
             'event': 'SAVE',
@@ -6486,11 +6487,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelineExec', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopToolCallFlow',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineExec',
         'emits': [
           {
             'event': 'SAVE',
@@ -6992,11 +6993,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelineExec', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ToolLoopContextMonitor',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineExec',
         'emits': [
           {
             'event': 'RESET',
@@ -8970,7 +8971,7 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'PipelineExec', canonicalName) as never,
     ],
     pages: [
       {
@@ -9144,10 +9145,10 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'PipelineSessionManager',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineSession',
         'emits': [
           {
             'event': 'FORK',
@@ -9490,11 +9491,11 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelineSession', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PipelineSessionLabel',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineSession',
         'emits': [
           {
             'event': 'LABELED',
@@ -9804,11 +9805,11 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'PipelineSession', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PipelineSessionAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'PipelineSession',
         'emits': [
           {
             'event': 'ENDED',
@@ -10268,7 +10269,7 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'PipelineSession', canonicalName) as never,
     ],
     pages: [
       {
@@ -10455,10 +10456,10 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
       })(),
     } as Entity,
     traits: [
-      {
+      rebindInlineTraitEntity({
         'name': 'ExecutionLogBrowse',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ExecutionLog',
         'emits': [
           {
             'event': 'MEMORIZE',
@@ -10966,11 +10967,11 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ExecutionLog', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ExecutionLogCreate',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ExecutionLog',
         'emits': [
           {
             'event': 'MEMORIZED',
@@ -11250,11 +11251,11 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
           ],
         },
         'scope': 'collection',
-      } as never,
-      {
+      } as never, 'ExecutionLog', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'ExecutionLogAgent',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'ExecutionLog',
         'emits': [
           {
             'event': 'FORGOT',
@@ -11727,7 +11728,7 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'ExecutionLog', canonicalName) as never,
     ],
     pages: [
       {

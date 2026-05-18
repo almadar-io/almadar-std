@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-restaurant-pos';
 const ALIAS = 'RestaurantPos';
@@ -214,7 +215,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           'SEARCH': 'MENU_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MenuCatalog',
         'category': 'interaction',
         'emits': [
@@ -422,7 +423,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MenuRecord', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MenuSearch',
@@ -656,10 +657,10 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MenuPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'MenuRecord',
         'emits': [
           {
             'event': 'MENU_CREATED',
@@ -838,7 +839,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MenuRecord', canonicalName) as never,
     ],
     pages: [
       {
@@ -1145,10 +1146,10 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TablePersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TableRecord',
         'emits': [
           {
             'event': 'TABLE_UPDATED',
@@ -1226,7 +1227,7 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TableRecord', canonicalName) as never,
     ],
     pages: [
       {
@@ -1484,10 +1485,10 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
         'ref': 'Cart.traits.CartItemPersistor',
         'name': 'OrderCartPersistor',
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'OrderClose',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'OrderTicket',
         'emits': [
           {
             'event': 'SUBMIT',
@@ -1896,7 +1897,7 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
           ],
         },
         'scope': 'collection',
-      } as never,
+      } as never, 'OrderTicket', canonicalName) as never,
     ],
     pages: [
       {

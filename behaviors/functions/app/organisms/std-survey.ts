@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-survey';
 const ALIAS = 'Survey';
@@ -204,7 +205,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
           'NOTIFY_CLICK': 'SURVEY_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SurveyCatalog',
         'category': 'interaction',
         'emits': [
@@ -419,7 +420,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Survey', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'SurveySearch',
@@ -716,10 +717,10 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'SurveyPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Survey',
         'emits': [
           {
             'event': 'SURVEY_CREATED',
@@ -898,7 +899,7 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Survey', canonicalName) as never,
     ],
     pages: [
       {
@@ -1176,7 +1177,7 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
           'SEARCH': 'RESPONSE_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ResponseDashboard',
         'category': 'interaction',
         'listens': [
@@ -1334,7 +1335,7 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Response', canonicalName) as never,
       makeTraitRef({
         'ref': 'Collector.traits.ResponseCollect',
         'name': 'ResponseCollect',

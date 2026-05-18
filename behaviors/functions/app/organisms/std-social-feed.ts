@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-social-feed';
 const ALIAS = 'SocialFeed';
@@ -197,7 +198,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           'NOTIFY_CLICK': 'POST_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'FeedCatalog',
         'category': 'interaction',
         'emits': [
@@ -392,7 +393,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Post', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PostSearch',
@@ -671,7 +672,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           'bucket': 'social-feed-images',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'PostImageUploadForm',
         'category': 'interaction',
         'emits': [
@@ -746,11 +747,11 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Post', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PostPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Post',
         'emits': [
           {
             'event': 'POST_CREATED',
@@ -937,11 +938,11 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
-      {
+      } as never, 'Post', canonicalName) as never,
+      rebindInlineTraitEntity({
         'name': 'PostLikeTracker',
         'category': 'interaction',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Post',
         'emits': [
           {
             'event': 'DO_UPDATE',
@@ -1050,7 +1051,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Post', canonicalName) as never,
     ],
     pages: [
       {
@@ -1320,7 +1321,7 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
           'NOTIFY_CLICK': 'COMMENT_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CommentDisplay',
         'category': 'interaction',
         'emits': [
@@ -1503,7 +1504,7 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Comment', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'CommentBrowseList',
@@ -1683,10 +1684,10 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CommentPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Comment',
         'emits': [
           {
             'event': 'COMMENT_CREATED',
@@ -1865,7 +1866,7 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Comment', canonicalName) as never,
     ],
     pages: [
       {

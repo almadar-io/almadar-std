@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-fitness-studio';
 const ALIAS = 'FitnessStudio';
@@ -216,7 +217,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
           'SEARCH': 'MEMBER_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MemberCatalog',
         'category': 'interaction',
         'emits': [
@@ -413,7 +414,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Member', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MemberSearch',
@@ -754,10 +755,10 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MemberPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Member',
         'emits': [
           {
             'event': 'MEMBER_CREATED',
@@ -936,7 +937,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Member', canonicalName) as never,
     ],
     pages: [
       {
@@ -1175,7 +1176,7 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
           'SEARCH': 'CLASS_SESSION_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ClassSessionDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -1241,7 +1242,7 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ClassSessionRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'ClassSession.traits.ClassSessionSchedule',
         'name': 'ClassSessionSchedule',
@@ -1451,7 +1452,7 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
           'SEARCH': 'MEMBERSHIP_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'MembershipDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -1517,7 +1518,7 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'MembershipRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'Membership.traits.MembershipDirectory',
         'name': 'MembershipDirectory',
@@ -1727,7 +1728,7 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
           'NOTIFY_CLICK': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'ClassRosterDisplay',
         'category': 'interaction',
         'stateMachine': {
@@ -1793,7 +1794,7 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'ClassRosterRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'ClassRoster.traits.RosterEntryRoster',
         'name': 'ClassRosterEntries',

@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-event-ticketing';
 const ALIAS = 'EventTicketing';
@@ -231,7 +232,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
           'SEARCH': 'EVENT_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EventCatalog',
         'category': 'interaction',
         'emits': [
@@ -440,7 +441,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'EventRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'EventSearch',
@@ -799,10 +800,10 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'EventPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'EventRow',
         'emits': [
           {
             'event': 'EVENT_CREATED',
@@ -981,7 +982,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'EventRow', canonicalName) as never,
     ],
     pages: [
       {
@@ -1290,7 +1291,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
           'SEARCH': 'TICKET_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TicketShop',
         'category': 'interaction',
         'emits': [
@@ -1459,7 +1460,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Ticket', canonicalName) as never,
       makeTraitRef({
         'ref': 'TierAtom.traits.TicketTierManage',
         'name': 'TicketTierShop',
@@ -1567,10 +1568,10 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TicketPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'Ticket',
         'emits': [
           {
             'event': 'TICKET_ISSUED',
@@ -1648,7 +1649,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Ticket', canonicalName) as never,
     ],
     pages: [
       {
@@ -1916,7 +1917,7 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
           'NOTIFY_CLICK': 'CHECKIN_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'CheckinDashboard',
         'category': 'interaction',
         'listens': [
@@ -2032,7 +2033,7 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'Attendee', canonicalName) as never,
       makeTraitRef({
         'ref': 'CheckinAtom.traits.CheckinScan',
         'name': 'GateScanner',
@@ -2299,7 +2300,7 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
           'NOTIFY_CLICK': 'WAITLIST_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WaitlistDashboard',
         'category': 'interaction',
         'emits': [
@@ -2454,7 +2455,7 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WaitlistRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'WaitlistAtom.traits.WaitlistManage',
         'name': 'WaitlistManageView',
@@ -2533,10 +2534,10 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WaitlistPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'WaitlistRow',
         'emits': [
           {
             'event': 'WAITLIST_JOINED',
@@ -2614,7 +2615,7 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WaitlistRow', canonicalName) as never,
     ],
     pages: [
       {

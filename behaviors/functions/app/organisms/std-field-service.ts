@@ -19,6 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
+import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-field-service';
 const ALIAS = 'FieldService';
@@ -248,7 +249,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
           'NOTIFY_CLICK': 'WORK_ORDER_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WorkOrderCatalog',
         'category': 'interaction',
         'emits': [
@@ -462,7 +463,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WorkOrderRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'WorkOrderSearch',
@@ -818,10 +819,10 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'WorkOrderPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'WorkOrderRow',
         'emits': [
           {
             'event': 'WORK_ORDER_CREATED',
@@ -1000,7 +1001,7 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'WorkOrderRow', canonicalName) as never,
     ],
     pages: [
       {
@@ -1301,7 +1302,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
           'SEARCH': 'TECHNICIAN_SEARCH',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TechnicianCatalog',
         'category': 'interaction',
         'emits': [
@@ -1501,7 +1502,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TechnicianRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'Browse.traits.BrowseItemBrowse',
         'name': 'TechnicianBrowseList',
@@ -1693,10 +1694,10 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
           },
         ],
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'TechnicianPersistor',
         'category': 'lifecycle',
-        'linkedEntity': canonicalName,
+        'linkedEntity': 'TechnicianRow',
         'emits': [
           {
             'event': 'TECHNICIAN_CREATED',
@@ -1867,7 +1868,7 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'TechnicianRow', canonicalName) as never,
     ],
     pages: [
       {
@@ -2093,7 +2094,7 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
           'NOTIFY_CLICK': 'JOB_CHECKIN_NOTIFICATIONS_OPEN',
         },
       }),
-      {
+      rebindInlineTraitEntity({
         'name': 'JobCheckinComposer',
         'category': 'interaction',
         'stateMachine': {
@@ -2173,7 +2174,7 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
           ],
         },
         'scope': 'instance',
-      } as never,
+      } as never, 'JobCheckinRow', canonicalName) as never,
       makeTraitRef({
         'ref': 'Checkin.traits.CheckinScan',
         'name': 'JobArrivalCheckin',
