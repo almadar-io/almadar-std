@@ -205,14 +205,35 @@ function isPageRefObject(p: PageOrRef): p is PageRefObject {
   return typeof p.ref === 'string';
 }
 
+/**
+ * Rebind the `linkedEntity` on any inline trait or inline page literal that
+ * was authored against the canonical entity name. Mirrors the substitution
+ * the codegen emits for ref-shaped traits/pages, so `params.entityName`
+ * overrides flow through inline literals too. Symmetric with
+ * `tools/almadar-pattern-sync/src/std-ts/regenerate.ts` —
+ * the two paths MUST stay in lockstep (see plan rule 6).
+ */
+function rewriteInlineLinkedEntity<T extends { linkedEntity?: string }>(
+  shape: T,
+  oldName: string,
+  newName: string,
+): T {
+  if (shape.linkedEntity !== oldName) return shape;
+  return { ...shape, linkedEntity: newName };
+}
+
+type TraitInput = OrbitalSchema['orbitals'][number]['traits'][number];
+type PageInput = NonNullable<OrbitalSchema['orbitals'][number]['pages']>[number];
+
 function rebuildTraits(
   ctx: OverlayContext,
   effectiveEntityName: string,
   traits: OrbitalSchema['orbitals'][number]['traits'],
 ): OrbitalDefinition['traits'] {
-  return traits.map((t) => {
+  return traits.map((t): TraitInput => {
     if (!isTraitReferenceObject(t)) {
-      return t;
+      if (typeof t === 'string') return t;
+      return rewriteInlineLinkedEntity(t, ctx.canonicalEntityName, effectiveEntityName);
     }
     const rewrittenLinkedEntity =
       t.linkedEntity === ctx.canonicalEntityName ? effectiveEntityName : t.linkedEntity;
@@ -233,8 +254,12 @@ function rebuildPages(
   pages: OrbitalSchema['orbitals'][number]['pages'],
 ): NonNullable<OrbitalDefinition['pages']> {
   if (!pages) return [];
-  return pages.map((p) => {
+  return pages.map((p): PageInput => {
     if (!isPageRefObject(p)) {
+      // Inline `OrbitalPage` has no top-level `linkedEntity` (it carries
+      // `primaryEntity` and per-trait `linkedEntity` via `PageTraitRef`).
+      // The AGENT-005 fix lives on the ref branch + on inline traits inside
+      // the page's `traits[]`, both already symmetric with codegen.
       return p;
     }
     const rewrittenLinkedEntity =
