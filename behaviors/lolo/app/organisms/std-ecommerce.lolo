@@ -207,6 +207,12 @@ ProductLoaded
         (set @entity.sku "")
         (fetch Product { emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
       VIEW -> open
+        (set @entity.name "@payload.row.name")
+        (set @entity.description "@payload.row.description")
+        (set @entity.price "@payload.row.price")
+        (set @entity.category "@payload.row.category")
+        (set @entity.sku "@payload.row.sku")
+        (set @entity.inStock "@payload.row.inStock")
         (fetch Product {id: "@payload.id" , emit: { success: "ProductLoaded", failure: "ProductLoadFailed" }, emit: { success: "ProductLoaded", failure: "ProductLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Price" }, { type: "typography", variant: "body", content: "@entity.price" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Sku" }, { type: "typography", variant: "body", content: "@entity.sku" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "In Stock" }, { type: "typography", variant: "body", content: "@entity.inStock" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
@@ -220,7 +226,7 @@ ProductLoaded
         (render-ui main { type: "box" })
     }
     listens {
-      VIEW { id : string! }
+      VIEW { id : string!, row : Product }
       SAVE { data : object! }
           ProductLoadFailed { error : string, code : string }
       ProductBrowseList.VIEW -> VIEW
@@ -734,6 +740,12 @@ OrderRecordLoaded
         (set @entity.status "")
         (fetch OrderRecord { emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" } })
       VIEW -> open
+        (set @entity.customerName "@payload.row.customerName")
+        (set @entity.email "@payload.row.email")
+        (set @entity.shippingAddress "@payload.row.shippingAddress")
+        (set @entity.paymentMethod "@payload.row.paymentMethod")
+        (set @entity.orderTotal "@payload.row.orderTotal")
+        (set @entity.status "@payload.row.status")
         (fetch OrderRecord {id: "@payload.id" , emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" }, emit: { success: "OrderRecordLoaded", failure: "OrderRecordLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye" }, { type: "typography", variant: "h3", content: "@entity.customerName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Customer Name" }, { type: "typography", variant: "body", content: "@entity.customerName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Shipping Address" }, { type: "typography", variant: "body", content: "@entity.shippingAddress" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Payment Method" }, { type: "typography", variant: "body", content: "@entity.paymentMethod" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Order Total" }, { type: "typography", variant: "body", content: "@entity.orderTotal" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", action: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", action: "CLOSE", variant: "ghost" }] }] })
     }
@@ -748,7 +760,7 @@ OrderRecordLoaded
     }
     listens {
       OrderRecordLoadFailed { error : string, code : string }
-      VIEW { id : string }
+      VIEW { id : string, row : OrderRecord }
       OrderRecordBrowse.VIEW -> VIEW
     }
   }
