@@ -4,15 +4,15 @@
  *
  * Reads every organism + atom in `behaviors-registry.json`, composes a
  * domain-text snippet per entry, sends a single batch request to the
- * OpenAI Embeddings API, and writes the manifest to
- * `behaviors/behaviors-embeddings.json`. `tsup.config.ts` then copies it
- * into `dist/` alongside the registry JSON so consumers find it next to
- * the published package's other artifacts.
+ * OpenRouter Embeddings API (baai/bge-base-en-v1.5, 768-d), and writes
+ * the manifest to `behaviors/behaviors-embeddings.json`. `tsup.config.ts`
+ * then copies it into `dist/` alongside the registry JSON so consumers
+ * find it next to the published package's other artifacts.
  *
  * Runtime: ~1 second for ~190 entries × 1 batch call.
- * Cost: text-embedding-3-small ≈ $0.02 per 1M tokens × ~20k tokens ≈ $0.0004 per bake.
+ * Cost: bge-base-en-v1.5 via OpenRouter ≈ $0.005 per 1M tokens × ~20k tokens ≈ $0.0001 per bake.
  *
- * Required env var: `OPENAI_API_KEY`. Skips with a warning when unset —
+ * Required env var: `OPEN_ROUTER_API_KEY`. Skips with a warning when unset —
  * dev workflows can `pnpm run build` without embeddings (consumers fall
  * back to a full catalog walk if `behaviors-embeddings.json` is missing).
  *
@@ -20,7 +20,7 @@
  *   pnpm run build:embeddings          # bake to behaviors/behaviors-embeddings.json
  *   pnpm run build                     # bake + tsup
  *
- * In CI: add OPENAI_API_KEY to the std publish workflow's secrets.
+ * In CI: add OPEN_ROUTER_API_KEY to the std publish workflow's secrets.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -34,8 +34,10 @@ const REGISTRY_PATH = join(STD_ROOT, 'behaviors', 'behaviors-registry.json');
 const OUTPUT_PATH = join(STD_ROOT, 'behaviors', 'behaviors-embeddings.json');
 const PKG_PATH = join(STD_ROOT, 'package.json');
 
-const EMBEDDING_MODEL = 'text-embedding-3-small';
-const EMBEDDING_DIMS = 1536;
+const EMBEDDING_PROVIDER = 'openrouter' as const;
+const EMBEDDING_MODEL = 'baai/bge-base-en-v1.5';
+const EMBEDDING_DIMS = 768;
+const PRICE_PER_1M = 0.005;
 
 interface RegistryEntry {
   name: string;
@@ -76,10 +78,10 @@ function buildEntryText(entry: RegistryEntry): string {
 }
 
 async function main(): Promise<void> {
-  const apiKey = process.env['OPENAI_API_KEY'];
+  const apiKey = process.env['OPEN_ROUTER_API_KEY'];
   if (!apiKey) {
     console.warn(
-      '[build-embeddings] OPENAI_API_KEY not set — skipping embeddings bake. ' +
+      '[build-embeddings] OPEN_ROUTER_API_KEY not set — skipping embeddings bake. ' +
         'Consumers will fall back to the full catalog walk at runtime.',
     );
     process.exit(0);
@@ -102,12 +104,12 @@ async function main(): Promise<void> {
     texts.push(buildEntryText(entry));
   }
 
-  const client = new EmbeddingClient({ provider: 'openai', model: EMBEDDING_MODEL });
-  console.log(`[build-embeddings] Calling ${EMBEDDING_MODEL} for ${texts.length} entries...`);
+  const client = new EmbeddingClient({ provider: EMBEDDING_PROVIDER, model: EMBEDDING_MODEL });
+  console.log(`[build-embeddings] Calling ${EMBEDDING_MODEL} via ${EMBEDDING_PROVIDER} for ${texts.length} entries...`);
   const result = await client.embedBatch(texts);
   console.log(
     `[build-embeddings] Got ${result.embeddings.length} vectors; ` +
-      `tokens: ${result.usage.totalTokens} (≈ $${(result.usage.totalTokens / 1_000_000 * 0.02).toFixed(4)})`,
+      `tokens: ${result.usage.totalTokens} (≈ $${(result.usage.totalTokens / 1_000_000 * PRICE_PER_1M).toFixed(6)})`,
   );
 
   const vectors: Record<string, number[]> = {};
