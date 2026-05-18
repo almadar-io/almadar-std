@@ -164,5 +164,67 @@ orbital RatingReviewOrbital {
       ReviewSaveFailed   { error : string, code : string }
     }
   }
+  trait RatingReviewSubmit -> ReviewView [interaction, instance] {
+    config {
+      title         : string  = "Write a review"
+      submitLabel   : string  = "Submit review"
+      cancelLabel   : string  = "Cancel"
+      submitEvent   : string  = "SUBMIT_REVIEW"
+      maxStars      : number  = 5
+      allowComment  : boolean = true
+      allowPhotos   : boolean = false
+    }
+    initial: composing
+    state composing {
+      INIT -> composing
+        (set @entity.draftRating 0)
+        (set @entity.draftComment "")
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: "@entity.draftRating", max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+      RATE_DRAFT -> composing
+        (set @entity.draftRating @payload.rating)
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: "@entity.draftRating", max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+      SUBMIT_REVIEW -> submitting
+        (persist create ReviewView { rating: @entity.draftRating, comment: @entity.draftComment } { emit: { success: "ReviewSaved", failure: "ReviewSaveFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "send", size: "lg" }, { type: "typography", content: "Submitting…", variant: "h3" }] })
+      CANCEL_REVIEW -> composing
+        (set @entity.draftRating 0)
+        (set @entity.draftComment "")
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: 0, max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+    }
+    state submitting {
+      ReviewSaved -> submitted
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Thanks for your review!", variant: "h2" }] })
+      ReviewSaveFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Submit failed", message: "@entity.errorMessage" })
+    }
+    state submitted {
+      RESTART -> composing
+        (set @entity.draftRating 0)
+        (set @entity.draftComment "")
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: 0, max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+    }
+    state error {
+      RESTART -> composing
+        (render-ui main { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "star-rating", value: 0, max: "@config.maxStars", action: "RATE_DRAFT" }, { type: "form-section", entity: "@entity", mode: "edit", submitEvent: "SUBMIT_REVIEW", cancelEvent: "CANCEL_REVIEW", submitLabel: "@config.submitLabel", fields: ["draftComment"] }] }] })
+    }
+    emits {
+      RATE_DRAFT         { rating : number }
+      SUBMIT_REVIEW      { data : object }
+      CANCEL_REVIEW      { }
+      RESTART            { }
+      ReviewSaved        { row : object }
+      ReviewSaveFailed   { error : string, code : string }
+    }
+    listens {
+      RATE_DRAFT         { rating : number }
+      SUBMIT_REVIEW      { data : object }
+      CANCEL_REVIEW      { }
+      RESTART            { }
+      ReviewSaved        { row : object }
+      ReviewSaveFailed   { error : string, code : string }
+    }
+  }
   page "/reviews" as RatingReviewPage -> RatingReviewBoard
+  page "/reviews/new" as RatingReviewSubmitPage -> RatingReviewSubmit
 }
