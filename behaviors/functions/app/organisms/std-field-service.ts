@@ -75,7 +75,7 @@ export interface StdFieldServiceWorkOrderOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WorkOrderAppLayout' | 'WorkOrderSearch' | 'WorkOrderFilter' | 'WorkOrderStats' | 'WorkOrderBrowseList' | 'WorkOrderDispatch' | 'WorkOrderRoutes' | 'WorkOrderCreate' | 'WorkOrderEdit' | 'WorkOrderView' | 'WorkOrderDelete',
+    'WorkOrderAppLayout' | 'WorkOrderSearch' | 'WorkOrderFilter' | 'WorkOrderStats' | 'WorkOrderBrowseList' | 'WorkOrderDispatch' | 'WorkOrderRoutes' | 'WorkOrderCreate' | 'WorkOrderEdit' | 'WorkOrderView' | 'WorkOrderDelete' | 'WorkOrderCatalog' | 'WorkOrderPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1057,8 +1057,11 @@ export function stdFieldServiceWorkOrderOrbital(params: StdFieldServiceWorkOrder
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1121,7 +1124,10 @@ export function isStdFieldServiceWorkOrderOrbitalParams(p: object): p is StdFiel
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFieldServiceWorkOrderOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFieldServiceWorkOrderOrbitalManifest.traitNames,
+      ...StdFieldServiceWorkOrderOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1169,7 +1175,7 @@ export interface StdFieldServiceTechnicianOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TechnicianAppLayout' | 'TechnicianBrowseList' | 'TechnicianDispatchBoard' | 'TechnicianFieldCheckin' | 'TechnicianCreate' | 'TechnicianEdit' | 'TechnicianView',
+    'TechnicianAppLayout' | 'TechnicianBrowseList' | 'TechnicianDispatchBoard' | 'TechnicianFieldCheckin' | 'TechnicianCreate' | 'TechnicianEdit' | 'TechnicianView' | 'TechnicianCatalog' | 'TechnicianPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1912,8 +1918,11 @@ export function stdFieldServiceTechnicianOrbital(params: StdFieldServiceTechnici
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1972,7 +1981,10 @@ export function isStdFieldServiceTechnicianOrbitalParams(p: object): p is StdFie
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFieldServiceTechnicianOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFieldServiceTechnicianOrbitalManifest.traitNames,
+      ...StdFieldServiceTechnicianOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2020,7 +2032,7 @@ export interface StdFieldServiceJobCheckinOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'JobCheckinAppLayout' | 'JobArrivalCheckin' | 'JobCompletionSignature',
+    'JobCheckinAppLayout' | 'JobArrivalCheckin' | 'JobCompletionSignature' | 'JobCheckinComposer',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2219,8 +2231,11 @@ export function stdFieldServiceJobCheckinOrbital(params: StdFieldServiceJobCheck
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2274,7 +2289,10 @@ export function isStdFieldServiceJobCheckinOrbitalParams(p: object): p is StdFie
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFieldServiceJobCheckinOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFieldServiceJobCheckinOrbitalManifest.traitNames,
+      ...StdFieldServiceJobCheckinOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

@@ -75,7 +75,7 @@ export interface StdRetailPosSaleOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SaleAppLayout' | 'SaleSearch' | 'SaleFilter' | 'SaleStats' | 'SaleGraphs' | 'SaleBrowseList' | 'SaleCreate' | 'SaleEdit' | 'SaleView' | 'SaleDelete',
+    'SaleAppLayout' | 'SaleSearch' | 'SaleFilter' | 'SaleStats' | 'SaleGraphs' | 'SaleBrowseList' | 'SaleCreate' | 'SaleEdit' | 'SaleView' | 'SaleDelete' | 'SaleCatalog' | 'SalePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -986,8 +986,11 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1049,7 +1052,10 @@ export function isStdRetailPosSaleOrbitalParams(p: object): p is StdRetailPosSal
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRetailPosSaleOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRetailPosSaleOrbitalManifest.traitNames,
+      ...StdRetailPosSaleOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1271,8 +1277,11 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1324,7 +1333,10 @@ export function isStdRetailPosCheckoutOrbitalParams(p: object): p is StdRetailPo
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRetailPosCheckoutOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRetailPosCheckoutOrbitalManifest.traitNames,
+      ...StdRetailPosCheckoutOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1540,8 +1552,11 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1593,7 +1608,10 @@ export function isStdRetailPosReceiptOrbitalParams(p: object): p is StdRetailPos
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRetailPosReceiptOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRetailPosReceiptOrbitalManifest.traitNames,
+      ...StdRetailPosReceiptOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1798,8 +1816,11 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1851,7 +1872,10 @@ export function isStdRetailPosCustomerOrbitalParams(p: object): p is StdRetailPo
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRetailPosCustomerOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRetailPosCustomerOrbitalManifest.traitNames,
+      ...StdRetailPosCustomerOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

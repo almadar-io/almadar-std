@@ -75,7 +75,7 @@ export interface StdForumQuestionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'QuestionAppLayout' | 'QuestionSearch' | 'QuestionFilter' | 'QuestionStats' | 'QuestionTagTree' | 'QuestionBrowseList' | 'QuestionThread' | 'QuestionVote' | 'QuestionCreate' | 'QuestionEdit' | 'QuestionView' | 'QuestionDeleteConfirm',
+    'QuestionAppLayout' | 'QuestionSearch' | 'QuestionFilter' | 'QuestionStats' | 'QuestionTagTree' | 'QuestionBrowseList' | 'QuestionThread' | 'QuestionVote' | 'QuestionCreate' | 'QuestionEdit' | 'QuestionView' | 'QuestionDeleteConfirm' | 'QuestionCatalog' | 'QuestionPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1014,8 +1014,11 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1079,7 +1082,10 @@ export function isStdForumQuestionOrbitalParams(p: object): p is StdForumQuestio
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdForumQuestionOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdForumQuestionOrbitalManifest.traitNames,
+      ...StdForumQuestionOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1127,7 +1133,7 @@ export interface StdForumModQueueOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ModerationAppLayout' | 'ModerationQueue' | 'ModerationFlagBrowse' | 'ModerationDecisionBrowse' | 'ModerationRevertConfirm',
+    'ModerationAppLayout' | 'ModerationQueue' | 'ModerationFlagBrowse' | 'ModerationDecisionBrowse' | 'ModerationRevertConfirm' | 'ModerationDisplay' | 'ModerationPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1694,8 +1700,11 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1752,7 +1761,10 @@ export function isStdForumModQueueOrbitalParams(p: object): p is StdForumModQueu
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdForumModQueueOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdForumModQueueOrbitalManifest.traitNames,
+      ...StdForumModQueueOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

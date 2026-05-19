@@ -75,7 +75,7 @@ export interface StdIotDashboardSensorReadingOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SensorAppLayout' | 'SensorStats' | 'SensorGraphs' | 'SensorBrowseList',
+    'SensorAppLayout' | 'SensorStats' | 'SensorGraphs' | 'SensorBrowseList' | 'SensorCatalog',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -420,8 +420,11 @@ export function stdIotDashboardSensorReadingOrbital(params: StdIotDashboardSenso
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -476,7 +479,10 @@ export function isStdIotDashboardSensorReadingOrbitalParams(p: object): p is Std
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdIotDashboardSensorReadingOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdIotDashboardSensorReadingOrbitalManifest.traitNames,
+      ...StdIotDashboardSensorReadingOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -524,7 +530,7 @@ export interface StdIotDashboardDeviceOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DeviceAppLayout' | 'DeviceSearch' | 'DeviceFilter' | 'DeviceBrowseList' | 'DeviceCreate' | 'DeviceEdit' | 'DeviceView' | 'DeviceDelete',
+    'DeviceAppLayout' | 'DeviceSearch' | 'DeviceFilter' | 'DeviceBrowseList' | 'DeviceCreate' | 'DeviceEdit' | 'DeviceView' | 'DeviceDelete' | 'DeviceCatalog' | 'DevicePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1306,8 +1312,11 @@ export function stdIotDashboardDeviceOrbital(params: StdIotDashboardDeviceOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1367,7 +1376,10 @@ export function isStdIotDashboardDeviceOrbitalParams(p: object): p is StdIotDash
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdIotDashboardDeviceOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdIotDashboardDeviceOrbitalManifest.traitNames,
+      ...StdIotDashboardDeviceOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1415,7 +1427,7 @@ export interface StdIotDashboardDeviceAlertOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DeviceAlertAppLayout' | 'AlertBrowseList' | 'AlertCreate' | 'AlertEdit' | 'AlertView' | 'AlertDelete' | 'AlertEmail',
+    'DeviceAlertAppLayout' | 'AlertBrowseList' | 'AlertCreate' | 'AlertEdit' | 'AlertView' | 'AlertDelete' | 'AlertEmail' | 'AlertCatalog' | 'AlertPersistor' | 'AlertEmailNotice' | 'DeviceAlertCircuitBreaker',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2872,8 +2884,11 @@ export function stdIotDashboardDeviceAlertOrbital(params: StdIotDashboardDeviceA
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2934,7 +2949,10 @@ export function isStdIotDashboardDeviceAlertOrbitalParams(p: object): p is StdIo
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdIotDashboardDeviceAlertOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdIotDashboardDeviceAlertOrbitalManifest.traitNames,
+      ...StdIotDashboardDeviceAlertOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

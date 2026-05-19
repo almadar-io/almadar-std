@@ -75,7 +75,7 @@ export interface StdRealtimeChatChatMessageOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ChatAppLayout' | 'ChatSearch' | 'ChatStats' | 'ChatMessageCompose' | 'ChatMessageView',
+    'ChatAppLayout' | 'ChatSearch' | 'ChatStats' | 'ChatMessageCompose' | 'ChatMessageView' | 'ChatRoom' | 'ChatMessageBrowse' | 'ChatMessagePersistor' | 'ChatMessageAttachment' | 'ChatSmsNotify',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1327,8 +1327,11 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1388,7 +1391,10 @@ export function isStdRealtimeChatChatMessageOrbitalParams(p: object): p is StdRe
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRealtimeChatChatMessageOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRealtimeChatChatMessageOrbitalManifest.traitNames,
+      ...StdRealtimeChatChatMessageOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1436,7 +1442,7 @@ export interface StdRealtimeChatChannelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ChannelAppLayout' | 'ChannelBrowseList' | 'ChannelCreate' | 'ChannelEdit' | 'ChannelView' | 'ChannelDelete',
+    'ChannelAppLayout' | 'ChannelBrowseList' | 'ChannelCreate' | 'ChannelEdit' | 'ChannelView' | 'ChannelDelete' | 'ChannelCatalog' | 'ChannelPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2064,8 +2070,11 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2123,7 +2132,10 @@ export function isStdRealtimeChatChannelOrbitalParams(p: object): p is StdRealti
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRealtimeChatChannelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRealtimeChatChannelOrbitalManifest.traitNames,
+      ...StdRealtimeChatChannelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2171,7 +2183,7 @@ export interface StdRealtimeChatOnlineUserOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'OnlineUserAppLayout',
+    'OnlineUserAppLayout' | 'OnlineUserDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2606,8 +2618,11 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2659,7 +2674,10 @@ export function isStdRealtimeChatOnlineUserOrbitalParams(p: object): p is StdRea
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRealtimeChatOnlineUserOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRealtimeChatOnlineUserOrbitalManifest.traitNames,
+      ...StdRealtimeChatOnlineUserOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

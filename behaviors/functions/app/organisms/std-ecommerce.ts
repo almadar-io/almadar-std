@@ -76,7 +76,7 @@ export interface StdEcommerceProductOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ProductAppLayout' | 'ProductBrowseList',
+    'ProductAppLayout' | 'ProductBrowseList' | 'ProductCatalog' | 'ProductCreate' | 'ProductEdit' | 'ProductView' | 'ProductDelete',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1925,8 +1925,11 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1983,7 +1986,10 @@ export function isStdEcommerceProductOrbitalParams(p: object): p is StdEcommerce
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEcommerceProductOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEcommerceProductOrbitalManifest.traitNames,
+      ...StdEcommerceProductOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2031,7 +2037,7 @@ export interface StdEcommerceCartItemOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    never,
+    'CartItemCartBrowse' | 'CartItemAddItem' | 'CartItemRemoveConfirm',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3374,8 +3380,11 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3428,7 +3437,10 @@ export function isStdEcommerceCartItemOrbitalParams(p: object): p is StdEcommerc
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEcommerceCartItemOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEcommerceCartItemOrbitalManifest.traitNames,
+      ...StdEcommerceCartItemOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -3476,7 +3488,7 @@ export interface StdEcommerceCheckoutOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CheckoutPayment',
+    'CheckoutPayment' | 'CheckoutPaymentForm' | 'CheckoutWizard',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -4587,8 +4599,11 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -4641,7 +4656,10 @@ export function isStdEcommerceCheckoutOrbitalParams(p: object): p is StdEcommerc
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEcommerceCheckoutOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEcommerceCheckoutOrbitalManifest.traitNames,
+      ...StdEcommerceCheckoutOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -4689,7 +4707,7 @@ export interface StdEcommerceOrderRecordOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    never,
+    'OrderRecordBrowse' | 'OrderRecordCreate' | 'OrderRecordEdit' | 'OrderRecordView' | 'OrderRecordDelete',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -6671,8 +6689,11 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -6727,7 +6748,10 @@ export function isStdEcommerceOrderRecordOrbitalParams(p: object): p is StdEcomm
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEcommerceOrderRecordOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEcommerceOrderRecordOrbitalManifest.traitNames,
+      ...StdEcommerceOrderRecordOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

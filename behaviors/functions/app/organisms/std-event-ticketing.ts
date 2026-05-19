@@ -75,7 +75,7 @@ export interface StdEventTicketingEventOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'EventAppLayout' | 'EventSearch' | 'EventFilter' | 'EventStats' | 'EventBrowseList' | 'EventCalendarView' | 'EventAdvancedAdmin' | 'EventCreate' | 'EventEdit' | 'EventView' | 'EventDelete',
+    'EventAppLayout' | 'EventSearch' | 'EventFilter' | 'EventStats' | 'EventBrowseList' | 'EventCalendarView' | 'EventAdvancedAdmin' | 'EventCreate' | 'EventEdit' | 'EventView' | 'EventDelete' | 'EventCatalog' | 'EventPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1038,8 +1038,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1102,7 +1105,10 @@ export function isStdEventTicketingEventOrbitalParams(p: object): p is StdEventT
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEventTicketingEventOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEventTicketingEventOrbitalManifest.traitNames,
+      ...StdEventTicketingEventOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1150,7 +1156,7 @@ export interface StdEventTicketingTicketOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TicketAppLayout' | 'TicketTierShop' | 'TicketCart' | 'TicketCartAddItem' | 'TicketCartRemoveItem' | 'TicketCartPersistor' | 'TicketBrowseList' | 'TicketIssueModal',
+    'TicketAppLayout' | 'TicketTierShop' | 'TicketCart' | 'TicketCartAddItem' | 'TicketCartRemoveItem' | 'TicketCartPersistor' | 'TicketBrowseList' | 'TicketIssueModal' | 'TicketShop' | 'TicketPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1696,8 +1702,11 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1757,7 +1766,10 @@ export function isStdEventTicketingTicketOrbitalParams(p: object): p is StdEvent
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEventTicketingTicketOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEventTicketingTicketOrbitalManifest.traitNames,
+      ...StdEventTicketingTicketOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1805,7 +1817,7 @@ export interface StdEventTicketingCheckinOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CheckinAppLayout' | 'GateScanner' | 'AttendeeListing',
+    'CheckinAppLayout' | 'GateScanner' | 'AttendeeListing' | 'CheckinDashboard',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2075,8 +2087,11 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2130,7 +2145,10 @@ export function isStdEventTicketingCheckinOrbitalParams(p: object): p is StdEven
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEventTicketingCheckinOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEventTicketingCheckinOrbitalManifest.traitNames,
+      ...StdEventTicketingCheckinOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2178,7 +2196,7 @@ export interface StdEventTicketingWaitlistOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WaitlistAppLayout' | 'WaitlistManageView' | 'WaitlistBrowseList' | 'WaitlistJoinModal',
+    'WaitlistAppLayout' | 'WaitlistManageView' | 'WaitlistBrowseList' | 'WaitlistJoinModal' | 'WaitlistDashboard' | 'WaitlistPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2650,8 +2668,11 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2707,7 +2728,10 @@ export function isStdEventTicketingWaitlistOrbitalParams(p: object): p is StdEve
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdEventTicketingWaitlistOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdEventTicketingWaitlistOrbitalManifest.traitNames,
+      ...StdEventTicketingWaitlistOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

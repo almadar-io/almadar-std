@@ -75,7 +75,7 @@ export interface StdTimeTrackingEmployeeOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'EmployeeAppLayout' | 'EmployeeSearch' | 'EmployeeFilter' | 'EmployeeStats' | 'EmployeeGraphs' | 'EmployeeBrowseList' | 'EmployeeCreate' | 'EmployeeEdit' | 'EmployeeView' | 'EmployeeDelete',
+    'EmployeeAppLayout' | 'EmployeeSearch' | 'EmployeeFilter' | 'EmployeeStats' | 'EmployeeGraphs' | 'EmployeeBrowseList' | 'EmployeeCreate' | 'EmployeeEdit' | 'EmployeeView' | 'EmployeeDelete' | 'EmployeeCatalog' | 'EmployeePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1016,8 +1016,11 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1079,7 +1082,10 @@ export function isStdTimeTrackingEmployeeOrbitalParams(p: object): p is StdTimeT
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTimeTrackingEmployeeOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTimeTrackingEmployeeOrbitalManifest.traitNames,
+      ...StdTimeTrackingEmployeeOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1127,7 +1133,7 @@ export interface StdTimeTrackingTimesheetPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TimesheetAppLayout' | 'TimesheetLedgerView',
+    'TimesheetAppLayout' | 'TimesheetLedgerView' | 'TimesheetPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1370,8 +1376,11 @@ export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTime
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1424,7 +1433,10 @@ export function isStdTimeTrackingTimesheetPanelOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTimeTrackingTimesheetPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTimeTrackingTimesheetPanelOrbitalManifest.traitNames,
+      ...StdTimeTrackingTimesheetPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1472,7 +1484,7 @@ export interface StdTimeTrackingTimeEntryPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TimeEntryAppLayout' | 'TimeEntryLogView',
+    'TimeEntryAppLayout' | 'TimeEntryLogView' | 'TimeEntryPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1709,8 +1721,11 @@ export function stdTimeTrackingTimeEntryPanelOrbital(params: StdTimeTrackingTime
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1763,7 +1778,10 @@ export function isStdTimeTrackingTimeEntryPanelOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTimeTrackingTimeEntryPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTimeTrackingTimeEntryPanelOrbitalManifest.traitNames,
+      ...StdTimeTrackingTimeEntryPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1811,7 +1829,7 @@ export interface StdTimeTrackingBillableHourTimeTrackingOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'BillableHourAppLayout' | 'BillableHourTimesheetView',
+    'BillableHourAppLayout' | 'BillableHourTimesheetView' | 'BillableHourPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2043,8 +2061,11 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2097,7 +2118,10 @@ export function isStdTimeTrackingBillableHourTimeTrackingOrbitalParams(p: object
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTimeTrackingBillableHourTimeTrackingOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTimeTrackingBillableHourTimeTrackingOrbitalManifest.traitNames,
+      ...StdTimeTrackingBillableHourTimeTrackingOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2145,7 +2169,7 @@ export interface StdTimeTrackingApprovalRequestPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ApprovalRequestAppLayout' | 'ApprovalRequestPipelineView',
+    'ApprovalRequestAppLayout' | 'ApprovalRequestPipelineView' | 'ApprovalRequestPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2397,8 +2421,11 @@ export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTracki
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2451,7 +2478,10 @@ export function isStdTimeTrackingApprovalRequestPanelOrbitalParams(p: object): p
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTimeTrackingApprovalRequestPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTimeTrackingApprovalRequestPanelOrbitalManifest.traitNames,
+      ...StdTimeTrackingApprovalRequestPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

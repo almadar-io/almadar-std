@@ -75,7 +75,7 @@ export interface StdLmsCourseOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CourseAppLayout' | 'CourseSearch' | 'CourseFilter' | 'CourseStats' | 'CourseGraphs' | 'CourseGallery' | 'CourseCreateModal' | 'CourseEditModal' | 'CourseDeleteConfirm' | 'CourseThumbnailUpload' | 'CourseLessonVideo',
+    'CourseAppLayout' | 'CourseSearch' | 'CourseFilter' | 'CourseStats' | 'CourseGraphs' | 'CourseGallery' | 'CourseCreateModal' | 'CourseEditModal' | 'CourseDeleteConfirm' | 'CourseThumbnailUpload' | 'CourseLessonVideo' | 'CourseCatalog' | 'CoursePersistor' | 'CourseThumbnailForm' | 'CourseLessonPlayer',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1419,8 +1419,11 @@ export function stdLmsCourseOrbital(params: StdLmsCourseOrbitalParams = {}): Orb
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1485,7 +1488,10 @@ export function isStdLmsCourseOrbitalParams(p: object): p is StdLmsCourseOrbital
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdLmsCourseOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdLmsCourseOrbitalManifest.traitNames,
+      ...StdLmsCourseOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1533,7 +1539,7 @@ export interface StdLmsEnrollmentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'EnrollmentAppLayout',
+    'EnrollmentAppLayout' | 'EnrollmentWizard',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2649,8 +2655,11 @@ export function stdLmsEnrollmentOrbital(params: StdLmsEnrollmentOrbitalParams = 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2702,7 +2711,10 @@ export function isStdLmsEnrollmentOrbitalParams(p: object): p is StdLmsEnrollmen
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdLmsEnrollmentOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdLmsEnrollmentOrbitalManifest.traitNames,
+      ...StdLmsEnrollmentOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2750,7 +2762,7 @@ export interface StdLmsProgressOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ProgressAppLayout' | 'ProgressBrowseList',
+    'ProgressAppLayout' | 'ProgressBrowseList' | 'ProgressDisplay' | 'ProgressStats' | 'ProgressGraphs' | 'ProgressItemSink',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3440,8 +3452,11 @@ export function stdLmsProgressOrbital(params: StdLmsProgressOrbitalParams = {}):
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3497,7 +3512,10 @@ export function isStdLmsProgressOrbitalParams(p: object): p is StdLmsProgressOrb
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdLmsProgressOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdLmsProgressOrbitalManifest.traitNames,
+      ...StdLmsProgressOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

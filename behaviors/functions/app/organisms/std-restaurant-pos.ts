@@ -75,7 +75,7 @@ export interface StdRestaurantPosMenuOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'MenuAppLayout' | 'MenuSearch' | 'MenuFilter' | 'MenuCategoryTree' | 'MenuBrowseList' | 'MenuModifierGroups' | 'MenuImageUpload' | 'MenuCreate' | 'MenuEdit' | 'MenuDelete',
+    'MenuAppLayout' | 'MenuSearch' | 'MenuFilter' | 'MenuCategoryTree' | 'MenuBrowseList' | 'MenuModifierGroups' | 'MenuImageUpload' | 'MenuCreate' | 'MenuEdit' | 'MenuDelete' | 'MenuCatalog' | 'MenuPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -892,8 +892,11 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -955,7 +958,10 @@ export function isStdRestaurantPosMenuOrbitalParams(p: object): p is StdRestaura
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRestaurantPosMenuOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRestaurantPosMenuOrbitalManifest.traitNames,
+      ...StdRestaurantPosMenuOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1003,7 +1009,7 @@ export interface StdRestaurantPosTableOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TableFloorPlan' | 'TableRoster' | 'TableEdit',
+    'TableFloorPlan' | 'TableRoster' | 'TableEdit' | 'TablePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1256,8 +1262,11 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1311,7 +1320,10 @@ export function isStdRestaurantPosTableOrbitalParams(p: object): p is StdRestaur
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRestaurantPosTableOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRestaurantPosTableOrbitalManifest.traitNames,
+      ...StdRestaurantPosTableOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1359,7 +1371,7 @@ export interface StdRestaurantPosOrderOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'OrderCart' | 'OrderCartAddItem' | 'OrderCartRemoveConfirm' | 'OrderCartPersistor',
+    'OrderCart' | 'OrderCartAddItem' | 'OrderCartRemoveConfirm' | 'OrderCartPersistor' | 'OrderClose',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1929,8 +1941,11 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1985,7 +2000,10 @@ export function isStdRestaurantPosOrderOrbitalParams(p: object): p is StdRestaur
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRestaurantPosOrderOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRestaurantPosOrderOrbitalManifest.traitNames,
+      ...StdRestaurantPosOrderOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2142,8 +2160,11 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2195,7 +2216,10 @@ export function isStdRestaurantPosKitchenOrbitalParams(p: object): p is StdResta
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdRestaurantPosKitchenOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdRestaurantPosKitchenOrbitalManifest.traitNames,
+      ...StdRestaurantPosKitchenOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

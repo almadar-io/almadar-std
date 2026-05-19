@@ -75,7 +75,7 @@ export interface StdSubscriptionBillingSubscriptionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PlanAppLayout' | 'PlanSearch' | 'PlanFilter' | 'PlanStats' | 'PlanGraphs' | 'PlanBrowseList' | 'PlanCreate' | 'PlanEdit' | 'PlanView' | 'PlanDelete' | 'PlanSubscriptionManage' | 'PlanTrialManage',
+    'PlanAppLayout' | 'PlanSearch' | 'PlanFilter' | 'PlanStats' | 'PlanGraphs' | 'PlanBrowseList' | 'PlanCreate' | 'PlanEdit' | 'PlanView' | 'PlanDelete' | 'PlanSubscriptionManage' | 'PlanTrialManage' | 'PlanCatalog' | 'PlanPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1032,8 +1032,11 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1097,7 +1100,10 @@ export function isStdSubscriptionBillingSubscriptionOrbitalParams(p: object): p 
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdSubscriptionBillingSubscriptionOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdSubscriptionBillingSubscriptionOrbitalManifest.traitNames,
+      ...StdSubscriptionBillingSubscriptionOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1145,7 +1151,7 @@ export interface StdSubscriptionBillingInvoiceOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'InvoiceAppLayout' | 'InvoiceManageBlock' | 'InvoiceNoteBrowseList' | 'InvoiceNoteCreate',
+    'InvoiceAppLayout' | 'InvoiceManageBlock' | 'InvoiceNoteBrowseList' | 'InvoiceNoteCreate' | 'InvoiceCatalog' | 'InvoiceNotePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1698,8 +1704,11 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1755,7 +1764,10 @@ export function isStdSubscriptionBillingInvoiceOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdSubscriptionBillingInvoiceOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdSubscriptionBillingInvoiceOrbitalManifest.traitNames,
+      ...StdSubscriptionBillingInvoiceOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1803,7 +1815,7 @@ export interface StdSubscriptionBillingDunningOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DunningAppLayout' | 'DunningEscalateBlock' | 'DunningNoteBrowseList' | 'DunningNoteCreate',
+    'DunningAppLayout' | 'DunningEscalateBlock' | 'DunningNoteBrowseList' | 'DunningNoteCreate' | 'DunningCatalog' | 'DunningNotePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2355,8 +2367,11 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2412,7 +2427,10 @@ export function isStdSubscriptionBillingDunningOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdSubscriptionBillingDunningOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdSubscriptionBillingDunningOrbitalManifest.traitNames,
+      ...StdSubscriptionBillingDunningOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

@@ -153,7 +153,7 @@ export interface StdAgentPipelinePipelinePlanOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    never,
+    'PipelinePlanner' | 'PlannerTaskInput' | 'PlannerClassifierFlow' | 'PlannerCompletionFlow' | 'PlannerMemoryLifecycle',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3124,8 +3124,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3180,7 +3183,10 @@ export function isStdAgentPipelinePipelinePlanOrbitalParams(p: object): p is Std
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdAgentPipelinePipelinePlanOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdAgentPipelinePipelinePlanOrbitalManifest.traitNames,
+      ...StdAgentPipelinePipelinePlanOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -3228,7 +3234,7 @@ export interface StdAgentPipelinePipelineExecOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    never,
+    'PipelineExecutor' | 'ToolLoopStepProgress' | 'ToolLoopCompletionFlow' | 'ToolLoopToolCallFlow' | 'ToolLoopContextMonitor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -8991,8 +8997,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -9047,7 +9056,10 @@ export function isStdAgentPipelinePipelineExecOrbitalParams(p: object): p is Std
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdAgentPipelinePipelineExecOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdAgentPipelinePipelineExecOrbitalManifest.traitNames,
+      ...StdAgentPipelinePipelineExecOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -9095,7 +9107,7 @@ export interface StdAgentPipelinePipelineSessionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    never,
+    'PipelineSessionManager' | 'PipelineSessionLabel' | 'PipelineSessionAgent',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -10289,8 +10301,11 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -10343,7 +10358,10 @@ export function isStdAgentPipelinePipelineSessionOrbitalParams(p: object): p is 
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdAgentPipelinePipelineSessionOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdAgentPipelinePipelineSessionOrbitalManifest.traitNames,
+      ...StdAgentPipelinePipelineSessionOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -10391,7 +10409,7 @@ export interface StdAgentPipelineExecutionLogOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    never,
+    'ExecutionLogBrowse' | 'ExecutionLogCreate' | 'ExecutionLogAgent',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -11754,8 +11772,11 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -11808,7 +11829,10 @@ export function isStdAgentPipelineExecutionLogOrbitalParams(p: object): p is Std
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdAgentPipelineExecutionLogOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdAgentPipelineExecutionLogOrbitalManifest.traitNames,
+      ...StdAgentPipelineExecutionLogOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -11932,8 +11956,11 @@ export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipeline
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -11984,7 +12011,10 @@ export function isStdAgentPipelinePipelineProgressOrbitalParams(p: object): p is
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdAgentPipelinePipelineProgressOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdAgentPipelinePipelineProgressOrbitalManifest.traitNames,
+      ...StdAgentPipelinePipelineProgressOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -12103,8 +12133,11 @@ export function stdAgentPipelineSessionTreeOrbital(params: StdAgentPipelineSessi
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -12155,7 +12188,10 @@ export function isStdAgentPipelineSessionTreeOrbitalParams(p: object): p is StdA
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdAgentPipelineSessionTreeOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdAgentPipelineSessionTreeOrbitalManifest.traitNames,
+      ...StdAgentPipelineSessionTreeOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

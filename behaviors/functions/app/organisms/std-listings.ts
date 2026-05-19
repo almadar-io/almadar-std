@@ -75,7 +75,7 @@ export interface StdListingsListingOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ListingAppLayout' | 'ListingGeoSearch' | 'ListingFilter' | 'ListingTags' | 'ListingSavedSearch' | 'ListingImages' | 'ListingStats' | 'ListingBrowse' | 'ListingCreate' | 'ListingEdit' | 'ListingView' | 'ListingDelete' | 'ListingInquiryThread',
+    'ListingAppLayout' | 'ListingGeoSearch' | 'ListingFilter' | 'ListingTags' | 'ListingSavedSearch' | 'ListingImages' | 'ListingStats' | 'ListingBrowse' | 'ListingCreate' | 'ListingEdit' | 'ListingView' | 'ListingDelete' | 'ListingInquiryThread' | 'ListingCatalog' | 'ListingPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1051,8 +1051,11 @@ export function stdListingsListingOrbital(params: StdListingsListingOrbitalParam
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1117,7 +1120,10 @@ export function isStdListingsListingOrbitalParams(p: object): p is StdListingsLi
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdListingsListingOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdListingsListingOrbitalManifest.traitNames,
+      ...StdListingsListingOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1165,7 +1171,7 @@ export interface StdListingsInquiryOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'InquiryCreate',
+    'InquiryCreate' | 'InquiryBrowse' | 'InquiryPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1761,8 +1767,11 @@ export function stdListingsInquiryOrbital(params: StdListingsInquiryOrbitalParam
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1815,7 +1824,10 @@ export function isStdListingsInquiryOrbitalParams(p: object): p is StdListingsIn
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdListingsInquiryOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdListingsInquiryOrbitalManifest.traitNames,
+      ...StdListingsInquiryOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

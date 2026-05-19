@@ -75,7 +75,7 @@ export interface StdProjectManagerTaskOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TaskAppLayout' | 'TaskSearch' | 'TaskFilter' | 'TaskStats' | 'TaskGraphs' | 'TaskCalendar' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete',
+    'TaskAppLayout' | 'TaskSearch' | 'TaskFilter' | 'TaskStats' | 'TaskGraphs' | 'TaskCalendar' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete' | 'TaskCatalog' | 'TaskPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1063,8 +1063,11 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1127,7 +1130,10 @@ export function isStdProjectManagerTaskOrbitalParams(p: object): p is StdProject
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdProjectManagerTaskOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdProjectManagerTaskOrbitalManifest.traitNames,
+      ...StdProjectManagerTaskOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1175,7 +1181,7 @@ export interface StdProjectManagerSprintOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SprintAppLayout' | 'SprintBrowseList' | 'SprintCreate' | 'SprintEdit' | 'SprintView' | 'SprintDelete',
+    'SprintAppLayout' | 'SprintBrowseList' | 'SprintCreate' | 'SprintEdit' | 'SprintView' | 'SprintDelete' | 'SprintCatalog' | 'SprintPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1823,8 +1829,11 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1882,7 +1891,10 @@ export function isStdProjectManagerSprintOrbitalParams(p: object): p is StdProje
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdProjectManagerSprintOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdProjectManagerSprintOrbitalManifest.traitNames,
+      ...StdProjectManagerSprintOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1930,7 +1942,7 @@ export interface StdProjectManagerBurndownOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'BurndownAppLayout',
+    'BurndownAppLayout' | 'BurndownDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2336,8 +2348,11 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2389,7 +2404,10 @@ export function isStdProjectManagerBurndownOrbitalParams(p: object): p is StdPro
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdProjectManagerBurndownOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdProjectManagerBurndownOrbitalManifest.traitNames,
+      ...StdProjectManagerBurndownOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

@@ -75,7 +75,7 @@ export interface StdWikiDocumentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WikiAppLayout' | 'WikiSearch' | 'WikiFilter' | 'WikiPageTree' | 'WikiBrowseList' | 'WikiBacklinks' | 'WikiCreate' | 'WikiEdit' | 'WikiView' | 'WikiDelete' | 'WikiVersionHistory' | 'WikiTagBrowse',
+    'WikiAppLayout' | 'WikiSearch' | 'WikiFilter' | 'WikiPageTree' | 'WikiBrowseList' | 'WikiBacklinks' | 'WikiCreate' | 'WikiEdit' | 'WikiView' | 'WikiDelete' | 'WikiVersionHistory' | 'WikiTagBrowse' | 'WikiWorkspace' | 'WikiPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1040,8 +1040,11 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1105,7 +1108,10 @@ export function isStdWikiDocumentOrbitalParams(p: object): p is StdWikiDocumentO
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdWikiDocumentOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdWikiDocumentOrbitalManifest.traitNames,
+      ...StdWikiDocumentOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1153,7 +1159,7 @@ export interface StdWikiRevisionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'RevisionAppLayout' | 'RevisionBrowseList' | 'RevisionCreate',
+    'RevisionAppLayout' | 'RevisionBrowseList' | 'RevisionCreate' | 'RevisionWorkspace' | 'RevisionPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1576,8 +1582,11 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1632,7 +1641,10 @@ export function isStdWikiRevisionOrbitalParams(p: object): p is StdWikiRevisionO
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdWikiRevisionOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdWikiRevisionOrbitalManifest.traitNames,
+      ...StdWikiRevisionOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

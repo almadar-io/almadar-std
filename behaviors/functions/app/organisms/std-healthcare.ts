@@ -75,7 +75,7 @@ export interface StdHealthcarePatientOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PatientAppLayout' | 'PatientSearch' | 'PatientFilter' | 'PatientStats' | 'PatientGraphs' | 'PatientBrowseList' | 'PatientCreate' | 'PatientEdit' | 'PatientView' | 'PatientDelete',
+    'PatientAppLayout' | 'PatientSearch' | 'PatientFilter' | 'PatientStats' | 'PatientGraphs' | 'PatientBrowseList' | 'PatientCreate' | 'PatientEdit' | 'PatientView' | 'PatientDelete' | 'PatientCatalog' | 'PatientPersistor' | 'PatientDocumentUpload',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1216,8 +1216,11 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1280,7 +1283,10 @@ export function isStdHealthcarePatientOrbitalParams(p: object): p is StdHealthca
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHealthcarePatientOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHealthcarePatientOrbitalManifest.traitNames,
+      ...StdHealthcarePatientOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1328,7 +1334,7 @@ export interface StdHealthcareAppointmentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'AppointmentAppLayout' | 'AppointmentCalendar' | 'AppointmentBrowseList' | 'AppointmentCreate' | 'AppointmentEdit' | 'AppointmentView' | 'AppointmentDelete',
+    'AppointmentAppLayout' | 'AppointmentCalendar' | 'AppointmentBrowseList' | 'AppointmentCreate' | 'AppointmentEdit' | 'AppointmentView' | 'AppointmentDelete' | 'AppointmentCatalog' | 'AppointmentPersistor' | 'AppointmentReminderSms',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2335,8 +2341,11 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2396,7 +2405,10 @@ export function isStdHealthcareAppointmentOrbitalParams(p: object): p is StdHeal
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHealthcareAppointmentOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHealthcareAppointmentOrbitalManifest.traitNames,
+      ...StdHealthcareAppointmentOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2444,7 +2456,7 @@ export interface StdHealthcareIntakeFormOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'IntakeFormAppLayout',
+    'IntakeFormAppLayout' | 'IntakeFormWizard',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3637,8 +3649,11 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3690,7 +3705,10 @@ export function isStdHealthcareIntakeFormOrbitalParams(p: object): p is StdHealt
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHealthcareIntakeFormOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHealthcareIntakeFormOrbitalManifest.traitNames,
+      ...StdHealthcareIntakeFormOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -3738,7 +3756,7 @@ export interface StdHealthcarePrescriptionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PrescriptionAppLayout' | 'PrescriptionBrowseList' | 'PrescriptionCreate' | 'PrescriptionEdit' | 'PrescriptionDelete',
+    'PrescriptionAppLayout' | 'PrescriptionBrowseList' | 'PrescriptionCreate' | 'PrescriptionEdit' | 'PrescriptionDelete' | 'PrescriptionCatalog' | 'PrescriptionView' | 'PrescriptionPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -4773,8 +4791,11 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -4832,7 +4853,10 @@ export function isStdHealthcarePrescriptionOrbitalParams(p: object): p is StdHea
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHealthcarePrescriptionOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHealthcarePrescriptionOrbitalManifest.traitNames,
+      ...StdHealthcarePrescriptionOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -4880,7 +4904,7 @@ export interface StdHealthcareDashboardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DashboardAppLayout',
+    'DashboardAppLayout' | 'DashboardDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -5079,8 +5103,11 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -5132,7 +5159,10 @@ export function isStdHealthcareDashboardOrbitalParams(p: object): p is StdHealth
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHealthcareDashboardOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHealthcareDashboardOrbitalManifest.traitNames,
+      ...StdHealthcareDashboardOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

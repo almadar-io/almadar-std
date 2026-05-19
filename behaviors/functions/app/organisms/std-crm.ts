@@ -75,7 +75,7 @@ export interface StdCrmContactOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactStats' | 'ContactGraphs' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete',
+    'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactStats' | 'ContactGraphs' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete' | 'ContactCatalog' | 'ContactPersistor' | 'ContactEmailSend',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1139,8 +1139,11 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1203,7 +1206,10 @@ export function isStdCrmContactOrbitalParams(p: object): p is StdCrmContactOrbit
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCrmContactOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCrmContactOrbitalManifest.traitNames,
+      ...StdCrmContactOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1251,7 +1257,7 @@ export interface StdCrmDealOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DealAppLayout' | 'DealBrowseList' | 'DealCreate' | 'DealEdit' | 'DealView' | 'DealDelete',
+    'DealAppLayout' | 'DealBrowseList' | 'DealCreate' | 'DealEdit' | 'DealView' | 'DealDelete' | 'DealCatalog' | 'DealPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1894,8 +1900,11 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1953,7 +1962,10 @@ export function isStdCrmDealOrbitalParams(p: object): p is StdCrmDealOrbitalPara
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCrmDealOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCrmDealOrbitalManifest.traitNames,
+      ...StdCrmDealOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2001,7 +2013,7 @@ export interface StdCrmPipelineOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PipelineAppLayout',
+    'PipelineAppLayout' | 'PipelineDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2336,8 +2348,11 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2389,7 +2404,10 @@ export function isStdCrmPipelineOrbitalParams(p: object): p is StdCrmPipelineOrb
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCrmPipelineOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCrmPipelineOrbitalManifest.traitNames,
+      ...StdCrmPipelineOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2437,7 +2455,7 @@ export interface StdCrmNoteOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'NoteAppLayout' | 'NoteBrowseList' | 'NoteCalendar' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
+    'NoteAppLayout' | 'NoteBrowseList' | 'NoteCalendar' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete' | 'NoteCatalog' | 'NotePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3108,8 +3126,11 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3168,7 +3189,10 @@ export function isStdCrmNoteOrbitalParams(p: object): p is StdCrmNoteOrbitalPara
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCrmNoteOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCrmNoteOrbitalManifest.traitNames,
+      ...StdCrmNoteOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

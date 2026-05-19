@@ -75,7 +75,7 @@ export interface StdGenericAppContactOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete',
+    'ContactAppLayout' | 'ContactSearch' | 'ContactFilter' | 'ContactBrowseList' | 'ContactCreate' | 'ContactEdit' | 'ContactView' | 'ContactDelete' | 'ContactCatalog' | 'ContactPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -868,8 +868,11 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -929,7 +932,10 @@ export function isStdGenericAppContactOrbitalParams(p: object): p is StdGenericA
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppContactOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppContactOrbitalManifest.traitNames,
+      ...StdGenericAppContactOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -977,7 +983,7 @@ export interface StdGenericAppItemOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ItemAppLayout' | 'ItemSearch' | 'ItemFilter' | 'ItemBrowseList' | 'ItemCreate' | 'ItemEdit' | 'ItemView' | 'ItemDelete',
+    'ItemAppLayout' | 'ItemSearch' | 'ItemFilter' | 'ItemBrowseList' | 'ItemCreate' | 'ItemEdit' | 'ItemView' | 'ItemDelete' | 'ItemCatalog' | 'ItemPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1772,8 +1778,11 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1833,7 +1842,10 @@ export function isStdGenericAppItemOrbitalParams(p: object): p is StdGenericAppI
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppItemOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppItemOrbitalManifest.traitNames,
+      ...StdGenericAppItemOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1881,7 +1893,7 @@ export interface StdGenericAppActivityOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ActivityAppLayout' | 'ActivityBrowseList' | 'ActivityView' | 'ActivityEdit' | 'ActivityDelete',
+    'ActivityAppLayout' | 'ActivityBrowseList' | 'ActivityView' | 'ActivityEdit' | 'ActivityDelete' | 'ActivityCatalog' | 'ActivityPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2501,8 +2513,11 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2559,7 +2574,10 @@ export function isStdGenericAppActivityOrbitalParams(p: object): p is StdGeneric
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppActivityOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppActivityOrbitalManifest.traitNames,
+      ...StdGenericAppActivityOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2607,7 +2625,7 @@ export interface StdGenericAppTaskOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TaskAppLayout' | 'TaskSelection' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete',
+    'TaskAppLayout' | 'TaskSelection' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete' | 'TaskCatalog' | 'TaskPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3382,8 +3400,11 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3442,7 +3463,10 @@ export function isStdGenericAppTaskOrbitalParams(p: object): p is StdGenericAppT
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppTaskOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppTaskOrbitalManifest.traitNames,
+      ...StdGenericAppTaskOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -3490,7 +3514,7 @@ export interface StdGenericAppCalendarOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CalendarAppLayout' | 'CalendarView' | 'CalendarBrowseList' | 'CalendarCreate' | 'CalendarEdit' | 'CalendarDelete',
+    'CalendarAppLayout' | 'CalendarView' | 'CalendarBrowseList' | 'CalendarCreate' | 'CalendarEdit' | 'CalendarDelete' | 'CalendarCatalog' | 'CalendarPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -4215,8 +4239,11 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -4274,7 +4301,10 @@ export function isStdGenericAppCalendarOrbitalParams(p: object): p is StdGeneric
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppCalendarOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppCalendarOrbitalManifest.traitNames,
+      ...StdGenericAppCalendarOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -4322,7 +4352,7 @@ export interface StdGenericAppWidgetOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WidgetAppLayout' | 'WidgetStats' | 'WidgetGraphs' | 'WidgetBrowseList' | 'WidgetView' | 'WidgetEdit' | 'WidgetDelete',
+    'WidgetAppLayout' | 'WidgetStats' | 'WidgetGraphs' | 'WidgetBrowseList' | 'WidgetView' | 'WidgetEdit' | 'WidgetDelete' | 'WidgetCatalog' | 'WidgetPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -5018,8 +5048,11 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -5078,7 +5111,10 @@ export function isStdGenericAppWidgetOrbitalParams(p: object): p is StdGenericAp
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppWidgetOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppWidgetOrbitalManifest.traitNames,
+      ...StdGenericAppWidgetOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -5126,7 +5162,7 @@ export interface StdGenericAppFeedOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'FeedAppLayout' | 'FeedPagination' | 'FeedBrowseList' | 'FeedCreate' | 'FeedEdit' | 'FeedDelete',
+    'FeedAppLayout' | 'FeedPagination' | 'FeedBrowseList' | 'FeedCreate' | 'FeedEdit' | 'FeedDelete' | 'FeedCatalog' | 'FeedPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -5838,8 +5874,11 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -5897,7 +5936,10 @@ export function isStdGenericAppFeedOrbitalParams(p: object): p is StdGenericAppF
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppFeedOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppFeedOrbitalManifest.traitNames,
+      ...StdGenericAppFeedOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -5945,7 +5987,7 @@ export interface StdGenericAppNoteOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'NoteAppLayout' | 'NoteSearch' | 'NoteBrowseList' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
+    'NoteAppLayout' | 'NoteSearch' | 'NoteBrowseList' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete' | 'NoteCatalog' | 'NotePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -6688,8 +6730,11 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -6748,7 +6793,10 @@ export function isStdGenericAppNoteOrbitalParams(p: object): p is StdGenericAppN
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdGenericAppNoteOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdGenericAppNoteOrbitalManifest.traitNames,
+      ...StdGenericAppNoteOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

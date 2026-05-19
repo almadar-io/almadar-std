@@ -75,7 +75,7 @@ export interface StdTradingDashboardPortfolioOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PortfolioAppLayout' | 'PortfolioSearch' | 'PortfolioFilter' | 'PortfolioStats' | 'PortfolioGraphs' | 'PortfolioBrowseList' | 'PortfolioCreate' | 'PortfolioEdit' | 'PortfolioView' | 'PortfolioDelete',
+    'PortfolioAppLayout' | 'PortfolioSearch' | 'PortfolioFilter' | 'PortfolioStats' | 'PortfolioGraphs' | 'PortfolioBrowseList' | 'PortfolioCreate' | 'PortfolioEdit' | 'PortfolioView' | 'PortfolioDelete' | 'PortfolioCatalog' | 'PortfolioPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -953,8 +953,11 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1016,7 +1019,10 @@ export function isStdTradingDashboardPortfolioOrbitalParams(p: object): p is Std
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTradingDashboardPortfolioOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTradingDashboardPortfolioOrbitalManifest.traitNames,
+      ...StdTradingDashboardPortfolioOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1064,7 +1070,7 @@ export interface StdTradingDashboardTradeOrderOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TradeOrderAppLayout' | 'TradeOrderBrowseList' | 'TradeOrderCreate' | 'TradeOrderEdit' | 'TradeOrderView' | 'TradeOrderDelete',
+    'TradeOrderAppLayout' | 'TradeOrderBrowseList' | 'TradeOrderCreate' | 'TradeOrderEdit' | 'TradeOrderView' | 'TradeOrderDelete' | 'TradeOrderCatalog' | 'TradeOrderPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1699,8 +1705,11 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1758,7 +1767,10 @@ export function isStdTradingDashboardTradeOrderOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTradingDashboardTradeOrderOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTradingDashboardTradeOrderOrbitalManifest.traitNames,
+      ...StdTradingDashboardTradeOrderOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1806,7 +1818,7 @@ export interface StdTradingDashboardMarketFeedOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'MarketFeedAppLayout' | 'MarketSelection',
+    'MarketFeedAppLayout' | 'MarketSelection' | 'MarketFeedDisplay' | 'MarketFeedAsync',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2556,8 +2568,11 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2611,7 +2626,10 @@ export function isStdTradingDashboardMarketFeedOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdTradingDashboardMarketFeedOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdTradingDashboardMarketFeedOrbitalManifest.traitNames,
+      ...StdTradingDashboardMarketFeedOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
