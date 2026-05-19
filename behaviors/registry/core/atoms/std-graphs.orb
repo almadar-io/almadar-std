@@ -77,16 +77,16 @@
                     "@entity.chartData",
                     [
                       {
-                        "label": "Active",
-                        "value": 6.0
+                        "value": 6.0,
+                        "label": "Active"
                       },
                       {
                         "label": "Pending",
                         "value": 3.0
                       },
                       {
-                        "value": 1.0,
-                        "label": "Inactive"
+                        "label": "Inactive",
+                        "value": 1.0
                       }
                     ]
                   ],
@@ -94,18 +94,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "@config.viewPattern",
-                      "chartType": "@config.chartType",
-                      "series": "@config.series",
-                      "showValues": "@config.showValues",
-                      "stack": "@config.stack",
-                      "timeAxis": "@config.timeAxis",
-                      "subtitle": "@config.subtitle",
-                      "height": "@config.height",
                       "showLegend": "@config.showLegend",
+                      "showValues": "@config.showValues",
+                      "height": "@config.height",
+                      "subtitle": "@config.subtitle",
+                      "type": "@config.viewPattern",
+                      "timeAxis": "@config.timeAxis",
+                      "chartType": "@config.chartType",
+                      "data": "@entity.chartData",
                       "title": "@config.title",
-                      "drillEvent": "@config.drillEvent",
-                      "data": "@entity.chartData"
+                      "series": "@config.series",
+                      "stack": "@config.stack",
+                      "drillEvent": "@config.drillEvent"
                     }
                   ]
                 ]
@@ -164,6 +164,11 @@
                           "fn",
                           "entry",
                           {
+                            "label": [
+                              "object/get",
+                              "@entry",
+                              "0"
+                            ],
                             "value": [
                               "if",
                               [
@@ -239,11 +244,6 @@
                                   ]
                                 ]
                               ]
-                            ],
-                            "label": [
-                              "object/get",
-                              "@entry",
-                              "0"
                             ]
                           }
                         ]
@@ -291,18 +291,18 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
-                      "timeAxis": "@config.timeAxis",
-                      "chartType": "@config.chartType",
-                      "series": "@config.series",
-                      "showLegend": "@config.showLegend",
-                      "drillEvent": "@config.drillEvent",
-                      "showValues": "@config.showValues",
-                      "data": "@entity.chartData",
                       "subtitle": "@config.subtitle",
+                      "showLegend": "@config.showLegend",
+                      "type": "@config.viewPattern",
+                      "series": "@config.series",
                       "stack": "@config.stack",
+                      "chartType": "@config.chartType",
+                      "timeAxis": "@config.timeAxis",
+                      "data": "@entity.chartData",
+                      "showValues": "@config.showValues",
                       "height": "@config.height",
-                      "type": "@config.viewPattern"
+                      "title": "@config.title",
+                      "drillEvent": "@config.drillEvent"
                     }
                   ]
                 ]
@@ -310,67 +310,13 @@
             ]
           },
           "config": {
-            "timeField": {
-              "type": "string",
-              "default": "date"
-            },
-            "aggregation": {
-              "type": "string",
-              "default": "count",
-              "values": [
-                "count",
-                "sum",
-                "avg",
-                "min",
-                "max"
-              ]
-            },
-            "height": {
-              "type": "number",
-              "default": 280.0
-            },
-            "categoryField": {
-              "type": "string",
-              "default": "status"
-            },
-            "timeAxis": {
-              "type": "boolean",
-              "default": false
-            },
-            "title": {
-              "type": "string",
-              "default": "Distribution"
-            },
-            "showValues": {
-              "type": "boolean",
-              "default": false
-            },
-            "period": {
-              "type": "string",
-              "default": "month",
-              "values": [
-                "day",
-                "week",
-                "month",
-                "quarter",
-                "year"
-              ]
-            },
             "series": {
               "type": "[SeriesSpec]",
               "default": []
             },
-            "sortDir": {
-              "type": "string",
-              "default": "desc",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "viewPattern": {
-              "type": "string",
-              "default": "chart"
+            "showValues": {
+              "type": "boolean",
+              "default": false
             },
             "chartType": {
               "type": "string",
@@ -385,6 +331,22 @@
                 "scatter"
               ]
             },
+            "viewPattern": {
+              "type": "pattern",
+              "default": "chart"
+            },
+            "timeAxis": {
+              "type": "boolean",
+              "default": false
+            },
+            "categoryField": {
+              "type": "string",
+              "default": "status"
+            },
+            "valueField": {
+              "type": "string",
+              "default": ""
+            },
             "sortField": {
               "type": "string",
               "default": "none",
@@ -394,21 +356,36 @@
                 "none"
               ]
             },
+            "height": {
+              "type": "number",
+              "default": 280.0
+            },
+            "title": {
+              "type": "string",
+              "default": "Distribution"
+            },
+            "aggregation": {
+              "type": "string",
+              "default": "count",
+              "values": [
+                "count",
+                "sum",
+                "avg",
+                "min",
+                "max"
+              ]
+            },
+            "timeField": {
+              "type": "string",
+              "default": "date"
+            },
             "limit": {
               "type": "number",
               "default": 0.0
             },
-            "valueField": {
+            "drillEvent": {
               "type": "string",
               "default": ""
-            },
-            "showLegend": {
-              "type": "boolean",
-              "default": true
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "Counts per category"
             },
             "stack": {
               "type": "string",
@@ -419,9 +396,32 @@
                 "normalize"
               ]
             },
-            "drillEvent": {
+            "period": {
               "type": "string",
-              "default": ""
+              "default": "month",
+              "values": [
+                "day",
+                "week",
+                "month",
+                "quarter",
+                "year"
+              ]
+            },
+            "sortDir": {
+              "type": "string",
+              "default": "desc",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "Counts per category"
             }
           },
           "scope": "instance"
