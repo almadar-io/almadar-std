@@ -31,6 +31,7 @@ orbital GraphItemOrbital {
       height        : number  = 280
       showLegend    : boolean = true
       showValues    : boolean = false
+      viewPattern   : string = "chart"
     }
     state idle {
       INIT -> idle
@@ -39,7 +40,7 @@ orbital GraphItemOrbital {
           { label: "Pending",  value: 3 },
           { label: "Inactive", value: 1 }
         ])
-        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
+        (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
       ITEMS_LOADED -> idle
         (set @entity.chartData
           (if (= @config.chartType "histogram")
@@ -64,7 +65,7 @@ orbital GraphItemOrbital {
           (if (> @config.limit 0)
               (array/take @entity.chartData @config.limit)
               @entity.chartData))
-        (render-ui main { type: "chart", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
+        (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
     }
     listens {
       ITEMS_LOADED { data : [object], totalCount : number }

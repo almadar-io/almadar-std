@@ -21,13 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "value": {
-                  "name": "value",
-                  "type": "number"
-                },
                 "label": {
                   "name": "label",
                   "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number"
                 }
               }
             }
@@ -85,8 +85,8 @@
                         "value": 3.0
                       },
                       {
-                        "label": "Inactive",
-                        "value": 1.0
+                        "value": 1.0,
+                        "label": "Inactive"
                       }
                     ]
                   ],
@@ -94,18 +94,18 @@
                     "render-ui",
                     "main",
                     {
-                      "height": "@config.height",
-                      "type": "chart",
-                      "drillEvent": "@config.drillEvent",
-                      "showLegend": "@config.showLegend",
-                      "data": "@entity.chartData",
-                      "timeAxis": "@config.timeAxis",
+                      "type": "@config.viewPattern",
                       "chartType": "@config.chartType",
                       "series": "@config.series",
-                      "title": "@config.title",
-                      "stack": "@config.stack",
                       "showValues": "@config.showValues",
-                      "subtitle": "@config.subtitle"
+                      "stack": "@config.stack",
+                      "timeAxis": "@config.timeAxis",
+                      "subtitle": "@config.subtitle",
+                      "height": "@config.height",
+                      "showLegend": "@config.showLegend",
+                      "title": "@config.title",
+                      "drillEvent": "@config.drillEvent",
+                      "data": "@entity.chartData"
                     }
                   ]
                 ]
@@ -164,11 +164,6 @@
                           "fn",
                           "entry",
                           {
-                            "label": [
-                              "object/get",
-                              "@entry",
-                              "0"
-                            ],
                             "value": [
                               "if",
                               [
@@ -244,6 +239,11 @@
                                   ]
                                 ]
                               ]
+                            ],
+                            "label": [
+                              "object/get",
+                              "@entry",
+                              "0"
                             ]
                           }
                         ]
@@ -291,18 +291,18 @@
                     "render-ui",
                     "main",
                     {
-                      "height": "@config.height",
-                      "stack": "@config.stack",
-                      "chartType": "@config.chartType",
-                      "type": "chart",
-                      "data": "@entity.chartData",
-                      "showLegend": "@config.showLegend",
-                      "showValues": "@config.showValues",
-                      "subtitle": "@config.subtitle",
                       "title": "@config.title",
-                      "drillEvent": "@config.drillEvent",
                       "timeAxis": "@config.timeAxis",
-                      "series": "@config.series"
+                      "chartType": "@config.chartType",
+                      "series": "@config.series",
+                      "showLegend": "@config.showLegend",
+                      "drillEvent": "@config.drillEvent",
+                      "showValues": "@config.showValues",
+                      "data": "@entity.chartData",
+                      "subtitle": "@config.subtitle",
+                      "stack": "@config.stack",
+                      "height": "@config.height",
+                      "type": "@config.viewPattern"
                     }
                   ]
                 ]
@@ -310,25 +310,9 @@
             ]
           },
           "config": {
-            "height": {
-              "type": "number",
-              "default": 280.0
-            },
-            "showLegend": {
-              "type": "boolean",
-              "default": true
-            },
-            "valueField": {
-              "type": "string",
-              "default": ""
-            },
             "timeField": {
               "type": "string",
               "default": "date"
-            },
-            "categoryField": {
-              "type": "string",
-              "default": "status"
             },
             "aggregation": {
               "type": "string",
@@ -341,14 +325,21 @@
                 "max"
               ]
             },
-            "stack": {
+            "height": {
+              "type": "number",
+              "default": 280.0
+            },
+            "categoryField": {
               "type": "string",
-              "default": "none",
-              "values": [
-                "none",
-                "stack",
-                "normalize"
-              ]
+              "default": "status"
+            },
+            "timeAxis": {
+              "type": "boolean",
+              "default": false
+            },
+            "title": {
+              "type": "string",
+              "default": "Distribution"
             },
             "showValues": {
               "type": "boolean",
@@ -365,13 +356,9 @@
                 "year"
               ]
             },
-            "limit": {
-              "type": "number",
-              "default": 0.0
-            },
-            "title": {
-              "type": "string",
-              "default": "Distribution"
+            "series": {
+              "type": "[SeriesSpec]",
+              "default": []
             },
             "sortDir": {
               "type": "string",
@@ -381,22 +368,9 @@
                 "desc"
               ]
             },
-            "subtitle": {
+            "viewPattern": {
               "type": "string",
-              "default": "Counts per category"
-            },
-            "drillEvent": {
-              "type": "string",
-              "default": ""
-            },
-            "sortField": {
-              "type": "string",
-              "default": "none",
-              "values": [
-                "value",
-                "label",
-                "none"
-              ]
+              "default": "chart"
             },
             "chartType": {
               "type": "string",
@@ -411,13 +385,43 @@
                 "scatter"
               ]
             },
-            "timeAxis": {
-              "type": "boolean",
-              "default": false
+            "sortField": {
+              "type": "string",
+              "default": "none",
+              "values": [
+                "value",
+                "label",
+                "none"
+              ]
             },
-            "series": {
-              "type": "[SeriesSpec]",
-              "default": []
+            "limit": {
+              "type": "number",
+              "default": 0.0
+            },
+            "valueField": {
+              "type": "string",
+              "default": ""
+            },
+            "showLegend": {
+              "type": "boolean",
+              "default": true
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "Counts per category"
+            },
+            "stack": {
+              "type": "string",
+              "default": "none",
+              "values": [
+                "none",
+                "stack",
+                "normalize"
+              ]
+            },
+            "drillEvent": {
+              "type": "string",
+              "default": ""
             }
           },
           "scope": "instance"
