@@ -2386,6 +2386,15 @@ export interface DispatchExtraTrait
  * to `def.traits[]` (with corresponding `uses[]` entries merged) AFTER
  * the factory returns. Strictly additive — never replaces factory
  * traits.
+ *
+ * `params.traitOverrides` may also carry entries keyed on an
+ * extra-trait's NAME (Phase 4's `applyRuleOverlay` row emits
+ * `traitOverrides[<TraitName>].config` for capability-matched traits).
+ * Those entries are partitioned out BEFORE the typed guard runs — the
+ * factory's guard rejects unknown trait keys — and merged into the
+ * matching extraTrait BEFORE it's appended. Native-trait overrides
+ * (keys in the factory's `manifest.traitNames`) stay on the factory
+ * params untouched.
  */
 export function dispatchOrbitalFactory(
   organism: string,
@@ -2394,7 +2403,12 @@ export function dispatchOrbitalFactory(
 ): OrbitalDefinition | null {
   const entry = REGISTRY.get(`${organism}::${orbitalName}`);
   if (!entry) return null;
-  const { extraTraits, ...factoryParams } = params;
+  const { extraTraits, ...rest } = params;
+  const { factoryParams, extraOverrides } = partitionTraitOverrides(
+    rest,
+    extraTraits ?? [],
+    entry.manifest.traitNames,
+  );
   const def = entry.factory(factoryParams);
   if (extraTraits && extraTraits.length > 0) {
     if (!def.uses) def.uses = [];
@@ -2404,11 +2418,94 @@ export function dispatchOrbitalFactory(
       if (!aliasTaken) {
         def.uses.push({ from: extra.from, as: extra.as });
       }
+      const extraName = extraTraitName(extra);
+      const overlay = extraName ? extraOverrides[extraName] : undefined;
       const { from: _from, as: _as, ...traitFields } = extra;
-      def.traits.push(traitFields);
+      const merged = overlay
+        ? mergeExtraTraitWithOverlay(traitFields, overlay)
+        : traitFields;
+      def.traits.push(merged);
     }
   }
   return def;
+}
+
+/**
+ * Returns the trait name carried by an extra-trait entry, used to
+ * match a `traitOverrides[<name>]` key onto the trait.
+ *
+ * Preference order: explicit `name` (the renamed-at-call-site form),
+ * else the tail of `ref` ("Alias.traits.TraitName" → "TraitName"). Any
+ * other shape returns undefined and the entry inherits no overlay.
+ */
+function extraTraitName(extra: DispatchExtraTrait): string | undefined {
+  if (typeof extra.name === 'string' && extra.name.length > 0) return extra.name;
+  const ref = typeof extra.ref === 'string' ? extra.ref : '';
+  const match = /\.traits\.([A-Za-z0-9_]+)$/.exec(ref);
+  return match?.[1];
+}
+
+/**
+ * Split the agent-supplied `traitOverrides` dict into the slice the
+ * factory accepts (keys that match its manifest's `traitNames`) and
+ * the slice keyed on extra-trait names (Phase 4 capability matches).
+ *
+ * Unknown keys (neither factory-native nor an extra trait) stay on
+ * `factoryParams.traitOverrides` so the factory's typed guard surfaces
+ * them — they're real authoring bugs we want to see, not silently
+ * dropped.
+ */
+function partitionTraitOverrides(
+  rest: { traitOverrides?: Record<string, object> } & object,
+  extraTraits: ReadonlyArray<DispatchExtraTrait>,
+  factoryTraitNames: ReadonlyArray<string>,
+): { factoryParams: object; extraOverrides: Record<string, object> } {
+  const overrides = (rest as { traitOverrides?: Record<string, object> }).traitOverrides;
+  if (!overrides || typeof overrides !== 'object') {
+    return { factoryParams: rest, extraOverrides: {} };
+  }
+  const factorySet = new Set(factoryTraitNames);
+  const extraSet = new Set<string>();
+  for (const e of extraTraits) {
+    const n = extraTraitName(e);
+    if (n) extraSet.add(n);
+  }
+  const factoryOverrides: Record<string, object> = {};
+  const extraOverrides: Record<string, object> = {};
+  for (const [k, v] of Object.entries(overrides)) {
+    if (extraSet.has(k) && !factorySet.has(k)) {
+      extraOverrides[k] = v;
+    } else {
+      factoryOverrides[k] = v;
+    }
+  }
+  return {
+    factoryParams: { ...rest, traitOverrides: factoryOverrides },
+    extraOverrides,
+  };
+}
+
+/**
+ * Merge an extra-trait entry with a `traitOverrides[<name>]` overlay
+ * lifted from `params.traitOverrides`. The overlay's `config`,
+ * `events`, `listens`, `linkedEntity`, `name`, and `emitsScope` keys
+ * win; the extra-trait entry's `ref` is preserved (the overlay can't
+ * change which atom-side trait we reference).
+ */
+function mergeExtraTraitWithOverlay(
+  trait: Omit<DispatchExtraTrait, 'from' | 'as'>,
+  overlay: object,
+): Omit<DispatchExtraTrait, 'from' | 'as'> {
+  const o = overlay as Partial<DispatchExtraTrait>;
+  return {
+    ...trait,
+    ...(o.config !== undefined ? { config: { ...(trait.config ?? {}), ...o.config } } : {}),
+    ...(o.events !== undefined ? { events: { ...(trait.events ?? {}), ...o.events } } : {}),
+    ...(o.listens !== undefined ? { listens: o.listens } : {}),
+    ...(o.linkedEntity !== undefined ? { linkedEntity: o.linkedEntity } : {}),
+    ...(o.name !== undefined ? { name: o.name } : {}),
+    ...(o.emitsScope !== undefined ? { emitsScope: o.emitsScope } : {}),
+  };
 }
 
 /**
