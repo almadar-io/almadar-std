@@ -1,19 +1,20 @@
 {
   "name": "std-browse-kanban",
-  "version": "1.0.0",
-  "description": "Kanban view for std-browse. Embeds base browse atom with kanban pattern override.",
+  "version": "1.1.0",
+  "description": "Kanban view. Composes std-board (the N-column board primitive with dragGroup/accepts/dropEvent wiring on the nested data-list inside each column card). Topology = loading / viewing_board / viewing_card / adding / error — same as std-pipeline, distinct from std-browse's loading/browsing/error CRUD shape. Cards drag between columns to update their stage via the bus.",
   "orbitals": [
     {
       "name": "KanbanBrowseItemOrbital",
       "uses": [
         {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
+          "from": "std/behaviors/std-board",
+          "as": "Board"
         }
       ],
       "entity": {
         "name": "KanbanBrowseItem",
-        "persistence": "runtime",
+        "collection": "kanban_browse_items",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -21,37 +22,44 @@
             "required": true
           },
           {
-            "name": "name",
+            "name": "title",
             "type": "string",
             "required": true
           },
           {
             "name": "description",
-            "type": "string"
+            "type": "string",
+            "default": ""
           },
           {
-            "name": "status",
+            "name": "stage",
             "type": "string",
-            "default": "active",
+            "default": "todo",
             "values": [
-              "active",
-              "inactive",
-              "pending"
+              "todo",
+              "doing",
+              "done"
             ]
           },
           {
-            "name": "createdAt",
-            "type": "string"
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
+          "ref": "Board.traits.BoardItemBoard",
           "name": "KanbanBrowseItemBrowse",
           "linkedEntity": "KanbanBrowseItem",
           "config": {
-            "viewPattern": "data-grid"
+            "title": "Kanban Browse"
           }
         }
       ],
