@@ -1,0 +1,56 @@
+{
+  "name": "std-stats-sparkline",
+  "version": "1.0.0",
+  "description": "Sparkline stat view. Embeds std-stats with sparkline pattern override.",
+  "orbitals": [
+    {
+      "name": "SparklineStatsItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        }
+      ],
+      "entity": {
+        "name": "SparklineStatsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "SparklineStatsItemStats",
+          "linkedEntity": "SparklineStatsItem",
+          "config": {
+            "viewPattern": "sparkline"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SparklineStatsPage",
+          "path": "/sparkline-stats",
+          "traits": [
+            {
+              "ref": "SparklineStatsItemStats"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

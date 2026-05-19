@@ -1,0 +1,22 @@
+app std-browse-timeline "1.0.0"
+"Timeline view for std-browse. Embeds base browse atom with timeline pattern override."
+
+orbital TimelineBrowseItemOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity TimelineBrowseItem [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+  }
+
+  trait TimelineBrowseItemBrowse = Browse.traits.BrowseItemBrowse -> TimelineBrowseItem {
+    config: {
+      viewPattern: "timeline"
+    }
+  }
+
+  page "/timeline-browse" as TimelineBrowsePage -> TimelineBrowseItemBrowse
+}
