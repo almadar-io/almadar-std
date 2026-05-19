@@ -75,7 +75,7 @@ export interface StdInventoryInventoryItemOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'InventoryAppLayout' | 'InventorySearch' | 'InventoryFilter' | 'InventoryStats' | 'InventoryGraphs' | 'InventoryBrowseList' | 'InventoryCreate' | 'InventoryEdit' | 'InventoryView' | 'InventoryDelete',
+    'InventoryAppLayout' | 'InventorySearch' | 'InventoryFilter' | 'InventoryStats' | 'InventoryGraphs' | 'InventoryBrowseList' | 'InventoryCreate' | 'InventoryEdit' | 'InventoryView' | 'InventoryDelete' | 'InventoryCatalog' | 'InventoryPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -980,8 +980,11 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1043,7 +1046,10 @@ export function isStdInventoryInventoryItemOrbitalParams(p: object): p is StdInv
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdInventoryInventoryItemOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdInventoryInventoryItemOrbitalManifest.traitNames,
+      ...StdInventoryInventoryItemOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1091,7 +1097,7 @@ export interface StdInventoryStockLevelPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'StockLevelAppLayout' | 'StockLevelView',
+    'StockLevelAppLayout' | 'StockLevelView' | 'StockLevelPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1302,8 +1308,11 @@ export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLeve
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1356,7 +1365,10 @@ export function isStdInventoryStockLevelPanelOrbitalParams(p: object): p is StdI
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdInventoryStockLevelPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdInventoryStockLevelPanelOrbitalManifest.traitNames,
+      ...StdInventoryStockLevelPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1404,7 +1416,7 @@ export interface StdInventoryWarehousePanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WarehouseAppLayout' | 'WarehouseView',
+    'WarehouseAppLayout' | 'WarehouseView' | 'WarehousePanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1615,8 +1627,11 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1669,7 +1684,10 @@ export function isStdInventoryWarehousePanelOrbitalParams(p: object): p is StdIn
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdInventoryWarehousePanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdInventoryWarehousePanelOrbitalManifest.traitNames,
+      ...StdInventoryWarehousePanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1717,7 +1735,7 @@ export interface StdInventoryReorderRulePanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ReorderRuleAppLayout' | 'ReorderRuleView',
+    'ReorderRuleAppLayout' | 'ReorderRuleView' | 'ReorderRulePanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1928,8 +1946,11 @@ export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderR
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1982,7 +2003,10 @@ export function isStdInventoryReorderRulePanelOrbitalParams(p: object): p is Std
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdInventoryReorderRulePanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdInventoryReorderRulePanelOrbitalManifest.traitNames,
+      ...StdInventoryReorderRulePanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2030,7 +2054,7 @@ export interface StdInventoryStockAdjustmentPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'StockAdjustmentAppLayout' | 'StockAdjustmentBrowse' | 'StockAdjustmentCreate' | 'StockAdjustmentDelete' | 'StockAdjustmentPersistor',
+    'StockAdjustmentAppLayout' | 'StockAdjustmentBrowse' | 'StockAdjustmentCreate' | 'StockAdjustmentDelete' | 'StockAdjustmentPersistor' | 'StockAdjustmentPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2287,8 +2311,11 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2344,7 +2371,10 @@ export function isStdInventoryStockAdjustmentPanelOrbitalParams(p: object): p is
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdInventoryStockAdjustmentPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdInventoryStockAdjustmentPanelOrbitalManifest.traitNames,
+      ...StdInventoryStockAdjustmentPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

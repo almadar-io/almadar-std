@@ -75,7 +75,7 @@ export interface StdPublicHelpCenterHelpCenterOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'HelpCenterAppLayout' | 'HelpCenterSearch' | 'HelpCenterFilter' | 'HelpCenterStats' | 'HelpCenterGraphs' | 'HelpCenterBrowseList' | 'HelpCenterCreate' | 'HelpCenterEdit' | 'HelpCenterView' | 'HelpCenterDelete',
+    'HelpCenterAppLayout' | 'HelpCenterSearch' | 'HelpCenterFilter' | 'HelpCenterStats' | 'HelpCenterGraphs' | 'HelpCenterBrowseList' | 'HelpCenterCreate' | 'HelpCenterEdit' | 'HelpCenterView' | 'HelpCenterDelete' | 'HelpCenterCatalog' | 'HelpCenterPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -992,8 +992,11 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1055,7 +1058,10 @@ export function isStdPublicHelpCenterHelpCenterOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPublicHelpCenterHelpCenterOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPublicHelpCenterHelpCenterOrbitalManifest.traitNames,
+      ...StdPublicHelpCenterHelpCenterOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1103,7 +1109,7 @@ export interface StdPublicHelpCenterHelpArticlePanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'HelpArticleAppLayout' | 'HelpArticleView',
+    'HelpArticleAppLayout' | 'HelpArticleView' | 'HelpArticlePanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1345,8 +1351,11 @@ export function stdPublicHelpCenterHelpArticlePanelOrbital(params: StdPublicHelp
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1399,7 +1408,10 @@ export function isStdPublicHelpCenterHelpArticlePanelOrbitalParams(p: object): p
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPublicHelpCenterHelpArticlePanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPublicHelpCenterHelpArticlePanelOrbitalManifest.traitNames,
+      ...StdPublicHelpCenterHelpArticlePanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1447,7 +1459,7 @@ export interface StdPublicHelpCenterHelpCategoryPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'HelpCategoryAppLayout' | 'HelpCategoryView',
+    'HelpCategoryAppLayout' | 'HelpCategoryView' | 'HelpCategoryPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1663,8 +1675,11 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1717,7 +1732,10 @@ export function isStdPublicHelpCenterHelpCategoryPanelOrbitalParams(p: object): 
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPublicHelpCenterHelpCategoryPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPublicHelpCenterHelpCategoryPanelOrbitalManifest.traitNames,
+      ...StdPublicHelpCenterHelpCategoryPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

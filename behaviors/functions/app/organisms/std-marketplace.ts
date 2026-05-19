@@ -75,7 +75,7 @@ export interface StdMarketplaceVendorOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'VendorAppLayout' | 'VendorBrowseList' | 'VendorPayoutLedger' | 'VendorCreate' | 'VendorEdit' | 'VendorView' | 'VendorDelete',
+    'VendorAppLayout' | 'VendorBrowseList' | 'VendorPayoutLedger' | 'VendorCreate' | 'VendorEdit' | 'VendorView' | 'VendorDelete' | 'VendorCatalog' | 'VendorPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -813,8 +813,11 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -873,7 +876,10 @@ export function isStdMarketplaceVendorOrbitalParams(p: object): p is StdMarketpl
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdMarketplaceVendorOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdMarketplaceVendorOrbitalManifest.traitNames,
+      ...StdMarketplaceVendorOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -921,7 +927,7 @@ export interface StdMarketplaceListingOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ListingAppLayout' | 'ListingSearch' | 'ListingFilter' | 'ListingStats' | 'ListingTags' | 'ListingBrowseList' | 'ListingImages' | 'ListingRating' | 'ListingFlag' | 'ListingModQueue' | 'ListingCreate' | 'ListingEdit' | 'ListingView' | 'ListingDelete',
+    'ListingAppLayout' | 'ListingSearch' | 'ListingFilter' | 'ListingStats' | 'ListingTags' | 'ListingBrowseList' | 'ListingImages' | 'ListingRating' | 'ListingFlag' | 'ListingModQueue' | 'ListingCreate' | 'ListingEdit' | 'ListingView' | 'ListingDelete' | 'ListingCatalog' | 'ListingPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1933,8 +1939,11 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2000,7 +2009,10 @@ export function isStdMarketplaceListingOrbitalParams(p: object): p is StdMarketp
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdMarketplaceListingOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdMarketplaceListingOrbitalManifest.traitNames,
+      ...StdMarketplaceListingOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2048,7 +2060,7 @@ export interface StdMarketplaceOrderOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'OrderAppLayout' | 'OrderBrowseList' | 'OrderCart' | 'OrderCartAdd' | 'OrderCartRemove' | 'OrderCartPersistor' | 'OrderCreate' | 'OrderEdit' | 'OrderView' | 'OrderDelete',
+    'OrderAppLayout' | 'OrderBrowseList' | 'OrderCart' | 'OrderCartAdd' | 'OrderCartRemove' | 'OrderCartPersistor' | 'OrderCreate' | 'OrderEdit' | 'OrderView' | 'OrderDelete' | 'OrderCatalog' | 'OrderPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2803,8 +2815,11 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2866,7 +2881,10 @@ export function isStdMarketplaceOrderOrbitalParams(p: object): p is StdMarketpla
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdMarketplaceOrderOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdMarketplaceOrderOrbitalManifest.traitNames,
+      ...StdMarketplaceOrderOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

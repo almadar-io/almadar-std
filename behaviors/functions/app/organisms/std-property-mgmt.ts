@@ -75,7 +75,7 @@ export interface StdPropertyMgmtPropertyOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PropertyAppLayout' | 'PropertySearch' | 'PropertyFilter' | 'PropertyStats' | 'PropertyGraphs' | 'PropertyBrowseList' | 'PropertyCreate' | 'PropertyEdit' | 'PropertyView' | 'PropertyDelete',
+    'PropertyAppLayout' | 'PropertySearch' | 'PropertyFilter' | 'PropertyStats' | 'PropertyGraphs' | 'PropertyBrowseList' | 'PropertyCreate' | 'PropertyEdit' | 'PropertyView' | 'PropertyDelete' | 'PropertyCatalog' | 'PropertyPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -993,8 +993,11 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1056,7 +1059,10 @@ export function isStdPropertyMgmtPropertyOrbitalParams(p: object): p is StdPrope
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPropertyMgmtPropertyOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPropertyMgmtPropertyOrbitalManifest.traitNames,
+      ...StdPropertyMgmtPropertyOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1104,7 +1110,7 @@ export interface StdPropertyMgmtLeasePanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'LeaseAppLayout' | 'LeaseView',
+    'LeaseAppLayout' | 'LeaseView' | 'LeasePanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1331,8 +1337,11 @@ export function stdPropertyMgmtLeasePanelOrbital(params: StdPropertyMgmtLeasePan
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1385,7 +1394,10 @@ export function isStdPropertyMgmtLeasePanelOrbitalParams(p: object): p is StdPro
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPropertyMgmtLeasePanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPropertyMgmtLeasePanelOrbitalManifest.traitNames,
+      ...StdPropertyMgmtLeasePanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1433,7 +1445,7 @@ export interface StdPropertyMgmtTenantPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TenantAppLayout' | 'TenantView',
+    'TenantAppLayout' | 'TenantView' | 'TenantPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1654,8 +1666,11 @@ export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1708,7 +1723,10 @@ export function isStdPropertyMgmtTenantPanelOrbitalParams(p: object): p is StdPr
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPropertyMgmtTenantPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPropertyMgmtTenantPanelOrbitalManifest.traitNames,
+      ...StdPropertyMgmtTenantPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1756,7 +1774,7 @@ export interface StdPropertyMgmtRentChargePanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'RentChargeAppLayout' | 'RentChargeView',
+    'RentChargeAppLayout' | 'RentChargeView' | 'RentChargePanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1978,8 +1996,11 @@ export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRen
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2032,7 +2053,10 @@ export function isStdPropertyMgmtRentChargePanelOrbitalParams(p: object): p is S
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPropertyMgmtRentChargePanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPropertyMgmtRentChargePanelOrbitalManifest.traitNames,
+      ...StdPropertyMgmtRentChargePanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2080,7 +2104,7 @@ export interface StdPropertyMgmtMaintenanceRequestPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'MaintenanceRequestAppLayout' | 'MaintenanceRequestView',
+    'MaintenanceRequestAppLayout' | 'MaintenanceRequestView' | 'MaintenanceRequestPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2324,8 +2348,11 @@ export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropert
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2378,7 +2405,10 @@ export function isStdPropertyMgmtMaintenanceRequestPanelOrbitalParams(p: object)
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest.traitNames,
+      ...StdPropertyMgmtMaintenanceRequestPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

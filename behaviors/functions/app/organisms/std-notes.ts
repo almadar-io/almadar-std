@@ -75,7 +75,7 @@ export interface StdNotesNoteOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'NoteAppLayout' | 'NoteSearch' | 'NoteFilter' | 'NoteStats' | 'NoteGraphs' | 'NoteBrowseList' | 'NotePageTree' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete',
+    'NoteAppLayout' | 'NoteSearch' | 'NoteFilter' | 'NoteStats' | 'NoteGraphs' | 'NoteBrowseList' | 'NotePageTree' | 'NoteCreate' | 'NoteEdit' | 'NoteView' | 'NoteDelete' | 'NoteCatalog' | 'NotePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1086,8 +1086,11 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1150,7 +1153,10 @@ export function isStdNotesNoteOrbitalParams(p: object): p is StdNotesNoteOrbital
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdNotesNoteOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdNotesNoteOrbitalManifest.traitNames,
+      ...StdNotesNoteOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1198,7 +1204,7 @@ export interface StdNotesRichEditorPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'RichEditorAppLayout' | 'RichEditorDocumentEdit',
+    'RichEditorAppLayout' | 'RichEditorDocumentEdit' | 'RichEditorPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1431,8 +1437,11 @@ export function stdNotesRichEditorPanelOrbital(params: StdNotesRichEditorPanelOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1485,7 +1494,10 @@ export function isStdNotesRichEditorPanelOrbitalParams(p: object): p is StdNotes
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdNotesRichEditorPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdNotesRichEditorPanelOrbitalManifest.traitNames,
+      ...StdNotesRichEditorPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

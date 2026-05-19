@@ -75,7 +75,7 @@ export interface StdHrPortalEmployeeOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'EmployeeAppLayout' | 'EmployeeSearch' | 'EmployeeFilter' | 'EmployeeStats' | 'EmployeeGraphs' | 'EmployeeBrowseList' | 'EmployeeCreate' | 'EmployeeEdit' | 'EmployeeView' | 'EmployeeDelete' | 'EmployeeAvatarUpload',
+    'EmployeeAppLayout' | 'EmployeeSearch' | 'EmployeeFilter' | 'EmployeeStats' | 'EmployeeGraphs' | 'EmployeeBrowseList' | 'EmployeeCreate' | 'EmployeeEdit' | 'EmployeeView' | 'EmployeeDelete' | 'EmployeeAvatarUpload' | 'EmployeeCatalog' | 'EmployeePersistor' | 'EmployeeAvatarUploadForm',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1132,8 +1132,11 @@ export function stdHrPortalEmployeeOrbital(params: StdHrPortalEmployeeOrbitalPar
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1197,7 +1200,10 @@ export function isStdHrPortalEmployeeOrbitalParams(p: object): p is StdHrPortalE
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHrPortalEmployeeOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHrPortalEmployeeOrbitalManifest.traitNames,
+      ...StdHrPortalEmployeeOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1245,7 +1251,7 @@ export interface StdHrPortalOnboardingOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'OnboardingAppLayout',
+    'OnboardingAppLayout' | 'OnboardingWizard',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2434,8 +2440,11 @@ export function stdHrPortalOnboardingOrbital(params: StdHrPortalOnboardingOrbita
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2487,7 +2496,10 @@ export function isStdHrPortalOnboardingOrbitalParams(p: object): p is StdHrPorta
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHrPortalOnboardingOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHrPortalOnboardingOrbitalManifest.traitNames,
+      ...StdHrPortalOnboardingOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2535,7 +2547,7 @@ export interface StdHrPortalTimeOffOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TimeOffAppLayout' | 'TimeOffCalendar' | 'TimeOffBrowseList' | 'TimeOffCreate' | 'TimeOffEdit' | 'TimeOffView' | 'TimeOffDelete',
+    'TimeOffAppLayout' | 'TimeOffCalendar' | 'TimeOffBrowseList' | 'TimeOffCreate' | 'TimeOffEdit' | 'TimeOffView' | 'TimeOffDelete' | 'TimeOffCatalog' | 'TimeOffPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3344,8 +3356,11 @@ export function stdHrPortalTimeOffOrbital(params: StdHrPortalTimeOffOrbitalParam
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3404,7 +3419,10 @@ export function isStdHrPortalTimeOffOrbitalParams(p: object): p is StdHrPortalTi
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHrPortalTimeOffOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHrPortalTimeOffOrbitalManifest.traitNames,
+      ...StdHrPortalTimeOffOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -3452,7 +3470,7 @@ export interface StdHrPortalOrgChartOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'OrgChartAppLayout' | 'EmployeeRelated',
+    'OrgChartAppLayout' | 'EmployeeRelated' | 'OrgChartDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3929,8 +3947,11 @@ export function stdHrPortalOrgChartOrbital(params: StdHrPortalOrgChartOrbitalPar
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3983,7 +4004,10 @@ export function isStdHrPortalOrgChartOrbitalParams(p: object): p is StdHrPortalO
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdHrPortalOrgChartOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdHrPortalOrgChartOrbitalManifest.traitNames,
+      ...StdHrPortalOrgChartOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

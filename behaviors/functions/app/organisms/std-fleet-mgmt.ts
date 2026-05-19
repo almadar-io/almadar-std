@@ -75,7 +75,7 @@ export interface StdFleetMgmtFleetOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'FleetAppLayout' | 'FleetSearch' | 'FleetFilter' | 'FleetStats' | 'FleetGraphs' | 'FleetBrowseList' | 'FleetCreate' | 'FleetEdit' | 'FleetView' | 'FleetDelete',
+    'FleetAppLayout' | 'FleetSearch' | 'FleetFilter' | 'FleetStats' | 'FleetGraphs' | 'FleetBrowseList' | 'FleetCreate' | 'FleetEdit' | 'FleetView' | 'FleetDelete' | 'FleetCatalog' | 'FleetPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -985,8 +985,11 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1048,7 +1051,10 @@ export function isStdFleetMgmtFleetOrbitalParams(p: object): p is StdFleetMgmtFl
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFleetMgmtFleetOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFleetMgmtFleetOrbitalManifest.traitNames,
+      ...StdFleetMgmtFleetOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1096,7 +1102,7 @@ export interface StdFleetMgmtVehiclePanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'VehicleAppLayout' | 'VehicleView',
+    'VehicleAppLayout' | 'VehicleView' | 'VehiclePanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1341,8 +1347,11 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1395,7 +1404,10 @@ export function isStdFleetMgmtVehiclePanelOrbitalParams(p: object): p is StdFlee
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFleetMgmtVehiclePanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFleetMgmtVehiclePanelOrbitalManifest.traitNames,
+      ...StdFleetMgmtVehiclePanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1443,7 +1455,7 @@ export interface StdFleetMgmtDriverPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DriverAppLayout' | 'DriverView',
+    'DriverAppLayout' | 'DriverView' | 'DriverPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1678,8 +1690,11 @@ export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOr
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1732,7 +1747,10 @@ export function isStdFleetMgmtDriverPanelOrbitalParams(p: object): p is StdFleet
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFleetMgmtDriverPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFleetMgmtDriverPanelOrbitalManifest.traitNames,
+      ...StdFleetMgmtDriverPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1780,7 +1798,7 @@ export interface StdFleetMgmtTelematicsEventPanelOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TelematicsEventAppLayout' | 'TelematicsEventView',
+    'TelematicsEventAppLayout' | 'TelematicsEventView' | 'TelematicsEventPanel',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2015,8 +2033,11 @@ export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTele
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2069,7 +2090,10 @@ export function isStdFleetMgmtTelematicsEventPanelOrbitalParams(p: object): p is
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdFleetMgmtTelematicsEventPanelOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdFleetMgmtTelematicsEventPanelOrbitalManifest.traitNames,
+      ...StdFleetMgmtTelematicsEventPanelOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

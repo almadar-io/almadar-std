@@ -75,7 +75,7 @@ export interface StdCmsArticleOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ArticleAppLayout' | 'ArticleBrowseList' | 'ArticleSearch' | 'ArticleFilter' | 'ArticleStats' | 'ArticleGraphs' | 'ArticleCreate' | 'ArticleEdit' | 'ArticleView' | 'ArticleDelete',
+    'ArticleAppLayout' | 'ArticleBrowseList' | 'ArticleSearch' | 'ArticleFilter' | 'ArticleStats' | 'ArticleGraphs' | 'ArticleCreate' | 'ArticleEdit' | 'ArticleView' | 'ArticleDelete' | 'ArticleCatalog' | 'ArticleHeroImageUpload' | 'ArticlePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1106,8 +1106,11 @@ export function stdCmsArticleOrbital(params: StdCmsArticleOrbitalParams = {}): O
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1170,7 +1173,10 @@ export function isStdCmsArticleOrbitalParams(p: object): p is StdCmsArticleOrbit
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCmsArticleOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCmsArticleOrbitalManifest.traitNames,
+      ...StdCmsArticleOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1218,7 +1224,7 @@ export interface StdCmsMediaAssetOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'MediaAssetAppLayout' | 'MediaAssetGallery' | 'MediaAssetCreate' | 'MediaAssetView',
+    'MediaAssetAppLayout' | 'MediaAssetGallery' | 'MediaAssetCreate' | 'MediaAssetView' | 'MediaCatalog' | 'MediaUpload' | 'MediaPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1952,8 +1958,11 @@ export function stdCmsMediaAssetOrbital(params: StdCmsMediaAssetOrbitalParams = 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2010,7 +2019,10 @@ export function isStdCmsMediaAssetOrbitalParams(p: object): p is StdCmsMediaAsse
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCmsMediaAssetOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCmsMediaAssetOrbitalManifest.traitNames,
+      ...StdCmsMediaAssetOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2058,7 +2070,7 @@ export interface StdCmsCategoryOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CategoryAppLayout' | 'CategoryBrowseList' | 'CategoryCreate' | 'CategoryEdit' | 'CategoryView' | 'CategoryDelete',
+    'CategoryAppLayout' | 'CategoryBrowseList' | 'CategoryCreate' | 'CategoryEdit' | 'CategoryView' | 'CategoryDelete' | 'CategoryCatalog' | 'CategoryPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2712,8 +2724,11 @@ export function stdCmsCategoryOrbital(params: StdCmsCategoryOrbitalParams = {}):
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2771,7 +2786,10 @@ export function isStdCmsCategoryOrbitalParams(p: object): p is StdCmsCategoryOrb
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCmsCategoryOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCmsCategoryOrbitalManifest.traitNames,
+      ...StdCmsCategoryOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2819,7 +2837,7 @@ export interface StdCmsCmsHubOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CmsHubAppLayout' | 'HubBrowseList',
+    'CmsHubAppLayout' | 'HubBrowseList' | 'CmsHubDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3087,8 +3105,11 @@ export function stdCmsCmsHubOrbital(params: StdCmsCmsHubOrbitalParams = {}): Orb
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3141,7 +3162,10 @@ export function isStdCmsCmsHubOrbitalParams(p: object): p is StdCmsCmsHubOrbital
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCmsCmsHubOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCmsCmsHubOrbitalManifest.traitNames,
+      ...StdCmsCmsHubOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

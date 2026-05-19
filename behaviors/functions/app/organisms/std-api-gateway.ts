@@ -75,7 +75,7 @@ export interface StdApiGatewayRouteOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'RouteAppLayout' | 'RouteSearch' | 'RouteFilter' | 'RouteStats' | 'RouteGraphs' | 'RouteBrowseList' | 'RouteCreate' | 'RouteEdit' | 'RouteView' | 'RouteDelete',
+    'RouteAppLayout' | 'RouteSearch' | 'RouteFilter' | 'RouteStats' | 'RouteGraphs' | 'RouteBrowseList' | 'RouteCreate' | 'RouteEdit' | 'RouteView' | 'RouteDelete' | 'RouteCatalog' | 'RoutePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -976,8 +976,11 @@ export function stdApiGatewayRouteOrbital(params: StdApiGatewayRouteOrbitalParam
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1039,7 +1042,10 @@ export function isStdApiGatewayRouteOrbitalParams(p: object): p is StdApiGateway
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdApiGatewayRouteOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdApiGatewayRouteOrbitalManifest.traitNames,
+      ...StdApiGatewayRouteOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1087,7 +1093,7 @@ export interface StdApiGatewayBackendOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'BackendAppLayout' | 'BackendBrowseList' | 'BackendCircuitBreaker' | 'BackendRateLimiter' | 'BackendCache' | 'BackendCreate' | 'BackendEdit' | 'BackendView' | 'BackendDelete',
+    'BackendAppLayout' | 'BackendBrowseList' | 'BackendCircuitBreaker' | 'BackendRateLimiter' | 'BackendCache' | 'BackendCreate' | 'BackendEdit' | 'BackendView' | 'BackendDelete' | 'BackendCatalog' | 'BackendPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1833,8 +1839,11 @@ export function stdApiGatewayBackendOrbital(params: StdApiGatewayBackendOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1895,7 +1904,10 @@ export function isStdApiGatewayBackendOrbitalParams(p: object): p is StdApiGatew
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdApiGatewayBackendOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdApiGatewayBackendOrbitalManifest.traitNames,
+      ...StdApiGatewayBackendOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1943,7 +1955,7 @@ export interface StdApiGatewayAnalyticsOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'AnalyticsAppLayout' | 'AnalyticsBrowseList',
+    'AnalyticsAppLayout' | 'AnalyticsBrowseList' | 'AnalyticsDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2257,8 +2269,11 @@ export function stdApiGatewayAnalyticsOrbital(params: StdApiGatewayAnalyticsOrbi
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2311,7 +2326,10 @@ export function isStdApiGatewayAnalyticsOrbitalParams(p: object): p is StdApiGat
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdApiGatewayAnalyticsOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdApiGatewayAnalyticsOrbitalManifest.traitNames,
+      ...StdApiGatewayAnalyticsOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

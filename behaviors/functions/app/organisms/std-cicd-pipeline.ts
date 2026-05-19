@@ -75,7 +75,7 @@ export interface StdCicdPipelineBuildOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'BuildAppLayout' | 'BuildSearch' | 'BuildFilter' | 'BuildStats' | 'BuildGraphs' | 'BuildBrowseList' | 'BuildCreate' | 'BuildEdit' | 'BuildView' | 'BuildDelete',
+    'BuildAppLayout' | 'BuildSearch' | 'BuildFilter' | 'BuildStats' | 'BuildGraphs' | 'BuildBrowseList' | 'BuildCreate' | 'BuildEdit' | 'BuildView' | 'BuildDelete' | 'BuildCatalog' | 'BuildPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -984,8 +984,11 @@ export function stdCicdPipelineBuildOrbital(params: StdCicdPipelineBuildOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1047,7 +1050,10 @@ export function isStdCicdPipelineBuildOrbitalParams(p: object): p is StdCicdPipe
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCicdPipelineBuildOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCicdPipelineBuildOrbitalManifest.traitNames,
+      ...StdCicdPipelineBuildOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1095,7 +1101,7 @@ export interface StdCicdPipelineStageOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'StageAppLayout' | 'StageBrowseList' | 'StageCreate' | 'StageEdit' | 'StageView' | 'StageDelete',
+    'StageAppLayout' | 'StageBrowseList' | 'StageCreate' | 'StageEdit' | 'StageView' | 'StageDelete' | 'StageCatalog' | 'StagePersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1810,8 +1816,11 @@ export function stdCicdPipelineStageOrbital(params: StdCicdPipelineStageOrbitalP
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1869,7 +1878,10 @@ export function isStdCicdPipelineStageOrbitalParams(p: object): p is StdCicdPipe
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCicdPipelineStageOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCicdPipelineStageOrbitalManifest.traitNames,
+      ...StdCicdPipelineStageOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1917,7 +1929,7 @@ export interface StdCicdPipelineDeploymentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DeploymentAppLayout' | 'DeploymentBrowseList' | 'DeploymentGitHub',
+    'DeploymentAppLayout' | 'DeploymentBrowseList' | 'DeploymentGitHub' | 'DeploymentDisplay' | 'DeploymentCommitsPanel' | 'DeploymentAsync',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2775,8 +2787,11 @@ export function stdCicdPipelineDeploymentOrbital(params: StdCicdPipelineDeployme
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2832,7 +2847,10 @@ export function isStdCicdPipelineDeploymentOrbitalParams(p: object): p is StdCic
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdCicdPipelineDeploymentOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdCicdPipelineDeploymentOrbitalManifest.traitNames,
+      ...StdCicdPipelineDeploymentOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

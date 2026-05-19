@@ -75,7 +75,7 @@ export interface StdSurveySurveyOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SurveyAppLayout' | 'SurveySearch' | 'SurveyStats' | 'SurveyGraphs' | 'SurveyBrowseList' | 'SurveyQuestionBank' | 'SurveyBranching' | 'SurveyPreviewForm' | 'SurveyCreate' | 'SurveyEdit' | 'SurveyView' | 'SurveyDelete',
+    'SurveyAppLayout' | 'SurveySearch' | 'SurveyStats' | 'SurveyGraphs' | 'SurveyBrowseList' | 'SurveyQuestionBank' | 'SurveyBranching' | 'SurveyPreviewForm' | 'SurveyCreate' | 'SurveyEdit' | 'SurveyView' | 'SurveyDelete' | 'SurveyCatalog' | 'SurveyPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -958,8 +958,11 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1023,7 +1026,10 @@ export function isStdSurveySurveyOrbitalParams(p: object): p is StdSurveySurveyO
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdSurveySurveyOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdSurveySurveyOrbitalManifest.traitNames,
+      ...StdSurveySurveyOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1071,7 +1077,7 @@ export interface StdSurveyResponseOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ResponseAppLayout' | 'ResponseCollect' | 'ResponseBrowseList' | 'ResponseView',
+    'ResponseAppLayout' | 'ResponseCollect' | 'ResponseBrowseList' | 'ResponseView' | 'ResponseDashboard',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1460,8 +1466,11 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1516,7 +1525,10 @@ export function isStdSurveyResponseOrbitalParams(p: object): p is StdSurveyRespo
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdSurveyResponseOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdSurveyResponseOrbitalManifest.traitNames,
+      ...StdSurveyResponseOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }

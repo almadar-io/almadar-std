@@ -75,7 +75,7 @@ export interface StdDevopsDashboardServiceNodeOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'ServiceNodeAppLayout' | 'ServiceNodeSearch' | 'ServiceNodeFilter' | 'ServiceNodeStats' | 'ServiceNodeGraphs' | 'ServiceNodeBrowseList' | 'ServiceNodeCreate' | 'ServiceNodeEdit' | 'ServiceNodeView' | 'ServiceNodeDelete',
+    'ServiceNodeAppLayout' | 'ServiceNodeSearch' | 'ServiceNodeFilter' | 'ServiceNodeStats' | 'ServiceNodeGraphs' | 'ServiceNodeBrowseList' | 'ServiceNodeCreate' | 'ServiceNodeEdit' | 'ServiceNodeView' | 'ServiceNodeDelete' | 'ServiceNodeCatalog' | 'ServiceNodePersistor' | 'ServiceNodeCircuitBreaker',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1778,8 +1778,11 @@ export function stdDevopsDashboardServiceNodeOrbital(params: StdDevopsDashboardS
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -1842,7 +1845,10 @@ export function isStdDevopsDashboardServiceNodeOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdDevopsDashboardServiceNodeOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdDevopsDashboardServiceNodeOrbitalManifest.traitNames,
+      ...StdDevopsDashboardServiceNodeOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -1890,7 +1896,7 @@ export interface StdDevopsDashboardAlertMetricOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'AlertMetricAppLayout' | 'AlertBrowseList' | 'AlertCreate' | 'AlertEdit' | 'AlertView' | 'AlertDelete',
+    'AlertMetricAppLayout' | 'AlertBrowseList' | 'AlertCreate' | 'AlertEdit' | 'AlertView' | 'AlertDelete' | 'AlertCatalog' | 'AlertPersistor' | 'AlertEmail',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2605,8 +2611,11 @@ export function stdDevopsDashboardAlertMetricOrbital(params: StdDevopsDashboardA
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2665,7 +2674,10 @@ export function isStdDevopsDashboardAlertMetricOrbitalParams(p: object): p is St
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdDevopsDashboardAlertMetricOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdDevopsDashboardAlertMetricOrbitalManifest.traitNames,
+      ...StdDevopsDashboardAlertMetricOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -2713,7 +2725,7 @@ export interface StdDevopsDashboardLogEntryOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'LogEntryAppLayout' | 'LogBrowseList',
+    'LogEntryAppLayout' | 'LogBrowseList' | 'LogCatalog',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -2941,8 +2953,11 @@ export function stdDevopsDashboardLogEntryOrbital(params: StdDevopsDashboardLogE
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -2995,7 +3010,10 @@ export function isStdDevopsDashboardLogEntryOrbitalParams(p: object): p is StdDe
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdDevopsDashboardLogEntryOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdDevopsDashboardLogEntryOrbitalManifest.traitNames,
+      ...StdDevopsDashboardLogEntryOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
@@ -3043,7 +3061,7 @@ export interface StdDevopsDashboardSystemMetricOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SystemMetricAppLayout' | 'SystemMetricsBrowse',
+    'SystemMetricAppLayout' | 'SystemMetricsBrowse' | 'SystemMetricDisplay',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3270,8 +3288,11 @@ export function stdDevopsDashboardSystemMetricOrbital(params: StdDevopsDashboard
   if (built.traits && params.traitOverrides !== undefined) {
     built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
       if (!t || typeof t !== "object") return t;
-      const tr = t as TraitReference;
-      if (typeof tr.ref !== "string" || typeof tr.name !== "string") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
       const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
       const override = overrides?.[tr.name];
       if (!override) return t;
@@ -3324,7 +3345,10 @@ export function isStdDevopsDashboardSystemMetricOrbitalParams(p: object): p is S
   const obj = p as { traitOverrides?: _OverrideRecord };
   if (obj.traitOverrides !== undefined) {
     if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
-    const allowed: readonly string[] = StdDevopsDashboardSystemMetricOrbitalManifest.traitNames;
+    const allowed: readonly string[] = [
+      ...StdDevopsDashboardSystemMetricOrbitalManifest.traitNames,
+      ...StdDevopsDashboardSystemMetricOrbitalManifest.inlineTraitNames,
+    ];
     for (const k of Object.keys(obj.traitOverrides)) {
       if (!allowed.includes(k)) return false;
     }
