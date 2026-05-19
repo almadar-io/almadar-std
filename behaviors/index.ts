@@ -69,5 +69,8 @@ export {
   getBehaviorEmbedding,
 } from './embeddings.js';
 
+// Factory signature catalog (sync-time bake — see tools/almadar-pattern-sync)
+export { getFactorySignatureCatalog } from './factory-signatures.js';
+
 // All behavior functions (atoms, molecules, organisms)
 export * from './functions/index.js';

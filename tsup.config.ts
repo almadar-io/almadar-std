@@ -11,6 +11,7 @@ export default defineConfig({
     'behaviors/exports-reader.ts',
     'behaviors/query.ts',
     'behaviors/embeddings.ts',
+    'behaviors/factory-signatures.ts',
     'behaviors/functions/index.ts',
     'factory-runtime/index.ts',
   ],
@@ -27,6 +28,11 @@ export default defineConfig({
     // intentionally not emitted anymore — the `behaviors/exports/` layout is
     // retired as of 2026-04-17.)
     cpSync('behaviors/registry', 'dist/behaviors/registry', { recursive: true });
+    // Mirror the same registry tree at `dist/registry/` so the bundled
+    // `dist/index.js` (where `import.meta.url` resolves to `dist/`) can
+    // also locate `factory-signatures.json`. Mirrors the dual-copy
+    // pattern used for `behaviors-registry.json` / `behaviors-embeddings.json`.
+    cpSync('behaviors/registry', 'dist/registry', { recursive: true });
     // Copy behaviors-registry.json so query.ts can find it at runtime.
     cpSync('behaviors/behaviors-registry.json', 'dist/behaviors/behaviors-registry.json');
     cpSync('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
