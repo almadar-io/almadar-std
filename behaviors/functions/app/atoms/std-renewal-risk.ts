@@ -89,12 +89,12 @@ export interface StdRenewalRiskRenewalRiskLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRenewalRiskConfig {
-  /** Default: `[{"event":"OPEN_RISK","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","label":"Mark Churned","event":"MARK_CHURNED"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","label":"Customer","name":"customerName"},{"label":"Renewal","variant":"caption","name":"renewalDate"},{"label":"ARR","variant":"caption","name":"arrAmount"},{"label":"Risk","name":"riskLevel","variant":"badge"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","label":"CSM","name":"assignedCsm"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Renewal Risk"` */
   title?: string;
+  /** Default: `[{"variant":"caption","name":"customerName","label":"Customer"},{"name":"renewalDate","label":"Renewal","variant":"caption"},{"label":"ARR","variant":"caption","name":"arrAmount"},{"label":"Risk","variant":"badge","name":"riskLevel"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"assignedCsm","label":"CSM"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","event":"OPEN_RISK","label":"Open","icon":"arrow-right"},{"label":"Mark Churned","variant":"danger","event":"MARK_CHURNED"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

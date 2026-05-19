@@ -53,12 +53,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Documents"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.DocumentCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Documents",
+                "href": "/documents",
+                "icon": "file-text"
+              },
+              {
+                "label": "E-Sign Flow",
+                "icon": "file-signature",
+                "href": "/esign-flow"
+              },
+              {
+                "label": "Files",
+                "icon": "folder",
+                "href": "/files"
+              },
+              {
+                "label": "Signatures",
+                "href": "/esign",
+                "icon": "pen-tool"
+              },
+              {
+                "icon": "history",
+                "href": "/revisions/manage",
+                "label": "Versions"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "DOCUMENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "DOCUMENT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "DOCUMENT_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search documents…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +147,38 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "DOCUMENT_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "status",
+                "filterType": "select",
+                "label": "Status",
+                "options": [
+                  "active",
+                  "archived",
+                  "pending-review"
+                ]
+              },
+              {
+                "field": "mimeType",
+                "options": [
+                  "pdf",
+                  "doc",
+                  "text",
+                  "image"
+                ],
+                "label": "Type",
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +189,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "label": "Total",
+                "aggregation": "count",
+                "format": "number",
+                "icon": "file-text"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "format": "number",
+                "label": "Active",
+                "aggregation": "count",
+                "icon": "check-circle",
+                "variant": "success"
+              },
+              {
+                "aggregation": "count",
+                "label": "Pending Review",
+                "icon": "clock",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "pending-review"
+                  ]
+                ],
+                "variant": "warning"
+              },
+              {
+                "variant": "primary",
+                "format": "number",
+                "field": "sizeBytes",
+                "aggregation": "sum",
+                "label": "Total Size",
+                "icon": "hard-drive"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Documents"
+          }
         ],
         "capabilities": []
       },
@@ -113,13 +257,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Volume across status buckets"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Documents by Status"
+          }
         ],
         "capabilities": []
       },
@@ -134,10 +306,65 @@
           "DOCUMENT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "variant": "h3",
+                "icon": "file-text"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "mimeType",
+                "variant": "badge"
+              },
+              {
+                "name": "owner",
+                "variant": "body"
+              },
+              {
+                "name": "lastModified",
+                "variant": "caption",
+                "format": "date"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -148,10 +375,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "mimeType",
+              "sizeBytes",
+              "owner",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Document"
+          }
         ],
         "capabilities": []
       },
@@ -162,10 +411,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "mimeType",
+              "sizeBytes",
+              "owner",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Document"
+          }
         ],
         "capabilities": []
       },
@@ -176,10 +447,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "mimeType",
+              "sizeBytes",
+              "owner",
+              "status",
+              "lastModified"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Document"
+          }
         ],
         "capabilities": []
       },
@@ -190,10 +484,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Document"
+          }
         ],
         "capabilities": []
       },
@@ -242,7 +552,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Files"
+          }
         ],
         "capabilities": []
       },
@@ -251,7 +565,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Signature Requests"
+          }
         ],
         "capabilities": []
       },
@@ -260,7 +578,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Version History"
+          }
         ],
         "capabilities": []
       },

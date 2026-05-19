@@ -63,12 +63,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "DevOps Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ServiceNodeCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/services",
+                "icon": "server",
+                "label": "Services"
+              },
+              {
+                "href": "/alerts",
+                "icon": "bell",
+                "label": "Alerts"
+              },
+              {
+                "label": "Logs",
+                "href": "/logs",
+                "icon": "terminal"
+              },
+              {
+                "href": "/metrics",
+                "label": "Metrics",
+                "icon": "layout-list"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SERVICE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SERVICE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SERVICE_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search services…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +152,38 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SERVICE_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "status",
+                "label": "Status",
+                "filterType": "select",
+                "options": [
+                  "healthy",
+                  "degraded",
+                  "down"
+                ]
+              },
+              {
+                "label": "Region",
+                "field": "region",
+                "filterType": "select",
+                "options": [
+                  "us-east",
+                  "us-west",
+                  "eu-central",
+                  "ap-south"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +194,72 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "aggregation": "count",
+                "label": "Total",
+                "icon": "server",
+                "format": "number"
+              },
+              {
+                "icon": "check-circle",
+                "aggregation": "count",
+                "format": "number",
+                "label": "Healthy",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "healthy"
+                  ]
+                ],
+                "variant": "success"
+              },
+              {
+                "icon": "alert-circle",
+                "variant": "warning",
+                "label": "Degraded",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "degraded"
+                  ]
+                ],
+                "aggregation": "count",
+                "format": "number"
+              },
+              {
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "down"
+                  ]
+                ],
+                "icon": "alert-triangle",
+                "label": "Down",
+                "variant": "danger"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Services"
+          }
         ],
         "capabilities": []
       },
@@ -123,13 +270,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "pie"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Health distribution across the fleet"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Services by Status"
+          }
         ],
         "capabilities": []
       },
@@ -144,10 +319,61 @@
           "SERVICE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "variant": "h4",
+                "icon": "server"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "region",
+                "variant": "body"
+              },
+              {
+                "format": "date",
+                "variant": "caption",
+                "name": "lastChecked"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -158,10 +384,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "status",
+              "region",
+              "url",
+              "threshold"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Register Service"
+          }
         ],
         "capabilities": []
       },
@@ -172,10 +420,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "status",
+              "region",
+              "url",
+              "threshold"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Service"
+          }
         ],
         "capabilities": []
       },
@@ -186,10 +456,35 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "status",
+              "region",
+              "url",
+              "lastChecked",
+              "failureCount",
+              "successCount",
+              "threshold"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Service"
+          }
         ],
         "capabilities": []
       },
@@ -200,10 +495,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Service"
+          }
         ],
         "capabilities": []
       },
@@ -309,12 +620,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "DevOps Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AlertCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Services",
+                "href": "/services",
+                "icon": "server"
+              },
+              {
+                "icon": "bell",
+                "label": "Alerts",
+                "href": "/alerts"
+              },
+              {
+                "icon": "terminal",
+                "label": "Logs",
+                "href": "/logs"
+              },
+              {
+                "label": "Metrics",
+                "icon": "layout-list",
+                "href": "/metrics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "ALERT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "ALERT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -336,10 +692,61 @@
           "ALERT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "severity",
+                "variant": "badge"
+              },
+              {
+                "name": "message",
+                "icon": "alert-triangle",
+                "variant": "h4"
+              },
+              {
+                "variant": "body",
+                "name": "source"
+              },
+              {
+                "name": "timestamp",
+                "variant": "caption",
+                "format": "date"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -350,10 +757,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "severity",
+              "message",
+              "source",
+              "timestamp"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Alert"
+          }
         ],
         "capabilities": []
       },
@@ -364,10 +792,31 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "severity",
+              "message",
+              "source",
+              "timestamp"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Alert"
+          }
         ],
         "capabilities": []
       },
@@ -378,10 +827,31 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "severity",
+              "message",
+              "source",
+              "timestamp"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Alert"
+          }
         ],
         "capabilities": []
       },
@@ -392,10 +862,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Alert"
+          }
         ],
         "capabilities": []
       },
@@ -488,12 +974,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "DevOps Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.LogCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/services",
+                "icon": "server",
+                "label": "Services"
+              },
+              {
+                "label": "Alerts",
+                "icon": "bell",
+                "href": "/alerts"
+              },
+              {
+                "label": "Logs",
+                "href": "/logs",
+                "icon": "terminal"
+              },
+              {
+                "icon": "layout-list",
+                "href": "/metrics",
+                "label": "Metrics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "LOG_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "LOG_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -509,10 +1040,45 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "variant"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "level",
+                "variant": "badge"
+              },
+              {
+                "name": "message",
+                "variant": "body",
+                "icon": "file-text"
+              },
+              {
+                "name": "service",
+                "variant": "caption"
+              },
+              {
+                "format": "date",
+                "variant": "caption",
+                "name": "timestamp"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "dense"
+          }
         ],
         "capabilities": []
       }
@@ -566,12 +1132,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "DevOps Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SystemMetricDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/services",
+                "label": "Services",
+                "icon": "server"
+              },
+              {
+                "label": "Alerts",
+                "href": "/alerts",
+                "icon": "bell"
+              },
+              {
+                "href": "/logs",
+                "icon": "terminal",
+                "label": "Logs"
+              },
+              {
+                "label": "Metrics",
+                "icon": "layout-list",
+                "href": "/metrics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SYSTEM_METRIC_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SYSTEM_METRIC_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -580,9 +1191,43 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "displayPageSize",
-          "fields",
-          "pageSize"
+          {
+            "key": "displayPageSize",
+            "type": "unknown",
+            "default": 10
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Metric",
+                "name": "name",
+                "variant": "h4"
+              },
+              {
+                "label": "Value",
+                "variant": "h3",
+                "format": "number",
+                "name": "value"
+              },
+              {
+                "variant": "caption",
+                "name": "unit",
+                "label": "Unit"
+              },
+              {
+                "label": "Trend",
+                "name": "trend",
+                "variant": "badge"
+              }
+            ]
+          },
+          {
+            "key": "pageSize",
+            "type": "unknown",
+            "default": 100
+          }
         ],
         "capabilities": []
       },

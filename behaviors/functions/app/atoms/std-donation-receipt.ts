@@ -88,10 +88,10 @@ export interface StdDonationReceiptDonationReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonationReceiptConfig {
-  /** Default: `[{"event":"OPEN_RECEIPT","variant":"primary","icon":"arrow-right","label":"Open"},{"event":"VOID_RECEIPT","label":"Void","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","label":"Receipt #","name":"receiptNumber"},{"label":"Donor","name":"donorName","variant":"caption"},{"label":"Amount","variant":"caption","name":"amount"},{"variant":"caption","label":"Date","name":"donationDate"},{"name":"taxYear","variant":"caption","label":"Tax Year"},{"variant":"badge","label":"Emailed","name":"isEmailed"}]` */
+  /** Default: `[{"name":"receiptNumber","label":"Receipt #","variant":"caption"},{"variant":"caption","name":"donorName","label":"Donor"},{"name":"amount","variant":"caption","label":"Amount"},{"label":"Date","variant":"caption","name":"donationDate"},{"label":"Tax Year","name":"taxYear","variant":"caption"},{"name":"isEmailed","variant":"badge","label":"Emailed"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_RECEIPT"},{"event":"VOID_RECEIPT","label":"Void","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Donation Receipts"` */
   title?: string;
 }

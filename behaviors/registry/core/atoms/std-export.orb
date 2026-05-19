@@ -21,16 +21,16 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": {
-                  "name": "id",
-                  "type": "string"
-                },
                 "format": {
                   "name": "format",
                   "type": "string"
                 },
                 "label": {
                   "name": "label",
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
                   "type": "string"
                 }
               }
@@ -107,6 +107,15 @@
                     "render-ui",
                     "main",
                     {
+                      "position": "bottom",
+                      "children": {
+                        "size": "sm",
+                        "icon": "download",
+                        "variant": "ghost",
+                        "label": "Export",
+                        "action": "OPEN_EXPORT",
+                        "type": "button"
+                      },
                       "content": {
                         "fields": [],
                         "type": "data-list",
@@ -114,29 +123,20 @@
                           "fn",
                           "fmt",
                           {
-                            "type": "button",
-                            "label": "@fmt.label",
-                            "variant": "ghost",
-                            "size": "sm",
-                            "actionPayload": {
-                              "tileId": "@config.tileId",
-                              "format": "@fmt.format"
-                            },
                             "action": "@config.event",
+                            "label": "@fmt.label",
+                            "size": "sm",
+                            "type": "button",
+                            "actionPayload": {
+                              "format": "@fmt.format",
+                              "tileId": "@config.tileId"
+                            },
+                            "variant": "ghost",
                             "icon": "file-down"
                           }
                         ],
                         "entity": "@entity.options"
                       },
-                      "children": {
-                        "action": "OPEN_EXPORT",
-                        "icon": "download",
-                        "variant": "ghost",
-                        "type": "button",
-                        "size": "sm",
-                        "label": "Export"
-                      },
-                      "position": "bottom",
                       "type": "popover"
                     }
                   ]
@@ -171,31 +171,37 @@
           "config": {
             "tileId": {
               "type": "string",
-              "default": ""
-            },
-            "event": {
-              "type": "string",
-              "default": "EXPORT_REQUESTED"
+              "default": "",
+              "label": "Tile id",
+              "description": "Identifier of the dashboard tile being exported"
             },
             "formats": {
               "type": "[object]",
               "default": [
                 {
-                  "id": "csv",
+                  "label": "CSV",
                   "format": "csv",
-                  "label": "CSV"
+                  "id": "csv"
                 },
                 {
-                  "label": "XLSX",
                   "format": "xlsx",
-                  "id": "xlsx"
+                  "id": "xlsx",
+                  "label": "XLSX"
                 },
                 {
-                  "label": "PDF",
+                  "format": "pdf",
                   "id": "pdf",
-                  "format": "pdf"
+                  "label": "PDF"
                 }
-              ]
+              ],
+              "label": "Available formats",
+              "description": "Export formats shown to the user in the popover"
+            },
+            "event": {
+              "type": "string",
+              "default": "EXPORT_REQUESTED",
+              "label": "Export event",
+              "description": "Event emitted when the user picks a format"
             }
           },
           "scope": "instance"

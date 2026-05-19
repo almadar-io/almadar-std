@@ -166,14 +166,14 @@ export interface StdInvoiceInvoiceRefundFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInvoiceConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_INVOICE","variant":"primary","icon":"arrow-right"},{"event":"VOID","label":"Void","variant":"danger","icon":"x"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"invoiceNumber","label":"Invoice #","variant":"caption"},{"variant":"caption","label":"Customer","name":"customerId"},{"variant":"badge","name":"status","label":"Status"},{"name":"total","label":"Total","variant":"caption"},{"variant":"badge","name":"currency","label":"Currency"},{"label":"Due","variant":"caption","name":"dueAt"}]` */
+  /** Default: `[{"variant":"caption","label":"Invoice #","name":"invoiceNumber"},{"name":"customerId","label":"Customer","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"total","label":"Total"},{"name":"currency","label":"Currency","variant":"badge"},{"label":"Due","name":"dueAt","variant":"caption"}]` */
   fields?: TraitConfig[];
-  /** Default: `"[]"` */
-  refundTiersJson?: string;
   /** Default: `"Invoices"` */
   title?: string;
+  /** Default: `"[]"` */
+  refundTiersJson?: string;
+  /** Default: `[{"event":"OPEN_INVOICE","label":"Open","variant":"primary","icon":"arrow-right"},{"icon":"x","event":"VOID","label":"Void","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

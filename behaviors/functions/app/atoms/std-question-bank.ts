@@ -84,11 +84,11 @@ export interface StdQuestionBankQuestionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdQuestionBankConfig {
-  /** Default: `[{"label":"Question","variant":"caption","name":"label"},{"label":"Type","name":"kind","variant":"badge"},{"name":"category","variant":"caption","label":"Category"},{"name":"surveyId","label":"Survey","variant":"caption"},{"name":"order","variant":"caption","label":"Order"}]` */
+  /** Default: `[{"name":"label","variant":"caption","label":"Question"},{"name":"kind","label":"Type","variant":"badge"},{"label":"Category","name":"category","variant":"caption"},{"name":"surveyId","label":"Survey","variant":"caption"},{"label":"Order","variant":"caption","name":"order"}]` */
   fields?: TraitConfig[];
   /** Default: `"Question Bank"` */
   title?: string;
-  /** Default: `[{"label":"Open","event":"OPEN_QUESTION","variant":"primary","icon":"arrow-right"},{"event":"DELETE_QUESTION","variant":"danger","label":"Delete"}]` */
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_QUESTION","variant":"primary","label":"Open"},{"event":"DELETE_QUESTION","variant":"danger","label":"Delete"}]` */
   itemActions?: TraitConfig[];
 }
 

@@ -48,12 +48,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Trading Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.PortfolioCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/portfolio",
+                "icon": "layout-list",
+                "label": "Portfolio"
+              },
+              {
+                "href": "/orders",
+                "icon": "clipboard-list",
+                "label": "Orders"
+              },
+              {
+                "href": "/market",
+                "icon": "activity",
+                "label": "Market"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PORTFOLIO_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PORTFOLIO_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -74,8 +114,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "PORTFOLIO_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search positions…"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +132,22 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "PORTFOLIO_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "text",
+                "field": "symbol",
+                "label": "Symbol"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -96,8 +158,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "icon": "dollar-sign",
+                "field": "marketValue",
+                "format": "currency",
+                "aggregation": "sum",
+                "label": "Total Value"
+              },
+              {
+                "field": "dailyPnl",
+                "aggregation": "sum",
+                "icon": "trending-up",
+                "variant": "success",
+                "label": "Daily PnL",
+                "format": "currency"
+              },
+              {
+                "format": "number",
+                "variant": "info",
+                "aggregation": "count",
+                "label": "Positions",
+                "icon": "layout-list"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    ">",
+                    "@row.dailyPnl",
+                    0
+                  ]
+                ],
+                "aggregation": "count",
+                "label": "Winners",
+                "icon": "check-circle",
+                "variant": "success",
+                "format": "number"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Portfolio"
+          }
         ],
         "capabilities": []
       },
@@ -108,14 +218,46 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title",
-          "valueField"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "sum"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "symbol"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "line"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Profit and loss across positions"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Daily PnL"
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "dailyPnl"
+          }
         ],
         "capabilities": []
       },
@@ -130,10 +272,72 @@
           "PORTFOLIO_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "symbol",
+                "icon": "trending-up",
+                "variant": "h3"
+              },
+              {
+                "format": "number",
+                "name": "qty",
+                "label": "Qty",
+                "variant": "body"
+              },
+              {
+                "label": "Avg Cost",
+                "variant": "body",
+                "name": "avgCost",
+                "format": "currency"
+              },
+              {
+                "name": "marketValue",
+                "format": "currency",
+                "label": "Market Value",
+                "variant": "h4"
+              },
+              {
+                "format": "currency",
+                "variant": "badge",
+                "name": "dailyPnl",
+                "label": "Daily PnL"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -144,10 +348,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "symbol",
+              "qty",
+              "avgCost",
+              "marketValue",
+              "dailyPnl"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Add Position"
+          }
         ],
         "capabilities": []
       },
@@ -158,10 +384,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "symbol",
+              "qty",
+              "avgCost",
+              "marketValue",
+              "dailyPnl"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Position"
+          }
         ],
         "capabilities": []
       },
@@ -172,10 +420,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "symbol",
+              "qty",
+              "avgCost",
+              "marketValue",
+              "dailyPnl"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Position"
+          }
         ],
         "capabilities": []
       },
@@ -186,10 +456,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Close"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Close Position"
+          }
         ],
         "capabilities": []
       },
@@ -288,12 +574,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Trading Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TradeOrderCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/portfolio",
+                "icon": "layout-list",
+                "label": "Portfolio"
+              },
+              {
+                "icon": "clipboard-list",
+                "label": "Orders",
+                "href": "/orders"
+              },
+              {
+                "label": "Market",
+                "href": "/market",
+                "icon": "activity"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TRADE_ORDER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TRADE_ORDER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -315,10 +641,66 @@
           "TRADE_ORDER_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "icon": "trending-up",
+                "name": "symbol"
+              },
+              {
+                "name": "side",
+                "variant": "badge"
+              },
+              {
+                "format": "number",
+                "name": "quantity",
+                "variant": "body"
+              },
+              {
+                "name": "price",
+                "format": "currency",
+                "variant": "h4"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "label": "Cancel",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -329,10 +711,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "symbol",
+              "side",
+              "quantity",
+              "price",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Order"
+          }
         ],
         "capabilities": []
       },
@@ -343,10 +747,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "symbol",
+              "side",
+              "quantity",
+              "price",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Order"
+          }
         ],
         "capabilities": []
       },
@@ -357,10 +783,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "symbol",
+              "side",
+              "quantity",
+              "price",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Order"
+          }
         ],
         "capabilities": []
       },
@@ -371,10 +819,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "Cancel this pending order?"
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Cancel Order"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Cancel Order"
+          }
         ],
         "capabilities": []
       },
@@ -463,12 +927,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Trading Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MarketFeedDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/portfolio",
+                "icon": "layout-list",
+                "label": "Portfolio"
+              },
+              {
+                "label": "Orders",
+                "href": "/orders",
+                "icon": "clipboard-list"
+              },
+              {
+                "label": "Market",
+                "href": "/market",
+                "icon": "activity"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MARKET_FEED_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MARKET_FEED_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -484,7 +988,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "multi"
+          {
+            "key": "multi",
+            "type": "unknown",
+            "default": true
+          }
         ],
         "capabilities": []
       },

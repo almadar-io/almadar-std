@@ -53,12 +53,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Finance Tracker"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TransactionCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/transactions",
+                "label": "Transactions",
+                "icon": "receipt"
+              },
+              {
+                "href": "/summary",
+                "icon": "layout-list",
+                "label": "Summary"
+              },
+              {
+                "href": "/reports",
+                "icon": "bar-chart",
+                "label": "Reports"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TRANSACTION_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TRANSACTION_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +119,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "TRANSACTION_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search transactions…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +137,36 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "TRANSACTION_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "category",
+                "filterType": "text",
+                "label": "Category"
+              },
+              {
+                "filterType": "text",
+                "field": "account",
+                "label": "Account"
+              },
+              {
+                "label": "Type",
+                "filterType": "select",
+                "field": "type",
+                "options": [
+                  "income",
+                  "expense"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +177,58 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "format": "currency",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.type",
+                    "income"
+                  ]
+                ],
+                "aggregation": "sum",
+                "variant": "success",
+                "label": "Income",
+                "field": "amount",
+                "icon": "trending-up"
+              },
+              {
+                "format": "currency",
+                "label": "Expenses",
+                "aggregation": "sum",
+                "icon": "trending-down",
+                "variant": "error",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.type",
+                    "expense"
+                  ]
+                ],
+                "field": "amount"
+              },
+              {
+                "aggregation": "count",
+                "variant": "primary",
+                "format": "number",
+                "icon": "percent",
+                "label": "Savings Rate"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Transactions"
+          }
         ],
         "capabilities": []
       },
@@ -113,14 +239,46 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title",
-          "valueField"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "sum"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "category"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "pie"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Distribution across categories"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Spending by Category"
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "amount"
+          }
         ],
         "capabilities": []
       },
@@ -135,10 +293,66 @@
           "TRANSACTION_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "date",
+                "variant": "caption",
+                "format": "date"
+              },
+              {
+                "icon": "receipt",
+                "name": "description",
+                "variant": "h4"
+              },
+              {
+                "variant": "badge",
+                "name": "category"
+              },
+              {
+                "variant": "h4",
+                "name": "amount",
+                "format": "currency"
+              },
+              {
+                "variant": "badge",
+                "name": "type"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -149,10 +363,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "description",
+              "amount",
+              "category",
+              "account",
+              "type",
+              "date"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Add Transaction"
+          }
         ],
         "capabilities": []
       },
@@ -163,10 +400,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "description",
+              "amount",
+              "category",
+              "account",
+              "type",
+              "date"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Transaction"
+          }
         ],
         "capabilities": []
       },
@@ -177,10 +437,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "description",
+              "amount",
+              "category",
+              "account",
+              "type",
+              "date"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Transaction"
+          }
         ],
         "capabilities": []
       },
@@ -191,10 +474,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Transaction"
+          }
         ],
         "capabilities": []
       },
@@ -283,12 +582,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Finance Tracker"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.FinanceSummaryDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Transactions",
+                "icon": "receipt",
+                "href": "/transactions"
+              },
+              {
+                "label": "Summary",
+                "href": "/summary",
+                "icon": "layout-list"
+              },
+              {
+                "href": "/reports",
+                "label": "Reports",
+                "icon": "bar-chart"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "FINANCE_SUMMARY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "FINANCE_SUMMARY_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -370,12 +709,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Finance Tracker"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.FinanceReportBrowse"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "receipt",
+                "label": "Transactions",
+                "href": "/transactions"
+              },
+              {
+                "icon": "layout-list",
+                "label": "Summary",
+                "href": "/summary"
+              },
+              {
+                "icon": "bar-chart",
+                "href": "/reports",
+                "label": "Reports"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "FINANCE_REPORT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "FINANCE_REPORT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -402,10 +781,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "period",
+              "dateRange",
+              "total",
+              "generatedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Report Preview"
+          }
         ],
         "capabilities": []
       },
@@ -416,10 +817,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "period",
+              "dateRange",
+              "filters"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Report"
+          }
         ],
         "capabilities": []
       },

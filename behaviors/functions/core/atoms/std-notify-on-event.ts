@@ -49,14 +49,14 @@ export interface StdNotifyOnEventNotificationDispatchedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNotifyOnEventConfig {
-  /** Default: `[]` */
-  listensFor?: string[];
-  /** Default: `""` */
-  template?: string;
-  /** Default: `"in-app"` */
-  notifyChannel?: string;
   /** Default: `"info"` */
   severity?: string;
+  /** Default: `[]` */
+  listensFor?: string[];
+  /** Default: `"in-app"` */
+  notifyChannel?: string;
+  /** Default: `""` */
+  template?: string;
 }
 
 /**

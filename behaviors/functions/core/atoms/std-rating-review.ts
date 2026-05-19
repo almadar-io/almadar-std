@@ -97,20 +97,20 @@ export interface StdRatingReviewReviewSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRatingReviewConfig {
-  /** Default: `[{"label":"Most recent","id":"recent","icon":"clock"},{"icon":"star","label":"Top rated","id":"highest"},{"id":"lowest","label":"Lowest","icon":"trending-down"}]` */
-  sortOptions?: TraitConfig[];
-  /** Default: `"Cancel"` */
-  cancelLabel?: string;
-  /** Default: `[{"percentage":74,"label":"5 stars"},{"label":"4 stars","percentage":18},{"label":"3 stars","percentage":5},{"percentage":2,"label":"2 stars"},{"percentage":1,"label":"1 star"}]` */
+  /** Default: `[{"label":"5 stars","percentage":74},{"percentage":18,"label":"4 stars"},{"percentage":5,"label":"3 stars"},{"percentage":2,"label":"2 stars"},{"percentage":1,"label":"1 star"}]` */
   starDistribution?: TraitConfig[];
-  /** Default: `"Bali Sunset Villa · 3 nights"` */
-  subjectTitle?: string;
   /** Default: `["draftComment"]` */
   reviewFields?: string[];
+  /** Default: `"Cancel"` */
+  cancelLabel?: string;
   /** Default: `"Write a review"` */
   writeLabel?: string;
   /** Default: `"Submit review"` */
   submitLabel?: string;
+  /** Default: `[{"label":"Most recent","icon":"clock","id":"recent"},{"icon":"star","label":"Top rated","id":"highest"},{"id":"lowest","label":"Lowest","icon":"trending-down"}]` */
+  sortOptions?: TraitConfig[];
+  /** Default: `"Bali Sunset Villa · 3 nights"` */
+  subjectTitle?: string;
 }
 
 /**

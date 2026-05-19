@@ -108,12 +108,12 @@ export interface StdApplicantApplicantLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApplicantConfig {
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_APPLICANT","variant":"primary","label":"Open"},{"label":"Reject","event":"REJECT_APPLICANT","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Applicants"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Email","variant":"caption","name":"email"},{"name":"jobId","label":"Job","variant":"caption"},{"variant":"badge","name":"stage","label":"Stage"},{"name":"appliedAt","variant":"caption","label":"Applied"}]` */
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"caption","name":"email","label":"Email"},{"label":"Job","name":"jobId","variant":"caption"},{"name":"stage","label":"Stage","variant":"badge"},{"name":"appliedAt","label":"Applied","variant":"caption"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_APPLICANT","label":"Open","variant":"primary"},{"variant":"danger","event":"REJECT_APPLICANT","label":"Reject"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

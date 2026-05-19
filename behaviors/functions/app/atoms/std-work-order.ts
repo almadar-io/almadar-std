@@ -178,12 +178,12 @@ export interface StdWorkOrderWorkOrderLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWorkOrderConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_ORDER","variant":"primary","icon":"arrow-right"},{"event":"CANCEL","icon":"x","label":"Cancel","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"customerName","variant":"caption","label":"Customer"},{"name":"serviceType","variant":"caption","label":"Service"},{"variant":"caption","name":"address","label":"Address"},{"variant":"badge","name":"priority","label":"Priority"},{"variant":"badge","label":"Status","name":"status"},{"name":"assignedTo","label":"Assigned","variant":"caption"},{"name":"etaMinutes","label":"ETA (min)","variant":"caption"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Work Orders"` */
   title?: string;
+  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"label":"Service","name":"serviceType","variant":"caption"},{"variant":"caption","name":"address","label":"Address"},{"label":"Priority","variant":"badge","name":"priority"},{"name":"status","label":"Status","variant":"badge"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"variant":"caption","name":"etaMinutes","label":"ETA (min)"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ORDER","icon":"arrow-right"},{"label":"Cancel","event":"CANCEL","variant":"danger","icon":"x"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

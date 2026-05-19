@@ -341,8 +341,8 @@
                     "Submittal",
                     {
                       "emit": {
-                        "failure": "SubmittalLoadFailed",
-                        "success": "SubmittalLoaded"
+                        "success": "SubmittalLoaded",
+                        "failure": "SubmittalLoadFailed"
                       }
                     }
                   ],
@@ -350,6 +350,7 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
                       "className": "py-12",
@@ -358,14 +359,13 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
+                          "content": "Loading submittals…",
                           "color": "muted",
-                          "content": "Loading submittals…"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -379,10 +379,14 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -390,35 +394,33 @@
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Total submittals",
-                              "value": "@payload.data.length",
+                              "icon": "file-text",
                               "type": "stat-display",
-                              "icon": "file-text"
+                              "value": "@payload.data.length",
+                              "label": "Total submittals"
                             },
                             {
-                              "label": "In review",
                               "icon": "search",
                               "type": "stat-display",
-                              "value": "18"
+                              "value": "18",
+                              "label": "In review"
                             },
                             {
+                              "type": "stat-display",
                               "value": "62",
                               "label": "Approved",
-                              "icon": "check-circle",
-                              "type": "stat-display"
+                              "icon": "check-circle"
                             },
                             {
                               "type": "stat-display",
@@ -433,15 +435,13 @@
                         },
                         {
                           "gap": "sm",
-                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "cols": 1.0,
                           "itemActions": "@config.itemActions",
-                          "type": "data-grid",
-                          "fields": "@config.fields"
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -526,20 +526,17 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "variant": "ghost",
                               "label": "Back",
-                              "type": "button",
-                              "action": "CLOSE_VIEW"
+                              "action": "CLOSE_VIEW",
+                              "type": "button"
                             },
                             {
                               "type": "icon",
@@ -555,21 +552,28 @@
                               "variant": "default",
                               "type": "badge"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
+                                  "variant": "caption",
                                   "content": "Number",
                                   "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
@@ -577,21 +581,20 @@
                                   "content": "@entity.submittalNumber"
                                 }
                               ],
-                              "gap": "md",
                               "type": "stack"
                             },
                             {
                               "children": [
                                 {
-                                  "content": "Spec section",
+                                  "color": "muted",
                                   "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "content": "Spec section"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.specSection",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.specSection"
                                 }
                               ],
                               "gap": "md",
@@ -600,13 +603,13 @@
                             },
                             {
                               "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
+                                  "variant": "caption",
                                   "type": "typography",
                                   "color": "muted",
-                                  "variant": "caption",
                                   "content": "Contractor"
                                 },
                                 {
@@ -617,119 +620,116 @@
                               ]
                             },
                             {
+                              "children": [
+                                {
+                                  "content": "Reviewer",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.reviewer",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
                               "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "color": "muted",
+                                  "content": "Comments",
                                   "type": "typography",
-                                  "content": "Reviewer"
+                                  "variant": "caption",
+                                  "color": "muted"
                                 },
                                 {
+                                  "content": "@entity.comments",
                                   "variant": "body",
-                                  "content": "@entity.reviewer",
                                   "type": "typography"
                                 }
                               ],
                               "direction": "horizontal"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Comments",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.comments",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "vertical",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 3.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@entity.revisionNumber",
                               "icon": "rotate-cw",
-                              "label": "Revision"
-                            },
-                            {
-                              "value": "@entity.submittedAt",
-                              "icon": "calendar",
-                              "label": "Submitted",
+                              "label": "Revision",
+                              "value": "@entity.revisionNumber",
                               "type": "stat-display"
                             },
                             {
-                              "label": "Reviewed",
                               "type": "stat-display",
+                              "label": "Submitted",
+                              "value": "@entity.submittedAt",
+                              "icon": "calendar"
+                            },
+                            {
+                              "icon": "calendar-check",
                               "value": "@entity.reviewedAt",
-                              "icon": "calendar-check"
+                              "label": "Reviewed",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          ]
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "action": "APPROVE",
-                              "label": "Approve",
                               "variant": "primary",
+                              "label": "Approve",
+                              "action": "APPROVE",
                               "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "label": "Reject",
-                              "action": "REJECT",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "variant": "danger"
-                            },
-                            {
-                              "variant": "secondary",
-                              "action": "REQUEST_REVISION",
-                              "type": "button",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "label": "Revise"
-                            },
-                            {
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "variant": "danger",
+                              "label": "Reject",
+                              "action": "REJECT",
+                              "type": "button"
+                            },
+                            {
+                              "label": "Revise",
+                              "action": "REQUEST_REVISION",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "label": "Delete",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
                               "type": "button",
                               "action": "REQUEST_DELETE",
-                              "label": "Delete"
+                              "variant": "danger"
                             }
                           ],
                           "align": "center",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -749,8 +749,8 @@
                     "Submittal",
                     {
                       "emit": {
-                        "failure": "SubmittalLoadFailed",
-                        "success": "SubmittalLoaded"
+                        "success": "SubmittalLoaded",
+                        "failure": "SubmittalLoadFailed"
                       }
                     }
                   ],
@@ -760,7 +760,6 @@
                     {
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
                       "type": "stack",
                       "className": "py-12",
                       "children": [
@@ -768,12 +767,13 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Deleting submittal…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Deleting submittal…"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -788,8 +788,8 @@
                     "Submittal",
                     {
                       "emit": {
-                        "success": "SubmittalLoaded",
-                        "failure": "SubmittalLoadFailed"
+                        "failure": "SubmittalLoadFailed",
+                        "success": "SubmittalLoaded"
                       }
                     }
                   ],
@@ -797,6 +797,7 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
                       "className": "py-12",
@@ -805,14 +806,13 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "content": "Loading submittals…",
                           "type": "typography",
-                          "content": "Loading submittals…"
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -841,22 +841,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Approving submittal…",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Approving submittal…"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -885,21 +885,21 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-12",
                       "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
                           "content": "Rejecting submittal…",
+                          "color": "muted",
                           "type": "typography"
                         }
                       ],
+                      "align": "center",
+                      "className": "py-12",
                       "type": "stack"
                     }
                   ]
@@ -920,8 +920,8 @@
                     "Submittal",
                     {
                       "emit": {
-                        "failure": "SubmittalLoadFailed",
-                        "success": "SubmittalLoaded"
+                        "success": "SubmittalLoaded",
+                        "failure": "SubmittalLoadFailed"
                       }
                     }
                   ],
@@ -929,22 +929,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Requesting revision…",
                           "variant": "caption",
+                          "content": "Requesting revision…",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -973,22 +973,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Deleting submittal…",
                           "variant": "caption",
+                          "content": "Deleting submittal…",
+                          "color": "muted",
                           "type": "typography"
                         }
                       ],
-                      "className": "py-12",
                       "align": "center",
-                      "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1031,50 +1031,56 @@
                   "variant": "primary"
                 },
                 {
+                  "variant": "danger",
                   "label": "Delete",
-                  "event": "REQUEST_DELETE",
-                  "variant": "danger"
+                  "event": "REQUEST_DELETE"
                 }
-              ]
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each submittal row"
             },
             "title": {
               "type": "string",
-              "default": "Submittals"
+              "default": "Submittals",
+              "label": "Section title",
+              "description": "Heading shown above the submittal review list"
             },
             "fields": {
               "type": "[object]",
               "default": [
                 {
-                  "name": "submittalNumber",
+                  "label": "Number",
                   "variant": "caption",
-                  "label": "Number"
+                  "name": "submittalNumber"
                 },
                 {
-                  "name": "specSection",
                   "variant": "caption",
+                  "name": "specSection",
                   "label": "Spec Section"
                 },
                 {
                   "label": "Title",
-                  "name": "title",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Contractor",
                   "variant": "caption",
-                  "name": "contractor"
+                  "name": "title"
                 },
                 {
-                  "name": "status",
+                  "variant": "caption",
+                  "name": "contractor",
+                  "label": "Contractor"
+                },
+                {
                   "label": "Status",
-                  "variant": "badge"
+                  "variant": "badge",
+                  "name": "status"
                 },
                 {
-                  "name": "revisionNumber",
+                  "variant": "caption",
                   "label": "Rev",
-                  "variant": "caption"
+                  "name": "revisionNumber"
                 }
-              ]
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Submittal entity"
             }
           },
           "scope": "collection"

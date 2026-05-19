@@ -204,37 +204,37 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'ref': 'AppShell.traits.AppLayout',
         'name': 'NoteAppLayout',
         'config': {
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.NoteCatalog',
           'appName': 'Notes',
           'navItems': [
             {
+              'href': '/notes',
               'label': 'Notes',
               'icon': 'file-text',
-              'href': '/notes',
             },
             {
-              'href': '/notes/tree',
               'icon': 'list-tree',
+              'href': '/notes/tree',
               'label': 'Tree',
             },
             {
-              'href': '/notes/editor',
-              'label': 'Editor',
               'icon': 'edit',
+              'label': 'Editor',
+              'href': '/notes/editor',
             },
             {
+              'label': 'Favorites',
               'href': '/notes/favorites',
               'icon': 'star',
-              'label': 'Favorites',
             },
           ],
           'searchEvent': 'NOTE_SEARCH',
           'notifications': [],
-          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
           'SEARCH': 'NOTE_SEARCH',
+          'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -317,14 +317,17 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'align': 'center',
                         'children': [
                           {
+                            'align': 'center',
                             'type': 'stack',
                             'children': [
                               {
@@ -337,42 +340,37 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
                                 'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'align': 'center',
+                            'direction': 'horizontal',
                           },
                           {
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'icon': 'plus',
+                                'action': 'CREATE',
                                 'type': 'button',
                                 'label': 'New Note',
-                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'justify': 'between',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
                         'children': [
                           '@trait.NoteSearch',
                           '@trait.NoteFilter',
                         ],
-                        'align': 'center',
+                        'gap': 'md',
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'align': 'center',
                       },
                       '@trait.NoteStats',
                       '@trait.NoteGraphs',
@@ -381,6 +379,8 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
                       },
                       '@trait.NoteBrowseList',
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -399,34 +399,34 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'direction': 'vertical',
                     'type': 'stack',
                     'align': 'center',
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'variant': 'caption',
                         'color': 'muted',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'type': 'button',
+                        'variant': 'ghost',
                         'label': 'Back to notes',
                         'action': 'INIT',
-                        'variant': 'ghost',
                       },
                     ],
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -439,26 +439,26 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'NoteSearch',
         'config': {
-          'event': 'NOTE_FULLTEXT_SEARCH',
           'placeholder': 'Search notes…',
+          'event': 'NOTE_FULLTEXT_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'NoteFilter',
         'config': {
-          'event': 'NOTE_FILTER',
           'filters': [
             {
               'label': 'Favorite',
-              'field': 'isFavorite',
               'filterType': 'select',
+              'field': 'isFavorite',
               'options': [
                 'true',
                 'false',
               ],
             },
           ],
+          'event': 'NOTE_FILTER',
         },
       }),
       makeTraitRef({
@@ -468,14 +468,15 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
           'metrics': [
             {
               'variant': 'primary',
-              'format': 'number',
               'icon': 'file-text',
-              'label': 'Total',
               'aggregation': 'count',
+              'label': 'Total',
+              'format': 'number',
             },
             {
-              'label': 'Favorites',
+              'variant': 'warning',
               'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -485,13 +486,10 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
                   true,
                 ],
               ],
-              'format': 'number',
-              'variant': 'warning',
+              'label': 'Favorites',
               'icon': 'star',
             },
             {
-              'variant': 'info',
-              'icon': 'folder',
               'format': 'number',
               'filter': [
                 'fn',
@@ -502,8 +500,10 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
                   '',
                 ],
               ],
-              'aggregation': 'count',
+              'variant': 'info',
               'label': 'Top-level',
+              'icon': 'folder',
+              'aggregation': 'count',
             },
           ],
           'title': 'Notes',
@@ -523,13 +523,13 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'NoteGraphs',
         'config': {
-          'categoryField': 'icon',
-          'height': 240,
-          'chartType': 'bar',
-          'title': 'Notes by Icon',
-          'showLegend': false,
-          'aggregation': 'count',
           'subtitle': 'Distribution of note icons across your tree',
+          'showLegend': false,
+          'categoryField': 'icon',
+          'title': 'Notes by Icon',
+          'chartType': 'bar',
+          'aggregation': 'count',
+          'height': 240,
         },
         'listens': [
           {
@@ -548,6 +548,7 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'linkedEntity': canonicalName,
         'config': {
           'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
               'icon': 'file-text',
@@ -570,22 +571,21 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
           ],
           'itemActions': [
             {
-              'event': 'VIEW',
               'variant': 'ghost',
               'label': 'View',
+              'event': 'VIEW',
             },
             {
               'variant': 'ghost',
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
             },
             {
-              'event': 'DELETE',
               'variant': 'danger',
               'label': 'Delete',
+              'event': 'DELETE',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -642,9 +642,6 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'name': 'NoteCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'mode': 'create',
-          'title': 'New Note',
           'fields': [
             'title',
             'content',
@@ -653,6 +650,9 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
             'icon',
             'isFavorite',
           ],
+          'mode': 'create',
+          'title': 'New Note',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -673,8 +673,8 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'name': 'NoteEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Note',
           'icon': 'edit',
+          'title': 'Edit Note',
           'mode': 'edit',
           'fields': [
             'title',
@@ -704,6 +704,8 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'name': 'NoteView',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Note',
+          'icon': 'eye',
           'mode': 'edit',
           'fields': [
             'title',
@@ -713,8 +715,6 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
             'isFavorite',
             'lastEditedAt',
           ],
-          'icon': 'eye',
-          'title': 'View Note',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -735,10 +735,10 @@ export function stdNotesNoteOrbital(params: StdNotesNoteOrbitalParams = {}): Orb
         'name': 'NoteDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Note',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'title': 'Delete Note',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -1306,38 +1306,38 @@ export function stdNotesRichEditorPanelOrbital(params: StdNotesRichEditorPanelOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'RichEditorAppLayout',
         'config': {
-          'appName': 'Notes',
-          'notificationClickEvent': 'RICH_EDITOR_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'contentTrait': '@trait.RichEditorPanel',
-          'searchEvent': 'RICH_EDITOR_SEARCH',
           'navItems': [
             {
               'label': 'Notes',
-              'href': '/notes',
               'icon': 'file-text',
+              'href': '/notes',
             },
             {
               'label': 'Tree',
-              'href': '/notes/tree',
               'icon': 'list-tree',
+              'href': '/notes/tree',
             },
             {
-              'icon': 'edit',
               'label': 'Editor',
               'href': '/notes/editor',
+              'icon': 'edit',
             },
             {
-              'href': '/notes/favorites',
               'icon': 'star',
+              'href': '/notes/favorites',
               'label': 'Favorites',
             },
             {
-              'label': 'Editor',
               'href': '/editor',
+              'label': 'Editor',
               'icon': 'edit',
             },
           ],
+          'notifications': [],
+          'notificationClickEvent': 'RICH_EDITOR_NOTIFICATIONS_OPEN',
+          'appName': 'Notes',
+          'searchEvent': 'RICH_EDITOR_SEARCH',
+          'contentTrait': '@trait.RichEditorPanel',
         },
         'events': {
           'NOTIFY_CLICK': 'RICH_EDITOR_NOTIFICATIONS_OPEN',
@@ -1370,33 +1370,33 @@ export function stdNotesRichEditorPanelOrbital(params: StdNotesRichEditorPanelOr
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
                         'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'edit',
                           },
                           {
-                            'variant': 'h2',
-                            'type': 'typography',
                             'content': 'Rich Editor',
+                            'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.RichEditorDocumentEdit',
                     ],
-                    'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],

@@ -63,12 +63,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Help Center"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.HelpCenterCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/help-centers",
+                "icon": "life-buoy",
+                "label": "Help Centers"
+              },
+              {
+                "href": "/articles",
+                "icon": "book",
+                "label": "Articles"
+              },
+              {
+                "label": "Categories",
+                "href": "/categories",
+                "icon": "folder"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "HELP_CENTER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "HELP_CENTER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "HELP_CENTER_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search help centers…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +147,27 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "HELP_CENTER_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "field": "status",
+                "label": "Status",
+                "options": [
+                  "draft",
+                  "published",
+                  "private"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +178,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "life-buoy",
+                "variant": "primary",
+                "format": "number",
+                "label": "Total",
+                "aggregation": "count"
+              },
+              {
+                "variant": "success",
+                "aggregation": "count",
+                "label": "Published",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "published"
+                  ]
+                ],
+                "icon": "check-circle"
+              },
+              {
+                "format": "number",
+                "icon": "edit",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "draft"
+                  ]
+                ],
+                "label": "Draft",
+                "variant": "warning",
+                "aggregation": "count"
+              },
+              {
+                "format": "number",
+                "variant": "info",
+                "field": "totalArticles",
+                "aggregation": "sum",
+                "label": "Articles",
+                "icon": "book-open"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Help Centers"
+          }
         ],
         "capabilities": []
       },
@@ -123,13 +246,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Publication state across managed help centers"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Help Centers by Status"
+          }
         ],
         "capabilities": []
       },
@@ -144,10 +295,74 @@
           "HELP_CENTER_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "icon": "life-buoy",
+                "variant": "h3"
+              },
+              {
+                "variant": "caption",
+                "name": "slug"
+              },
+              {
+                "variant": "caption",
+                "name": "domain"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "format": "number",
+                "name": "totalArticles"
+              },
+              {
+                "name": "totalCategories",
+                "variant": "caption",
+                "format": "number"
+              },
+              {
+                "variant": "caption",
+                "name": "lastUpdatedAt"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -158,10 +373,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "slug",
+              "domain",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Help Center"
+          }
         ],
         "capabilities": []
       },
@@ -172,10 +408,31 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "slug",
+              "domain",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Help Center"
+          }
         ],
         "capabilities": []
       },
@@ -186,10 +443,31 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "slug",
+              "domain",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Help Center"
+          }
         ],
         "capabilities": []
       },
@@ -200,10 +478,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Help Center"
+          }
         ],
         "capabilities": []
       },
@@ -337,12 +631,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Help Center"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.HelpArticlePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Articles",
+                "href": "/articles",
+                "icon": "book"
+              },
+              {
+                "href": "/help-centers",
+                "icon": "life-buoy",
+                "label": "Help Centers"
+              },
+              {
+                "icon": "folder",
+                "label": "Categories",
+                "href": "/categories"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "HELP_ARTICLE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "HELP_ARTICLE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -358,7 +692,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Help Articles"
+          }
         ],
         "capabilities": []
       }
@@ -432,12 +770,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Help Center"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.HelpCategoryPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "folder",
+                "label": "Categories",
+                "href": "/categories"
+              },
+              {
+                "icon": "life-buoy",
+                "href": "/help-centers",
+                "label": "Help Centers"
+              },
+              {
+                "label": "Articles",
+                "icon": "book",
+                "href": "/articles"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "HELP_CATEGORY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "HELP_CATEGORY_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -453,7 +831,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Help Categories"
+          }
         ],
         "capabilities": []
       }

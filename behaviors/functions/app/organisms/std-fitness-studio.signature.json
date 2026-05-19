@@ -48,12 +48,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fitness Studio"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MemberCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/members",
+                "label": "Members",
+                "icon": "users"
+              },
+              {
+                "icon": "calendar",
+                "label": "Classes",
+                "href": "/classes"
+              },
+              {
+                "icon": "credit-card",
+                "label": "Memberships",
+                "href": "/memberships"
+              },
+              {
+                "icon": "clipboard-list",
+                "label": "Rosters",
+                "href": "/rosters"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MEMBER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MEMBER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -74,8 +119,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "MEMBER_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search members…"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +137,37 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "MEMBER_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Tier",
+                "field": "membershipTier",
+                "options": [
+                  "basic",
+                  "premium",
+                  "unlimited"
+                ],
+                "filterType": "select"
+              },
+              {
+                "filterType": "select",
+                "options": [
+                  "active",
+                  "paused",
+                  "cancelled"
+                ],
+                "field": "status",
+                "label": "Status"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -96,8 +178,72 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "format": "number",
+                "label": "Total",
+                "variant": "primary",
+                "icon": "users"
+              },
+              {
+                "icon": "user-check",
+                "format": "number",
+                "variant": "success",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "label": "Active"
+              },
+              {
+                "aggregation": "count",
+                "icon": "pause-circle",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "paused"
+                  ]
+                ],
+                "label": "Paused",
+                "variant": "warning"
+              },
+              {
+                "aggregation": "count",
+                "label": "Cancelled",
+                "icon": "user-x",
+                "variant": "danger",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "cancelled"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Members"
+          }
         ],
         "capabilities": []
       },
@@ -108,13 +254,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "membershipTier"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Distribution across membership tiers"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Members by Tier"
+          }
         ],
         "capabilities": []
       },
@@ -129,10 +303,64 @@
           "MEMBER_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h4",
+                "icon": "user",
+                "name": "name"
+              },
+              {
+                "variant": "body",
+                "name": "email"
+              },
+              {
+                "variant": "badge",
+                "name": "membershipTier"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "joinedAt",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -143,10 +371,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "membershipTier",
+              "status",
+              "joinedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "user-plus"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Member"
+          }
         ],
         "capabilities": []
       },
@@ -157,10 +407,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "membershipTier",
+              "status",
+              "joinedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Member"
+          }
         ],
         "capabilities": []
       },
@@ -171,10 +443,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "membershipTier",
+              "status",
+              "joinedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Member"
+          }
         ],
         "capabilities": []
       },
@@ -185,10 +479,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Cancel Membership"
+          }
         ],
         "capabilities": []
       },
@@ -256,12 +566,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fitness Studio"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ClassSessionDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/members",
+                "label": "Members",
+                "icon": "users"
+              },
+              {
+                "icon": "calendar",
+                "href": "/classes",
+                "label": "Classes"
+              },
+              {
+                "href": "/memberships",
+                "icon": "credit-card",
+                "label": "Memberships"
+              },
+              {
+                "label": "Rosters",
+                "icon": "clipboard-list",
+                "href": "/rosters"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CLASS_SESSION_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CLASS_SESSION_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -277,7 +632,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Upcoming Classes"
+          }
         ],
         "capabilities": []
       }
@@ -310,12 +669,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fitness Studio"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MembershipDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "label": "Members",
+                "href": "/members"
+              },
+              {
+                "label": "Classes",
+                "icon": "calendar",
+                "href": "/classes"
+              },
+              {
+                "label": "Memberships",
+                "icon": "credit-card",
+                "href": "/memberships"
+              },
+              {
+                "label": "Rosters",
+                "href": "/rosters",
+                "icon": "clipboard-list"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MEMBERSHIP_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MEMBERSHIP_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -331,7 +735,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Active Memberships"
+          }
         ],
         "capabilities": []
       }
@@ -364,12 +772,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fitness Studio"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ClassRosterDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "label": "Members",
+                "href": "/members"
+              },
+              {
+                "href": "/classes",
+                "label": "Classes",
+                "icon": "calendar"
+              },
+              {
+                "label": "Memberships",
+                "href": "/memberships",
+                "icon": "credit-card"
+              },
+              {
+                "href": "/rosters",
+                "icon": "clipboard-list",
+                "label": "Rosters"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CLASS_ROSTER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CLASS_ROSTER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -385,7 +838,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Roster Entries"
+          }
         ],
         "capabilities": []
       }

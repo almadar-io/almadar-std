@@ -76,12 +76,12 @@ export interface StdSegmentSegmentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSegmentConfig {
-  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"variant":"caption","label":"Description","name":"description"},{"label":"Members","variant":"badge","name":"memberCount"},{"label":"Updated","variant":"caption","name":"lastUpdated"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_SEGMENT"},{"label":"Recalculate","event":"RECALCULATE","variant":"danger"}]` */
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_SEGMENT","variant":"primary","label":"Open"},{"label":"Recalculate","variant":"danger","event":"RECALCULATE"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Segments"` */
   title?: string;
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"description","label":"Description","variant":"caption"},{"name":"memberCount","label":"Members","variant":"badge"},{"name":"lastUpdated","variant":"caption","label":"Updated"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

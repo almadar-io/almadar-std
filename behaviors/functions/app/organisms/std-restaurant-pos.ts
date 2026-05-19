@@ -189,19 +189,19 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           'contentTrait': '@trait.MenuCatalog',
           'navItems': [
             {
-              'icon': 'utensils',
               'href': '/menu',
+              'icon': 'utensils',
               'label': 'Menu',
             },
             {
               'href': '/floor',
-              'label': 'Floor',
               'icon': 'layout-grid',
+              'label': 'Floor',
             },
             {
-              'icon': 'receipt',
               'href': '/orders',
               'label': 'Orders',
+              'icon': 'receipt',
             },
             {
               'label': 'Kitchen',
@@ -211,8 +211,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
           ],
         },
         'events': {
-          'NOTIFY_CLICK': 'MENU_NOTIFICATIONS_OPEN',
           'SEARCH': 'MENU_SEARCH',
+          'NOTIFY_CLICK': 'MENU_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -295,22 +295,24 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
+                        'justify': 'between',
+                        'type': 'stack',
                         'align': 'center',
-                        'gap': 'md',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
+                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'utensils',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
@@ -318,39 +320,37 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                                 'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'icon': 'plus',
                                 'action': 'CREATE',
-                                'label': 'New Item',
                                 'variant': 'primary',
+                                'type': 'button',
+                                'label': 'New Item',
+                                'icon': 'plus',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'gap': 'md',
                         'direction': 'horizontal',
-                        'type': 'stack',
-                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'align': 'center',
-                        'gap': 'md',
                         'children': [
                           '@trait.MenuSearch',
                           '@trait.MenuFilter',
                         ],
+                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       '@trait.MenuCategoryTree',
                       {
@@ -361,9 +361,9 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'Modifier groups',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       '@trait.MenuModifierGroups',
                       {
@@ -371,8 +371,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Item images',
+                        'type': 'typography',
                       },
                       '@trait.MenuImageUpload',
                     ],
@@ -394,28 +394,28 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'type': 'typography',
                         'content': 'No notifications',
                         'variant': 'h3',
-                        'type': 'typography',
                       },
                       {
                         'label': 'Back to menu',
-                        'action': 'INIT',
                         'type': 'button',
                         'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'align': 'center',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -436,7 +436,6 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'MenuFilter',
         'config': {
-          'event': 'MENU_FILTER',
           'filters': [
             {
               'options': [
@@ -445,9 +444,9 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
                 'dessert',
                 'drink',
               ],
+              'label': 'Category',
               'filterType': 'select',
               'field': 'category',
-              'label': 'Category',
             },
             {
               'field': 'available',
@@ -459,6 +458,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
               'filterType': 'select',
             },
           ],
+          'event': 'MENU_FILTER',
         },
       }),
       makeTraitRef({
@@ -474,27 +474,17 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'name': 'MenuBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'event': 'EDIT',
-              'variant': 'ghost',
-              'label': 'Edit',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
               'name': 'name',
-              'icon': 'utensils',
               'variant': 'h4',
+              'icon': 'utensils',
             },
             {
-              'variant': 'badge',
               'name': 'category',
+              'variant': 'badge',
             },
             {
               'name': 'price',
@@ -505,12 +495,22 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
               'variant': 'badge',
             },
             {
-              'name': 'description',
               'variant': 'caption',
+              'name': 'description',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
         },
         'listens': [
           {
@@ -566,10 +566,10 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'ref': 'ImageUpload.traits.UploadedImageUpload',
         'name': 'MenuImageUpload',
         'config': {
-          'accept': 'image/*',
           'title': 'Item Images',
-          'maxImages': 12,
           'maxBytesPerImage': 5242880,
+          'maxImages': 12,
+          'accept': 'image/*',
         },
       }),
       makeTraitRef({
@@ -577,7 +577,6 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'name': 'MenuCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'fields': [
             'name',
             'description',
@@ -585,6 +584,7 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
             'category',
             'available',
           ],
+          'icon': 'plus-circle',
           'title': 'New Menu Item',
           'mode': 'create',
         },
@@ -607,6 +607,9 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'name': 'MenuEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
+          'title': 'Edit Menu Item',
+          'mode': 'edit',
           'fields': [
             'name',
             'description',
@@ -614,9 +617,6 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
             'category',
             'available',
           ],
-          'icon': 'edit',
-          'title': 'Edit Menu Item',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -639,8 +639,8 @@ export function stdRestaurantPosMenuOrbital(params: StdRestaurantPosMenuOrbitalP
         'config': {
           'confirmLabel': 'Delete',
           'title': 'Delete Menu Item',
-          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -1078,8 +1078,8 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
         'ref': 'TableMap.traits.TableManage',
         'name': 'TableFloorPlan',
         'config': {
-          'title': 'Floor Plan',
           'canvasHeight': 640,
+          'title': 'Floor Plan',
           'canvasWidth': 960,
         },
       }),
@@ -1088,30 +1088,30 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
         'name': 'TableRoster',
         'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
+          'cols': 1,
           'itemActions': [
             {
+              'event': 'EDIT',
               'variant': 'ghost',
               'label': 'Edit',
-              'event': 'EDIT',
             },
           ],
           'fields': [
             {
+              'icon': 'layout-grid',
               'name': 'label',
               'variant': 'h4',
-              'icon': 'layout-grid',
             },
             {
-              'variant': 'badge',
               'name': 'capacity',
+              'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'section',
+              'variant': 'caption',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -1129,14 +1129,14 @@ export function stdRestaurantPosTableOrbital(params: StdRestaurantPosTableOrbita
         'name': 'TableEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Table',
-          'mode': 'edit',
           'fields': [
             'label',
             'capacity',
             'section',
           ],
+          'mode': 'edit',
+          'title': 'Edit Table',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1472,7 +1472,6 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
         'ref': 'Cart.traits.CartItemAddItem',
         'name': 'OrderCartAddItem',
         'config': {
-          'icon': 'plus-circle',
           'openButtonLabel': 'Add Item',
           'fields': [
             'name',
@@ -1481,6 +1480,7 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
           ],
           'title': 'Add to Order',
           'mode': 'create',
+          'icon': 'plus-circle',
         },
       }),
       makeTraitRef({
@@ -1489,8 +1489,8 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
         'config': {
           'icon': 'alert-triangle',
           'alertMessage': 'Remove this item from the order?',
-          'title': 'Remove From Order',
           'confirmLabel': 'Remove',
+          'title': 'Remove From Order',
         },
       }),
       makeTraitRef({
@@ -1678,8 +1678,8 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'OrderTicket',
                   {
                     'emit': {
-                      'failure': 'OrderTicketLoadFailed',
                       'success': 'OrderTicketLoaded',
+                      'failure': 'OrderTicketLoadFailed',
                     },
                   },
                 ],
@@ -1687,22 +1687,22 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
-                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Loading order…',
                         'variant': 'caption',
+                        'content': 'Loading order…',
+                        'type': 'typography',
                         'color': 'muted',
                       },
                     ],
+                    'gap': 'md',
                     'direction': 'vertical',
-                    'align': 'center',
-                    'type': 'stack',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1716,9 +1716,11 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
+                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
@@ -1726,75 +1728,73 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h3',
                             'type': 'typography',
                             'content': 'Close & Tip Split',
+                            'variant': 'h3',
                           },
                         ],
+                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'entity': '@payload.data',
                         'cols': 1,
                         'gap': 'sm',
                         'type': 'data-grid',
+                        'entity': '@payload.data',
                         'fields': [
                           {
                             'variant': 'caption',
                             'name': 'tableId',
                           },
                           {
-                            'variant': 'caption',
                             'name': 'subtotal',
+                            'variant': 'caption',
                           },
                           {
-                            'name': 'taxAmount',
                             'variant': 'caption',
+                            'name': 'taxAmount',
                           },
                           {
                             'name': 'tipAmount',
                             'variant': 'caption',
                           },
                           {
-                            'name': 'total',
                             'variant': 'h4',
+                            'name': 'total',
                           },
                           {
-                            'variant': 'badge',
                             'name': 'status',
+                            'variant': 'badge',
                           },
                         ],
                       },
                       {
-                        'justify': 'end',
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
+                        'justify': 'end',
                         'children': [
                           {
-                            'label': 'Submit to Kitchen',
-                            'variant': 'secondary',
                             'type': 'button',
-                            'action': 'SUBMIT',
                             'icon': 'send',
+                            'variant': 'secondary',
+                            'label': 'Submit to Kitchen',
+                            'action': 'SUBMIT',
                           },
                           {
+                            'action': 'CLOSE_TICKET',
                             'variant': 'primary',
+                            'type': 'button',
                             'label': 'Close & Split Tip',
                             'icon': 'split',
-                            'type': 'button',
-                            'action': 'CLOSE_TICKET',
                           },
                         ],
+                        'direction': 'horizontal',
                       },
                     ],
                     'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1808,9 +1808,9 @@ export function stdRestaurantPosOrderOrbital(params: StdRestaurantPosOrderOrbita
                   'render-ui',
                   'main',
                   {
-                    'variant': 'error',
                     'message': '@payload.error',
                     'type': 'alert',
+                    'variant': 'error',
                   },
                 ],
               ],
@@ -2111,8 +2111,8 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
         'ref': 'Kitchen.traits.KitchenTicketManage',
         'name': 'KitchenBoard',
         'config': {
-          'title': 'Kitchen Display',
           'overdueMinutes': 18,
+          'title': 'Kitchen Display',
         },
       }),
       makeTraitRef({
@@ -2120,20 +2120,20 @@ export function stdRestaurantPosKitchenOrbital(params: StdRestaurantPosKitchenOr
         'name': 'KitchenLogList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
           'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
+              'variant': 'caption',
               'name': 'orderId',
-              'variant': 'caption',
             },
             {
+              'variant': 'caption',
               'name': 'note',
-              'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'createdAt',
+              'variant': 'caption',
             },
           ],
         },

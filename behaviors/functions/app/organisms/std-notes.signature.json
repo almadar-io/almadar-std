@@ -63,12 +63,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Notes"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.NoteCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/notes",
+                "label": "Notes",
+                "icon": "file-text"
+              },
+              {
+                "icon": "list-tree",
+                "href": "/notes/tree",
+                "label": "Tree"
+              },
+              {
+                "icon": "edit",
+                "label": "Editor",
+                "href": "/notes/editor"
+              },
+              {
+                "label": "Favorites",
+                "href": "/notes/favorites",
+                "icon": "star"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "NOTE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "NOTE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "NOTE_FULLTEXT_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search notes…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +152,26 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "NOTE_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Favorite",
+                "filterType": "select",
+                "field": "isFavorite",
+                "options": [
+                  "true",
+                  "false"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +182,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "icon": "file-text",
+                "aggregation": "count",
+                "label": "Total",
+                "format": "number"
+              },
+              {
+                "variant": "warning",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.isFavorite",
+                    true
+                  ]
+                ],
+                "label": "Favorites",
+                "icon": "star"
+              },
+              {
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.parentId",
+                    ""
+                  ]
+                ],
+                "variant": "info",
+                "label": "Top-level",
+                "icon": "folder",
+                "aggregation": "count"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Notes"
+          }
         ],
         "capabilities": []
       },
@@ -123,13 +242,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "icon"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Distribution of note icons across your tree"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Notes by Icon"
+          }
         ],
         "capabilities": []
       },
@@ -144,10 +291,61 @@
           "NOTE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "file-text",
+                "variant": "h3",
+                "name": "title"
+              },
+              {
+                "variant": "badge",
+                "name": "icon"
+              },
+              {
+                "variant": "badge",
+                "name": "isFavorite"
+              },
+              {
+                "name": "lastEditedAt",
+                "variant": "caption",
+                "label": "Edited"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -156,7 +354,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Note Tree"
+          }
         ],
         "capabilities": []
       },
@@ -167,10 +369,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "content",
+              "blocksJson",
+              "parentId",
+              "icon",
+              "isFavorite"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Note"
+          }
         ],
         "capabilities": []
       },
@@ -181,10 +406,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "content",
+              "blocksJson",
+              "parentId",
+              "icon",
+              "isFavorite"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Note"
+          }
         ],
         "capabilities": []
       },
@@ -195,10 +443,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "content",
+              "blocksJson",
+              "icon",
+              "isFavorite",
+              "lastEditedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Note"
+          }
         ],
         "capabilities": []
       },
@@ -209,10 +480,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Note"
+          }
         ],
         "capabilities": []
       },
@@ -331,12 +618,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Notes"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.RichEditorPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Notes",
+                "icon": "file-text",
+                "href": "/notes"
+              },
+              {
+                "label": "Tree",
+                "icon": "list-tree",
+                "href": "/notes/tree"
+              },
+              {
+                "label": "Editor",
+                "href": "/notes/editor",
+                "icon": "edit"
+              },
+              {
+                "icon": "star",
+                "href": "/notes/favorites",
+                "label": "Favorites"
+              },
+              {
+                "href": "/editor",
+                "label": "Editor",
+                "icon": "edit"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "RICH_EDITOR_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "RICH_EDITOR_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -352,7 +689,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Documents"
+          }
         ],
         "capabilities": []
       }

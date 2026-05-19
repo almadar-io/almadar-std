@@ -58,12 +58,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.PatientCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Patients",
+                "href": "/patients",
+                "icon": "user-plus"
+              },
+              {
+                "label": "Appointments",
+                "href": "/appointments",
+                "icon": "calendar"
+              },
+              {
+                "label": "Intake",
+                "href": "/intake",
+                "icon": "layout-list"
+              },
+              {
+                "href": "/prescriptions",
+                "icon": "pill",
+                "label": "Prescriptions"
+              },
+              {
+                "href": "/dashboard",
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PATIENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PATIENT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search patients by name…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +152,38 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "filterType": "select",
+                "field": "status",
+                "options": [
+                  "active",
+                  "inactive",
+                  "discharged"
+                ]
+              },
+              {
+                "filterType": "select",
+                "field": "insuranceId",
+                "options": [
+                  "aetna",
+                  "bcbs",
+                  "cigna",
+                  "uhc"
+                ],
+                "label": "Insurance"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +194,54 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "format": "number",
+                "label": "Total Patients",
+                "icon": "users",
+                "variant": "primary"
+              },
+              {
+                "icon": "check-circle",
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "aggregation": "count",
+                "format": "number",
+                "label": "Active"
+              },
+              {
+                "variant": "info",
+                "icon": "user-plus",
+                "format": "number",
+                "label": "New This Month",
+                "aggregation": "count"
+              },
+              {
+                "label": "By Insurance",
+                "format": "number",
+                "aggregation": "count",
+                "icon": "shield",
+                "variant": "default"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Patient Overview"
+          }
         ],
         "capabilities": []
       },
@@ -118,13 +252,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "insuranceId"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "pie"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 280
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Distribution across providers"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Patients by Insurance"
+          }
         ],
         "capabilities": []
       },
@@ -140,9 +302,67 @@
           "FILTER"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Name",
+                "variant": "h3",
+                "name": "firstName",
+                "icon": "user"
+              },
+              {
+                "name": "lastName",
+                "variant": "body"
+              },
+              {
+                "name": "dateOfBirth",
+                "variant": "caption",
+                "label": "DOB",
+                "format": "date"
+              },
+              {
+                "name": "insuranceId",
+                "label": "Insurance",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "email"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -153,10 +373,34 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "firstName",
+              "lastName",
+              "dateOfBirth",
+              "phone",
+              "email",
+              "insuranceId",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Create Patient"
+          }
         ],
         "capabilities": []
       },
@@ -167,10 +411,34 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "firstName",
+              "lastName",
+              "dateOfBirth",
+              "phone",
+              "email",
+              "insuranceId",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Patient"
+          }
         ],
         "capabilities": []
       },
@@ -181,10 +449,34 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "firstName",
+              "lastName",
+              "dateOfBirth",
+              "phone",
+              "email",
+              "insuranceId",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Patient Details"
+          }
         ],
         "capabilities": []
       },
@@ -195,10 +487,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Patient"
+          }
         ],
         "capabilities": []
       },
@@ -328,13 +636,67 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AppointmentCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Patients",
+                "icon": "user-plus",
+                "href": "/patients"
+              },
+              {
+                "href": "/appointments",
+                "label": "Appointments",
+                "icon": "calendar"
+              },
+              {
+                "href": "/intake",
+                "label": "Intake",
+                "icon": "layout-list"
+              },
+              {
+                "label": "Prescriptions",
+                "href": "/prescriptions",
+                "icon": "pill"
+              },
+              {
+                "href": "/dashboard",
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },
@@ -356,9 +718,21 @@
           "APPOINTMENT_DELETED"
         ],
         "overridableConfigKeys": [
-          "colorField",
-          "dateField",
-          "titleField"
+          {
+            "key": "colorField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "scheduledAt"
+          },
+          {
+            "key": "titleField",
+            "type": "unknown",
+            "default": "summary"
+          }
         ],
         "capabilities": []
       },
@@ -371,9 +745,63 @@
           "APPOINTMENT_DELETED"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "patientName",
+                "icon": "user",
+                "variant": "h4",
+                "label": "Patient"
+              },
+              {
+                "label": "Doctor",
+                "variant": "body",
+                "name": "doctorName"
+              },
+              {
+                "variant": "caption",
+                "name": "scheduledAt",
+                "label": "When",
+                "format": "date"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "reason",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -384,10 +812,35 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "patientName",
+              "patientEmail",
+              "patientPhone",
+              "doctorName",
+              "summary",
+              "scheduledAt",
+              "reason",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Create Appointment"
+          }
         ],
         "capabilities": []
       },
@@ -398,10 +851,35 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "patientName",
+              "patientEmail",
+              "patientPhone",
+              "doctorName",
+              "summary",
+              "scheduledAt",
+              "reason",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Appointment"
+          }
         ],
         "capabilities": []
       },
@@ -412,10 +890,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "patientName",
+              "doctorName",
+              "summary",
+              "scheduledAt",
+              "reason",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Appointment Details"
+          }
         ],
         "capabilities": []
       },
@@ -426,10 +927,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Appointment"
+          }
         ],
         "capabilities": []
       },
@@ -552,13 +1069,67 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.IntakeFormWizard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "user-plus",
+                "label": "Patients",
+                "href": "/patients"
+              },
+              {
+                "icon": "calendar",
+                "label": "Appointments",
+                "href": "/appointments"
+              },
+              {
+                "label": "Intake",
+                "icon": "layout-list",
+                "href": "/intake"
+              },
+              {
+                "icon": "pill",
+                "label": "Prescriptions",
+                "href": "/prescriptions"
+              },
+              {
+                "href": "/dashboard",
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "INTAKE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "INTAKE_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },
@@ -656,13 +1227,67 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.PrescriptionCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Patients",
+                "icon": "user-plus",
+                "href": "/patients"
+              },
+              {
+                "href": "/appointments",
+                "icon": "calendar",
+                "label": "Appointments"
+              },
+              {
+                "href": "/intake",
+                "icon": "layout-list",
+                "label": "Intake"
+              },
+              {
+                "href": "/prescriptions",
+                "icon": "pill",
+                "label": "Prescriptions"
+              },
+              {
+                "label": "Dashboard",
+                "icon": "layout-dashboard",
+                "href": "/dashboard"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PRESCRIPTION_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PRESCRIPTION_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },
@@ -684,9 +1309,71 @@
           "PRESCRIPTION_DELETED"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "pill",
+                "name": "medication",
+                "variant": "h3"
+              },
+              {
+                "variant": "badge",
+                "name": "dosage"
+              },
+              {
+                "variant": "body",
+                "name": "frequency"
+              },
+              {
+                "variant": "body",
+                "name": "patientName",
+                "label": "Patient"
+              },
+              {
+                "variant": "caption",
+                "name": "prescribedBy",
+                "label": "Prescribed By"
+              },
+              {
+                "variant": "caption",
+                "name": "startDate",
+                "label": "Start",
+                "format": "date"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -697,10 +1384,35 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "medication",
+              "dosage",
+              "frequency",
+              "patientName",
+              "prescribedBy",
+              "startDate",
+              "endDate",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Prescription"
+          }
         ],
         "capabilities": []
       },
@@ -711,10 +1423,35 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "medication",
+              "dosage",
+              "frequency",
+              "patientName",
+              "prescribedBy",
+              "startDate",
+              "endDate",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Prescription"
+          }
         ],
         "capabilities": []
       },
@@ -738,10 +1475,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Prescription"
+          }
         ],
         "capabilities": []
       },
@@ -805,13 +1558,67 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.DashboardDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Patients",
+                "icon": "user-plus",
+                "href": "/patients"
+              },
+              {
+                "icon": "calendar",
+                "href": "/appointments",
+                "label": "Appointments"
+              },
+              {
+                "icon": "layout-list",
+                "href": "/intake",
+                "label": "Intake"
+              },
+              {
+                "icon": "pill",
+                "label": "Prescriptions",
+                "href": "/prescriptions"
+              },
+              {
+                "label": "Dashboard",
+                "icon": "layout-dashboard",
+                "href": "/dashboard"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "DASHBOARD_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "DASHBOARD_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },

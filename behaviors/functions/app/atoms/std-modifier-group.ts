@@ -157,12 +157,12 @@ export interface StdModifierGroupModifierGroupWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModifierGroupConfig {
-  /** Default: `[{"variant":"caption","name":"name","label":"Group"},{"variant":"badge","name":"constraintType","label":"Constraint"},{"variant":"badge","name":"required","label":"Required"},{"variant":"caption","label":"Min","name":"minSelect"},{"name":"maxSelect","label":"Max","variant":"caption"}]` */
+  /** Default: `[{"name":"name","label":"Group","variant":"caption"},{"variant":"badge","label":"Constraint","name":"constraintType"},{"variant":"badge","label":"Required","name":"required"},{"variant":"caption","name":"minSelect","label":"Min"},{"label":"Max","variant":"caption","name":"maxSelect"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","event":"OPEN_GROUP","variant":"primary","icon":"arrow-right"},{"icon":"trash","event":"DELETE","variant":"danger","label":"Delete"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Modifier Groups"` */
   title?: string;
+  /** Default: `[{"event":"OPEN_GROUP","label":"Open","variant":"primary","icon":"arrow-right"},{"variant":"danger","event":"DELETE","label":"Delete","icon":"trash"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

@@ -31,8 +31,8 @@ const ALIAS = 'Accounting';
  * without modifying its state-machine topology.
  */
 export interface StdAccountingConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -190,19 +190,18 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'JournalAppLayout',
         'config': {
-          'searchEvent': 'JOURNAL_SEARCH',
-          'notificationClickEvent': 'JOURNAL_NOTIFICATIONS_OPEN',
-          'notifications': [],
+          'appName': 'Accounting',
+          'contentTrait': '@trait.JournalCatalog',
           'navItems': [
             {
-              'icon': 'book-open',
-              'href': '/journal-summaries',
               'label': 'Journal',
+              'href': '/journal-summaries',
+              'icon': 'book-open',
             },
             {
-              'href': '/entries',
-              'label': 'Entries',
               'icon': 'list',
+              'label': 'Entries',
+              'href': '/entries',
             },
             {
               'label': 'Chart of Accounts',
@@ -210,18 +209,19 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
               'icon': 'layout-list',
             },
             {
-              'href': '/bills',
               'label': 'AP Bills',
+              'href': '/bills',
               'icon': 'file-text',
             },
             {
+              'href': '/invoices',
               'icon': 'receipt',
               'label': 'AR Invoices',
-              'href': '/invoices',
             },
           ],
-          'appName': 'Accounting',
-          'contentTrait': '@trait.JournalCatalog',
+          'notifications': [],
+          'searchEvent': 'JOURNAL_SEARCH',
+          'notificationClickEvent': 'JOURNAL_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'JOURNAL_NOTIFICATIONS_OPEN',
@@ -308,60 +308,59 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
                             'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'book-open',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Journal Summaries',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
-                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'button',
+                                'action': 'CREATE',
                                 'variant': 'primary',
                                 'icon': 'plus',
                                 'label': 'New Period',
-                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'md',
-                        'type': 'stack',
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           '@trait.JournalSearch',
                           '@trait.JournalFilter',
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
                       },
                       '@trait.JournalStats',
                       '@trait.JournalGraphs',
@@ -370,8 +369,9 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                       },
                       '@trait.JournalBrowseList',
                     ],
-                    'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -390,34 +390,34 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'icon',
-                        'name': 'bell',
-                      },
-                      {
-                        'type': 'typography',
-                        'content': 'No notifications',
-                        'variant': 'h3',
-                      },
-                      {
-                        'type': 'typography',
-                        'color': 'muted',
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
-                      },
-                      {
-                        'type': 'button',
-                        'action': 'INIT',
-                        'label': 'Back to journal',
-                        'variant': 'ghost',
-                      },
-                    ],
                     'className': 'py-8',
                     'type': 'stack',
                     'align': 'center',
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                      },
+                      {
+                        'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'label': 'Back to journal',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -441,14 +441,14 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
           'event': 'JOURNAL_FILTER',
           'filters': [
             {
-              'filterType': 'select',
-              'field': 'status',
-              'label': 'Status',
               'options': [
                 'draft',
                 'posted',
                 'closed',
               ],
+              'field': 'status',
+              'label': 'Status',
+              'filterType': 'select',
             },
           ],
         },
@@ -457,32 +457,32 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'JournalStats',
         'config': {
+          'title': 'Journal Periods',
           'metrics': [
             {
-              'label': 'Periods',
-              'format': 'number',
-              'icon': 'book-open',
-              'aggregation': 'count',
               'variant': 'primary',
+              'aggregation': 'count',
+              'icon': 'book-open',
+              'format': 'number',
+              'label': 'Periods',
             },
             {
-              'aggregation': 'sum',
-              'variant': 'success',
               'label': 'Debits',
               'format': 'number',
-              'field': 'totalDebits',
+              'aggregation': 'sum',
+              'variant': 'success',
               'icon': 'trending-up',
+              'field': 'totalDebits',
             },
             {
               'format': 'number',
+              'icon': 'trending-down',
+              'field': 'totalCredits',
               'aggregation': 'sum',
               'label': 'Credits',
-              'icon': 'trending-down',
               'variant': 'warning',
-              'field': 'totalCredits',
             },
           ],
-          'title': 'Journal Periods',
         },
         'listens': [
           {
@@ -499,13 +499,13 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'JournalGraphs',
         'config': {
-          'title': 'Journal Status',
-          'chartType': 'bar',
           'height': 240,
+          'aggregation': 'count',
+          'chartType': 'bar',
+          'showLegend': false,
+          'title': 'Journal Status',
           'subtitle': 'Periods by status',
           'categoryField': 'status',
-          'aggregation': 'count',
-          'showLegend': false,
         },
         'listens': [
           {
@@ -794,8 +794,8 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                   'JournalSummary',
                   {
                     'emit': {
-                      'failure': 'JournalSummaryLoadFailed',
                       'success': 'JournalSummaryLoaded',
+                      'failure': 'JournalSummaryLoadFailed',
                     },
                   },
                 ],
@@ -803,22 +803,22 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
+                        'variant': 'caption',
                         'color': 'muted',
                         'content': 'Loading journal periods…',
                       },
                     ],
                     'className': 'py-12',
                     'direction': 'vertical',
-                    'align': 'center',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -832,27 +832,27 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'data-grid',
-                    'gap': 'sm',
-                    'entity': '@payload.data',
                     'cols': 1,
+                    'gap': 'sm',
                     'itemActions': [
                       {
-                        'label': 'View',
                         'variant': 'ghost',
                         'event': 'VIEW',
+                        'label': 'View',
                       },
                       {
-                        'event': 'EDIT',
                         'label': 'Edit',
                         'variant': 'ghost',
+                        'event': 'EDIT',
                       },
                       {
-                        'label': 'Delete',
                         'variant': 'danger',
+                        'label': 'Delete',
                         'event': 'DELETE',
                       },
                     ],
+                    'type': 'data-grid',
+                    'entity': '@payload.data',
                     'fields': [
                       {
                         'label': 'Period',
@@ -861,19 +861,19 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
                         'icon': 'calendar',
                       },
                       {
+                        'name': 'status',
                         'label': 'Status',
                         'variant': 'badge',
-                        'name': 'status',
                       },
                       {
-                        'variant': 'caption',
                         'name': 'totalDebits',
                         'label': 'Total Debits',
+                        'variant': 'caption',
                       },
                       {
+                        'label': 'Total Credits',
                         'name': 'totalCredits',
                         'variant': 'caption',
-                        'label': 'Total Credits',
                       },
                     ],
                   },
@@ -989,6 +989,7 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'name': 'JournalCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'title': 'New Journal Period',
           'mode': 'create',
           'fields': [
@@ -997,7 +998,6 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
             'totalCredits',
             'status',
           ],
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1018,15 +1018,15 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'name': 'JournalEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Journal Period',
           'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Journal Period',
           'fields': [
             'period',
             'totalDebits',
             'totalCredits',
             'status',
           ],
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1047,15 +1047,15 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'name': 'JournalView',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
           'title': 'View Journal Period',
+          'mode': 'edit',
           'fields': [
             'period',
             'totalDebits',
             'totalCredits',
             'status',
           ],
-          'mode': 'edit',
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1076,10 +1076,10 @@ export function stdAccountingJournalOrbital(params: StdAccountingJournalOrbitalP
         'name': 'JournalDelete',
         'linkedEntity': canonicalName,
         'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
           'title': 'Delete Journal Period',
-          'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',

@@ -92,7 +92,7 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStepFlowConfig {
-  /** Default: `[{"description":"Initial review by direct manager","key":"manager","label":"Manager Review","icon":"user"},{"label":"Director Approval","icon":"users","description":"Department director sign-off","key":"director"},{"key":"executive","icon":"shield","description":"Final executive approval","label":"Executive Sign-off"}]` */
+  /** Default: `[{"key":"manager","description":"Initial review by direct manager","icon":"user","label":"Manager Review"},{"key":"director","label":"Director Approval","icon":"users","description":"Department director sign-off"},{"label":"Executive Sign-off","description":"Final executive approval","icon":"shield","key":"executive"}]` */
   steps?: TraitConfig[];
   /** Default: `"Review"` */
   title?: string;

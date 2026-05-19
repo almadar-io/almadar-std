@@ -65,10 +65,10 @@ export interface StdConfirmationConfig {
   confirmLabel?: string;
   /** Default: `"Are you sure?"` */
   alertMessage?: string;
-  /** Default: `"alert-triangle"` */
-  icon?: string;
   /** Default: `"Confirm Action"` */
   title?: string;
+  /** Default: `"alert-triangle"` */
+  icon?: string;
 }
 
 /**

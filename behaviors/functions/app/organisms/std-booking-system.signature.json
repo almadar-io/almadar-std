@@ -58,12 +58,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "BookingSystemApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ProviderCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "user-check",
+                "label": "Providers",
+                "href": "/providers"
+              },
+              {
+                "label": "Book",
+                "href": "/book",
+                "icon": "calendar-plus"
+              },
+              {
+                "label": "Appointments",
+                "icon": "calendar",
+                "href": "/appointments"
+              },
+              {
+                "href": "/schedule",
+                "label": "Schedule",
+                "icon": "clock"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BOOKING_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BOOKING_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search providers…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +147,36 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "options": [
+                  "general",
+                  "dental",
+                  "dermatology",
+                  "cardiology",
+                  "psychiatry"
+                ],
+                "label": "Specialty",
+                "field": "specialty"
+              },
+              {
+                "label": "Rating",
+                "field": "rating",
+                "max": 5,
+                "min": 0,
+                "filterType": "range"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +187,50 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "label": "Total Providers",
+                "aggregation": "count",
+                "icon": "users",
+                "format": "number"
+              },
+              {
+                "filter": {
+                  "available": true
+                },
+                "aggregation": "count",
+                "label": "Active",
+                "icon": "check-circle",
+                "variant": "success",
+                "format": "number"
+              },
+              {
+                "aggregation": "avg",
+                "label": "Avg Rating",
+                "format": "number",
+                "variant": "info",
+                "icon": "star",
+                "field": "rating"
+              },
+              {
+                "field": "hourlyRate",
+                "label": "Avg Hourly Rate",
+                "variant": "info",
+                "aggregation": "avg",
+                "icon": "dollar-sign",
+                "format": "currency"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Provider Overview"
+          }
         ],
         "capabilities": []
       },
@@ -118,11 +241,31 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "specialty"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "pie"
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Distribution across specialties"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Providers by Specialty"
+          }
         ],
         "capabilities": []
       },
@@ -137,10 +280,69 @@
           "FILTER"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 2
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "icon": "user",
+                "name": "name"
+              },
+              {
+                "variant": "badge",
+                "name": "specialty"
+              },
+              {
+                "variant": "body",
+                "format": "number",
+                "name": "rating"
+              },
+              {
+                "label": "Hourly Rate",
+                "variant": "h4",
+                "format": "currency",
+                "name": "hourlyRate"
+              },
+              {
+                "variant": "body",
+                "label": "Availability",
+                "format": "boolean",
+                "name": "available"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "md"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -300,13 +502,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "BookingSystemApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.BookingWizard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/providers",
+                "icon": "user-check",
+                "label": "Providers"
+              },
+              {
+                "href": "/book",
+                "icon": "calendar-plus",
+                "label": "Book"
+              },
+              {
+                "label": "Appointments",
+                "href": "/appointments",
+                "icon": "calendar"
+              },
+              {
+                "href": "/schedule",
+                "icon": "clock",
+                "label": "Schedule"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BOOKING_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BOOKING_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },
@@ -317,10 +568,26 @@
           "CREATE_PAYMENT"
         ],
         "overridableConfigKeys": [
-          "amount",
-          "currency",
-          "metadata",
-          "uiTrait"
+          {
+            "key": "amount",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "currency",
+            "type": "unknown",
+            "default": "usd"
+          },
+          {
+            "key": "metadata",
+            "type": "unknown",
+            "default": {}
+          },
+          {
+            "key": "uiTrait",
+            "type": "unknown",
+            "default": "@trait.BookingPaymentForm"
+          }
         ],
         "capabilities": []
       },
@@ -440,13 +707,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "BookingSystemApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AppointmentDashboard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Providers",
+                "icon": "user-check",
+                "href": "/providers"
+              },
+              {
+                "icon": "calendar-plus",
+                "label": "Book",
+                "href": "/book"
+              },
+              {
+                "icon": "calendar",
+                "label": "Appointments",
+                "href": "/appointments"
+              },
+              {
+                "icon": "clock",
+                "label": "Schedule",
+                "href": "/schedule"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },
@@ -469,9 +785,21 @@
           "BOOKING_CONFIRMED"
         ],
         "overridableConfigKeys": [
-          "colorField",
-          "dateField",
-          "titleField"
+          {
+            "key": "colorField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "scheduledAt"
+          },
+          {
+            "key": "titleField",
+            "type": "unknown",
+            "default": "summary"
+          }
         ],
         "capabilities": []
       },
@@ -485,10 +813,73 @@
           "BOOKING_CONFIRMED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Summary",
+                "name": "summary",
+                "variant": "h3",
+                "icon": "calendar"
+              },
+              {
+                "variant": "body",
+                "name": "providerName",
+                "label": "Provider"
+              },
+              {
+                "label": "Customer",
+                "variant": "body",
+                "name": "customerName"
+              },
+              {
+                "variant": "body",
+                "label": "When",
+                "format": "date",
+                "name": "scheduledAt"
+              },
+              {
+                "name": "time",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -624,13 +1015,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent",
-          "topBarActions"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "BookingSystemApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ScheduleDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Providers",
+                "href": "/providers",
+                "icon": "user-check"
+              },
+              {
+                "label": "Book",
+                "href": "/book",
+                "icon": "calendar-plus"
+              },
+              {
+                "label": "Appointments",
+                "href": "/appointments",
+                "icon": "calendar"
+              },
+              {
+                "icon": "clock",
+                "label": "Schedule",
+                "href": "/schedule"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SCHEDULE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SCHEDULE_SEARCH"
+          },
+          {
+            "key": "topBarActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },

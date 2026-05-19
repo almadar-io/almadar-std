@@ -63,12 +63,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Forum"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.QuestionCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/questions",
+                "icon": "help-circle",
+                "label": "Questions"
+              },
+              {
+                "href": "/questions",
+                "icon": "tag",
+                "label": "Categories"
+              },
+              {
+                "icon": "shield-alert",
+                "label": "Moderation",
+                "href": "/moderation"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "QUESTION_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "QUESTION_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "QUESTION_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search questions…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +147,33 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "QUESTION_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "options": [
+                  "open",
+                  "answered",
+                  "closed"
+                ],
+                "field": "status",
+                "filterType": "select",
+                "label": "Status"
+              },
+              {
+                "field": "tag",
+                "options": [],
+                "label": "Tag",
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +184,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "icon": "help-circle",
+                "label": "Total",
+                "format": "number",
+                "aggregation": "count"
+              },
+              {
+                "variant": "warning",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ],
+                "label": "Open",
+                "aggregation": "count",
+                "icon": "circle"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "answered"
+                  ]
+                ],
+                "icon": "check-circle",
+                "format": "number",
+                "label": "Answered",
+                "variant": "success",
+                "aggregation": "count"
+              },
+              {
+                "aggregation": "mode",
+                "label": "Top Tag",
+                "format": "text",
+                "field": "tag",
+                "variant": "info",
+                "icon": "hash"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Questions"
+          }
         ],
         "capabilities": []
       },
@@ -121,8 +250,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "allowEdit",
-          "title"
+          {
+            "key": "allowEdit",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Categories"
+          }
         ],
         "capabilities": []
       },
@@ -137,11 +274,75 @@
           "QUESTION_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions",
-          "variant"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "title",
+                "icon": "help-circle",
+                "variant": "h3"
+              },
+              {
+                "variant": "body",
+                "name": "authorName"
+              },
+              {
+                "variant": "badge",
+                "name": "tag"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "voteCount",
+                "format": "number"
+              },
+              {
+                "name": "replyCount",
+                "variant": "caption",
+                "format": "number"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          },
+          {
+            "key": "variant",
+            "type": "unknown",
+            "default": "card"
+          }
         ],
         "capabilities": []
       },
@@ -150,8 +351,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "flat",
-          "threadRootId"
+          {
+            "key": "flat",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "threadRootId",
+            "type": "unknown",
+            "default": ""
+          }
         ],
         "capabilities": []
       },
@@ -160,7 +369,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "allowDown"
+          {
+            "key": "allowDown",
+            "type": "unknown",
+            "default": true
+          }
         ],
         "capabilities": []
       },
@@ -171,10 +384,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "body",
+              "authorName",
+              "tag",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Ask Question"
+          }
         ],
         "capabilities": []
       },
@@ -185,10 +420,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "body",
+              "authorName",
+              "tag",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Question"
+          }
         ],
         "capabilities": []
       },
@@ -199,10 +456,34 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "body",
+              "authorName",
+              "tag",
+              "status",
+              "voteCount",
+              "replyCount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Question"
+          }
         ],
         "capabilities": []
       },
@@ -213,10 +494,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone. The question and all its replies will be removed."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Question"
+          }
         ],
         "capabilities": []
       },
@@ -315,12 +612,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Forum"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ModerationDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Questions",
+                "href": "/questions",
+                "icon": "help-circle"
+              },
+              {
+                "icon": "tag",
+                "label": "Categories",
+                "href": "/questions"
+              },
+              {
+                "label": "Moderation",
+                "icon": "shield-alert",
+                "href": "/moderation"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MODERATION_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MODERATION_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -339,8 +676,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "autoEscalateThreshold",
-          "title"
+          {
+            "key": "autoEscalateThreshold",
+            "type": "unknown",
+            "default": 5
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Pending Reports"
+          }
         ],
         "capabilities": []
       },
@@ -349,8 +694,23 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "reasons",
-          "title"
+          {
+            "key": "reasons",
+            "type": "unknown",
+            "default": [
+              "spam",
+              "abuse",
+              "off-topic",
+              "misinformation",
+              "nsfw",
+              "other"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Latest reports"
+          }
         ],
         "capabilities": []
       },
@@ -362,10 +722,59 @@
           "DECISION_REVERTED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "targetType",
+                "label": "Target",
+                "variant": "badge"
+              },
+              {
+                "name": "verdict",
+                "label": "Verdict",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "reviewerId",
+                "label": "Reviewer"
+              },
+              {
+                "label": "Notes",
+                "variant": "body",
+                "name": "notes"
+              },
+              {
+                "format": "date",
+                "variant": "caption",
+                "label": "When",
+                "name": "createdAt"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "DELETE",
+                "label": "Revert",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -376,10 +785,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This will undo the recorded moderation verdict."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Revert"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "rotate-ccw"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Revert Decision"
+          }
         ],
         "capabilities": []
       },

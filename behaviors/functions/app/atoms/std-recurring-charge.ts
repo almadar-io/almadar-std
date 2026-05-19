@@ -95,10 +95,10 @@ export interface StdRecurringChargeConfig {
   title?: string;
   /** Default: `4` */
   maxRetries?: number;
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerId"},{"name":"planId","variant":"caption","label":"Plan"},{"variant":"badge","label":"Status","name":"status"},{"name":"amount","label":"Amount","variant":"caption"},{"label":"Interval","name":"interval","variant":"badge"},{"name":"nextBillingAt","label":"Next Bill","variant":"caption"},{"name":"attemptCount","label":"Retries","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_SUBSCRIPTION","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Cancel","event":"CANCEL"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_SUBSCRIPTION"},{"event":"CANCEL","variant":"danger","label":"Cancel"}]` */
   itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Customer","name":"customerId","variant":"caption"},{"variant":"caption","label":"Plan","name":"planId"},{"label":"Status","variant":"badge","name":"status"},{"label":"Amount","name":"amount","variant":"caption"},{"variant":"badge","label":"Interval","name":"interval"},{"name":"nextBillingAt","label":"Next Bill","variant":"caption"},{"label":"Retries","variant":"caption","name":"attemptCount"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

@@ -89,12 +89,12 @@ export interface StdReceiptReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReceiptConfig {
+  /** Default: `[{"name":"receiptNumber","variant":"caption","label":"Receipt #"},{"variant":"caption","name":"recipientName","label":"Recipient"},{"variant":"badge","name":"transactionType","label":"Type"},{"label":"Total","name":"total","variant":"caption"},{"label":"Issued","name":"issuedAt","variant":"caption"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_RECEIPT","variant":"primary","icon":"arrow-right","label":"Open"},{"event":"REPRINT_RECEIPT","label":"Reprint","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Receipts"` */
   title?: string;
-  /** Default: `[{"label":"Receipt #","variant":"caption","name":"receiptNumber"},{"name":"recipientName","label":"Recipient","variant":"caption"},{"name":"transactionType","label":"Type","variant":"badge"},{"variant":"caption","label":"Total","name":"total"},{"name":"issuedAt","label":"Issued","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_RECEIPT","icon":"arrow-right"},{"variant":"danger","event":"REPRINT_RECEIPT","label":"Reprint"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

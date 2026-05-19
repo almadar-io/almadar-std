@@ -127,12 +127,12 @@ export interface StdTrialTrialLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTrialConfig {
-  /** Default: `[{"name":"customerId","label":"Customer","variant":"caption"},{"label":"Plan","variant":"caption","name":"planId"},{"label":"Status","variant":"badge","name":"status"},{"name":"startedAt","variant":"caption","label":"Started"},{"variant":"caption","label":"Expires","name":"expiresAt"},{"label":"Converted","name":"convertedAt","variant":"caption"},{"label":"Notified","name":"notifiedAt","variant":"caption"}]` */
+  /** Default: `[{"name":"customerId","variant":"caption","label":"Customer"},{"name":"planId","label":"Plan","variant":"caption"},{"variant":"badge","label":"Status","name":"status"},{"label":"Started","name":"startedAt","variant":"caption"},{"label":"Expires","variant":"caption","name":"expiresAt"},{"variant":"caption","label":"Converted","name":"convertedAt"},{"label":"Notified","name":"notifiedAt","variant":"caption"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_TRIAL","label":"Open","icon":"arrow-right","variant":"primary"},{"event":"CANCEL","label":"Cancel","variant":"danger","icon":"x"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Trials"` */
   title?: string;
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_TRIAL","variant":"primary"},{"icon":"x","variant":"danger","label":"Cancel","event":"CANCEL"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

@@ -115,36 +115,36 @@
           "name": "FleetAppLayout",
           "config": {
             "contentTrait": "@trait.FleetCatalog",
+            "appName": "Fleet Manager",
             "navItems": [
               {
-                "href": "/fleets",
                 "label": "Fleets",
+                "href": "/fleets",
                 "icon": "truck"
               },
               {
+                "icon": "truck",
                 "label": "Vehicles",
-                "href": "/vehicles",
-                "icon": "truck"
+                "href": "/vehicles"
               },
               {
                 "label": "Drivers",
-                "href": "/drivers",
-                "icon": "user"
+                "icon": "user",
+                "href": "/drivers"
               },
               {
-                "href": "/telematics",
                 "label": "Telematics",
-                "icon": "activity"
+                "icon": "activity",
+                "href": "/telematics"
               }
             ],
             "notifications": [],
             "searchEvent": "FLEET_SEARCH",
-            "notificationClickEvent": "FLEET_NOTIFICATIONS_OPEN",
-            "appName": "Fleet Manager"
+            "notificationClickEvent": "FLEET_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "FLEET_NOTIFICATIONS_OPEN",
-            "SEARCH": "FLEET_SEARCH"
+            "SEARCH": "FLEET_SEARCH",
+            "NOTIFY_CLICK": "FLEET_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -227,60 +227,59 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "justify": "between",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "truck"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "Fleets",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "align": "center"
+                              "align": "center",
+                              "gap": "sm"
                             },
                             {
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "variant": "primary",
+                                  "type": "button",
                                   "label": "New Fleet",
+                                  "variant": "primary",
                                   "action": "CREATE",
-                                  "icon": "plus",
-                                  "type": "button"
+                                  "icon": "plus"
                                 }
                               ],
+                              "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.FleetSearch",
                             "@trait.FleetFilter"
                           ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center"
                         },
                         "@trait.FleetStats",
                         "@trait.FleetGraphs",
@@ -289,8 +288,9 @@
                         },
                         "@trait.FleetBrowseList"
                       ],
+                      "direction": "vertical",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -309,34 +309,34 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "content": "No notifications",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "No notifications"
                         },
                         {
+                          "color": "muted",
                           "variant": "caption",
                           "type": "typography",
-                          "content": "You're all caught up.",
-                          "color": "muted"
+                          "content": "You're all caught up."
                         },
                         {
-                          "variant": "ghost",
+                          "action": "INIT",
                           "label": "Back to fleets",
                           "type": "button",
-                          "action": "INIT"
+                          "variant": "ghost"
                         }
                       ],
+                      "gap": "md",
+                      "type": "stack",
                       "className": "py-8",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -349,45 +349,48 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "FleetSearch",
           "config": {
-            "placeholder": "Search fleets…",
-            "event": "FLEET_SEARCH"
+            "event": "FLEET_SEARCH",
+            "placeholder": "Search fleets…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "FleetFilter",
           "config": {
+            "event": "FLEET_FILTER",
             "filters": [
               {
+                "label": "Status",
+                "field": "status",
+                "filterType": "select",
                 "options": [
                   "active",
                   "inactive",
                   "merging",
                   "archived"
-                ],
-                "filterType": "select",
-                "label": "Status",
-                "field": "status"
+                ]
               }
-            ],
-            "event": "FLEET_FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "FleetStats",
           "config": {
-            "title": "Fleets",
             "metrics": [
               {
-                "aggregation": "count",
-                "icon": "truck",
-                "variant": "primary",
+                "format": "number",
                 "label": "Total",
-                "format": "number"
+                "variant": "primary",
+                "aggregation": "count",
+                "icon": "truck"
               },
               {
+                "aggregation": "count",
+                "variant": "success",
+                "label": "Active",
                 "format": "number",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -396,29 +399,26 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "aggregation": "count",
-                "variant": "success",
-                "label": "Active",
-                "icon": "check-circle"
+                ]
               },
               {
-                "aggregation": "sum",
+                "format": "number",
+                "field": "vehicleCount",
                 "variant": "info",
+                "aggregation": "sum",
                 "label": "Vehicles",
-                "icon": "truck",
-                "format": "number",
-                "field": "vehicleCount"
+                "icon": "truck"
               },
               {
-                "format": "number",
+                "label": "Drivers",
                 "field": "driverCount",
-                "variant": "info",
-                "icon": "users",
+                "format": "number",
                 "aggregation": "sum",
-                "label": "Drivers"
+                "icon": "users",
+                "variant": "info"
               }
-            ]
+            ],
+            "title": "Fleets"
           },
           "listens": [
             {
@@ -436,12 +436,12 @@
           "name": "FleetGraphs",
           "config": {
             "height": 240.0,
+            "showLegend": false,
             "title": "Fleets by Status",
+            "categoryField": "status",
             "subtitle": "Operational composition across fleet statuses",
             "chartType": "bar",
-            "categoryField": "status",
-            "aggregation": "count",
-            "showLegend": false
+            "aggregation": "count"
           },
           "listens": [
             {
@@ -459,25 +459,24 @@
           "name": "FleetBrowseList",
           "linkedEntity": "Fleet",
           "config": {
-            "cols": 1.0,
-            "gap": "sm",
             "itemActions": [
               {
-                "event": "VIEW",
                 "label": "View",
+                "event": "VIEW",
                 "variant": "ghost"
               },
               {
+                "event": "EDIT",
                 "label": "Edit",
-                "variant": "ghost",
-                "event": "EDIT"
+                "variant": "ghost"
               },
               {
                 "label": "Delete",
-                "variant": "danger",
-                "event": "DELETE"
+                "event": "DELETE",
+                "variant": "danger"
               }
             ],
+            "gap": "sm",
             "fields": [
               {
                 "variant": "h3",
@@ -493,14 +492,15 @@
                 "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "vehicleCount"
+                "name": "vehicleCount",
+                "variant": "caption"
               },
               {
                 "variant": "caption",
                 "name": "driverCount"
               }
-            ]
+            ],
+            "cols": 1.0
           },
           "listens": [
             {
@@ -550,9 +550,9 @@
           "name": "FleetCreate",
           "linkedEntity": "Fleet",
           "config": {
-            "title": "New Fleet",
-            "icon": "plus-circle",
             "mode": "create",
+            "icon": "plus-circle",
+            "title": "New Fleet",
             "fields": [
               "name",
               "description",
@@ -580,16 +580,16 @@
           "name": "FleetEdit",
           "linkedEntity": "Fleet",
           "config": {
-            "title": "Edit Fleet",
-            "mode": "edit",
-            "icon": "edit",
             "fields": [
               "name",
               "description",
               "region",
               "status",
               "managedBy"
-            ]
+            ],
+            "title": "Edit Fleet",
+            "icon": "edit",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -610,8 +610,6 @@
           "name": "FleetView",
           "linkedEntity": "Fleet",
           "config": {
-            "title": "View Fleet",
-            "mode": "edit",
             "fields": [
               "name",
               "description",
@@ -621,7 +619,9 @@
               "vehicleCount",
               "driverCount"
             ],
-            "icon": "eye"
+            "icon": "eye",
+            "title": "View Fleet",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -643,13 +643,13 @@
           "linkedEntity": "Fleet",
           "config": {
             "title": "Delete Fleet",
-            "icon": "alert-triangle",
             "confirmLabel": "Delete",
+            "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -994,22 +994,22 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "VehicleAppLayout",
           "config": {
-            "searchEvent": "VEHICLE_SEARCH",
+            "appName": "Fleet Management",
             "navItems": [
               {
-                "href": "/fleets",
                 "icon": "truck",
-                "label": "Fleets"
+                "label": "Fleets",
+                "href": "/fleets"
               },
               {
                 "label": "Vehicles",
-                "icon": "truck",
-                "href": "/vehicles"
+                "href": "/vehicles",
+                "icon": "truck"
               },
               {
-                "href": "/drivers",
+                "label": "Drivers",
                 "icon": "user",
-                "label": "Drivers"
+                "href": "/drivers"
               },
               {
                 "label": "Telematics",
@@ -1019,12 +1019,12 @@
             ],
             "notificationClickEvent": "VEHICLE_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.VehiclePanel",
-            "notifications": [],
-            "appName": "Fleet Management"
+            "searchEvent": "VEHICLE_SEARCH",
+            "notifications": []
           },
           "events": {
-            "SEARCH": "VEHICLE_SEARCH",
-            "NOTIFY_CLICK": "VEHICLE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "VEHICLE_NOTIFICATIONS_OPEN",
+            "SEARCH": "VEHICLE_SEARCH"
           }
         },
         {
@@ -1053,17 +1053,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "truck"
+                              "name": "truck",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -1071,7 +1072,6 @@
                               "content": "Vehicles"
                             }
                           ],
-                          "align": "center",
                           "type": "stack"
                         },
                         {
@@ -1207,37 +1207,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "DriverAppLayout",
           "config": {
-            "notificationClickEvent": "DRIVER_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.DriverPanel",
             "notifications": [],
+            "appName": "Fleet Management",
             "searchEvent": "DRIVER_SEARCH",
             "navItems": [
               {
-                "label": "Fleets",
                 "href": "/fleets",
+                "label": "Fleets",
                 "icon": "truck"
               },
               {
-                "href": "/vehicles",
                 "label": "Vehicles",
+                "href": "/vehicles",
                 "icon": "truck"
               },
               {
                 "icon": "user",
-                "label": "Drivers",
-                "href": "/drivers"
+                "href": "/drivers",
+                "label": "Drivers"
               },
               {
-                "label": "Telematics",
                 "href": "/telematics",
-                "icon": "activity"
+                "icon": "activity",
+                "label": "Telematics"
               }
             ],
-            "appName": "Fleet Management",
-            "contentTrait": "@trait.DriverPanel"
+            "notificationClickEvent": "DRIVER_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "DRIVER_NOTIFICATIONS_OPEN",
-            "SEARCH": "DRIVER_SEARCH"
+            "SEARCH": "DRIVER_SEARCH",
+            "NOTIFY_CLICK": "DRIVER_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1266,33 +1266,33 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "name": "user",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "user"
                             },
                             {
-                              "content": "Drivers",
+                              "type": "typography",
                               "variant": "h2",
-                              "type": "typography"
+                              "content": "Drivers"
                             }
                           ],
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.DriverView"
-                      ],
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      ]
                     }
                   ]
                 ]
@@ -1420,6 +1420,10 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "TelematicsEventAppLayout",
           "config": {
+            "searchEvent": "TELEMATICS_EVENT_SEARCH",
+            "contentTrait": "@trait.TelematicsEventPanel",
+            "notifications": [],
+            "appName": "Fleet Management",
             "navItems": [
               {
                 "label": "Fleets",
@@ -1427,8 +1431,8 @@
                 "href": "/fleets"
               },
               {
-                "label": "Vehicles",
                 "href": "/vehicles",
+                "label": "Vehicles",
                 "icon": "truck"
               },
               {
@@ -1437,16 +1441,12 @@
                 "href": "/drivers"
               },
               {
-                "href": "/telematics",
                 "label": "Telematics",
-                "icon": "activity"
+                "icon": "activity",
+                "href": "/telematics"
               }
             ],
-            "searchEvent": "TELEMATICS_EVENT_SEARCH",
-            "appName": "Fleet Management",
-            "notifications": [],
-            "notificationClickEvent": "TELEMATICS_EVENT_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.TelematicsEventPanel"
+            "notificationClickEvent": "TELEMATICS_EVENT_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "TELEMATICS_EVENT_NOTIFICATIONS_OPEN",
@@ -1480,10 +1480,15 @@
                     "main",
                     {
                       "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "activity",
@@ -1494,18 +1499,13 @@
                               "content": "Telematics Events",
                               "type": "typography"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.TelematicsEventView"
-                      ],
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

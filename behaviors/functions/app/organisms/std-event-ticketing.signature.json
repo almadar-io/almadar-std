@@ -63,12 +63,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "EventTicketing"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.EventCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/events",
+                "label": "Events",
+                "icon": "calendar"
+              },
+              {
+                "href": "/tickets",
+                "icon": "ticket",
+                "label": "Tickets"
+              },
+              {
+                "href": "/checkin",
+                "label": "Check-in",
+                "icon": "qr-code"
+              },
+              {
+                "href": "/waitlist",
+                "icon": "users",
+                "label": "Waitlist"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "EVENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "EVENT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "EVENT_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search events…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +152,28 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "EVENT_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "label": "Status",
+                "options": [
+                  "draft",
+                  "published",
+                  "sold-out",
+                  "cancelled"
+                ],
+                "field": "status"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +184,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "calendar",
+                "label": "Total",
+                "format": "number",
+                "variant": "primary",
+                "aggregation": "count"
+              },
+              {
+                "aggregation": "count",
+                "icon": "send",
+                "variant": "success",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "published"
+                  ]
+                ],
+                "label": "Published"
+              },
+              {
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "sold-out"
+                  ]
+                ],
+                "aggregation": "count",
+                "icon": "check-circle",
+                "label": "Sold Out",
+                "variant": "warning"
+              },
+              {
+                "label": "Capacity",
+                "variant": "info",
+                "field": "capacity",
+                "icon": "users",
+                "format": "number",
+                "aggregation": "sum"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Events"
+          }
         ],
         "capabilities": []
       },
@@ -127,10 +256,71 @@
           "EVENT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "icon": "calendar",
+                "variant": "h3"
+              },
+              {
+                "variant": "body",
+                "name": "venue"
+              },
+              {
+                "format": "date",
+                "name": "startsAt",
+                "variant": "caption"
+              },
+              {
+                "name": "endsAt",
+                "variant": "caption",
+                "format": "date"
+              },
+              {
+                "format": "number",
+                "name": "capacity",
+                "variant": "body"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -143,7 +333,11 @@
           "EVENT_DELETED"
         ],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Event Calendar"
+          }
         ],
         "capabilities": []
       },
@@ -152,7 +346,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Lifecycle Admin"
+          }
         ],
         "capabilities": []
       },
@@ -163,10 +361,35 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "venue",
+              "startsAt",
+              "endsAt",
+              "capacity",
+              "status",
+              "organizerId"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Event"
+          }
         ],
         "capabilities": []
       },
@@ -177,10 +400,35 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "venue",
+              "startsAt",
+              "endsAt",
+              "capacity",
+              "status",
+              "organizerId"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Event"
+          }
         ],
         "capabilities": []
       },
@@ -191,10 +439,35 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "venue",
+              "startsAt",
+              "endsAt",
+              "capacity",
+              "status",
+              "organizerId"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Event"
+          }
         ],
         "capabilities": []
       },
@@ -205,10 +478,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Event"
+          }
         ],
         "capabilities": []
       },
@@ -317,12 +606,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "EventTicketing"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TicketShop"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/events",
+                "icon": "calendar",
+                "label": "Events"
+              },
+              {
+                "icon": "ticket",
+                "label": "Tickets",
+                "href": "/tickets"
+              },
+              {
+                "label": "Check-in",
+                "icon": "qr-code",
+                "href": "/checkin"
+              },
+              {
+                "label": "Waitlist",
+                "icon": "users",
+                "href": "/waitlist"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TICKET_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TICKET_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -343,7 +677,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Choose Your Tier"
+          }
         ],
         "capabilities": []
       },
@@ -382,10 +720,59 @@
           "TICKET_ISSUED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "holderName",
+                "variant": "h4",
+                "icon": "ticket"
+              },
+              {
+                "name": "holderEmail",
+                "variant": "caption"
+              },
+              {
+                "variant": "badge",
+                "name": "tierId"
+              },
+              {
+                "name": "qrCode",
+                "variant": "body"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "format": "date",
+                "name": "purchasedAt",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -396,10 +783,32 @@
           "ISSUE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "eventId",
+              "tierId",
+              "holderName",
+              "holderEmail",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Issue Ticket"
+          }
         ],
         "capabilities": []
       },
@@ -473,12 +882,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "EventTicketing"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CheckinDashboard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/events",
+                "label": "Events",
+                "icon": "calendar"
+              },
+              {
+                "label": "Tickets",
+                "href": "/tickets",
+                "icon": "ticket"
+              },
+              {
+                "icon": "qr-code",
+                "label": "Check-in",
+                "href": "/checkin"
+              },
+              {
+                "label": "Waitlist",
+                "href": "/waitlist",
+                "icon": "users"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CHECKIN_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CHECKIN_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -497,8 +951,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "mode",
-          "title"
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "qr"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Scan Ticket QR"
+          }
         ],
         "capabilities": []
       },
@@ -572,12 +1034,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "EventTicketing"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.WaitlistDashboard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Events",
+                "icon": "calendar",
+                "href": "/events"
+              },
+              {
+                "icon": "ticket",
+                "label": "Tickets",
+                "href": "/tickets"
+              },
+              {
+                "icon": "qr-code",
+                "label": "Check-in",
+                "href": "/checkin"
+              },
+              {
+                "label": "Waitlist",
+                "icon": "users",
+                "href": "/waitlist"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "WAITLIST_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "WAITLIST_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -598,7 +1105,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Queue"
+          }
         ],
         "capabilities": []
       },
@@ -609,10 +1120,48 @@
           "SAVE"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "position",
+                "variant": "badge"
+              },
+              {
+                "name": "userId",
+                "variant": "h4"
+              },
+              {
+                "variant": "caption",
+                "name": "targetId"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "format": "date",
+                "name": "joinedAt",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": []
+          }
         ],
         "capabilities": []
       },
@@ -623,10 +1172,30 @@
           "JOIN"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "targetId",
+              "userId",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "user-plus"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Join Waitlist"
+          }
         ],
         "capabilities": []
       },

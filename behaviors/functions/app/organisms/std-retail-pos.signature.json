@@ -53,12 +53,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Retail POS"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SaleCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "shopping-bag",
+                "href": "/sales",
+                "label": "Sales"
+              },
+              {
+                "href": "/checkout",
+                "icon": "credit-card",
+                "label": "Checkout"
+              },
+              {
+                "label": "Receipts",
+                "href": "/receipts",
+                "icon": "receipt"
+              },
+              {
+                "label": "Customers",
+                "href": "/customers",
+                "icon": "users"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SALE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SALE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +124,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SALE_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search sales…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +142,39 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SALE_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "field": "status",
+                "label": "Status",
+                "options": [
+                  "in-progress",
+                  "completed",
+                  "refunded",
+                  "voided"
+                ]
+              },
+              {
+                "options": [
+                  "cash",
+                  "card",
+                  "check",
+                  "digital"
+                ],
+                "filterType": "select",
+                "label": "Payment",
+                "field": "paymentMethod"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +185,57 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "label": "Total",
+                "icon": "shopping-bag",
+                "variant": "primary",
+                "format": "number"
+              },
+              {
+                "label": "Completed",
+                "icon": "check-circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "completed"
+                  ]
+                ],
+                "aggregation": "count",
+                "variant": "success",
+                "format": "number"
+              },
+              {
+                "aggregation": "sum",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "completed"
+                  ]
+                ],
+                "format": "currency",
+                "icon": "dollar-sign",
+                "field": "total",
+                "variant": "info",
+                "label": "Revenue"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Sales"
+          }
         ],
         "capabilities": []
       },
@@ -113,13 +246,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "paymentMethod"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Volume across payment types"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Sales by Payment Method"
+          }
         ],
         "capabilities": []
       },
@@ -134,10 +295,64 @@
           "SALE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h4",
+                "icon": "shopping-bag",
+                "name": "id"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "paymentMethod",
+                "variant": "badge"
+              },
+              {
+                "name": "total",
+                "variant": "caption"
+              },
+              {
+                "name": "completedAt",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -148,10 +363,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "total",
+              "status",
+              "paymentMethod",
+              "customerId",
+              "cashierId"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Sale"
+          }
         ],
         "capabilities": []
       },
@@ -162,10 +399,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "total",
+              "status",
+              "paymentMethod",
+              "customerId",
+              "cashierId",
+              "completedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Sale"
+          }
         ],
         "capabilities": []
       },
@@ -176,10 +436,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "total",
+              "status",
+              "paymentMethod",
+              "customerId",
+              "cashierId",
+              "completedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Sale"
+          }
         ],
         "capabilities": []
       },
@@ -190,10 +473,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Sale"
+          }
         ],
         "capabilities": []
       },
@@ -317,12 +616,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Retail POS"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CheckoutTerminalBoard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "shopping-bag",
+                "label": "Sales",
+                "href": "/sales"
+              },
+              {
+                "icon": "credit-card",
+                "href": "/checkout",
+                "label": "Checkout"
+              },
+              {
+                "href": "/receipts",
+                "icon": "receipt",
+                "label": "Receipts"
+              },
+              {
+                "label": "Customers",
+                "href": "/customers",
+                "icon": "users"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CHECKOUT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CHECKOUT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -331,7 +675,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Open Terminals"
+          }
         ],
         "capabilities": []
       }
@@ -420,12 +768,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Retail POS"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ReceiptLedger"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/sales",
+                "label": "Sales",
+                "icon": "shopping-bag"
+              },
+              {
+                "icon": "credit-card",
+                "label": "Checkout",
+                "href": "/checkout"
+              },
+              {
+                "icon": "receipt",
+                "label": "Receipts",
+                "href": "/receipts"
+              },
+              {
+                "icon": "users",
+                "label": "Customers",
+                "href": "/customers"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "RECEIPT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "RECEIPT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -434,7 +827,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Receipts"
+          }
         ],
         "capabilities": []
       }
@@ -513,12 +910,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Retail POS"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CustomerDirectory"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Sales",
+                "href": "/sales",
+                "icon": "shopping-bag"
+              },
+              {
+                "icon": "credit-card",
+                "href": "/checkout",
+                "label": "Checkout"
+              },
+              {
+                "href": "/receipts",
+                "icon": "receipt",
+                "label": "Receipts"
+              },
+              {
+                "icon": "users",
+                "label": "Customers",
+                "href": "/customers"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CUSTOMER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CUSTOMER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -527,7 +969,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Customers"
+          }
         ],
         "capabilities": []
       }

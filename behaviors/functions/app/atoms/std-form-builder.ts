@@ -138,11 +138,11 @@ export interface StdFormBuilderSurveyPublishedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFormBuilderConfig {
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_SURVEY","label":"Open"},{"variant":"secondary","label":"Publish","icon":"send","event":"PUBLISH"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Survey Builder"` */
   title?: string;
-  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"name":"description","label":"Description","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"createdAt","label":"Created","variant":"caption"}]` */
+  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_SURVEY"},{"icon":"send","label":"Publish","event":"PUBLISH","variant":"secondary"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"name":"description","variant":"caption","label":"Description"},{"name":"status","label":"Status","variant":"badge"},{"label":"Created","variant":"caption","name":"createdAt"}]` */
   fields?: TraitConfig[];
 }
 

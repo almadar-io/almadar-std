@@ -68,12 +68,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Listings"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ListingCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "list",
+                "label": "Browse",
+                "href": "/listings"
+              },
+              {
+                "href": "/saved",
+                "icon": "bookmark",
+                "label": "Saved"
+              },
+              {
+                "href": "/inquiries",
+                "icon": "message-circle",
+                "label": "Inquiries"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "LISTING_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "LISTING_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -95,9 +135,21 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "defaultRadiusKm",
-          "event",
-          "placeholder"
+          {
+            "key": "defaultRadiusKm",
+            "type": "unknown",
+            "default": 25
+          },
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "LISTING_GEO_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search nearby listings…"
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +158,27 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "LISTING_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "status",
+                "filterType": "select",
+                "label": "Status",
+                "options": [
+                  "active",
+                  "sold",
+                  "expired"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -116,8 +187,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "allowEdit",
-          "title"
+          {
+            "key": "allowEdit",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Categories"
+          }
         ],
         "capabilities": []
       },
@@ -126,7 +205,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Saved Listing Searches"
+          }
         ],
         "capabilities": []
       },
@@ -135,10 +218,26 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "accept",
-          "maxBytesPerImage",
-          "maxImages",
-          "title"
+          {
+            "key": "accept",
+            "type": "unknown",
+            "default": "image/*"
+          },
+          {
+            "key": "maxBytesPerImage",
+            "type": "unknown",
+            "default": 10485760
+          },
+          {
+            "key": "maxImages",
+            "type": "unknown",
+            "default": 10
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Listing Photos"
+          }
         ],
         "capabilities": []
       },
@@ -149,8 +248,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "icon": "list",
+                "format": "number",
+                "label": "Total",
+                "variant": "primary"
+              },
+              {
+                "label": "Active",
+                "icon": "check-circle",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "variant": "success"
+              },
+              {
+                "icon": "tag",
+                "variant": "info",
+                "format": "number",
+                "aggregation": "count",
+                "label": "Sold",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "sold"
+                  ]
+                ]
+              },
+              {
+                "icon": "trending-up",
+                "variant": "warning",
+                "format": "number",
+                "label": "Avg Price",
+                "field": "price",
+                "aggregation": "avg"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Listings"
+          }
         ],
         "capabilities": []
       },
@@ -165,10 +320,69 @@
           "LISTING_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "name": "title",
+                "icon": "list"
+              },
+              {
+                "variant": "badge",
+                "name": "price"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "location",
+                "variant": "caption"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "variant": "secondary",
+                "label": "Inquire",
+                "event": "INQUIRE"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -179,10 +393,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "description",
+              "price",
+              "location",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Listing"
+          }
         ],
         "capabilities": []
       },
@@ -193,10 +429,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "description",
+              "price",
+              "location",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Listing"
+          }
         ],
         "capabilities": []
       },
@@ -207,10 +465,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "description",
+              "price",
+              "location",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Listing"
+          }
         ],
         "capabilities": []
       },
@@ -221,10 +501,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Listing"
+          }
         ],
         "capabilities": []
       },
@@ -233,8 +529,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "flat",
-          "threadRootId"
+          {
+            "key": "flat",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "threadRootId",
+            "type": "unknown",
+            "default": ""
+          }
         ],
         "capabilities": []
       },
@@ -355,10 +659,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "listingId",
+              "subject",
+              "message",
+              "fromUserId",
+              "toUserId"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Inquiry"
+          }
         ],
         "capabilities": []
       },

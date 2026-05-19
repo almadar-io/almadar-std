@@ -58,12 +58,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "CI/CD Pipeline"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.BuildCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/builds",
+                "icon": "hammer",
+                "label": "Builds"
+              },
+              {
+                "label": "Stages",
+                "href": "/stages",
+                "icon": "layers"
+              },
+              {
+                "icon": "rocket",
+                "href": "/deploy",
+                "label": "Deploy"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BUILD_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BUILD_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +124,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "BUILD_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search builds…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +142,32 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "BUILD_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "running",
+                  "success",
+                  "failed"
+                ],
+                "filterType": "select"
+              },
+              {
+                "label": "Branch",
+                "filterType": "text",
+                "field": "branch"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +178,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "format": "number",
+                "variant": "primary",
+                "aggregation": "count",
+                "icon": "hammer",
+                "label": "Total Today"
+              },
+              {
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "success"
+                  ]
+                ],
+                "aggregation": "count",
+                "label": "Success",
+                "icon": "check-circle",
+                "variant": "success"
+              },
+              {
+                "label": "Failed",
+                "icon": "x-circle",
+                "variant": "danger",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "failed"
+                  ]
+                ],
+                "aggregation": "count"
+              },
+              {
+                "aggregation": "avg",
+                "format": "number",
+                "icon": "clock",
+                "label": "Avg Duration",
+                "variant": "default",
+                "field": "duration"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Build Health"
+          }
         ],
         "capabilities": []
       },
@@ -118,13 +246,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "day"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Volume across the past period"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Builds per day"
+          }
         ],
         "capabilities": []
       },
@@ -139,10 +295,70 @@
           "BUILD_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "caption",
+                "name": "id"
+              },
+              {
+                "variant": "h4",
+                "icon": "git-branch",
+                "name": "branch"
+              },
+              {
+                "name": "commit",
+                "variant": "body"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "duration",
+                "variant": "caption"
+              },
+              {
+                "name": "startedAt",
+                "label": "Started",
+                "variant": "caption",
+                "format": "date"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -153,10 +369,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "branch",
+              "commit",
+              "status",
+              "duration",
+              "triggeredBy"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Create Build"
+          }
         ],
         "capabilities": []
       },
@@ -167,10 +405,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "branch",
+              "commit",
+              "status",
+              "duration",
+              "triggeredBy"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Build"
+          }
         ],
         "capabilities": []
       },
@@ -181,10 +441,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "branch",
+              "commit",
+              "status",
+              "duration",
+              "triggeredBy"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Build"
+          }
         ],
         "capabilities": []
       },
@@ -195,10 +477,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Build"
+          }
         ],
         "capabilities": []
       },
@@ -297,12 +595,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "CI/CD Pipeline"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.StageCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Builds",
+                "href": "/builds",
+                "icon": "hammer"
+              },
+              {
+                "href": "/stages",
+                "label": "Stages",
+                "icon": "layers"
+              },
+              {
+                "href": "/deploy",
+                "label": "Deploy",
+                "icon": "rocket"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "STAGE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "STAGE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -327,10 +665,65 @@
           "STAGE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h4",
+                "name": "name",
+                "icon": "layers"
+              },
+              {
+                "variant": "caption",
+                "name": "buildId",
+                "label": "Build"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "duration",
+                "variant": "caption"
+              },
+              {
+                "variant": "body",
+                "name": "output"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -341,10 +734,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "buildId",
+              "status",
+              "duration",
+              "output"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Create Stage"
+          }
         ],
         "capabilities": []
       },
@@ -355,10 +770,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "buildId",
+              "status",
+              "duration",
+              "output"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Stage"
+          }
         ],
         "capabilities": []
       },
@@ -369,10 +806,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "buildId",
+              "status",
+              "duration",
+              "output"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Stage"
+          }
         ],
         "capabilities": []
       },
@@ -383,10 +842,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Stage"
+          }
         ],
         "capabilities": []
       },
@@ -472,12 +947,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "CI/CD Pipeline"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.DeploymentDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Builds",
+                "icon": "hammer",
+                "href": "/builds"
+              },
+              {
+                "href": "/stages",
+                "label": "Stages",
+                "icon": "layers"
+              },
+              {
+                "label": "Deploy",
+                "href": "/deploy",
+                "icon": "rocket"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "DEPLOYMENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "DEPLOYMENT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -486,9 +1001,41 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "rocket",
+                "variant": "h4",
+                "name": "environment"
+              },
+              {
+                "name": "version",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "format": "date",
+                "variant": "caption",
+                "name": "deployedAt",
+                "label": "Deployed"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          }
         ],
         "capabilities": []
       },
@@ -514,12 +1061,36 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "op",
-          "owner",
-          "path",
-          "ref",
-          "repo",
-          "uiTrait"
+          {
+            "key": "op",
+            "type": "unknown",
+            "default": "listCommits"
+          },
+          {
+            "key": "owner",
+            "type": "unknown",
+            "default": "owner-placeholder"
+          },
+          {
+            "key": "path",
+            "type": "unknown",
+            "default": ""
+          },
+          {
+            "key": "ref",
+            "type": "unknown",
+            "default": "main"
+          },
+          {
+            "key": "repo",
+            "type": "unknown",
+            "default": "repo-placeholder"
+          },
+          {
+            "key": "uiTrait",
+            "type": "unknown",
+            "default": "@trait.DeploymentCommitsPanel"
+          }
         ],
         "capabilities": []
       },

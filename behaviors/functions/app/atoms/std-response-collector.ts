@@ -85,10 +85,10 @@ export interface StdResponseCollectorResponseLoadFailedPayload {
 export interface StdResponseCollectorConfig {
   /** Default: `"Responses"` */
   title?: string;
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_RESPONSE"},{"variant":"danger","label":"Delete","event":"DELETE_RESPONSE"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"questionId","label":"Question","variant":"caption"},{"label":"Respondent","name":"respondentId","variant":"caption"},{"label":"Survey","variant":"caption","name":"surveyId"},{"label":"Answer","variant":"caption","name":"answerJson"},{"label":"Submitted","variant":"caption","name":"submittedAt"}]` */
+  /** Default: `[{"name":"questionId","label":"Question","variant":"caption"},{"name":"respondentId","label":"Respondent","variant":"caption"},{"variant":"caption","label":"Survey","name":"surveyId"},{"name":"answerJson","variant":"caption","label":"Answer"},{"name":"submittedAt","label":"Submitted","variant":"caption"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_RESPONSE","icon":"arrow-right"},{"event":"DELETE_RESPONSE","variant":"danger","label":"Delete"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

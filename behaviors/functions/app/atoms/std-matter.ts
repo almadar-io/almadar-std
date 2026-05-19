@@ -94,11 +94,11 @@ export interface StdMatterMatterLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMatterConfig {
+  /** Default: `[{"variant":"caption","name":"matterNumber","label":"Matter #"},{"label":"Title","variant":"caption","name":"title"},{"name":"clientName","label":"Client","variant":"caption"},{"name":"practiceArea","label":"Practice","variant":"badge"},{"variant":"caption","name":"leadAttorney","label":"Lead"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Matters"` */
   title?: string;
-  /** Default: `[{"label":"Matter #","name":"matterNumber","variant":"caption"},{"name":"title","label":"Title","variant":"caption"},{"variant":"caption","name":"clientName","label":"Client"},{"name":"practiceArea","label":"Practice","variant":"badge"},{"label":"Lead","name":"leadAttorney","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_MATTER","variant":"primary","icon":"arrow-right","label":"Open"},{"event":"CLOSE_MATTER","label":"Close","variant":"danger"}]` */
+  /** Default: `[{"event":"OPEN_MATTER","variant":"primary","icon":"arrow-right","label":"Open"},{"label":"Close","event":"CLOSE_MATTER","variant":"danger"}]` */
   itemActions?: TraitConfig[];
 }
 

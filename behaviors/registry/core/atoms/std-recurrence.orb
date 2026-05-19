@@ -46,6 +46,14 @@
                     "error"
                   ]
                 },
+                "title": {
+                  "name": "title",
+                  "type": "string"
+                },
+                "date": {
+                  "name": "date",
+                  "type": "string"
+                },
                 "rawStatus": {
                   "name": "rawStatus",
                   "type": "string",
@@ -56,20 +64,12 @@
                     "rescheduled"
                   ]
                 },
-                "title": {
-                  "name": "title",
-                  "type": "string"
-                },
                 "description": {
                   "name": "description",
                   "type": "string"
                 },
                 "id": {
                   "name": "id",
-                  "type": "string"
-                },
-                "date": {
-                  "name": "date",
                   "type": "string"
                 }
               }
@@ -402,8 +402,8 @@
                     "RecurrenceView",
                     {
                       "emit": {
-                        "success": "RecurrenceLoaded",
-                        "failure": "RecurrenceLoadFailed"
+                        "failure": "RecurrenceLoadFailed",
+                        "success": "RecurrenceLoaded"
                       }
                     }
                   ],
@@ -411,8 +411,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading schedule…"
+                      "title": "Loading schedule…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -497,17 +497,10 @@
                         "fn",
                         "row",
                         {
-                          "rawStatus": "scheduled",
-                          "date": [
+                          "description": [
                             "object/get",
                             "@row",
-                            "date",
-                            ""
-                          ],
-                          "id": [
-                            "object/get",
-                            "@row",
-                            "id",
+                            "notes",
                             ""
                           ],
                           "title": [
@@ -516,13 +509,20 @@
                             "title",
                             "Occurrence"
                           ],
-                          "description": [
+                          "id": [
                             "object/get",
                             "@row",
-                            "notes",
+                            "id",
                             ""
                           ],
-                          "status": "active"
+                          "status": "active",
+                          "date": [
+                            "object/get",
+                            "@row",
+                            "date",
+                            ""
+                          ],
+                          "rawStatus": "scheduled"
                         }
                       ]
                     ]
@@ -531,15 +531,13 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "repeat",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "repeat"
                             },
                             {
                               "type": "typography",
@@ -547,32 +545,31 @@
                               "variant": "h3"
                             },
                             {
-                              "variant": "success",
+                              "type": "badge",
                               "label": "Active",
-                              "type": "badge"
+                              "variant": "success"
                             },
                             {
-                              "action": "EDIT_RULE",
-                              "icon": "settings",
-                              "variant": "primary",
                               "type": "button",
-                              "label": "Edit rule"
+                              "icon": "settings",
+                              "action": "EDIT_RULE",
+                              "label": "Edit rule",
+                              "variant": "primary"
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
-                          "gap": "sm"
+                          "align": "center"
                         },
                         {
                           "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "direction": "horizontal",
+                                  "type": "stack",
                                   "align": "center",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "color": "muted",
@@ -580,35 +577,35 @@
                                       "content": "Repeats every"
                                     },
                                     {
+                                      "type": "typography",
                                       "content": "@entity.interval",
-                                      "weight": "bold",
-                                      "type": "typography"
+                                      "weight": "bold"
                                     },
                                     {
-                                      "weight": "bold",
+                                      "type": "typography",
                                       "content": "@entity.frequency",
-                                      "type": "typography"
+                                      "weight": "bold"
                                     }
                                   ],
-                                  "type": "stack",
                                   "gap": "xs"
                                 },
                                 {
+                                  "gap": "xs",
                                   "children": [
                                     {
-                                      "content": "Starts",
                                       "color": "muted",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "Starts"
                                     },
                                     {
                                       "content": "@entity.startDate",
-                                      "weight": "bold",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "weight": "bold"
                                     },
                                     {
                                       "color": "muted",
-                                      "content": "·",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "content": "·"
                                     },
                                     {
                                       "type": "typography",
@@ -616,29 +613,28 @@
                                       "color": "muted"
                                     },
                                     {
-                                      "weight": "bold",
                                       "type": "typography",
+                                      "weight": "bold",
                                       "content": "@entity.endDate"
                                     }
                                   ],
-                                  "direction": "horizontal",
                                   "align": "center",
-                                  "gap": "xs",
+                                  "direction": "horizontal",
                                   "type": "stack"
                                 }
                               ],
+                              "gap": "xs",
                               "type": "stack",
-                              "gap": "xs"
+                              "direction": "vertical"
                             }
                           ]
                         },
                         {
                           "content": "Next runs",
-                          "variant": "h4",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h4"
                         },
                         {
-                          "type": "timeline",
                           "entity": "@entity.occurrences",
                           "fields": [
                             "title",
@@ -648,27 +644,31 @@
                           ],
                           "itemActions": [
                             {
-                              "event": "OPEN_EXCEPTION",
-                              "label": "Manage"
+                              "label": "Manage",
+                              "event": "OPEN_EXCEPTION"
                             }
-                          ]
+                          ],
+                          "type": "timeline"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
-                          "align": "center",
                           "children": [
                             {
+                              "type": "button",
                               "variant": "danger",
-                              "action": "CANCEL_SCHEDULE",
-                              "label": "End schedule",
                               "icon": "x-circle",
-                              "type": "button"
+                              "label": "End schedule",
+                              "action": "CANCEL_SCHEDULE"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -687,8 +687,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "title": "Failed to load",
+                      "type": "error-state",
                       "message": "@entity.errorMessage"
                     }
                   ]
@@ -704,8 +704,8 @@
                     "RecurrenceView",
                     {
                       "emit": {
-                        "success": "RecurrenceLoaded",
-                        "failure": "RecurrenceLoadFailed"
+                        "failure": "RecurrenceLoadFailed",
+                        "success": "RecurrenceLoaded"
                       }
                     }
                   ],
@@ -713,8 +713,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Refreshing…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Refreshing…"
                     }
                   ]
                 ]
@@ -749,16 +749,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
+                              "label": "Back",
                               "action": "CANCEL_RULE",
-                              "variant": "ghost",
+                              "type": "button",
                               "icon": "arrow-left",
-                              "label": "Back"
+                              "variant": "ghost"
                             },
                             {
                               "type": "icon",
@@ -766,31 +770,27 @@
                             },
                             {
                               "content": "Edit recurrence rule",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
                           "align": "center",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "form-section",
                               "entity": "@entity",
+                              "submitEvent": "SAVE_RULE",
                               "cancelEvent": "CANCEL_RULE",
                               "fields": "@config.formFields",
-                              "submitEvent": "SAVE_RULE",
-                              "mode": "edit"
+                              "mode": "edit",
+                              "type": "form-section"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -819,43 +819,40 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "icon": "arrow-left",
-                              "type": "button",
                               "label": "Back",
+                              "icon": "arrow-left",
+                              "variant": "ghost",
+                              "type": "button",
                               "action": "CLOSE_EXCEPTION"
                             },
                             {
-                              "name": "calendar-clock",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "calendar-clock"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.currentOccurrenceLabel"
+                              "content": "@entity.currentOccurrenceLabel",
+                              "variant": "h3"
                             },
                             {
-                              "variant": "primary",
+                              "type": "badge",
                               "label": "@entity.currentOccurrenceDate",
-                              "type": "badge"
+                              "variant": "primary"
                             }
                           ],
-                          "direction": "horizontal",
+                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "gap": "sm",
                               "type": "stack",
                               "children": [
@@ -865,39 +862,42 @@
                                   "type": "typography"
                                 },
                                 {
+                                  "gap": "sm",
                                   "children": [
                                     {
+                                      "type": "button",
                                       "actionPayload": {
                                         "id": "@entity.currentOccurrenceId"
                                       },
-                                      "variant": "secondary",
+                                      "label": "Skip",
                                       "icon": "skip-forward",
-                                      "type": "button",
-                                      "action": "SKIP_OCCURRENCE",
-                                      "label": "Skip"
+                                      "variant": "secondary",
+                                      "action": "SKIP_OCCURRENCE"
                                     },
                                     {
+                                      "action": "RESCHEDULE_OCCURRENCE",
+                                      "type": "button",
+                                      "variant": "primary",
+                                      "label": "Reschedule",
                                       "actionPayload": {
                                         "id": "@entity.currentOccurrenceId"
                                       },
-                                      "variant": "primary",
-                                      "label": "Reschedule",
-                                      "action": "RESCHEDULE_OCCURRENCE",
-                                      "icon": "calendar-clock",
-                                      "type": "button"
+                                      "icon": "calendar-clock"
                                     }
                                   ],
-                                  "type": "stack",
-                                  "gap": "sm",
+                                  "align": "center",
                                   "direction": "horizontal",
-                                  "align": "center"
+                                  "type": "stack"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -911,10 +911,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "size": "lg",
@@ -922,26 +921,27 @@
                           "type": "icon"
                         },
                         {
-                          "variant": "h2",
                           "type": "typography",
-                          "content": "Schedule ended",
+                          "variant": "h2",
+                          "align": "center",
+                          "content": "Schedule ended"
+                        },
+                        {
+                          "content": "This recurring schedule has been cancelled. No further occurrences will fire.",
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted",
                           "align": "center"
                         },
                         {
-                          "align": "center",
-                          "type": "typography",
-                          "content": "This recurring schedule has been cancelled. No further occurrences will fire.",
-                          "color": "muted",
-                          "variant": "body"
-                        },
-                        {
-                          "action": "RESTART",
-                          "type": "button",
                           "label": "Start a new schedule",
-                          "variant": "secondary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "RESTART",
+                          "variant": "secondary"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -958,8 +958,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "RecurrenceSaveFailed",
-                        "success": "RecurrenceSaved"
+                        "success": "RecurrenceSaved",
+                        "failure": "RecurrenceSaveFailed"
                       }
                     }
                   ],
@@ -967,8 +967,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Saving rule…"
+                      "title": "Saving rule…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -983,8 +983,8 @@
                     "RecurrenceView",
                     {
                       "emit": {
-                        "failure": "RecurrenceLoadFailed",
-                        "success": "RecurrenceLoaded"
+                        "success": "RecurrenceLoaded",
+                        "failure": "RecurrenceLoadFailed"
                       }
                     }
                   ],
@@ -992,8 +992,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Cancelling…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Cancelling…"
                     }
                   ]
                 ]
@@ -1022,8 +1022,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Skipping…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Skipping…"
                     }
                   ]
                 ]
@@ -1049,8 +1049,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "RecurrenceSaveFailed",
-                        "success": "RecurrenceSaved"
+                        "success": "RecurrenceSaved",
+                        "failure": "RecurrenceSaveFailed"
                       }
                     }
                   ],
@@ -1074,8 +1074,8 @@
                     "RecurrenceView",
                     {
                       "emit": {
-                        "success": "RecurrenceLoaded",
-                        "failure": "RecurrenceLoadFailed"
+                        "failure": "RecurrenceLoadFailed",
+                        "success": "RecurrenceLoaded"
                       }
                     }
                   ],
@@ -1108,8 +1108,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Restarting…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Restarting…"
                     }
                   ]
                 ]
@@ -1132,10 +1132,6 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Schedule"
-            },
             "formFields": {
               "type": "[string]",
               "default": [
@@ -1144,7 +1140,15 @@
                 "startDate",
                 "endDate",
                 "endAfterCount"
-              ]
+              ],
+              "label": "Rule fields",
+              "description": "Inputs shown in the recurrence-rule definition form"
+            },
+            "title": {
+              "type": "string",
+              "default": "Schedule",
+              "label": "Section title",
+              "description": "Heading shown above the recurrence editor"
             }
           },
           "scope": "instance"

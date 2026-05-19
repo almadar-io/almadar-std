@@ -58,12 +58,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Time Tracking"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.EmployeeCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "label": "Employees",
+                "href": "/employees"
+              },
+              {
+                "label": "Timesheets",
+                "href": "/timesheets",
+                "icon": "clipboard"
+              },
+              {
+                "href": "/time-entries",
+                "label": "Time Entries",
+                "icon": "clock"
+              },
+              {
+                "href": "/billable",
+                "icon": "dollar-sign",
+                "label": "Billable Hours"
+              },
+              {
+                "label": "Approvals",
+                "icon": "check-circle",
+                "href": "/approvals"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "EMPLOYEE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "EMPLOYEE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "EMPLOYEE_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search employees…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +152,39 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "EMPLOYEE_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "department",
+                "options": [
+                  "engineering",
+                  "sales",
+                  "operations",
+                  "hr",
+                  "finance"
+                ],
+                "label": "Department",
+                "filterType": "select"
+              },
+              {
+                "options": [
+                  "active",
+                  "on-leave",
+                  "terminated"
+                ],
+                "field": "status",
+                "label": "Status",
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +195,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "label": "Total",
+                "aggregation": "count",
+                "format": "number",
+                "icon": "users"
+              },
+              {
+                "aggregation": "count",
+                "icon": "check-circle",
+                "format": "number",
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "label": "Active"
+              },
+              {
+                "icon": "pause-circle",
+                "label": "On Leave",
+                "aggregation": "count",
+                "format": "number",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "on-leave"
+                  ]
+                ]
+              },
+              {
+                "format": "currency",
+                "label": "Avg Rate",
+                "icon": "dollar-sign",
+                "aggregation": "avg",
+                "field": "defaultHourlyRate",
+                "variant": "info"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Employees"
+          }
         ],
         "capabilities": []
       },
@@ -118,13 +263,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "department"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Workforce distribution across departments"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Employees by Department"
+          }
         ],
         "capabilities": []
       },
@@ -139,10 +312,64 @@
           "EMPLOYEE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "variant": "h3",
+                "icon": "user"
+              },
+              {
+                "variant": "caption",
+                "name": "role"
+              },
+              {
+                "name": "department",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "defaultHourlyRate",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "label": "Delete",
+                "variant": "danger",
+                "event": "DELETE"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -153,10 +380,34 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "status",
+              "hireDate",
+              "defaultHourlyRate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Employee"
+          }
         ],
         "capabilities": []
       },
@@ -167,10 +418,34 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "status",
+              "hireDate",
+              "defaultHourlyRate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Employee"
+          }
         ],
         "capabilities": []
       },
@@ -181,10 +456,34 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "status",
+              "hireDate",
+              "defaultHourlyRate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Employee"
+          }
         ],
         "capabilities": []
       },
@@ -195,10 +494,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Employee"
+          }
         ],
         "capabilities": []
       },
@@ -327,12 +642,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Time Tracking"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TimesheetPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "label": "Employees",
+                "href": "/employees"
+              },
+              {
+                "icon": "clipboard",
+                "href": "/timesheets",
+                "label": "Timesheets"
+              },
+              {
+                "label": "Time Entries",
+                "icon": "clock",
+                "href": "/time-entries"
+              },
+              {
+                "href": "/billable",
+                "icon": "dollar-sign",
+                "label": "Billable Hours"
+              },
+              {
+                "icon": "check-circle",
+                "href": "/approvals",
+                "label": "Approvals"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TIMESHEET_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TIMESHEET_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -348,7 +713,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Timesheets"
+          }
         ],
         "capabilities": []
       }
@@ -437,12 +806,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Time Tracking"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TimeEntryPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/employees",
+                "label": "Employees",
+                "icon": "users"
+              },
+              {
+                "label": "Timesheets",
+                "href": "/timesheets",
+                "icon": "clipboard"
+              },
+              {
+                "label": "Time Entries",
+                "href": "/time-entries",
+                "icon": "clock"
+              },
+              {
+                "href": "/billable",
+                "icon": "dollar-sign",
+                "label": "Billable Hours"
+              },
+              {
+                "label": "Approvals",
+                "href": "/approvals",
+                "icon": "check-circle"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TIME_ENTRY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TIME_ENTRY_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -458,7 +877,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Time Entries"
+          }
         ],
         "capabilities": []
       }
@@ -542,12 +965,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Time Tracking"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.BillableHourPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "label": "Employees",
+                "href": "/employees"
+              },
+              {
+                "icon": "clipboard",
+                "label": "Timesheets",
+                "href": "/timesheets"
+              },
+              {
+                "href": "/time-entries",
+                "icon": "clock",
+                "label": "Time Entries"
+              },
+              {
+                "href": "/billable",
+                "icon": "dollar-sign",
+                "label": "Billable Hours"
+              },
+              {
+                "icon": "check-circle",
+                "href": "/approvals",
+                "label": "Approvals"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BILLABLE_HOUR_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -563,7 +1036,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Billable Hours"
+          }
         ],
         "capabilities": []
       }
@@ -652,12 +1129,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Time Tracking"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ApprovalRequestPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/employees",
+                "label": "Employees",
+                "icon": "users"
+              },
+              {
+                "label": "Timesheets",
+                "icon": "clipboard",
+                "href": "/timesheets"
+              },
+              {
+                "icon": "clock",
+                "label": "Time Entries",
+                "href": "/time-entries"
+              },
+              {
+                "label": "Billable Hours",
+                "href": "/billable",
+                "icon": "dollar-sign"
+              },
+              {
+                "icon": "check-circle",
+                "label": "Approvals",
+                "href": "/approvals"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "APPROVAL_REQUEST_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "APPROVAL_REQUEST_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -673,7 +1200,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Approval Requests"
+          }
         ],
         "capabilities": []
       }
