@@ -1,0 +1,22 @@
+app std-browse-calendar "1.0.0"
+"Calendar view for std-browse. Embeds base browse atom with calendar pattern override."
+
+orbital CalendarBrowseItemOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity CalendarBrowseItem [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+  }
+
+  trait CalendarBrowseItemBrowse = Browse.traits.BrowseItemBrowse -> CalendarBrowseItem {
+    config: {
+      viewPattern: "calendar"
+    }
+  }
+
+  page "/calendar-browse" as CalendarBrowsePage -> CalendarBrowseItemBrowse
+}

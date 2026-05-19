@@ -1,0 +1,71 @@
+{
+  "name": "std-browse-calendar",
+  "version": "1.0.0",
+  "description": "Calendar view for std-browse. Embeds base browse atom with calendar pattern override.",
+  "orbitals": [
+    {
+      "name": "CalendarBrowseItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "CalendarBrowseItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "CalendarBrowseItemBrowse",
+          "linkedEntity": "CalendarBrowseItem",
+          "config": {
+            "viewPattern": "calendar"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "CalendarBrowsePage",
+          "path": "/calendar-browse",
+          "traits": [
+            {
+              "ref": "CalendarBrowseItemBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
