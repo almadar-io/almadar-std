@@ -120,6 +120,8 @@ export {
   type BehaviorEmbeddingsManifest,
   getBehaviorEmbeddings,
   getBehaviorEmbedding,
+  // Factory signature catalog (sync-time)
+  getFactorySignatureCatalog,
 } from './behaviors/index.js';
 
 // All behavior functions
